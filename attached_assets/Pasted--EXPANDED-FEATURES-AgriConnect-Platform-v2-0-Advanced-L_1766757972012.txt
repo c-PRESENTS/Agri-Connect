@@ -1,0 +1,1087 @@
+# 🚀 **EXPANDED FEATURES - AgriConnect Platform v2.0**
+
+## 🚛 Advanced Logistics & Fulfillment System
+
+### 3rd Party Logistics Integration Hub
+
+#### Integrated Logistics Partners
+```javascript
+LOGISTICS PARTNERS:
+├─ 🌍 International Shipping
+│  ├─ DHL Express (190+ countries)
+│  ├─ FedEx International (220+ countries)
+│  ├─ UPS Worldwide (220+ countries)
+│  └─ Aramex (600+ cities globally)
+│
+├─ 🇮🇳 National Logistics (India)
+│  ├─ Delhivery (27,000+ pincodes)
+│  ├─ Blue Dart (35,000+ locations)
+│  ├─ DTDC (15,000+ pincodes)
+│  ├─ Ecom Express (2,200+ cities)
+│  └─ Shadowfax (700+ cities)
+│
+├─ 🚚 Hyperlocal Delivery
+│  ├─ Dunzo (instant delivery, 8 cities)
+│  ├─ Porter (trucks & tempo, 20+ cities)
+│  ├─ Swiggy Genie (on-demand, 500+ cities)
+│  └─ Borzo (same-day, pan-India)
+│
+├─ ❄️ Cold Chain Specialists
+│  ├─ Snowman Logistics (temp-controlled)
+│  ├─ Gati KWE (perishable goods)
+│  ├─ ColdEx (pharma-grade cold chain)
+│  └─ Stellar Value Chain (farm-to-fork)
+│
+└─ 🌐 Freight Forwarding
+   ├─ Maersk (ocean freight)
+   ├─ Kuehne+Nagel (air/sea/road)
+   ├─ DB Schenker (multimodal)
+   └─ CEVA Logistics (contract logistics)
+```
+
+#### Smart Logistics Selection Algorithm
+```javascript
+FACTORS CONSIDERED:
+✅ Product type (fresh/frozen/dry/live)
+✅ Distance (0-10km, 10-50km, 50-500km, 500km+, international)
+✅ Urgency (same-day, next-day, standard, scheduled)
+✅ Weight & dimensions
+✅ Temperature requirements (-20°C to +25°C)
+✅ Destination accessibility (metro/tier-2/rural)
+✅ Cost optimization
+✅ Carbon footprint preference
+✅ Insurance requirements
+✅ Customs clearance (international)
+
+ALGORITHM OUTPUT:
+"Best Match: Snowman Logistics
+• Cost: ₹245 (15% cheaper than alternatives)
+• ETA: 18 hours
+• Cold chain: -5°C maintained
+• Rating: 4.7★ (12,340 deliveries)
+• Carbon offset: +₹12 (optional)"
+```
+
+#### Unified Tracking Dashboard
+```
+ORDER #AGC-789456
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 50kg Organic Tomatoes
+👨‍🌾 From: Raj Kumar, Pune
+🏢 To: Fresh Foods Ltd, Mumbai
+
+🚚 LIVE TRACKING:
+├─ ✅ Picked up - 8:30 AM
+├─ ✅ Quality check passed - 9:15 AM
+├─ 🔄 In transit (Cold chain: -2°C) - LIVE
+│   📍 Current location: NH48, Panvel
+│   ⏱️ ETA: 2:45 PM (45 mins)
+├─ ⏳ Hub sorting - Pending
+└─ ⏳ Delivered - Pending
+
+🌡️ TEMPERATURE LOG:
+8:30 AM: -1°C | 10:00 AM: -2°C | 12:30 PM: -2°C
+
+📱 UPDATES VIA:
+✅ SMS ✅ WhatsApp ✅ Email ✅ App Push
+
+🔗 SHARE TRACKING: [Copy Link]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+### 🥛 Milk Run Logistics System (Smart Batching)
+
+#### How Milk Run Works
+**Traditional Delivery:** Each farmer → Each buyer (10 trips)  
+**Milk Run:** One vehicle → Multiple pickups → Multiple drop-offs (1 trip)
+
+**Cost Savings:** 60-70% reduction in delivery costs  
+**Time Efficiency:** 40% faster than individual deliveries  
+**Carbon Impact:** 75% lower emissions
+
+#### Route Optimization Algorithm
+```javascript
+INPUT DATA:
+├─ 15 farmers with products ready (geo-located)
+├─ 23 buyers with pending orders (geo-located)
+├─ 4 available vehicles (capacity, type, location)
+├─ Time windows (pickup: 6-9 AM, delivery: 9 AM-6 PM)
+└─ Product requirements (5 need cold chain)
+
+AI PROCESSING:
+├─ Cluster nearby pickups (max 8 per route)
+├─ Batch compatible products (no cross-contamination)
+├─ Optimize sequence (minimize distance + time)
+├─ Respect capacity constraints (weight, volume)
+├─ Maintain temperature zones (-20°C to +25°C)
+└─ Balance workload across vehicles
+
+OUTPUT: Optimized Routes
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ROUTE 1 (Cold Chain Vehicle)
+🚚 Driver: Amit Singh | Capacity: 500kg
+├─ 6:00 AM: Start from hub (Warehouse A)
+├─ 6:25 AM: Pickup Farmer 1 (50kg tomatoes)
+├─ 6:50 AM: Pickup Farmer 2 (30kg spinach)
+├─ 7:15 AM: Pickup Farmer 3 (80kg carrots)
+├─ 8:00 AM: Hub sorting/packaging
+├─ 9:30 AM: Deliver Buyer 1 (70kg mixed)
+├─ 10:15 AM: Deliver Buyer 2 (90kg mixed)
+└─ 11:00 AM: Return to hub
+
+💰 Cost per farmer: ₹45 (vs ₹120 individual)
+📊 Efficiency: 85% capacity utilization
+⏱️ Total time: 5 hours
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+#### Farmer & Buyer Experience
+```
+FARMER VIEW:
+┌─────────────────────────────────┐
+│ 🚛 PICKUP SCHEDULED             │
+│ Tomorrow, 6:30-7:00 AM          │
+│                                 │
+│ 📦 Your products:               │
+│ • Tomatoes (50kg)               │
+│ • Chilies (20kg)                │
+│                                 │
+│ 🚚 Vehicle: TN-01-AB-1234       │
+│ 👨‍✈️ Driver: Amit (+91-98765...)  │
+│                                 │
+│ ⏰ Keep products ready by 6:15  │
+│ 🌡️ Pre-cool if possible (-2°C)  │
+│                                 │
+│ [📍 Track Vehicle] [☎️ Call]    │
+└─────────────────────────────────┘
+
+BUYER VIEW:
+┌─────────────────────────────────┐
+│ 🚚 DELIVERY WINDOW              │
+│ Today, 9:30-10:30 AM            │
+│                                 │
+│ 📦 Your order:                  │
+│ • Tomatoes (30kg) - Raj Kumar   │
+│ • Spinach (20kg) - Priya Farms  │
+│ • Carrots (20kg) - Green Valley │
+│                                 │
+│ 💰 Total: ₹2,850 (saved ₹340)   │
+│                                 │
+│ 📍 Vehicle 15 mins away         │
+│ [🔔 Notify on Arrival]          │
+└─────────────────────────────────┘
+```
+
+#### Dynamic Re-routing (Real-time Adjustments)
+```
+SCENARIO: New urgent order at 8:00 AM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔔 URGENT ORDER ALERT
+🏨 Hotel Taj needs 50kg potatoes by 10 AM
+
+AI RE-ROUTING:
+├─ Check: Route 2 has 100kg spare capacity ✅
+├─ Check: Route passes near Hotel Taj ✅
+├─ Check: Farmer 5 has potatoes in stock ✅
+├─ Action: Insert pickup at 8:15 AM
+├─ Action: Add delivery at 9:45 AM
+└─ Result: Order fulfilled, +₹1,200 revenue
+
+📱 NOTIFICATIONS SENT:
+✅ Route 2 driver (updated route)
+✅ Farmer 5 (pickup in 15 mins)
+✅ Hotel Taj (delivery confirmed)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 🌾 Land Leasing Marketplace
+
+### Category Structure
+```
+🏞️ LAND FOR LEASE
+├─ 🌾 AGRICULTURAL LAND
+│  ├─ Crop Cultivation (paddy, wheat, vegetables)
+│  ├─ Fruit Orchards (mango, apple, citrus)
+│  ├─ Organic Farming (certified organic zones)
+│  ├─ Greenhouse/Polyhouse Sites
+│  └─ Livestock/Dairy Farms
+│
+├─ 💧 IRRIGATED LAND
+│  ├─ Drip Irrigation Setup
+│  ├─ Sprinkler Systems
+│  ├─ Canal Access
+│  └─ Borewell Available
+│
+├─ 🏛️ GOVERNMENT LAND
+│  ├─ Public Lease Programs
+│  ├─ Community Farming Projects
+│  ├─ Cooperative Land Banks
+│  └─ Rural Development Schemes
+│
+├─ 🌱 SPECIALTY LAND
+│  ├─ Hydroponics/Vertical Farms
+│  ├─ Aquaculture Ponds
+│  ├─ Medicinal Plant Cultivation
+│  └─ Agro-Tourism Sites
+│
+└─ 🔄 SHORT-TERM LEASE
+   ├─ Seasonal Crops (3-6 months)
+   ├─ Trial Farming (1 year)
+   ├─ Agricultural Research (2-3 years)
+   └─ Contract Farming (corporate tie-ups)
+```
+
+### Land Listing Interface
+```
+POST YOUR UNUSED LAND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 LOCATION
+[Use Current Location] or [Enter Address]
+• Pin on map for exact boundary marking
+• Upload survey documents (optional)
+
+📏 LAND DETAILS
+• Total Area: [___] Acres/Hectares
+• Soil Type: [Black Soil ▼]
+• Topography: [Flat/Gentle Slope/Hilly ▼]
+• Current Condition: [Barren/Fallow/Cultivated ▼]
+
+💧 WATER AVAILABILITY
+☐ Borewell (Depth: ___ feet)
+☐ Canal Irrigation
+☐ River/Stream nearby
+☐ Rainwater harvesting setup
+☐ No water source
+
+🔌 INFRASTRUCTURE
+☐ Electricity connection
+☐ Road access (Distance: ___ km)
+☐ Storage shed/barn
+☐ Fencing completed
+☐ Farm house available
+
+📅 LEASE TERMS
+• Duration: [Minimum ___ months]
+• Rent: ₹[___] per acre/month
+• Deposit: ₹[___] (refundable)
+• Revenue Sharing: [___]% of crop yield
+
+✅ PERMISSIONS
+☐ Crops allowed (specify: _________)
+☐ Livestock allowed
+☐ Construction allowed (temporary)
+☐ Organic farming mandatory
+☐ Soil health testing required
+
+📸 UPLOAD PHOTOS (Max 10)
+[Drag & Drop Images]
+
+📄 DOCUMENTS
+☐ Land Ownership Certificate
+☐ 7/12 Extract (India)
+☐ Tax Receipts
+☐ NOC (if applicable)
+
+[✅ Submit for Verification]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Land Discovery for Farmers
+```
+FIND LAND TO LEASE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🗺️ MAP VIEW (50% screen)
+[Shows available land parcels as polygons]
+
+🔍 FILTERS:
+├─ Location: Within [50 km ▼] of me
+├─ Area: [5-20] acres
+├─ Budget: ₹[2,000-10,000]/acre/month
+├─ Soil Type: [Black Soil, Red Soil ▼]
+├─ Water: [Irrigation Available ☑️]
+├─ Electricity: [Available ☑️]
+├─ Lease Duration: [6-12 months ▼]
+└─ Certification: [Organic Zone ☐]
+
+📋 LIST VIEW:
+┌─────────────────────────────────┐
+│ 🌾 15 Acres - Black Soil        │
+│ 📍 Pune, Maharashtra (12 km)    │
+│ 💰 ₹5,000/acre/month            │
+│ 💧 Borewell + Drip Irrigation   │
+│ ⭐ 4.8★ (23 reviews)            │
+│ ✅ Organic Certified            │
+│ 📅 Available: Immediate         │
+│ [View Details] [Contact Owner]  │
+└─────────────────────────────────┘
+
+SMART RECOMMENDATIONS:
+💡 "Based on your profile (vegetable farmer),
+    we suggest plots with greenhouse potential"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Government Land Integration
+```
+🏛️ GOVERNMENT LAND PROGRAMS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROGRAM 1: PM-KISAN Land Bank
+• 50,000 acres available across India
+• Priority to youth farmers (18-35 years)
+• Subsidized rent: ₹1,000/acre/year
+• 5-year lease with renewal option
+• Training + seed support included
+
+[Check Eligibility] [Apply Now]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROGRAM 2: Wasteland Development
+• Barren/degraded land rehabilitation
+• 100% rent waiver for first 2 years
+• Soil improvement subsidy: ₹25,000/acre
+• Organic certification support
+
+[View Available Plots] [Application Guide]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Lease Management System
+```
+MY LEASED LAND DASHBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ACTIVE LEASE: Plot #LND-4567
+📍 15 acres, Pune, Maharashtra
+👤 Lessee: Rajesh Kumar
+📅 Start: Jan 1, 2025 | End: Dec 31, 2025
+💰 Rent: ₹75,000/year (₹6,250/month)
+
+PAYMENT STATUS:
+✅ Jan 2025 - Paid (₹6,250)
+✅ Feb 2025 - Paid (₹6,250)
+⏳ Mar 2025 - Due in 5 days
+
+ACTIVITY LOG:
+• Mar 10: Soil testing completed
+• Feb 25: Tomato planting started
+• Feb 10: Drip irrigation installed
+
+DOCUMENTS:
+📄 Lease Agreement (signed)
+📄 Insurance Policy (crop + liability)
+📄 Soil Health Report (Feb 2025)
+
+[💬 Message Lessee] [📞 Call] [📊 Reports]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 🥗 Dietary-Specific Food Categories
+
+### Complete Dietary Architecture
+```
+🍽️ DIETARY & LIFESTYLE FOODS
+├─ 🥑 KETO & LOW-CARB
+│  ├─ High-Fat Proteins (avocado, nuts, cheese)
+│  ├─ Keto Vegetables (spinach, broccoli, cauliflower)
+│  ├─ Keto Oils (MCT oil, coconut oil, ghee)
+│  ├─ Keto Snacks (pork rinds, cheese crisps)
+│  └─ Keto Sweeteners (stevia, erythritol, monk fruit)
+│
+├─ 💪 GYM & BODYBUILDING
+│  ├─ High-Protein Foods (chicken breast, eggs, fish)
+│  ├─ Lean Meats (turkey, lean beef, bison)
+│  ├─ Protein-Rich Vegetables (broccoli, peas, edamame)
+│  ├─ Complex Carbs (brown rice, oats, quinoa, sweet potato)
+│  ├─ Supplements Zone
+│  │  ├─ Whey Protein (isolate, concentrate, hydrolyzed)
+│  │  ├─ Plant Protein (pea, rice, hemp, soy)
+│  │  ├─ Mass Gainers (high-calorie formulas)
+│  │  ├─ Pre-Workout (caffeine, creatine, beta-alanine)
+│  │  ├─ Post-Workout (BCAAs, glutamine, recovery)
+│  │  └─ Vitamins & Minerals (multivitamins, ZMA, omega-3)
+│  └─ Meal Prep Containers & Scales
+│
+├─ 🌱 VEGAN & PLANT-BASED
+│  ├─ Plant Proteins (tofu, tempeh, seitan, legumes)
+│  ├─ Plant Milks (almond, oat, soy, coconut)
+│  ├─ Vegan Cheese & Butter (cashew-based, coconut oil)
+│  ├─ Meat Alternatives (Beyond, Impossible, jackfruit)
+│  ├─ Nutritional Yeast & Supplements (B12, D3, iron)
+│  └─ Superfoods (chia, flax, spirulina, hemp seeds)
+│
+├─ 🚫 GLUTEN-FREE
+│  ├─ Gluten-Free Grains (rice, quinoa, millet, amaranth)
+│  ├─ Gluten-Free Flours (almond, coconut, chickpea)
+│  ├─ Gluten-Free Bread & Pasta (certified)
+│  ├─ Gluten-Free Snacks (rice cakes, corn chips)
+│  └─ Gluten-Free Baking Mixes
+│
+├─ 🥛 DAIRY-FREE & LACTOSE-FREE
+│  ├─ Non-Dairy Milks (all types)
+│  ├─ Dairy-Free Yogurt (coconut, almond, soy)
+│  ├─ Dairy-Free Ice Cream & Desserts
+│  ├─ Lactose-Free Dairy Products (A2 milk)
+│  └─ Calcium-Fortified Alternatives
+│
+├─ 🩺 DIABETIC-FRIENDLY
+│  ├─ Low-Glycemic Foods (steel-cut oats, legumes)
+│  ├─ Sugar-Free Products (stevia-sweetened)
+│  ├─ High-Fiber Foods (vegetables, whole grains)
+│  ├─ Portion-Controlled Meals
+│  └─ Diabetic Snacks (nuts, seeds, dark chocolate)
+│
+├─ ❤️ HEART-HEALTHY
+│  ├─ Omega-3 Rich (salmon, mackerel, walnuts, flax)
+│  ├─ Low-Sodium Products (salt alternatives)
+│  ├─ Whole Grains (steel-cut oats, barley, brown rice)
+│  ├─ Heart-Healthy Oils (olive oil, avocado oil)
+│  └─ Antioxidant-Rich Foods (berries, dark leafy greens)
+│
+├─ 🤰 PREGNANCY & LACTATION
+│  ├─ Folate-Rich Foods (spinach, lentils, fortified grains)
+│  ├─ Iron Sources (red meat, beans, fortified cereals)
+│  ├─ Calcium-Rich (dairy, leafy greens, fortified foods)
+│  ├─ DHA/Omega-3 (fatty fish, algae supplements)
+│  ├─ Lactation Boosters (fenugreek, oats, fennel)
+│  └─ Prenatal Vitamins & Supplements
+│
+├─ 👶 BABY & INFANT NUTRITION
+│  ├─ Baby Food (purées, mashed, finger foods by age)
+│  ├─ Formula Milk (stage 1/2/3)
+│  ├─ Teething Foods (rusks, biscuits)
+│  ├─ Organic Baby Foods
+│  └─ Baby Nutrition Supplements
+│
+├─ 👴 SENIOR NUTRITION
+│  ├─ Easy-to-Digest Foods (soups, porridge)
+│  ├─ High-Calcium (bone health)
+│  ├─ Fiber-Rich (digestive health)
+│  ├─ Vitamin D & B12 Supplements
+│  └─ Soft/Pureed Options (dental issues)
+│
+├─ 🏃 PALEO DIET
+│  ├─ Grass-Fed Meats
+│  ├─ Wild-Caught Fish
+│  ├─ Organic Eggs
+│  ├─ Nuts & Seeds (raw, unprocessed)
+│  └─ No Grains/Legumes/Dairy (alternatives)
+│
+├─ 🌍 MEDITERRANEAN DIET
+│  ├─ Olive Oil (extra virgin)
+│  ├─ Fresh Fish & Seafood
+│  ├─ Whole Grains (bulgur, farro)
+│  ├─ Legumes (chickpeas, lentils)
+│  ├─ Fresh Vegetables & Fruits
+│  └─ Nuts, Seeds, Herbs
+│
+├─ 🍚 WHOLE30 & CLEAN EATING
+│  ├─ Unprocessed Meats
+│  ├─ Vegetables & Fruits (organic)
+│  ├─ Healthy Fats (avocado, nuts, coconut)
+│  ├─ No Added Sugar/Grains/Dairy
+│  └─ Compliant Snacks & Condiments
+│
+└─ 🧘 AYURVEDIC & TRADITIONAL
+   ├─ Sattvic Foods (pure, balanced)
+   ├─ Dosha-Specific (vata, pitta, kapha)
+   ├─ Herbal Supplements (ashwagandha, triphala)
+   ├─ Traditional Grains (amaranth, foxtail millet)
+   └─ Digestive Aids (ginger, turmeric, cumin)
+```
+
+### Smart Dietary Filtering System
+```
+DIETARY PREFERENCES PROFILE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Select all that apply to you:
+
+🎯 PRIMARY DIET:
+☐ Keto/Low-Carb
+☐ High-Protein/Bodybuilding
+☐ Vegan
+☐ Vegetarian
+☐ Paleo
+☐ Mediterranean
+☐ Whole30
+☐ Standard/No Restriction
+
+🚫 ALLERGIES & RESTRICTIONS:
+☐ Gluten-Free
+☐ Dairy-Free
+☐ Nut Allergy
+☐ Soy-Free
+☐ Egg-Free
+☐ Shellfish Allergy
+
+🩺 HEALTH CONDITIONS:
+☐ Diabetes (low-glycemic)
+☐ Heart Disease (low-sodium)
+☐ High Cholesterol (low-fat)
+☐ IBS/Digestive Issues (FODMAP)
+☐ Pregnancy/Lactation
+
+💪 LIFESTYLE GOALS:
+☐ Weight Loss
+☐ Muscle Gain
+☐ Endurance Training
+☐ General Wellness
+☐ Disease Management
+
+[Save Preferences]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ONCE SAVED, ALL PRODUCTS ARE FILTERED:
+✅ Only compatible items shown
+✅ Nutrition labels auto-highlighted
+✅ Recipe suggestions matched to diet
+✅ Meal plans auto-generated
+```
+
+### Product Labeling System
+```
+PRODUCT CARD (Dietary Tags)
+┌─────────────────────────────────┐
+│ 📷 [Organic Chicken Breast]     │
+│                                 │
+│ 🏷️ DIETARY TAGS:                │
+│ ✅ High-Protein  ✅ Keto         │
+│ ✅ Paleo  ✅ Gluten-Free         │
+│ ❌ Not Vegan                     │
+│                                 │
+│ 📊 NUTRITION (per 100g):        │
+│ Protein: 31g | Fat: 3.6g        │
+│ Carbs: 0g | Calories: 165       │
+│                                 │
+│ ⚠️ ALLERGEN INFO:               │
+│ Contains: None                  │
+│ May contain: None               │
+│                                 │
+│ 👨‍🌾 Farm: Green Valley Poultry  │
+│ ⭐ 4.9★ (1,234 reviews)         │
+│ 📍 5 km away                    │
+│ 💰 ₹320/kg                      │
+│                                 │
+│ [🛒 Add to Cart] [❤️ Save]     │
+└─────────────────────────────────┘
+```
+
+---
+
+## 🌍 Worldwide Logistics Integration
+
+### Global Shipping Infrastructure
+```
+INTERNATIONAL DELIVERY ZONES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌏 ASIA-PACIFIC
+├─ Express (2-4 days): DHL, FedEx, UPS
+├─ Standard (5-10 days): Aramex, TNT
+├─ Economy (10-20 days): India Post, EMS
+└─ Freight (30-45 days): Sea cargo
+
+🌍 EUROPE & UK
+├─ Express (3-5 days): DHL Express, FedEx Int'l
+├─ Standard (7-14 days): UPS Standard, Royal Mail
+└─ Economy (15-30 days): Surface mail
+
+🌎 AMERICAS
+├─ North America (4-7 days): FedEx, UPS, USPS
+├─ South America (7-15 days): DHL, Aramex
+└─ Caribbean (10-20 days): Regional carriers
+
+🌍 AFRICA & MIDDLE EAST
+├─ Middle East (3-6 days): Aramex, DHL
+├─ Africa (7-20 days): DHL Africa, EMS
+└─ Special: Cold chain available (select cities)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### International Checkout Flow
+```
+INTERNATIONAL ORDER: UK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 ITEMS (2):
+• Organic Turmeric Powder (500g) - ₹450
+• Kerala Black Pepper (1kg) - ₹1,200
+
+💱 CURRENCY CONVERSION:
+₹1,650 = £16.50 (today's rate)
+
+🌍 SHIPPING OPTIONS:
+┌─────────────────────────────────┐
+│ ✈️ DHL EXPRESS (3-5 days)       │
+│ £12.99 | Track | Insured        │
+│ [Select]                        │
+├─────────────────────────────────┤
+│ 📦 STANDARD (7-10 days)         │
+│ £8.99 | Track | Insured         │
+│ [Select] ← RECOMMENDED          │
+├─────────────────────────────────┤
+│ 🚢 ECONOMY (15-25 days)         │
+│ £4.99 | Basic tracking          │
+│ [Select]                        │
+└─────────────────────────────────┘
+
+📋 CUSTOMS & DUTIES:
+• Import duty: £2.30 (estimated)
+• VAT (20%): £3.30
+• Total taxes: £5.60
+
+💡 TIP: Orders under £135 may qualify
+        for duty exemption
+
+🛡️ INSURANCE:
+☐ Add shipping insurance (+£1.50)
+   Covers loss/damage up to £100
+
+📄 REQUIRED DOCUMENTS:
+✅ Commercial Invoice (auto-generated)
+✅ Phytosanitary Certificate (for spices)
+✅ FSSAI/FDA Certification (included)
+
+ORDER TOTAL:
+Items: £16.50
+Shipping: £8.99
+Taxes: £5.60
+━━━━━━━━━━━
+TOTAL: £31.09
+
+[Proceed to Payment]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Customs Clearance Automation
+```
+AUTOMATED CUSTOMS PROCESS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ORDER #INT-45678 → UK
+
+STEP 1: Document Generation (Instant)
+✅ Commercial invoice
+✅ Packing list
+✅ Certificate of origin
+✅ Phytosanitary certificate
+✅ FSSAI export certificate
+
+STEP 2: HS Code Classification (AI)
+• Turmeric Powder: HS 0910.30
+• Black Pepper: HS 0904.11
+[Verified against WCO database]
+
+STEP 3: Duty Calculation (Auto)
+• UK import duty: 2.5% (spices)
+• VAT: 20%
+• Total: £5.60
+[Pre-paid by buyer at checkout]
+
+STEP 4: Filing (API Integration)
+✅ Filed with HMRC (UK Customs)
+✅ Filed with ICEGATE (India Export)
+✅ AES filing (if required)
+
+STEP 5: Tracking
+🔄 In customs clearance (UK)
+⏱️ ETA: 4-8 hours for clearance
+
+[View Full Details]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 🍲 Food Waste Prevention System ("Share & Care")
+
+### Category Name: **"SHARE & CARE - Community Food Rescue"**
+
+### Sub-Categories
+```
+🍲 SHARE & CARE MARKETPLACE
+├─ 🏪 RESTAURANT SURPLUS
+│  ├─ Prepared Meals (same-day, excess inventory)
+│  ├─ Buffet Leftovers (safe, packaged)
+│  ├─ Bakery Items (day-old bread, pastries)
+│  └─ Ingredient Surplus (bought too much)
+│
+├─ 🏠 HOME SURPLUS
+│  ├─ Cooked Food (events, parties)
+│  ├─ Fresh Produce (excess from garden)
+│  ├─ Packaged Foods (bought extra, near expiry)
+│  └─ Bulk Purchases (split with neighbors)
+│
+├─ 🏬 RETAIL SURPLUS
+│  ├─ Grocery Stores (near-expiry discounts)
+│  ├─ Supermarkets (cosmetic imperfections)
+│  ├─ Bakeries (end-of-day unsold)
+│  └─ Catering Companies (event cancellations)
+│
+├─ 🏭 PRODUCTION SURPLUS
+│  ├─ Food Manufacturers (overproduction)
+│  ├─ Agricultural Processors (grade-B items)
+│  ├─ Packaging Defects (product fine, box damaged)
+│  └─ Seasonal Overstock (festival items)
+│
+├─ 🎉 EVENT SURPLUS
+│  ├─ Weddings (unserved food)
+│  ├─ Corporate Events (catered leftovers)
+│  ├─ Community Gatherings (excess prepared)
+│  └─ Festival Celebrations (post-event food)
+│
+└─ 🆓 FREE FOOD LISTINGS
+   ├─ Pay-it-forward (free to those in need)
+   ├─ Community Fridges (drop-off locations)
+   ├─ Food Banks (donation listings)
+   └─ Charitable Organizations (direct connect)
+```
+
+### Listing Interface (Restaurant Example)
+```
+SHARE SURPLUS FOOD (Restaurant)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏪 RESTAURANT DETAILS:
+Restaurant Name: Taj Palace
+Location: Mumbai, Andheri West
+Phone: +91-98765-43210
+
+📦 FOOD DETAILS:
+Item Name: Vegetable Biryani
+Quantity: 15 portions (2kg each)
+Original Price: ₹350/portion
+Your Price: [₹100] or [FREE ☐]
+
+⏰ TIME SENSITIVE:
+Prepared at: 6:00 PM today
+Best consumed by: 10:00 PM today
+(Auto-expires listing after deadline)
+
+🍽️ FOOD SAFETY:
+☑️ Cooked in licensed kitchen
+☑️ Stored at safe temperature (60°C+)
+☑️ FSSAI certified restaurant
+☑️ Packaged in food-grade containers
+
+🏷️ DIETARY INFO:
+☑️ Vegetarian  ☐ Vegan  ☐ Gluten-Free
+Allergens: Contains nuts, dairy
+Spice Level: Medium
+
+📸 UPLOAD PHOTO:
+[Click to add image]
+
+🚚 PICKUP/DELIVERY:
+● Pickup only (from restaurant)
+☐ Delivery available (within 5km, ₹30)
+
+📝 SPECIAL NOTES:
+"Fresh made this evening. Perfect for
+dinner. Help us reduce waste!"
+
+🎯 WHO CAN CLAIM:
+● Anyone (first-come-first-served)
+☐ NGOs/Charities only
+☐ Verified low-income users
+
+[✅ List Now - Expires in 4 hours]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Discovery Interface (Buyer Side)
+```
+FIND SURPLUS FOOD NEAR YOU
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🗺️ MAP VIEW (Live Updates)
+[Pins show available food locations]
+🔴 Red = Expires <1 hour (urgent!)
+🟡 Yellow = Expires 1-3 hours
+🟢 Green = Expires 3+ hours
+
+🔍 FILTERS:
+├─ Distance: Within [5 km ▼]
+├─ Price: [FREE ☑️] [Discounted ☑️]
+├─ Food Type: [Meals ☑️] [Groceries ☑️]
+├─ Dietary: [Veg ☑️] [Vegan ☐] [Halal ☐]
+└─ Pickup Time: [Now ☑️] [Today ☑️]
+
+📋 AVAILABLE NOW (18 listings):
+┌─────────────────────────────────┐
+│ 🍲 Vegetable Biryani (15 portions)│
+│ 🏪 Taj Palace Restaurant        │
+│ 📍 1.2 km away                  │
+│ 💰 ₹100/portion (was ₹350) 70% off│
+│ ⏰ Pick up by 10 PM (2 hrs left)│
+│ ⭐ 4.9★ Restaurant | FSSAI ✅   │
+│ 🔴 URGENT - Limited time!       │
+│ [Reserve Now] [Directions]      │
+└─────────────────────────────────┘
+
+┌─────────────────────────────────┐
+│ 🍞 Assorted Breads & Pastries   │
+│ 🏪 Sunshine Bakery              │
+│ 📍 2.5 km away                  │
+│ 💰 FREE (10 bags available)     │
+│ ⏰ Pick up by 9 PM (1 hr left)  │
+│ ⭐ 4.7★ Bakery | Hygienic ✅    │
+│ 🆓 PAY-IT-FORWARD              │
+│ [Claim Now] [Directions]        │
+└─────────────────────────────────┘
+
+💡 IMPACT TRACKER:
+"You've rescued 12 meals this month!
+Saved: ₹4,200 | Prevented: 8kg waste"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Safety & Quality Assurance
+```
+FOOD SAFETY PROTOCOL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FOR RESTAURANTS/BUSINESSES:
+✅ FSSAI license verification (mandatory)
+✅ Kitchen hygiene rating visible
+✅ Food handler training certificates
+✅ Temperature logs (hot food >60°C, cold <5°C)
+✅ Packaging standards (food-grade containers)
+
+FOR HOME SHARERS:
+✅ Profile verification (ID + phone)
+✅ Food safety guidelines shown
+✅ "Cook & Share Responsibly" training module
+✅ Disclaimer acceptance required
+✅ Community ratings visible
+
+AUTOMATIC SAFEGUARDS:
+🚫 Auto-reject if >4 hours old (cooked food)
+🚫 Auto-reject if damaged packaging
+🚫 Flag user if 3+ complaints received
+✅ Mandatory photo upload (freshness check)
+✅ AI image analysis (detect spoilage)
+
+LIABILITY DISCLAIMER (Shown to both parties):
+"Receiver acknowledges food is surplus/
+near-expiry. AgriConnect facilitates connection
+only. Inspect before consuming. Follow food
+safety guidelines."
+
+[Accept & Continue]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### NGO & Charity Integration
+```
+CHARITABLE ORGANIZATION PORTAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏛️ Registered: Food Bank Mumbai
+📄 Registration: 80G certified
+
+ACTIVE CAMPAIGNS:
+┌─────────────────────────────────┐
+│ 🎯 DAILY MEAL PROGRAM           │
+│ Target: 500 meals/day           │
+│ Today: 320/500 (64%)            │
+│                                 │
+│ NEEDED NOW:                     │
+│ • Rice/grains: 50kg             │
+│ • Cooked meals: 180 portions    │
+│ • Fresh vegetables: 30kg        │
+│                                 │
+│ [View Matching Listings]        │
+└─────────────────────────────────┘
+
+DONATION ALERTS:
+🔔 12 new listings match your needs!
+• 5 restaurants (cooked meals)
+• 3 grocery stores (fresh produce)
+• 4 households (packaged food)
+
+[Review & Claim] [Schedule Pickup]
+
+IMPACT DASHBOARD:
+This Month:
+• Meals distributed: 12,450
+• Food rescued: 3,200 kg
+• People served: 4,150
+• Carbon saved: 9,600 kg CO2
+
+[Generate Report] [Share Impact]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Gamification & Community Engagement
+```
+SHARE & CARE LEADERBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏆 TOP FOOD RESCUERS (This Month)
+
+🥇 Taj Palace Restaurant
+   • 450 meals shared
+   • 280 kg waste prevented
+   • 840 kg CO2 saved
+   • Badge: WASTE WARRIOR GOLD
+
+🥈 Sunshine Bakery
+   • 320 items shared
+   • 150 kg waste prevented
+   • 450 kg CO2 saved
+   • Badge: COMMUNITY HERO
+
+🥉 Priya Sharma (Home Sharer)
+   • 85 meals shared
+   • 42 kg waste prevented
+   • 126 kg CO2 saved
+   • Badge: SHARING STAR
+
+YOUR RANK: #247
+Keep sharing to climb! 🌟
+
+REWARDS UNLOCKED:
+✅ 10 shares → Silver Badge
+✅ 25 shares → Gold Badge + ₹100 voucher
+✅ 50 shares → Platinum + Featured listing
+⏳ 100 shares → Waste Warrior + Free Premium
+
+[View Full Leaderboard]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### SDG Impact Tracking
+```
+SHARE & CARE SDG DASHBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PLATFORM IMPACT (YTD 2025)
+
+🎯 SDG 2: ZERO HUNGER
+├─ Meals rescued: 1.2 million
+├─ People fed: 450,000 individuals
+└─ Food insecurity reduced: 35% in pilot zones
+
+♻️ SDG 12: RESPONSIBLE CONSUMPTION
+├─ Food waste prevented: 3,200 tonnes
+├─ Surplus redirected: 89% success rate
+└─ Economic value saved: ₹64 crores
+
+🌍 SDG 13: CLIMATE ACTION
+├─ Carbon emissions avoided: 9,600 tonnes CO2
+├─ Methane prevented (landfill): 1,280 tonnes
+└─ Equivalent to planting: 480,000 trees
+
+💰 SDG 1: NO POVERTY
+├─ Low-income families supported: 125,000
+├─ Average savings per family: ₹2,400/month
+└─ Food budget relief: 40% reduction
+
+🤝 SDG 17: PARTNERSHIPS
+├─ Partner restaurants: 4,200
+├─ NGOs onboarded: 180
+├─ Community volunteers: 12,000
+
+[Download Full Report] [Share Impact Story]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 🎯 **UPDATED TECHNICAL IMPLEMENTATION**
+
+### Additional API Endpoints Needed
+```javascript
+// Land Leasing
+POST /api/land/list - List land for lease
+GET /api/land/search - Search available land
+POST /api/land/lease-request - Apply for lease
+GET /api/land/my-leases - Manage active leases
+
+// Dietary System
+GET /api/products/dietary/:diet - Filter by diet type
+POST /api/users/dietary-profile - Save user diet prefs
+GET /api/nutrition/:productId - Get nutrition info
+
+// Worldwide Logistics
+POST /api/shipping/international-quote - Get shipping rates
+POST /api/customs/calculate - Calculate duties/taxes
+GET /api/shipping/hs-code/:product - Get HS classification
+
+// Food Rescue
+POST /api/surplus/list - List surplus food
+GET /api/surplus/nearby - Find nearby surplus
+POST /api/surplus/claim - Claim surplus item
+GET /api/surplus/impact - User impact stats
+```
+
+### Updated Database Schema
+```javascript
+// Land Listings
+{
+  _id, ownerId, location: {lat, lng, polygon[]},
+  area: {value, unit}, soilType, irrigation,
+  infrastructure[], leaseTerms: {duration, rent, deposit},
+  documents[], status, createdAt
+}
+
+// Dietary Profiles
+{
+  userId, primaryDiet[], restrictions[], allergies[],
+  healthConditions[], lifestyleGoals[],
+  macroTargets: {protein, carbs, fat, calories}
+}
+
+// Surplus Food
+{
+  _id, donorId, donorType: ['restaurant'|'home'|'retail'],
+  foodItem, quantity, preparedAt, expiresAt,
+  price, isFree, location, dietary[], allergens[],
+  safetyInfo, status, claimedBy, createdAt
+}
+```
+
+---
+
+## 🚀 **LAUNCH PRIORITY (Updated)**
+
+### Phase 1: Core + Logistics (Weeks 1-6)
+- ✅ All MVP features from original prompt
+- ✅ 3PL integration (start with 2-3 partners)
+- ✅ Basic milk run algorithm
+- ✅ International shipping (manual process initially)
+
+### Phase 2: Expansion Features (Weeks 7-12)
+- ✅ Land leasing marketplace
+- ✅ Dietary filtering system
+- ✅ Nutrition database integration
+- ✅ Share & Care food rescue module
+
+### Phase 3: Optimization (Weeks 13-16)
+- ✅ AI-powered milk run optimization
+- ✅ Automated customs clearance
+- ✅ Advanced dietary recommendations
+- ✅ Food rescue gamification
+
+---
+
+## 📊 **PROJECTED IMPACT (with new features)**
+
+### Economic Impact
+- **GMV increase:** +40% from international sales
+- **Land leasing revenue:** ₹15M-₹30M annually
+- **Dietary marketplace premium:** 25% higher AOV
+- **Food rescue:** ₹50M+ food value redirected
+
+### Social Impact
+- **Unused land activated:** 50,000+ acres
+- **Youth farming jobs:** 15,000+ new farmers
+- **Food waste reduced:** 80% in participating areas
+- **Hunger alleviation:** 500,000+ people fed monthly
+
+### Environmental Impact
+- **Carbon reduction:** 150,000 tonnes CO2/year
+- **Food waste to landfill:** -75%
+- **Packaging waste:** -40% (reusable containers)
+- **Biodiversity:** Restored via regenerative farming on leased land
+
+---
+
+**🎯 THIS IS NOW A COMPLETE $10M+ PLATFORM VISION!**
+
+Build this step-by-step, and you'll create the world's most comprehensive agricultural + food system transformation platform. 🌾🚀🌍

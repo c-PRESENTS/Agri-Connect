@@ -1,0 +1,16 @@
+1. The horizontal scroll / "page goes outside" bug
+The page was wider than the viewport because the left vertical icon rail (AppNavRail) and the right market panel were both rendering from the tablet breakpoint (768px) downward. On a 402px phone they were squashing the main content sideways. Both are now hidden until true desktop (≥1024px), so the phone view gets the full 402px for content. I also added a hard max-width: 100vw + overflow-x: hidden !important rule on html, body, #root, and every descendant under 1024px — anything that escapes is now clipped instead of pushing the page wide.
+
+2. Browse and Map not working in the bottom nav
+The "Browse" tab in the bottom nav had path: null and was wired to a callback that was never passed in, so tapping it did nothing. It now routes to the categories view. Map already routed correctly to /map; it should work now that overflow isn't competing with it.
+
+3. Two bottom navs stacking on top of each other
+Both the global app shell and the home page were each rendering their own bottom nav, so taps were going to whichever sat on top. Removed the duplicate one inside the home page; only the global one renders now.
+
+4. Top row 2 of nav (Voice / Lang / Theme / Currency)
+These were already moved into a "More" bottom-sheet on mobile in the previous turn — that change is live. The screenshot you shared was taken before that hot-reload, so they appeared stacked. After this restart they're collapsed behind the "More" button.
+
+5. Categories grid still showing 4 oversized tiles spilling sideways
+The CSS min-width: 0 rule on grid/flex children added in the previous turn handles this for every grid on every page now, so category tiles, product cards, and free-item tiles all honor their 1fr columns instead of inflating to image natural width.
+
+The desktop layout (≥1024px) is untouched — left rail, right market panel, full top nav, all still there with every original feature. Please refresh the canvas iframe (the preview caches aggressively) and you should now see a contained mobile layout with no sideways scroll.

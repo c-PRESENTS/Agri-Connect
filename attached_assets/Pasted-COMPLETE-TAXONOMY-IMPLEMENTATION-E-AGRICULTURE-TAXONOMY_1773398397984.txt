@@ -1,0 +1,124 @@
+COMPLETE TAXONOMY IMPLEMENTATION
+E. AGRICULTURE TAXONOMY - VERIFICATION & ALIGNMENT
+•	✅ E.1 All agriculture taxonomy categories included
+•	⚠️ E.2 Manual recheck needed: Verify all categories correctly aligned
+•	⚠️ E.3 Ensure proper hierarchy and nesting of subcategories
+MAIN CATEGORIES shoppableheck Required):
+✅ E.4 DAILY NEEDS MARKET
+•	✅ E.4.1 Food Grains & Cereals (Rice, Wheat, Millets visible)
+•	⚠️ E.4.2 Pulses & Lentils (verify all varieties)
+•	⚠️ E.4.3 Cooking Oils (verify all types)
+•	⚠️ E.4.4 Vegetables (verify all 47+ varieties)
+•	⚠️ E.4.5 Fruits (verify all 50+ varieties)
+•	⚠️ E.4.6 Dairy & Eggs
+•	⚠️ E.4.7 Meat & Poultry
+•	⚠️ E.4.8 Fish & Seafood
+•	⚠️ E.4.9 Spices & Condiments
+•	⚠️ E.4.10 Ready-to-Eat & Packaged Foods
+•	⚠️ E.4.11 Bakery & Breads
+✅ E.5 FRESH FARM PRODUCE (Wholesale)
+•	⚠️ E.5.1 Vegetables (Wholesale)
+•	⚠️ E.5.2 Fruits (Wholesale)
+•	⚠️ E.5.3 Flowers & Decoratives
+✅ E.6 LIVESTOCK & ANIMALS
+•	⚠️ E.6.1 Dairy Animals
+•	⚠️ E.6.2 Meat Animals
+•	⚠️ E.6.3 Poultry Birds
+•	⚠️ E.6.4 Fish & Aquaculture Stock
+✅ E.7 AGRICULTURAL INPUTS & TOOLS
+•	⚠️ E.7.1 Seeds & Planting Material
+•	⚠️ E.7.2 Fertilizers
+•	⚠️ E.7.3 Pesticides & Protection
+•	⚠️ E.7.4 Farming Tools & Equipment
+•	⚠️ E.7.5 Farm Machinery
+•	⚠️ E.7.6 Irrigation Equipment
+•	⚠️ E.7.7 Protective Gear
+•	⚠️ E.7.8 Animal Husbandry Equipment
+•	❌ E.7.9 Complete Tools Page: All agricultural sensors and equipment
+•	❌ E.7.10 GIS systems integration
+•	❌ E.7.11 Remote sensing technology showcase
+•	❌ E.7.12 Precision farming tools catalog
+✅ E.8 PROCESSED & VALUE-ADDED PRODUCTS
+•	⚠️ E.8.1 Spices & Powders
+•	⚠️ E.8.2 Pickles & Preserves
+•	⚠️ E.8.3 Health & Organic Foods
+•	⚠️ E.8.4 Beverages
+•	⚠️ E.8.5 Snacks & Ready Foods
+✅ E.9 SPECIALTY & PREMIUM PRODUCTS
+•	⚠️ E.9.1 Move under Daily Needs subcategories (restructuring needed)
+•	⚠️ E.9.2 Organic Products
+•	⚠️ E.9.3 Medicinal Plants & Herbs
+•	⚠️ E.9.4 Aromatic Plants
+•	⚠️ E.9.5 Mushrooms
+•	⚠️ E.9.6 Honey & Bee Products
+•	⚠️ E.9.7 Premium Crops
+✅ E.10 OTHER AGRICULTURAL PRODUCTS
+•	⚠️ E.10.1 Plantation Crops
+•	⚠️ E.10.2 Fibre Crops
+•	⚠️ E.10.3 Timber & Bamboo
+•	⚠️ E.10.4 Animal Feed
+•	⚠️ E.10.5 Agri-Waste & By-Products
+✅ E.11 SERVICES
+•	⚠️ E.11.1 Farming Services
+•	⚠️ E.11.2 Irrigation Services
+•	⚠️ E.11.3 Transport Services
+•	⚠️ E.11.4 Processing Services
+•	⚠️ E.11.5 Advisory Services
+✅ E.12 GOVERNMENT SCHEMES & SUBSIDIES
+•	⚠️ E.12.1 Input Subsidies
+•	⚠️ E.12.2 Insurance Schemes
+•	⚠️ E.12.3 Training Programs
+•	⚠️ E.12.4 Financial Schemes
+•	❌ E.12.5 Government Integration Module: Digital bridge to public institutions
+•	❌ E.12.6 Centralized subsidy repository with digital forms
+•	❌ E.12.7 API for government data sharing
+✅ E.13 MODERN FARMING
+•	⚠️ E.13.1 Hydroponics
+•	⚠️ E.13.2 Aeroponics
+•	⚠️ E.13.3 Vertical Farming
+•	⚠️ E.13.4 Greenhouse/Polyhouse
+•	⚠️ E.13.5 Precision Farming Tools
+✅ E.14 COMMERCIAL & INDUSTRIAL CROPS
+•	⚠️ E.14.1 Sugar Crops
+•	⚠️ E.14.2 Beverage Crops
+•	⚠️ E.14.3 Latex & Resin Crops
+•	⚠️ E.14.4 Other Commercial Crops
+✅ E.15 BIO-BASED PRODUCTS
+•	⚠️ E.15.1 Bioenergy
+•	⚠️ E.15.2 Biofertilizers & Biopesticides
+•	⚠️ E.15.3 Herbal & Pharma Products
+✅ E.16 COMPLETE DAILY NEEDS SUPERMARKET (Z Category)
+•	⚠️ E.16.1 Personal Care & Hygiene
+•	⚠️ E.16.2 Home & Kitchen
+•	⚠️ E.16.3 Household Items
+•	⚠️ E.16.4 Clothing & Accessories
+•	⚠️ E.16.5 Health & Wellness
+•	⚠️ E.16.6 Stationery & Office
+•	⚠️ E.16.7 Pet Care
+•	⚠️ E.16.8 Automotive
+•	⚠️ E.16.9 Baby & Kids
+•	⚠️ E.16.10 Sports & Outdoors
+•	⚠️ E.16.11 Books & Media
+•	⚠️ E.16.12 Gardening
+•	⚠️ E.16.13 Travel
+•	⚠️ E.16.14 Religious & Cultural
+•	⚠️ E.16.15 Party & Celebration
+•	⚠️ E.16.16 Miscellaneous
+•	❌ E.16.17 Tech Accessories: Electronics, gadgets, mobile accessories
+•	❌ E.16.18 Allied Products: Non-agricultural essentials
+✅ E.17 DIETARY & LIFESTYLE
+•	⚠️ E.17.1 Diet chart tables visible
+•	❌ E.17.2 Diet Chart Module: Two separate tables 
+o	Diet procedures with guidance
+o	Direct buy options for recommended products
+•	❌ E.17.3 Health Integration: Nutritional guidance linked to products
+•	❌ E.17.4 Meal planning with farmer-direct ingredients
+•	❌ E.17.5 Dietary restrictions filter (vegan, gluten-free, organic)
+✅ E.18 LAND LEASING OPTIONS
+•	⚠️ E.18.1 Land category visible
+•	❌ E.18.2 Agricultural Land Sale: Add under Lease page
+•	❌ E.18.3 Land rental marketplace
+•	❌ E.18.4 Farmland investment opportunities
+•	❌ E.18.5 Community farming plots
+•	❌ E.18.6 Map layer integration for land survey data
+All taxonomy data and detailed category structures should be visible only on the seller side for listing and management, while buyers should see only the currently available products and basic categories on the storefront, similar to how Amazon shows only shoppable items to customers.

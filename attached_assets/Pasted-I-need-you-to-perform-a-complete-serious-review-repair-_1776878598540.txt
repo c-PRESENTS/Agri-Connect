@@ -1,0 +1,127 @@
+I need you to perform a complete serious review, repair, restructuring, testing, and launch preparation of my existing website so it becomes fully working and ready for public use.
+
+This is not a simple redesign. This is a full audit and stabilisation project for my existing app. I want you to act like a senior full-stack engineer responsible for making the website reliable, secure, responsive, and publish-ready.
+
+Main goal:
+Take my current app and make sure all important pages, user flows, backend logic, data handling, and core features work correctly from login page to customer support, so the platform is ready for public launch.
+
+Very important rules:
+- Audit the current codebase first before making major changes
+- Reuse working code where sensible
+- Refactor or replace broken, duplicated, or badly connected code
+- Do not stop at partial UI fixes
+- Make sure frontend, backend, database flow, and user actions all work correctly
+- Prefer low-cost, Replit-friendly solutions
+- Use built-in Replit support where possible
+- Keep the code organised, maintainable, and easy for me to continue later
+- Fix critical flows first, then secondary features, then final polish
+- Ensure the whole app works on both mobile and desktop
+
+Use these technical requirements:
+- Use Replit Auth for authentication if auth is missing, broken, or incomplete
+- Use Replit Secrets for all sensitive keys and environment variables
+- Keep secrets out of the frontend and codebase
+- Validate sensitive actions on the backend
+- Add proper loading states, empty states, and user-friendly error handling
+- Ensure all protected routes are properly secured
+- Ensure each user can only access their own data
+- Remove duplicate or unused code causing issues
+- Fix console errors, broken handlers, failed requests, and routing problems
+
+I need these areas reviewed and fixed completely:
+1. Home page and navigation
+2. Login page
+3. Signup, logout, session handling, and protected routes
+4. User profile page
+5. Search bar and search results
+6. Product or listing pages
+7. Cart page
+8. Checkout readiness
+9. Order flow
+10. Payment status handling
+11. Customer support or contact flow
+12. FAQ and help pages
+13. About page content structure
+14. Admin-ready data handling
+15. Mobile responsiveness
+16. Desktop responsiveness
+17. Error states, empty states, and loading states
+18. Database structure and data consistency
+19. API routes and backend logic
+20. Security of auth, keys, and user data
+
+I need the app reviewed and fixed for these public-ready flows:
+- Visitor can open the site and browse without broken pages
+- User can sign up or log in successfully
+- User can edit their profile and save changes
+- User can search content or products and get useful results
+- User can open product or listing pages
+- User can add items to cart and update quantity
+- User can begin checkout correctly
+- Orders are created properly
+- Payment status can be tracked correctly
+- User can contact support or submit help requests
+- Main site pages load correctly on mobile and desktop
+
+I want the work done in this order:
+
+Phase 1: Full audit
+- Inspect the entire codebase
+- Identify what is already working
+- Identify what is broken
+- Identify what is duplicated
+- Identify what is missing
+- Identify what should be refactored
+- Rank issues as critical, important, and later
+
+Phase 2: Foundation fixes
+- Fix routing
+- Fix navigation
+- Fix app structure
+- Fix auth and protected routes
+- Fix backend validation
+- Fix database wiring
+- Fix shared state and data flow
+
+Phase 3: Core user journey fixes
+- Fix login and signup
+- Fix profile page
+- Fix search
+- Fix product or listing pages
+- Fix cart
+- Fix checkout readiness
+- Ensure these flows work fully
+
+Phase 4: Platform feature completion
+- Fix payment integration structure in test mode
+- Fix order creation and payment status flow
+- Fix support and FAQ
+- Fix about page structure
+- Fix customer data and support handling
+
+Phase 5: Public readiness
+- Fix responsive issues
+- Fix console errors
+- Fix empty states and error states
+- Improve user feedback and validation
+- Clean duplicated code
+- Make the app stable for public publishing
+
+When you begin:
+1. Audit the existing project first
+2. Show me a clear summary of working parts
+3. Show me a clear summary of broken parts
+4. Show me the priority fix list
+5. Then start by fixing the critical issues only
+
+Important:
+- Do not skip the audit
+- Do not pretend a feature works if backend or data flow is incomplete
+- Do not add unnecessary paid services
+- Prefer Replit-native and low-cost solutions
+- Make the final app genuinely usable and public-ready
+
+At the end of the work:
+- Give me a checklist of what is fully working
+- List any manual setup steps I still need to do
+- List any remaining optional improvements for later

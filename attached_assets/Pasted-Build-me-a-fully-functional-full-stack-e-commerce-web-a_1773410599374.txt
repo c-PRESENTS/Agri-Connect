@@ -1,0 +1,271 @@
+Build me a fully functional full-stack e-commerce web application similar to Amazon. 
+Everything must actually work end-to-end — from user registration all the way to 
+order delivery tracking. Use React (frontend), Node.js + Express (backend), 
+PostgreSQL or MongoDB (database), and JWT for authentication.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TECH STACK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Frontend: React + Tailwind CSS
+- Backend: Node.js + Express.js
+- Database: MongoDB (with Mongoose) OR PostgreSQL (with Prisma)
+- Auth: JWT (JSON Web Tokens) + bcrypt for password hashing
+- Payments: Stripe (test mode) for checkout
+- File uploads: Multer (for product images)
+- State management: React Context API or Redux
+- Notifications: React-Toastify
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+USER ROLES — TWO TYPES OF ACCOUNTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BUYER account:
+- Register with: name, email, password, phone, delivery address
+- Can browse all products
+- Can search and filter products
+- Can add products to cart
+- Can place and track orders
+- Can leave reviews and star ratings on purchased products
+- Has a personal dashboard showing order history
+
+SELLER account:
+- Register with: name, business name, email, password, phone
+- Can list products with: title, description, price, category, 
+  stock quantity, images
+- Can edit and delete their own products
+- Has a seller dashboard showing: their listings, incoming orders, 
+  revenue summary
+- Can update order status (Processing → Shipped → Out for Delivery → Delivered)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPLETE USER FLOW — EVERY STEP MUST WORK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1 — REGISTER / LOGIN
+- Landing page with "Sign In" and "Create Account" buttons
+- Registration form: choose role (Buyer or Seller), fill details, submit
+- Login form: email + password, returns JWT token stored in localStorage
+- Protected routes: redirect to login if not authenticated
+- Logout button clears token and redirects to home
+
+STEP 2 — HOMEPAGE (after login)
+- Sticky top navigation bar with: logo, search bar, cart icon 
+  (with item count badge), user menu, currency selector (£ GBP)
+- Left sidebar with product categories
+- Hero banner / featured products section
+- Product grid showing all listings with: image, name, price, 
+  star rating, seller name, "Add to Cart" button
+- Search bar filters products in real-time by name or category
+- Filter sidebar: by category, price range, rating, availability
+
+STEP 3 — PRODUCT PAGE
+- Full product detail page at route /product/:id
+- Product image gallery (multiple images)
+- Title, description, price, stock status
+- Seller info
+- Star ratings and written reviews from buyers
+- Quantity selector
+- "Add to Cart" button
+- "Buy Now" button (skips to checkout)
+- Related products section at bottom
+
+STEP 4 — SHOPPING CART
+- Cart page at /cart showing all added items
+- Each item shows: image, name, seller, price, quantity adjuster 
+  (+ and - buttons), remove button
+- Cart automatically recalculates: subtotal, estimated tax (20% VAT), 
+  delivery fee, grand total
+- "Continue Shopping" and "Proceed to Checkout" buttons
+- Cart state persists across page refreshes (saved to localStorage 
+  and synced to database for logged-in users)
+
+STEP 5 — CHECKOUT
+- Multi-step checkout page:
+  Step A: Delivery address (pre-filled from profile, editable)
+  Step B: Delivery method (Standard 3-5 days free, Express 1-2 days £5.99)
+  Step C: Payment via Stripe (card number, expiry, CVV — test mode)
+  Step D: Order review — show full summary before confirming
+- "Place Order" button submits everything
+- On success: show Order Confirmation page with unique order number
+- Send confirmation email (use Nodemailer or log to console in dev)
+
+STEP 6 — ORDER TRACKING (BUYER)
+- Buyer dashboard at /buyer/orders showing all past orders
+- Each order card shows: order number, date, items, total, current status
+- Click any order to see full detail page at /order/:id
+- Visual progress tracker showing these stages in sequence:
+  ✅ Order Placed → ✅ Payment Confirmed → 📦 Processing → 
+  🚚 Shipped → 🏠 Out for Delivery → ✅ Delivered
+- Each stage shows timestamp when it was reached
+- Cancel order button (only available while status is "Order Placed")
+
+STEP 7 — SELLER ORDER MANAGEMENT
+- Seller dashboard at /seller/dashboard
+- Overview cards: total revenue, active listings, pending orders, 
+  total orders fulfilled
+- Orders table showing all orders containing their products
+- Seller can click an order and update the status:
+  Processing → Shipped → Out for Delivery → Delivered
+- Status update saves to database and instantly reflects on buyer's 
+  tracking page
+- Product management: add new listing, edit existing, delete listing, 
+  view stock levels
+
+STEP 8 — REVIEW SYSTEM
+- After order status reaches "Delivered", buyer sees "Leave a Review" 
+  button on their order page
+- Review form: 1-5 star rating + written comment
+- Reviews display on product page with reviewer name and date
+- Average rating recalculates automatically when new review is added
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATABASE MODELS / SCHEMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+User: id, name, email, passwordHash, role (buyer/seller), phone, 
+      address, businessName (sellers only), createdAt
+
+Product: id, sellerId, title, description, price, category, 
+         images[], stockQty, averageRating, reviewCount, createdAt
+
+Cart: id, buyerId, items[{productId, quantity, price}], updatedAt
+
+Order: id, buyerId, items[{productId, sellerId, qty, price}], 
+       deliveryAddress, deliveryMethod, paymentStatus, orderStatus, 
+       statusHistory[{status, timestamp}], totalAmount, createdAt
+
+Review: id, productId, buyerId, orderId, rating (1-5), comment, createdAt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+API ROUTES (all prefixed with /api)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Auth:
+  POST /api/auth/register
+  POST /api/auth/login
+  GET  /api/auth/me (protected)
+
+Products:
+  GET    /api/products (with search & filter query params)
+  GET    /api/products/:id
+  POST   /api/products (seller only)
+  PUT    /api/products/:id (seller only, own products)
+  DELETE /api/products/:id (seller only, own products)
+
+Cart:
+  GET    /api/cart (buyer only)
+  POST   /api/cart/add
+  PUT    /api/cart/update
+  DELETE /api/cart/remove/:productId
+  DELETE /api/cart/clear
+
+Orders:
+  POST /api/orders/create (buyer — triggers Stripe payment)
+  GET  /api/orders/my-orders (buyer — their orders)
+  GET  /api/orders/:id (buyer or relevant seller)
+  PUT  /api/orders/:id/status (seller only — update status)
+  PUT  /api/orders/:id/cancel (buyer only — if still "Order Placed")
+
+Reviews:
+  POST /api/reviews (buyer only, must have delivered order)
+  GET  /api/reviews/product/:productId
+
+Seller:
+  GET /api/seller/dashboard (revenue, stats)
+  GET /api/seller/orders (all orders with their products)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND PAGES & ROUTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/ → Homepage (product grid, search, filters)
+/login → Login page
+/register → Registration page (choose Buyer or Seller)
+/product/:id → Product detail page
+/cart → Shopping cart
+/checkout → Multi-step checkout
+/order-confirmation/:id → Post-purchase confirmation
+/buyer/orders → Buyer order history dashboard
+/order/:id → Order detail + live tracking progress bar
+/seller/dashboard → Seller analytics + overview
+/seller/products → Manage product listings
+/seller/products/new → Add new product form
+/seller/products/edit/:id → Edit product form
+/seller/orders → All incoming orders with status controls
+/profile → Edit account details and address
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+UI & DESIGN REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Sticky top navigation that stays visible while scrolling
+- Mobile responsive layout that works on all screen sizes
+- Light and dark mode toggle (save preference to localStorage)
+- Loading spinners on all async operations
+- Toast notifications for: add to cart, order placed, errors, 
+  login success, status updates
+- Empty state illustrations when cart is empty or no orders yet
+- Form validation with clear error messages on all forms
+- Confirmation modals before delete or cancel actions
+- Star rating component (interactive for reviews, display-only elsewhere)
+- Order status progress bar with icons for each stage
+- Product image lazy loading
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SEED DATA (include this so it works immediately)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Create a database seed script that adds:
+- 2 seller accounts (email: seller1@test.com / seller2@test.com, 
+  password: Test1234!)
+- 2 buyer accounts (email: buyer1@test.com / buyer2@test.com, 
+  password: Test1234!)
+- 20 sample products across at least 5 categories 
+  (Electronics, Clothing, Home, Books, Garden)
+- Each product has realistic title, price, description, stock qty
+- Use placeholder images from https://picsum.photos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ENVIRONMENT VARIABLES NEEDED (.env file)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MONGODB_URI=your_mongo_connection_string
+JWT_SECRET=your_jwt_secret_key
+STRIPE_SECRET_KEY=sk_test_your_stripe_key
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key
+PORT=5000
+CLIENT_URL=http://localhost:3000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FOLDER STRUCTURE TO CREATE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/client          → React frontend
+  /src
+    /components  → Reusable UI components
+    /pages       → One file per route/page
+    /context     → Auth context, Cart context
+    /hooks       → Custom hooks
+    /utils       → Helper functions
+/server          → Express backend
+  /models        → Database schemas
+  /routes        → API route files
+  /middleware    → Auth middleware, error handler
+  /controllers   → Business logic
+  /seed          → Seed script
+.env
+README.md        → How to run the project
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT RULES FOR REPLIT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Both frontend and backend must run together using concurrently 
+  from a single "npm start" command in the root package.json
+- Configure CORS so the React frontend can talk to the Express API
+- All protected routes must return 401 if JWT token is missing 
+  or expired
+- Never expose passwords or JWT secrets in API responses
+- Handle all async errors with try/catch and return proper 
+  HTTP status codes
+- Build the entire app in one session — do not leave placeholder 
+  functions or TODO comments. Every button must do something real.
+
+Start by building the backend models and API first, then the 
+frontend, then connect them. After building, run the seed script 
+automatically so the app has data ready to use.

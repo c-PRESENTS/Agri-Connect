@@ -1,0 +1,249 @@
+Fix and build a complete, fully responsive mobile view for my AgriConnect 
+web application. The desktop version already exists. I need the mobile 
+experience to match the mobile screenshot I have — dark green theme, 
+bottom navigation bar, clean card layouts, and all features accessible 
+on small screens.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REFERENCE — WHAT THE APP LOOKS LIKE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- App name: AgriConnect / Agriconnect
+- Colour scheme: Dark green background (#0a1f0e), bright green 
+  accents (#22c55e), white text, dark cards
+- Logo: Green leaf icon
+- Top nav items: HELP, AGRITECH, SMART MAP, LAND, SHARE, SHIP
+- Currency: GB £
+- The app is a farm-to-table agricultural marketplace
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BREAKPOINTS TO TARGET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Mobile:  max-width 767px  (phones — primary focus)
+- Tablet:  768px to 1023px  (iPads, small laptops)
+- Desktop: 1024px and above (existing layout, keep as is)
+
+Add this to every HTML file if missing:
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 1 — TOP NAVIGATION BAR (mobile)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+On mobile screens (max-width 767px):
+
+- Hide the full horizontal desktop nav completely
+- Show a slim top bar with only:
+    Left:   Hamburger menu icon (≡) 
+    Left:   Back (<) and Forward (>) arrows
+    Center: Green leaf logo icon (circular, ~40px)
+    Right:  Search bar (compact, takes remaining space)
+    Right:  Cart icon with item count badge
+    Right:  User profile icon (green circle)
+
+- Below the top bar, show a second row with:
+    Left:  Microphone icon (voice search)
+    Left:  Globe icon + GB flag + £ currency dropdown
+    Right: HELP | AGRITECH | SMART MAP (text links, small font)
+
+- Make the entire top section sticky (position: fixed, top: 0)
+- Background: dark green (#0d2614) with slight blur backdrop
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 2 — BOTTOM NAVIGATION BAR (mobile only)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+On mobile, add a fixed bottom navigation bar with 5 tabs:
+
+  🏠 Home     ⊞ Categories     🗺 Map     🛒 Cart     👤 Profile
+
+- Position: fixed, bottom: 0, full width
+- Background: dark (#111), border-top: 1px solid #1a3320
+- Each tab: icon on top, label below in small text (11px)
+- Active tab: bright green icon + green label
+- Cart icon shows red badge with item count
+- Height: 64px total
+- This bar must NOT appear on desktop (hide above 768px)
+- Add padding-bottom: 70px to the main content so it doesn't 
+  hide behind the bottom bar
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3 — HERO BANNER (mobile)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Stack layout: text block on top, map/image below
+- "FARM TO TABLE" pill badge + "77 live" green dot badge 
+  side by side
+- Heading: "FRESH PRODUCE," in white, "DIRECT TO YOU" 
+  in bright green — large bold font (28px), stack on 2 lines
+- Subtext below heading (smaller, muted white, 13px)
+- Stats row: show "10+ FARMERS" pill stretched full width
+- Two buttons side by side: 
+    [Shop Now →]  full green button
+    [⚡ Live Map] outline button
+  Both buttons full width of their column, height 48px, 
+  border-radius 10px
+- Trust badges row below buttons: 
+  "✓ Verified Farms  🚜 Farm-to-Door  🌿 100% Natural  🌍 75+ Regions"
+  Wrap onto 2 lines if needed, font 12px
+- Map section: on mobile, show the map as a separate 
+  scrollable section below the hero, not side by side
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4 — QUICK ACCESS GRID (mobile)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Section title "QUICK ACCESS" left-aligned, uppercase, 
+  letter-spacing, muted green text
+- On mobile: show as a vertical list of full-width rows
+  Each row: dark card background, icon on left (gold/colored), 
+  label text, right arrow chevron
+  Items: Seller Hub, Processed, Govt Schemes, Share & Care, 
+  Daily Needs, Smart Map, Help Point, Inputs & Tools, Specialty, 
+  Other Agri, Supermarket, Farm Services, Dietary, Land Leasing,
+  Logistics, Commercial, Bio Products, AgriTech
+- Show first 4 items, rest hidden behind "Show More" toggle
+- Each row height: 56px, padding: 16px, border-bottom: 1px 
+  solid rgba(255,255,255,0.07)
+- Add "✏ Edit shortcuts" button top-right of section
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 5 — MY SITES (mobile)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Section title "MY SITES" left-aligned
+- Horizontal scroll row of icon tiles:
+  GOV.UK | TNAU Agri... | BBC Food | Weather | + Add site
+- Each tile: 72px wide x 80px tall, rounded corners (12px),
+  dark card bg, icon (48px) on top, label below (10px text)
+- "+ Add site" tile: dashed border, plus icon, same size
+- Horizontal scroll: overflow-x: auto, hide scrollbar, 
+  snap scrolling
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 6 — STATS TICKER ROW (mobile)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Show 4 stat cards in a horizontal scroll row:
+  👥 FARMERS 2,500+  (light teal card)
+  ⭐ RATING 4.9       (light yellow card)
+  📈 PRODUCTS 324+   (light blue card)
+  ⚡ ORDERS TODAY 1,441 (light purple card)
+
+- Each card: ~140px wide, rounded (12px), pastel background
+- Label in grey uppercase small text, value in bold colored text
+- Horizontal scroll row, no scrollbar visible
+- On desktop these show as full-width banner tiles instead
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 7 — FRESH PICKS PRODUCT CARDS (mobile)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Section header: green dot + "FRESH PICKS" bold + 
+  item count badge + "View All →" link on right
+- Horizontal scroll row of product cards
+- Each product card (mobile):
+    Width: 140px, border-radius: 12px, dark card bg
+    Top: product image (square, full width of card, 
+         border-radius top only)
+    Price badge: top-right corner, green pill "£1/kg"
+    Organic badge: top-left corner if applicable
+    Product name: bold white, 13px, truncate with ellipsis
+    Seller name: muted green, 11px
+    Star rating: small yellow stars + number
+    "Add to Cart" button: full width, green, 32px height
+- Horizontal scroll: snap to card, hide scrollbar
+- Cards should NOT wrap to multiple rows on mobile — 
+  always horizontal scroll
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 8 — LEFT SIDEBAR (mobile behaviour)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The desktop has a left sidebar with category icons.
+On mobile:
+- Hide the left sidebar completely (display: none)
+- The sidebar opens as a full-screen slide-in drawer 
+  when the hamburger menu (≡) is tapped
+- Drawer slides in from the LEFT
+- Drawer width: 85vw, max 320px
+- Dark background (#0d1f10), full height
+- Shows all category icons with labels in a vertical list
+- Close button (✕) in top-right of drawer
+- Overlay/scrim behind drawer: semi-transparent dark
+- Tapping the scrim closes the drawer
+- Smooth slide animation: transform translateX(-100%) 
+  to translateX(0), transition 0.3s ease
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 9 — SEARCH (mobile)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Search bar in top nav: tapping it expands to full-width 
+  overlay search on mobile
+- Full-screen search overlay with dark bg
+- Recent searches shown as chips below the input
+- Auto-suggest dropdown appears as user types
+- Voice search microphone button inside the search bar
+- Close (✕) button to dismiss and return to homepage
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 10 — GENERAL MOBILE CSS RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Apply these rules globally for mobile:
+
+- Remove all horizontal overflow (overflow-x: hidden on body)
+- All font sizes minimum 12px — never smaller on mobile
+- All tap targets minimum 44px x 44px (buttons, icons, links)
+- Touch-friendly: remove hover-only states, add active states
+- Remove desktop-only tooltips on mobile
+- Padding on sections: 16px left/right (not 24px+ like desktop)
+- Cards: border-radius 12px, dark bg (#1a2e1d or similar)
+- Headings: 20-28px on mobile (not 36px+ like desktop)
+- Line height: 1.5 for all body text
+- Images: max-width 100%, height auto always
+- Flexbox/Grid: always use flex-wrap: wrap on mobile
+- No fixed-width elements — everything max-width: 100%
+- Scroll behaviour: smooth scrolling enabled
+- Add -webkit-overflow-scrolling: touch for iOS scroll
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 11 — PAGES THAT NEED MOBILE LAYOUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Apply full mobile responsive treatment to ALL pages:
+
+/ → Homepage (described above in full detail)
+/products → Product listing page
+  - Single column grid on mobile (1 card per row)
+  - Filter button opens bottom sheet drawer
+  - Sort dropdown at top right
+/product/:id → Product detail page
+  - Image takes full width at top
+  - All info stacks vertically below
+  - Sticky "Add to Cart" bar fixed at bottom
+/cart → Cart page
+  - Full width item rows
+  - Order summary card at bottom before checkout button
+/checkout → Checkout steps
+  - Each step full screen, progress bar at top
+/buyer/orders → Orders list
+  - Full width order cards stacked vertically
+/order/:id → Order tracking
+  - Vertical progress tracker (not horizontal)
+  - Steps stacked top to bottom with connecting line
+/seller/dashboard → Seller dashboard
+  - Stats cards in 2x2 grid
+  - Charts full width, scrollable
+/map → Smart map page
+  - Map takes full viewport height
+  - Info panel slides up from bottom as sheet
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Do NOT change or break the existing desktop layout
+- Use CSS media queries only — mobile styles inside 
+  @media (max-width: 767px) blocks
+- Test every page at 375px width (iPhone SE) and 
+  390px width (iPhone 14)
+- The bottom nav bar must stay above all other content 
+  (z-index: 9999)
+- The sticky top bar must not overlap page content — 
+  add matching padding-top to the main content area
+- All interactive elements must work with touch (no 
+  hover-dependent functionality)
+- Do not use any fixed pixel widths inside card 
+  components — use % or vw units instead
+- After applying all changes, test by resizing the 
+  browser to 375px and confirm nothing overflows 
+  horizontally

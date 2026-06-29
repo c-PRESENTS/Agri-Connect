@@ -1,0 +1,86 @@
+Audit and rebuild my existing app so it runs properly from end to end.
+
+I already have an app running on Replit, but several areas are incomplete, unstable, or broken. I want you to act as a senior full-stack engineer and fully audit, repair, restructure, and finalise the existing project so the app works properly and is affordable to run.
+
+Main goal:
+Make the current app stable, clean, secure, responsive, and working with the lowest sensible cost by using Replit-native support wherever possible.
+
+Very important instructions:
+- First inspect the existing codebase fully before making big changes
+- Reuse working code where sensible, but refactor weak or duplicated parts
+- Do not do a random rewrite without first auditing the current structure
+- Keep the implementation simple, modular, and easy to maintain
+- Prefer built-in Replit support and low-cost solutions over expensive third-party services
+- Fix one phase completely before moving to the next
+- Make sure all pages and features actually work, not just partially generated UI
+
+Use these platform rules:
+- Use Replit Auth for authentication and protected routes
+- Do not build custom authentication if Replit Auth can handle it
+- Use Replit Secrets for all sensitive keys and environment variables
+- Keep secrets out of the codebase
+- Validate important actions on the server side
+- Keep database handling clean and structured
+- Add proper loading states, empty states, and error handling
+- Make the app mobile responsive and desktop responsive
+- Fix broken routes, broken buttons, broken forms, broken API calls, and missing handlers
+- Remove duplicate or unused code that is causing confusion or errors
+
+Features that must work properly:
+1. Login page using Replit Auth
+2. Signup, logout, session handling, and protected routes
+3. Profile page with editable user details, saved preferences, language, currency, and addresses
+4. Cart system with add to cart, remove item, update quantity, saved cart, totals, and checkout readiness
+5. Search bar with working product or content search, filters, and useful results
+6. Reusable map integration for relevant pages
+7. Multi-currency support with one safe base currency for checkout and display conversion for selected currencies
+8. Stripe Checkout integration in test mode first
+9. Order flow with order creation, payment success, payment failure, payment cancel flow, and payment status updates
+10. Multi-language support using translation files and saved user preference
+11. Voice search for the search bar with typed fallback
+12. AI assistance section for about, help, support, and FAQ
+13. Customer support flow with contact form, FAQ, and support ticket handling
+14. Clean data handling for users, profiles, products, carts, orders, payments, support tickets, languages, and currency preferences
+
+Working method I want you to follow:
+Phase 1: audit the entire current app and summarise exactly what is working, what is broken, what is duplicated, what is missing, and what should be refactored
+Phase 2: fix app structure, routing, auth, protected pages, server logic, and database wiring
+Phase 3: fix profile page, cart, search bar, and shared reusable components
+Phase 4: implement multi-language, multi-currency display, map integration, and voice search in a simple low-cost way
+Phase 5: implement Stripe Checkout in test mode, order flow, and payment status handling
+Phase 6: implement AI assistance section, FAQ, customer support, and final polish
+Phase 7: run final QA for desktop and mobile, fix edge cases, clean code, and confirm all main features work
+
+Technical expectations:
+- Audit current frontend and backend structure
+- Fix state handling issues
+- Fix database schema if needed
+- Ensure authenticated users only access their own profile, cart, and orders
+- Make reusable components for navbar, footer, search, map, form handling, and support UI
+- Add clear validation for forms and actions
+- Ensure all pages load without console errors
+- Ensure all important buttons and forms have working handlers
+- Add comments only where needed so I can continue development later
+
+For payments:
+- Use Stripe Checkout in test mode first
+- Store Stripe keys in Replit Secrets
+- Create secure backend session creation
+- Add success and cancel routes
+- Create and update order records correctly
+- Track payment status safely from the backend
+- Keep one base checkout currency first to reduce errors and cost
+
+Before coding:
+1. Audit the codebase
+2. Show me the audit summary
+3. Show me the rebuild plan in phases
+4. Then start Phase 1 implementation
+
+When finished:
+- Give me a checklist of fully working features
+- Tell me any manual setup still needed in Replit Secrets or Stripe
+- Keep the final app low-cost, stable, and Replit-friendly
+
+Important:
+Do not introduce unnecessary paid services, duplicate libraries, or a full rewrite unless clearly required. Prefer Replit-native and low-cost solutions. Make the app actually run properly.
