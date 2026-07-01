@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { AIChatAssistant } from "@/components/ai-chat-assistant";
+import { usePageTranslation } from "@/hooks/use-page-translation";
 import { ProtectedRoute } from "@/components/protected-route";
 import { ProfileWizard } from "@/components/profile-wizard";
 import { AppNavRail } from "@/components/app-nav-rail";
@@ -88,6 +89,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
 function AuthAwareContent() {
   const { user, isAuthenticated } = useAuth();
+  usePageTranslation();
 
   return (
     <>
