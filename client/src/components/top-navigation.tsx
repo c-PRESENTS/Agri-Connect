@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { 
   ShoppingCart, 
@@ -49,6 +49,8 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastScrollRef = useRef(0);
   const sidebarContext = useContext(SidebarContext);
   // Track the AppNavRail's expanded state so this button can mirror it.
   const [railExpanded, setRailExpanded] = useState<boolean>(() => {
@@ -72,18 +74,49 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
   const { t } = useTranslation();
 
   useEffect(() => {
+    const THRESHOLD = 8;
+    const SCROLL_UP_HIDE = 80;
+    let tick: number | undefined;
+
     const handleScroll = () => {
-      setScrolled(window.scrollY > 8);
+      const currentY = window.scrollY;
+      const delta = currentY - lastScrollRef.current;
+
+      setScrolled(currentY > THRESHOLD);
+
+      if (currentY > SCROLL_UP_HIDE && delta > 5) {
+        setHidden(true);
+      } else if (delta < -5 || currentY <= SCROLL_UP_HIDE) {
+        setHidden(false);
+      }
+
+      lastScrollRef.current = currentY;
     };
+
+    const throttled = () => {
+      if (tick) cancelAnimationFrame(tick);
+      tick = requestAnimationFrame(handleScroll);
+    };
+
     const mainArea = document.querySelector(".overflow-auto");
     const onMainScroll = () => {
-      if (mainArea) setScrolled((mainArea as HTMLElement).scrollTop > 8);
+      const scrollTop = mainArea ? (mainArea as HTMLElement).scrollTop : 0;
+      const delta = scrollTop - lastScrollRef.current;
+      setScrolled(scrollTop > THRESHOLD);
+      if (scrollTop > SCROLL_UP_HIDE && delta > 5) {
+        setHidden(true);
+      } else if (delta < -5 || scrollTop <= SCROLL_UP_HIDE) {
+        setHidden(false);
+      }
+      lastScrollRef.current = scrollTop;
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    window.addEventListener("scroll", throttled, { passive: true });
     mainArea?.addEventListener("scroll", onMainScroll, { passive: true });
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", throttled);
       mainArea?.removeEventListener("scroll", onMainScroll);
+      if (tick) cancelAnimationFrame(tick);
     };
   }, []);
 
@@ -112,6 +145,8 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
   return (
     <header
       className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
+        hidden ? "-translate-y-full -mb-12" : "translate-y-0"
+      } ${
         scrolled
           ? "border-border/60 bg-background/90 backdrop-blur-2xl shadow-sm shadow-black/5 dark:bg-background/80 dark:border-white/[0.06] dark:shadow-[0_1px_0_rgba(255,255,255,0.03)]"
           : "border-border/40 bg-background/70 backdrop-blur-xl dark:bg-background/60 dark:border-white/[0.04]"

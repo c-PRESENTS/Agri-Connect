@@ -11,7 +11,8 @@ import {
   ArrowRight,
   Leaf
 } from "lucide-react";
-import { SiFacebook, SiInstagram, SiX, SiLinkedin } from "react-icons/si";
+import { FaLinkedinIn } from "react-icons/fa";
+import { SiFacebook, SiInstagram, SiX } from "react-icons/si";
 
 const trustBadges = [
   {
@@ -151,7 +152,7 @@ export function TrustIndicators() {
                 Connecting farmers directly with customers for fresher produce and fairer prices.
               </p>
               <div className="flex gap-2">
-                {[SiFacebook, SiX, SiInstagram, SiLinkedin].map((Icon, i) => (
+                {[SiFacebook, SiX, SiInstagram, FaLinkedinIn].map((Icon, i) => (
                   <Button key={i} variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                     <Icon className="h-3.5 w-3.5" />
                   </Button>

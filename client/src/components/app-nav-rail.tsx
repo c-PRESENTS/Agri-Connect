@@ -6,10 +6,11 @@ import {
   FileText, ShoppingCart, LayoutDashboard, Camera, Settings,
   Pencil, X, Check, RotateCcw, ChevronsRight, ChevronsLeft, GripVertical,
   ShoppingBasket, Wrench, Package, Award, Wheat, Store,
-  Salad, Factory, Leaf, Briefcase, Sparkles,
+  Salad, Factory, Leaf, Briefcase, Sparkles, Grid3X3,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { categories as defaultCategories, categoryImages } from "@/lib/categories";
+import { AppLauncher } from "./app-launcher";
 
 function getCategoryImage(categoryId: string): string | undefined {
   if (categoryImages[categoryId]) return categoryImages[categoryId];
@@ -85,6 +86,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
   const [expanded, setExpanded] = useState<boolean>(() => readExpanded());
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [appLauncherOpen, setAppLauncherOpen] = useState(false);
 
   const defaultIds = ALL_SERVICES.filter(s => s.public || isAuthenticated).map(s => s.id);
 
@@ -361,6 +363,17 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
 
       {/* Bottom controls */}
       <div className="flex flex-col gap-1 px-2 pb-2 pt-1.5 border-t border-border/40 flex-shrink-0">
+        <button
+          onClick={() => setAppLauncherOpen(true)}
+          className={`w-full rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all flex ${
+            expanded ? "items-center gap-3 px-3 py-2.5" : "flex-col items-center gap-1 py-2"
+          }`}
+          title="All Apps & Features"
+          data-testid="nav-rail-apps"
+        >
+          <Grid3X3 className="h-5 w-5 flex-shrink-0" />
+          <span className={expanded ? "text-[13px] font-semibold" : "text-[10px] font-semibold"}>Apps</span>
+        </button>
         {editMode && (
           <button
             onClick={reset}
@@ -387,6 +400,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
           </span>
         </button>
       </div>
+      <AppLauncher open={appLauncherOpen} onClose={() => setAppLauncherOpen(false)} />
     </aside>
   );
 }

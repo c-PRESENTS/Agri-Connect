@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, X, TrendingUp, Package, Leaf } from "lucide-react";
+import { Search, X, TrendingUp, Package, Leaf, History, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
 import { useTranslation } from "react-i18next";
+import { categories } from "@/lib/categories";
 
 interface SearchAutocompleteProps {
   value: string;
@@ -15,9 +16,26 @@ interface SearchAutocompleteProps {
 
 const TRENDING = ["Organic tomatoes", "Fresh milk", "Potatoes", "Apples", "Carrots", "Wheat flour"];
 
+const RECENT_KEY = "agri-recent-searches";
+const MAX_RECENT = 6;
+
+function getRecentSearches(): string[] {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); } catch { return []; }
+}
+function addRecentSearch(q: string) {
+  const list = getRecentSearches().filter(s => s !== q);
+  list.unshift(q);
+  if (list.length > MAX_RECENT) list.length = MAX_RECENT;
+  localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+}
+function clearRecentSearches() {
+  localStorage.removeItem(RECENT_KEY);
+}
+
 export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [inputVal, setInputVal] = useState(value);
+  const [recentSearches, setRecentSearches] = useState<string[]>(getRecentSearches);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -49,6 +67,8 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   const handleSelect = (query: string) => {
     setInputVal(query);
     onChange(query);
+    addRecentSearch(query);
+    setRecentSearches(getRecentSearches());
     onSearch(query);
     setOpen(false);
     inputRef.current?.blur();
@@ -57,6 +77,8 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputVal.trim()) {
+      addRecentSearch(inputVal.trim());
+      setRecentSearches(getRecentSearches());
       onSearch(inputVal.trim());
       setOpen(false);
     }
@@ -69,8 +91,15 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
     inputRef.current?.focus();
   };
 
+  const handleClearRecent = () => {
+    clearRecentSearches();
+    setRecentSearches([]);
+  };
+
+  const showRecent = open && inputVal.length === 0 && recentSearches.length > 0;
   const showTrending = open && inputVal.length === 0;
   const showSuggestions = open && inputVal.length >= 2 && suggestions.length > 0;
+  const showCategories = open && inputVal.length === 0;
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -99,7 +128,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
       </form>
 
       <AnimatePresence>
-        {(showTrending || showSuggestions) && (
+        {(showRecent || showTrending || showCategories || showSuggestions) && (
           <motion.div
             initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -108,6 +137,58 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             className="absolute top-full left-0 right-0 mt-1.5 z-50 rounded-xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-xl shadow-black/8 overflow-hidden"
             data-testid="dropdown-search-results"
           >
+            {showRecent && (
+              <div className="p-2 border-b border-border/30">
+                <div className="flex items-center justify-between gap-1.5 px-2 py-1 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <History className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Recent
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleClearRecent}
+                    className="text-[9px] font-semibold text-muted-foreground hover:text-destructive flex items-center gap-0.5"
+                  >
+                    <RotateCcw className="h-2.5 w-2.5" /> Clear
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5 px-2">
+                  {recentSearches.map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => handleSelect(item)}
+                      className="text-[11px] px-2 py-0.5 rounded-md bg-muted/40 hover:bg-primary/10 hover:text-primary border border-border/30 hover:border-primary/20 transition-all font-medium"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {showCategories && (
+              <div className="p-2 border-b border-border/30">
+                <div className="flex items-center gap-1.5 px-2 py-1 mb-1">
+                  <Package className="h-3 w-3 text-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Browse Categories
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 px-2">
+                  {categories.slice(0, 12).map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => handleSelect(`?category=${cat.id}`)}
+                      className="text-[11px] px-2 py-0.5 rounded-md bg-primary/8 hover:bg-primary/15 hover:text-primary border border-primary/20 transition-all font-medium"
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {showTrending && (
               <div className="p-2">
                 <div className="flex items-center gap-1.5 px-2 py-1 mb-1">
