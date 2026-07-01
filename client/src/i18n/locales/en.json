@@ -364,7 +364,9 @@
     "sell_produce": "Sell my produce",
     "show_land": "Show land listings",
     "navigating": "Navigating to {{destination}}",
-    "searching": "Searching for \"{{query}}\""
+    "searching": "Searching for \"{{query}}\"",
+    "continuous": "Continuous",
+    "audio_cues": "Audio cues"
   },
   "common": {
     "loading": "Loading...",

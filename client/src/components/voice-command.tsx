@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef } from "react";
-import { Mic, MicOff, Volume2, X, Loader2, Sparkles } from "lucide-react";
+import { Mic, MicOff, Volume2, X, Loader2, Sparkles, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -105,11 +106,78 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
   const [responseText, setResponseText] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const recognitionRef = useRef<any>(null);
+  const [continuous, setContinuous] = useState(false);
+  const [audioCues, setAudioCues] = useState(() => localStorage.getItem("agri-voice-cues") !== "false");
+  const continuousRef = useRef(false);
+  const audioCuesRef = useRef(audioCues);
+  const restartRef = useRef<(() => void) | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { i18n, t } = useTranslation();
 
   const baseLang = i18n.language.split("-")[0];
+
+  const playBeep = useCallback((type: "start" | "done" | "error") => {
+    if (!audioCuesRef.current) return;
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      if (type === "start") {
+        osc.frequency.setValueAtTime(660, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.25);
+      } else if (type === "done") {
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.setValueAtTime(660, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.25);
+      } else {
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.3);
+      }
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+    } catch { /* audio not available */ }
+  }, []);
+
+  const toggleContinuous = useCallback(() => {
+    setContinuous((prev) => {
+      const next = !prev;
+      continuousRef.current = next;
+      return next;
+    });
+  }, []);
+
+  const toggleAudioCues = useCallback(() => {
+    setAudioCues((prev) => {
+      const next = !prev;
+      audioCuesRef.current = next;
+      localStorage.setItem("agri-voice-cues", String(next));
+      return next;
+    });
+  }, []);
+
+  const completeCommand = useCallback(() => {
+    setTranscript("");
+    setAiResponse("");
+    setResponseText("");
+    if (continuousRef.current) {
+      setVoiceState("listening");
+      setTimeout(() => restartRef.current?.(), 600);
+    } else {
+      setVoiceState("idle");
+    }
+  }, []);
 
   const speak = useCallback((text: string) => {
     if (!("speechSynthesis" in window)) return;
@@ -119,9 +187,10 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
     window.speechSynthesis.speak(utterance);
   }, [baseLang]);
 
-  const processWithAI = useCallback(async (text: string) => {
+  const processWithAI = useCallback(async (text: string, silent = false) => {
     setVoiceState("processing");
     setAiResponse("");
+    if (!silent) playBeep("start");
 
     const patterns = NAV_PATTERNS[baseLang] || NAV_PATTERNS.en;
     const allPatterns = [...patterns, ...(baseLang !== "en" ? NAV_PATTERNS.en : [])];
@@ -160,6 +229,7 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
       setAiResponse(reply);
       setVoiceState("speaking");
       speak(reply);
+      playBeep("done");
 
       if (data.action === "search" && data.query) {
         onSearch?.(data.query);
@@ -171,24 +241,15 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
         onSearch?.(text);
       }
 
-      setTimeout(() => {
-        setVoiceState("idle");
-        setTranscript("");
-        setAiResponse("");
-        setResponseText("");
-      }, 3000);
+      setTimeout(completeCommand, 3000);
     } catch {
       onSearch?.(text);
       setResponseText(t("voice.searching", { query: text }));
       setVoiceState("speaking");
       speak(t("voice.searching", { query: text }));
-      setTimeout(() => {
-        setVoiceState("idle");
-        setTranscript("");
-        setResponseText("");
-      }, 2000);
+      setTimeout(completeCommand, 2000);
     }
-  }, [onSearch, setLocation, speak, baseLang, t]);
+  }, [onSearch, setLocation, speak, baseLang, t, playBeep, completeCommand]);
 
   const startListening = useCallback(() => {
     if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
@@ -204,11 +265,15 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
 
-    recognition.continuous = false;
+    recognition.continuous = continuousRef.current;
     recognition.interimResults = true;
     recognition.lang = LANG_BCP[baseLang] || "en-GB";
 
-    recognition.onstart = () => { setVoiceState("listening"); setTranscript(""); };
+    recognition.onstart = () => {
+      setVoiceState("listening");
+      setTranscript("");
+      playBeep("start");
+    };
 
     recognition.onresult = (event: any) => {
       let final = "";
@@ -219,7 +284,7 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
         else interim += txt;
       }
       setTranscript(final || interim);
-      if (final) processWithAI(final);
+      if (final) processWithAI(final, false);
     };
 
     recognition.onerror = (event: any) => {
@@ -230,11 +295,13 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
     };
 
     recognition.onend = () => {
-      if (voiceState === "listening") setVoiceState("idle");
+      setVoiceState("idle");
     };
 
     recognition.start();
-  }, [toast, voiceState, processWithAI, baseLang, t]);
+  }, [toast, processWithAI, baseLang, t, playBeep]);
+
+  restartRef.current = startListening;
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -329,8 +396,24 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
             <p className="text-xs text-muted-foreground mb-2">{t("voice.try_saying")}</p>
             <div className="flex flex-wrap gap-1.5">
               {suggestions.map(s => (
-                <Badge key={s} variant="secondary" className="text-[10px] cursor-pointer hover:bg-primary/10" onClick={() => processWithAI(s)}>{s}</Badge>
+                <Badge key={s} variant="secondary" className="text-[10px] cursor-pointer hover:bg-primary/10" onClick={() => processWithAI(s, true)}>{s}</Badge>
               ))}
+            </div>
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t">
+              <label className="flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer select-none">
+                <Switch checked={continuous} onCheckedChange={toggleContinuous} className="scale-75" />
+                <span className="flex items-center gap-1">
+                  <Repeat className="h-3 w-3" />
+                  {t("voice.continuous")}
+                </span>
+              </label>
+              <label className="flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer select-none">
+                <Switch checked={audioCues} onCheckedChange={toggleAudioCues} className="scale-75" />
+                <span className="flex items-center gap-1">
+                  <Volume2 className="h-3 w-3" />
+                  {t("voice.audio_cues")}
+                </span>
+              </label>
             </div>
           </div>
         </DialogContent>
