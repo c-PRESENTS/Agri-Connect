@@ -23,6 +23,7 @@ import { authStorage } from "./replit_integrations/auth/storage";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import OpenAI from "openai";
+import { createAIService, normalizeLang } from "./ai";
 import { getStripe, getWebhookSecret } from "./stripe";
 import type Stripe from "stripe";
 
@@ -277,6 +278,8 @@ const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
+
+const ai = createAIService(openai);
 
 export async function registerRoutes(
   httpServer: Server,
@@ -1119,29 +1122,11 @@ GUIDELINES:
       if (!text || typeof text !== "string") return res.status(400).json({ error: "Text is required" });
       if (text.length > 2000) return res.status(400).json({ error: "Text too long (max 2000 characters)" });
 
-      const SUPPORTED_LANGS = ["en", "hi", "pa", "ta", "cy", "pl"];
-      const lang = typeof targetLanguage === "string" ? targetLanguage.split("-")[0] : "en";
-      if (!SUPPORTED_LANGS.includes(lang)) return res.status(400).json({ error: "Unsupported language" });
+      const lang = normalizeLang(targetLanguage);
+      if (lang === "en" && targetLanguage !== "en") return res.status(400).json({ error: "Unsupported language" });
 
-      const LANG_NAMES: Record<string, string> = {
-        en: "English", hi: "Hindi", pa: "Punjabi", ta: "Tamil", cy: "Welsh", pl: "Polish",
-      };
-      const langName = LANG_NAMES[lang] || lang;
-
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{
-          role: "user",
-          content: `Translate the following text to ${langName}. Return only the translated text, no explanations.
-Context: ${context}
-Text: ${text}`,
-        }],
-        max_tokens: 300,
-        temperature: 0.2,
-      });
-
-      const translated = completion.choices[0]?.message?.content?.trim() || text;
-      res.json({ translated, targetLanguage, original: text });
+      const translated = await ai.translate(text, lang, context);
+      res.json({ translated, targetLanguage: lang, original: text });
     } catch (error) {
       console.error("Translation error:", error);
       res.status(500).json({ error: "Translation failed" });
@@ -1160,34 +1145,7 @@ Text: ${text}`,
         return res.status(400).json({ error: "Transcript too long (max 500 characters)" });
       }
 
-      const systemPrompt = `You are the AgriConnect voice assistant for a UK agricultural marketplace.
-      
-The user spoke: "${transcript}" (language: ${language})
-
-Your job is to interpret the command and return a JSON response with:
-- "response": a short, friendly spoken reply in the same language as the user (max 20 words)
-- "action": one of "search", "navigate", "info", or "search_text"  
-- "query": if action is "search", the search term to use
-- "path": if action is "navigate", the URL path (e.g. "/dashboard", "/cart", "/land-leasing", "/share-care", "/logistics", "/farmers-help")
-
-Examples:
-- "show me organic potatoes" → {"response": "Searching for organic potatoes now", "action": "search", "query": "organic potatoes"}
-- "go to my dashboard" → {"response": "Opening your dashboard", "action": "navigate", "path": "/dashboard"}
-- "what vegetables are available" → {"response": "Searching vegetables for you", "action": "search", "query": "vegetables"}
-- "open the cart" → {"response": "Opening your cart", "action": "navigate", "path": "/cart"}
-
-Respond only with valid JSON.`;
-
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: systemPrompt }],
-        max_tokens: 150,
-        temperature: 0.3,
-        response_format: { type: "json_object" },
-      });
-
-      const content = completion.choices[0]?.message?.content || "{}";
-      const parsed = JSON.parse(content);
+      const parsed = await ai.interpretVoice(transcript, language, context);
       res.json(parsed);
     } catch (error) {
       console.error("Voice AI error:", error);
