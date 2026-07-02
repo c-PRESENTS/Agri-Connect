@@ -423,12 +423,19 @@
   }
 
   .animate-fade-in-up {
-    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: fadeInUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .animate-scale-in {
-    animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: scaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+
+  .stagger-1 { animation-delay: 0.03s; }
+  .stagger-2 { animation-delay: 0.06s; }
+  .stagger-3 { animation-delay: 0.09s; }
+  .stagger-4 { animation-delay: 0.12s; }
+  .stagger-5 { animation-delay: 0.15s; }
+  .stagger-6 { animation-delay: 0.18s; }
 
   .category-grid {
     display: grid;
@@ -582,17 +589,17 @@
 
   /* C.6 Micro-animation utilities */
   .hover-lift {
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .hover-lift:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.10);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
   }
   .dark .hover-lift:hover {
-    box-shadow: 0 12px 32px rgba(0,0,0,0.3), var(--glow-primary);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2), var(--glow-primary);
   }
   .press-scale {
-    transition: transform 0.1s ease;
+    transition: transform 0.05s ease;
   }
   .press-scale:active {
     transform: scale(0.97);
@@ -622,6 +629,22 @@
     animation: notificationPulse 2s ease-in-out infinite;
   }
 
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .touch-target-sm {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .touch-response {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -633,6 +656,45 @@
     transition-duration: 50ms;
   }
 
+  /* Ensure icon buttons have proper touch targets */
+  button[class*="h-8"][class*="w-8"],
+  button[class*="h-10"][class*="w-10"],
+  [role="button"][class*="h-8"][class*="w-8"],
+  [role="button"][class*="h-10"][class*="w-10"] {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* Form inputs need adequate height */
+  input, textarea, select {
+    min-height: 48px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Select dropdowns */
+  select {
+    padding-right: 40px; /* Room for arrow */
+  }
+
+  /* Checkbox/radio touch targets */
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-width: 24px;
+    min-height: 24px;
+    accent-color: hsl(var(--primary));
+  }
+
+  /* Switch component */
+  [role="switch"] {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* Link-like buttons */
+  a.touch-target, button.touch-target {
+    text-decoration: none;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -641,12 +703,12 @@
     display: none;
   }
 
-  .stagger-1 { animation-delay: 0.05s; }
-  .stagger-2 { animation-delay: 0.1s; }
-  .stagger-3 { animation-delay: 0.15s; }
-  .stagger-4 { animation-delay: 0.2s; }
-  .stagger-5 { animation-delay: 0.25s; }
-  .stagger-6 { animation-delay: 0.3s; }
+  .stagger-1 { animation-delay: 0.03s; }
+  .stagger-2 { animation-delay: 0.06s; }
+  .stagger-3 { animation-delay: 0.09s; }
+  .stagger-4 { animation-delay: 0.12s; }
+  .stagger-5 { animation-delay: 0.15s; }
+  .stagger-6 { animation-delay: 0.18s; }
 }
 
 @keyframes float {
