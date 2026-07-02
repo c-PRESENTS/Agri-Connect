@@ -57,7 +57,7 @@ export function FeatureShowcase() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.04 }}
-              className="flex items-start gap-2.5 p-3 rounded-xl border border-border/30 bg-card/60 backdrop-blur-sm hover:border-primary/30 hover:bg-card/90 transition-all duration-200 group"
+              className="flex items-start gap-2.5 p-3 rounded-xl border border-border/30 bg-card hover:border-primary/30 hover:bg-card/95 transition-all duration-200 group"
             >
               <div className={`flex-shrink-0 h-8 w-8 rounded-lg bg-gradient-to-br ${f.color} flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-200`}>
                 <f.icon className="h-4 w-4 text-white" />

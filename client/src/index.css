@@ -30,7 +30,7 @@
   --popover: 0 0% 95%;
   --popover-foreground: 0 0% 9%;
   --popover-border: 0 0% 91%;
-  --primary: 142 76% 36%;
+  --primary: 142 65% 35%;
   --primary-foreground: 0 0% 98%;
   --secondary: 0 0% 93%;
   --secondary-foreground: 0 0% 9%;
@@ -98,49 +98,49 @@
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .05);
   --elevate-2: rgba(255,255,255, .10);
-  --background: 220 16% 4%;
+  --background: 220 12% 3%;
   --foreground: 0 0% 96%;
-  --border: 220 10% 14%;
-  --card: 220 14% 6%;
+  --border: 220 10% 12%;
+  --card: 220 10% 7%;
   --card-foreground: 0 0% 96%;
-  --card-border: 220 10% 11%;
-  --sidebar: 220 14% 7%;
+  --card-border: 220 10% 14%;
+  --sidebar: 220 10% 6%;
   --sidebar-foreground: 0 0% 96%;
   --sidebar-border: 220 10% 12%;
-  --sidebar-primary: 142 76% 44%;
+  --sidebar-primary: 142 70% 48%;
   --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 220 10% 13%;
+  --sidebar-accent: 220 10% 11%;
   --sidebar-accent-foreground: 0 0% 96%;
-  --sidebar-ring: 142 76% 44%;
-  --popover: 220 14% 8%;
+  --sidebar-ring: 142 70% 48%;
+  --popover: 220 10% 8%;
   --popover-foreground: 0 0% 96%;
   --popover-border: 220 10% 15%;
-  --primary: 142 76% 44%;
+  --primary: 142 70% 48%;
   --primary-foreground: 0 0% 98%;
-  --secondary: 220 10% 15%;
+  --secondary: 220 10% 14%;
   --secondary-foreground: 0 0% 96%;
-  --muted: 220 10% 14%;
-  --muted-foreground: 220 5% 58%;
-  --accent: 142 8% 16%;
+  --muted: 220 10% 12%;
+  --muted-foreground: 220 5% 65%;
+  --accent: 142 8% 14%;
   --accent-foreground: 0 0% 96%;
   --destructive: 0 84% 48%;
   --destructive-foreground: 0 0% 98%;
-  --input: 220 8% 28%;
-  --ring: 142 76% 44%;
-  --chart-1: 142 76% 65%;
+  --input: 220 8% 32%;
+  --ring: 142 70% 48%;
+  --chart-1: 142 70% 65%;
   --chart-2: 39 92% 70%;
   --chart-3: 207 90% 72%;
   --chart-4: 280 65% 75%;
   --chart-5: 25 95% 68%;
-  --shadow-2xs: 0 1px 2px rgba(0,0,0,0.15);
-  --shadow-xs: 0 1px 3px rgba(0,0,0,0.20);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25), 0 1px 2px -1px rgba(0,0,0,0.15);
-  --shadow: 0 2px 6px rgba(0,0,0,0.20), 0 1px 3px -1px rgba(0,0,0,0.12);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.25), 0 2px 4px -1px rgba(0,0,0,0.15);
-  --shadow-lg: 0 8px 20px rgba(0,0,0,0.30), 0 4px 8px -1px rgba(0,0,0,0.15);
-  --shadow-xl: 0 16px 32px rgba(0,0,0,0.35), 0 8px 12px -1px rgba(0,0,0,0.20);
-  --shadow-2xl: 0 24px 48px rgba(0,0,0,0.40);
-  --glow-primary: 0 0 20px rgba(34, 197, 94, 0.15), 0 0 60px rgba(34, 197, 94, 0.05);
+  --shadow-2xs: 0 1px 2px rgba(0,0,0,0.12);
+  --shadow-xs: 0 1px 3px rgba(0,0,0,0.15);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.20), 0 1px 2px -1px rgba(0,0,0,0.12);
+  --shadow: 0 2px 6px rgba(0,0,0,0.18), 0 1px 3px -1px rgba(0,0,0,0.10);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.22), 0 2px 4px -1px rgba(0,0,0,0.12);
+  --shadow-lg: 0 8px 20px rgba(0,0,0,0.25), 0 4px 8px -1px rgba(0,0,0,0.12);
+  --shadow-xl: 0 16px 32px rgba(0,0,0,0.30), 0 8px 12px -1px rgba(0,0,0,0.18);
+  --shadow-2xl: 0 24px 48px rgba(0,0,0,0.35);
+  --glow-primary: 0 0 20px rgba(34, 197, 94, 0.12), 0 0 60px rgba(34, 197, 94, 0.04);
 
 /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
@@ -375,6 +375,20 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.2);
   }
 
+  .glass-overlay {
+    @apply fixed inset-0 z-50 bg-background/80 backdrop-blur-2xl;
+  }
+
+  .glass-modal {
+    @apply bg-background/95 backdrop-blur-2xl border border-border/30;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .dark .glass-modal {
+    @apply bg-background/90 border-white/[0.05];
+    box-shadow: 0 24px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
   .glass-dark {
     @apply bg-black/50 backdrop-blur-xl border border-white/[0.08];
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 32px rgba(0,0,0,0.3);
@@ -454,26 +468,45 @@
     -webkit-box-orient: vertical;
   }
 
+  .agri-card {
+    @apply rounded-xl border bg-card border-card-border text-card-foreground;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .agri-card:hover {
+    @apply border-primary/20;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  .dark .agri-card {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+
+  .dark .agri-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,197,94,0.06);
+  }
+
   .premium-card {
-    @apply rounded-2xl border border-border/50 bg-card/90 backdrop-blur-sm;
+    @apply rounded-2xl border border-border/50 bg-card;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
 
   .premium-card:hover {
     @apply border-primary/20;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   }
 
   .dark .premium-card {
-    @apply bg-card/80 border-white/[0.06];
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    border-color: rgba(255,255,255,0.06);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 2px 8px rgba(0,0,0,0.2);
   }
 
   .dark .premium-card:hover {
     @apply border-primary/30;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,197,94,0.1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,197,94,0.08);
   }
 
   /* C.4 Binance Q-Style — Data-dense, modern exchange UI */
