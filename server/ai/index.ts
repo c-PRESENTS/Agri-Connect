@@ -1,5 +1,5 @@
 import type OpenAI from "openai";
-import { isGeminiAvailable } from "./gemini";
+import { generateGeminiContent, isGeminiAvailable } from "./gemini";
 
 // Language helpers shared across AI tasks
 const SUPPORTED_LANGS = ["en", "hi", "pa", "ta", "cy", "pl"];
@@ -20,7 +20,7 @@ export function langDisplay(lang: string): string {
 export function createAIService(openai: OpenAI) {
   const geminiAvailable = isGeminiAvailable();
   if (geminiAvailable) {
-    console.log("[ai] Gemini API key found — Gemini routing enabled (SDK stubbed, using OpenAI for now)");
+    console.log("[ai] Gemini API key found — Gemini routing enabled");
   }
 
   return {
@@ -36,12 +36,17 @@ export function createAIService(openai: OpenAI) {
       const lang = normalizeLang(targetLanguage);
       const langName = langDisplay(lang);
 
-      // Gemini path — ready when SDK is installed
       if (geminiAvailable) {
-        // TODO: call GoogleGenAI model.generateContent()
-        // const model = getGeminiModel();
-        // const result = await model.generateContent(...)
-        // return result.text;
+        try {
+          return await generateGeminiContent({
+            systemInstruction: `You are a translation engine for AgriConnect. Return only the translated text.`,
+            prompt: `Translate the following text to ${langName}.\nContext: ${context}\nText: ${text}`,
+            temperature: 0.2,
+            maxOutputTokens: 300,
+          });
+        } catch (error) {
+          console.warn("[ai] Gemini translation failed; falling back to OpenAI", error);
+        }
       }
 
       // OpenAI fallback
@@ -67,32 +72,23 @@ export function createAIService(openai: OpenAI) {
       language: string,
       context: string,
     ): Promise<Record<string, unknown>> => {
-      // Gemini path — ready when SDK is installed
       if (geminiAvailable) {
-        // TODO: call GoogleGenAI model.generateContent()
-        // const model = getGeminiModel();
-        // const result = await model.generateContent(...)
-        // return JSON.parse(result.text);
+        try {
+          const content = await generateGeminiContent({
+            systemInstruction: "Return only valid JSON. Do not wrap it in markdown.",
+            prompt: buildVoicePrompt(transcript, language, context),
+            temperature: 0.25,
+            maxOutputTokens: 180,
+            responseMimeType: "application/json",
+          });
+          return JSON.parse(content) as Record<string, unknown>;
+        } catch (error) {
+          console.warn("[ai] Gemini voice interpretation failed; falling back to OpenAI", error);
+        }
       }
 
       // OpenAI fallback
-      const systemPrompt = `You are the AgriConnect voice assistant for a UK agricultural marketplace.
-      
-The user spoke: "${transcript}" (language: ${language})
-
-Your job is to interpret the command and return a JSON response with:
-- "response": a short, friendly spoken reply in the same language as the user (max 20 words)
-- "action": one of "search", "navigate", "info", or "search_text"  
-- "query": if action is "search", the search term to use
-- "path": if action is "navigate", the URL path (e.g. "/dashboard", "/cart", "/land-leasing", "/share-care", "/logistics", "/farmers-help")
-
-Examples:
-- "show me organic potatoes" → {"response": "Searching for organic potatoes now", "action": "search", "query": "organic potatoes"}
-- "go to my dashboard" → {"response": "Opening your dashboard", "action": "navigate", "path": "/dashboard"}
-- "what vegetables are available" → {"response": "Searching vegetables for you", "action": "search", "query": "vegetables"}
-- "open the cart" → {"response": "Opening your cart", "action": "navigate", "path": "/cart"}
-
-Respond only with valid JSON.`;
+      const systemPrompt = buildVoicePrompt(transcript, language, context);
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -106,4 +102,25 @@ Respond only with valid JSON.`;
       return JSON.parse(content) as Record<string, unknown>;
     },
   };
+}
+
+function buildVoicePrompt(transcript: string, language: string, context: string): string {
+  return `You are the AgriConnect voice assistant for an agricultural marketplace.
+
+The user spoke: "${transcript}" (language: ${language})
+Context: ${context}
+
+Interpret the command and return a JSON response with:
+- "response": a short, friendly spoken reply in the same language as the user (max 20 words)
+- "action": one of "search", "navigate", "info", or "search_text"
+- "query": if action is "search", the search term to use
+- "path": if action is "navigate", the URL path (e.g. "/dashboard", "/cart", "/land-leasing", "/share-care", "/logistics", "/farmers-help")
+
+Examples:
+- "show me organic potatoes" -> {"response": "Searching for organic potatoes now", "action": "search", "query": "organic potatoes"}
+- "go to my dashboard" -> {"response": "Opening your dashboard", "action": "navigate", "path": "/dashboard"}
+- "what vegetables are available" -> {"response": "Searching vegetables for you", "action": "search", "query": "vegetables"}
+- "open the cart" -> {"response": "Opening your cart", "action": "navigate", "path": "/cart"}
+
+Respond only with valid JSON.`;
 }

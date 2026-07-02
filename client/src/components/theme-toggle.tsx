@@ -28,7 +28,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="relative overflow-hidden"
+      className="theme-transition relative overflow-hidden hover:scale-105 active:scale-95"
       data-testid="button-theme-toggle"
     >
       <AnimatePresence mode="wait" initial={false}>

@@ -189,6 +189,23 @@ This document provides a complete reference for all environment variables requir
 
 ---
 
+### 16b. Gemini API Key (Optional, Preferred for Voice AI)
+**Variable:** `GEMINI_API_KEY`
+- **Type:** String
+- **Required:** NO
+- **Description:** Google Gemini API key used by `/api/ai/voice` and AI translation when present
+- **Where to get it:** Google AI Studio / Google Cloud Gemini API credentials
+- **Fallback:** If missing or if Gemini fails, the app falls back to OpenAI when `AI_INTEGRATIONS_OPENAI_API_KEY` is configured
+
+### 16c. Gemini Model (Optional)
+**Variable:** `GEMINI_MODEL`
+- **Type:** String
+- **Required:** NO
+- **Default:** `gemini-1.5-flash`
+- **Description:** Gemini model name used by the backend REST integration
+
+---
+
 ## REPLIT SPECIFIC (OPTIONAL)
 
 ### 17. Replit Domains

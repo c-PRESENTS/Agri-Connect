@@ -1658,7 +1658,7 @@ export class MemStorage implements IStorage {
     const pendingOrders = orders.filter((o) =>
       o.status === "order_placed" ||
       o.status === "payment_confirmed" ||
-      o.status === "preparing"
+      o.status === "processing"
     );
     const totalEarnings = orders
       .filter((o) => o.status !== "cancelled")

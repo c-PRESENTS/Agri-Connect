@@ -63,8 +63,8 @@ const rateBuckets = new Map<string, number[]>();
 // Periodic cleanup so the map doesn't grow unbounded (every 10 min, drop empty/stale keys).
 setInterval(() => {
   const cutoff = Date.now() - 10 * 60_000;
-  for (const [k, arr] of rateBuckets) {
-    const fresh = arr.filter((t) => t > cutoff);
+  for (const [k, arr] of Array.from(rateBuckets.entries())) {
+    const fresh = arr.filter((t: number) => t > cutoff);
     if (fresh.length === 0) rateBuckets.delete(k);
     else rateBuckets.set(k, fresh);
   }
@@ -143,7 +143,9 @@ async function ensureShipmentsForOrderInner(order: Order, origin: string): Promi
   const existing = await storage.listShipmentsByOrder(order.id);
   if (existing.length > 0) return existing;
 
+  const shippingChoices = order.shippingChoices;
   const drop = order.deliveryAddressStruct;
+  if (!shippingChoices || !drop) return [];
   const dropLL = geocodePostcode({ postcode: drop.postcode, country: drop.country });
   const itemsByFarmer = new Map<string, OrderItem[]>();
   for (const oi of order.items) {
@@ -152,8 +154,8 @@ async function ensureShipmentsForOrderInner(order: Order, origin: string): Promi
   }
 
   const created: Shipment[] = [];
-  for (const [farmerId, items] of itemsByFarmer) {
-    const choice = order.shippingChoices[farmerId];
+  for (const [farmerId, items] of Array.from(itemsByFarmer.entries())) {
+    const choice = shippingChoices[farmerId];
     if (!choice) {
       console.warn(`[order/auto-ship] no shipping choice for farmer ${farmerId} on order ${order.id}`);
       continue;
@@ -165,7 +167,7 @@ async function ensureShipmentsForOrderInner(order: Order, origin: string): Promi
     // Resolve every item's product so traits (cold-chain, fragile, weight) come
     // from the actual product, not just the first item — needed for parity with
     // the cart-quote endpoint when one farmer ships mixed categories.
-    const resolved = await Promise.all(items.map(async (it) => ({ it, product: await storage.getProduct(it.productId) })));
+    const resolved = await Promise.all(items.map(async (it: OrderItem) => ({ it, product: await storage.getProduct(it.productId) })));
     const firstProduct = resolved.find((r) => r.product)?.product;
     if (!firstProduct) continue;
     const shipItems = resolved
@@ -224,7 +226,6 @@ async function ensureShipmentsForOrderInner(order: Order, origin: string): Promi
           line1: drop.line1,
           line2: drop.line2,
           city: drop.city,
-          county: drop.county,
           postcode: drop.postcode,
           country: drop.country,
           lat: dropLL.lat,
@@ -565,10 +566,10 @@ export async function registerRoutes(
           if (!itemsByFarmer.has(it.farmerId)) itemsByFarmer.set(it.farmerId, []);
           itemsByFarmer.get(it.farmerId)!.push(it);
         }
-        for (const [farmerId, items] of itemsByFarmer) {
+        for (const [farmerId, items] of Array.from(itemsByFarmer.entries())) {
           const choice = parsed.shippingChoices[farmerId];
           if (!choice) continue;
-          const resolved = await Promise.all(items.map(async (it) => ({ it, product: await storage.getProduct(it.productId) })));
+          const resolved = await Promise.all(items.map(async (it: typeof parsed.items[number]) => ({ it, product: await storage.getProduct(it.productId) })));
           const firstProd = resolved.find((r) => r.product)?.product;
           if (!firstProd) continue;
           const shipItems = resolved.filter((r) => r.product).map(({ it, product }) => {
@@ -612,7 +613,7 @@ export async function registerRoutes(
       const stripe = getStripe();
       const profile = await authStorage.getUser(userId);
 
-      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = parsed.items.map((item) => ({
+      const lineItems: any[] = parsed.items.map((item) => ({
         quantity: item.quantity,
         price_data: {
           currency: "gbp",
@@ -1413,7 +1414,7 @@ GUIDELINES:
       const userId = getUserId(req)!;
       const { drop } = cartShippingQuotesRequestSchema.parse(req.body);
       const cart = await storage.getCart(userId);
-      if (!cart || cart.items.length === 0) {
+      if (!cart || cart.length === 0) {
         return res.status(400).json({ error: "Cart is empty" });
       }
 
@@ -1428,7 +1429,7 @@ GUIDELINES:
         farmerLng: number;
         items: { name: string; quantity: number; weightKg: number; coldChain?: boolean; fragile?: boolean; productId: string; price: number }[];
       }>();
-      for (const it of cart.items) {
+      for (const it of cart) {
         const fid = it.product.farmerId;
         if (!groups.has(fid)) {
           groups.set(fid, {

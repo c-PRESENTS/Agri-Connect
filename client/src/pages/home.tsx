@@ -33,11 +33,11 @@ function MobileBottomNav({
   onNavigate: (path: string) => void;
 }) {
   const items = [
-    { id: "home", label: "Home", icon: HomeIcon, action: onHome },
-    { id: "categories", label: "Categories", icon: LayoutGrid, action: () => onNavigate("/?category=daily-needs") },
-    { id: "map", label: "Map", icon: Map, action: () => onNavigate("/map") },
+    { id: "home", label: "Home", icon: HomeIcon, action: onHome, badge: null },
+    { id: "categories", label: "Categories", icon: LayoutGrid, action: () => onNavigate("/?category=daily-needs"), badge: null },
+    { id: "map", label: "Map", icon: Map, action: () => onNavigate("/map"), badge: null },
     { id: "cart", label: "Cart", icon: CartIcon, action: onCart, badge: cartCount > 0 ? cartCount : null },
-    { id: "profile", label: "Profile", icon: User, action: () => onNavigate("/login") },
+    { id: "profile", label: "Profile", icon: User, action: () => onNavigate("/login"), badge: null },
   ] as const;
 
   return (

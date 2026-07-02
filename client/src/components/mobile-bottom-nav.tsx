@@ -14,13 +14,19 @@ export function MobileBottomNav({ onCategories }: MobileBottomNavProps) {
   const { data: cart } = useQuery<Cart>({ queryKey: ["/api/cart"] });
   const cartCount = cart?.items?.reduce((acc, i) => acc + i.quantity, 0) ?? 0;
 
-  const items = [
+  const items: Array<{
+    id: string;
+    label: string;
+    icon: typeof Home;
+    path: string;
+    badge?: number;
+  }> = [
     { id: "home",       label: "Home",       icon: Home,        path: "/" },
     { id: "categories", label: "Browse",     icon: LayoutGrid,  path: "/?category=daily-needs" },
     { id: "map",        label: "Map",        icon: Map,         path: "/map" },
     { id: "cart",       label: "Cart",       icon: ShoppingCart, path: "/cart", badge: cartCount },
     { id: "profile",    label: "Profile",    icon: User,        path: "/login" },
-  ] as const;
+  ];
 
   const handleTap = (item: typeof items[number]) => {
     if (item.id === "categories" && onCategories) {
@@ -54,7 +60,7 @@ export function MobileBottomNav({ onCategories }: MobileBottomNavProps) {
           <motion.button
             key={id}
             whileTap={{ scale: 0.88 }}
-            onClick={() => handleTap({ id, label, icon: Icon, path } as any)}
+            onClick={() => handleTap({ id, label, icon: Icon, path, badge })}
             data-testid={`mobile-nav-global-${id}`}
             className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors relative py-1 ${
               isActive ? "text-primary" : "text-muted-foreground"

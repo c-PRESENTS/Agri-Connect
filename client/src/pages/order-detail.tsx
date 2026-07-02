@@ -100,7 +100,11 @@ export default function OrderDetailPage() {
       return res.json();
     },
     onSuccess: (_, vars) => {
-      setSubmittedReviews((prev) => new Set([...prev, vars.productId]));
+      setSubmittedReviews((prev) => {
+        const next = new Set(Array.from(prev));
+        next.add(vars.productId);
+        return next;
+      });
       setReviewingProductId(null);
       setReviewComment("");
       setReviewRating(5);

@@ -96,7 +96,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                   >
                     <div className="w-full aspect-[3/2] overflow-hidden bg-muted">
                       <img
-                        src={getProductImage(p.name, p.categoryId, "small")}
+                        src={getProductImage(p.name, p.categoryId, "sm")}
                         alt={p.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={e => {

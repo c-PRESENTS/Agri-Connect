@@ -110,11 +110,11 @@ export function LiveSellersRail({
       }
     }
     // Trim each seller's top products to 4 and sort cheapest first.
-    for (const s of map.values()) {
+    for (const s of Array.from(map.values())) {
       s.topProducts = s.topProducts.sort((a, b) => a.price - b.price).slice(0, 4);
     }
     return Array.from(map.values()).sort(
-      (a, b) => Number(b.isOnline) - Number(a.isOnline)
+      (a: SellerEntry, b: SellerEntry) => Number(b.isOnline) - Number(a.isOnline)
     );
   }, [products]);
 

@@ -629,7 +629,7 @@ export type ShipmentStatus =
   | "exception"
   | "cancelled";
 
-export type ShipServiceType = "standard" | "express" | "cold_chain" | "same_day" | "milk_run";
+export type ShipServiceType = "same_day" | "next_day" | "standard" | "express" | "scheduled" | "freight" | "cold_chain" | "milk_run";
 
 export interface ShipAddress {
   name: string;
@@ -745,7 +745,7 @@ export const quoteShipmentSchema = z.object({
   pickup: shipAddressSchema,
   drop: shipAddressSchema,
   items: z.array(shipmentItemSchema).min(1).max(50),
-  service: z.enum(["standard", "express", "cold_chain", "same_day", "milk_run"]).optional(),
+  service: shipServiceTypeSchema.optional(),
   pickupWindow: z.string().max(120).optional(),
 });
 

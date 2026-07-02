@@ -33,6 +33,7 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
 
+    root.classList.add("theme-transition");
     root.classList.remove("light", "dark");
 
     if (theme === "system") {

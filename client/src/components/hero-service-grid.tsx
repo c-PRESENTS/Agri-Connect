@@ -50,7 +50,7 @@ function readHidden(): string[]         { try { return JSON.parse(localStorage.g
 function readEmojis(): Record<string, string> { try { return JSON.parse(localStorage.getItem(LS_EMOJIS) || "{}"); } catch { return {}; } }
 function persist(o: string[], h: Set<string>, e: Record<string, string>) {
   localStorage.setItem(LS_ORDER,  JSON.stringify(o));
-  localStorage.setItem(LS_HIDDEN, JSON.stringify([...h]));
+  localStorage.setItem(LS_HIDDEN, JSON.stringify(Array.from(h)));
   localStorage.setItem(LS_EMOJIS, JSON.stringify(e));
 }
 

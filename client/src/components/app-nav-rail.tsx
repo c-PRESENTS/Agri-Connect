@@ -1,6 +1,24 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import type { ReactNode } from "react";
 import { useLocation, useSearch } from "wouter";
 import { motion } from "framer-motion";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  type DragEndEvent,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Home, Map, Sprout, Cpu, Landmark, Truck, HeartHandshake,
   FileText, ShoppingCart, LayoutDashboard, Camera, Settings,
@@ -68,7 +86,7 @@ function readExpanded(): boolean {
 }
 function persist(order: string[], hidden: Set<string>) {
   localStorage.setItem(LS_ORDER, JSON.stringify(order));
-  localStorage.setItem(LS_HIDDEN, JSON.stringify([...hidden]));
+  localStorage.setItem(LS_HIDDEN, JSON.stringify(Array.from(hidden)));
   window.dispatchEvent(new Event("agri-nav-changed"));
 }
 function readEmojis(): Record<string, string> {
@@ -77,6 +95,37 @@ function readEmojis(): Record<string, string> {
 
 interface AppNavRailProps { cartCount?: number; }
 
+function SortableNavSlot({
+  id,
+  editMode,
+  children,
+}: {
+  id: string;
+  editMode: boolean;
+  children: ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled: !editMode,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.55 : 1,
+      }}
+      {...(editMode ? attributes : {})}
+      {...(editMode ? listeners : {})}
+      className={`relative ${isDragging ? "ring-2 ring-primary/60 rounded-xl z-10" : ""}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
   const [location, setLocation] = useLocation();
   const search = useSearch();
@@ -84,9 +133,11 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
   const { isAuthenticated } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [expanded, setExpanded] = useState<boolean>(() => readExpanded());
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [appLauncherOpen, setAppLauncherOpen] = useState(false);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const defaultIds = ALL_SERVICES.filter(s => s.public || isAuthenticated).map(s => s.id);
 
@@ -147,7 +198,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
   const hiddenItems = ALL_SERVICES.filter(s => (s.public || isAuthenticated) && hidden.has(s.id));
 
   const remove = (id: string) => setHidden(prev => {
-    const next = new Set([...prev, id]); persist(order, next); return next;
+    const next = new Set(Array.from(prev)); next.add(id); persist(order, next); return next;
   });
   const restore = (id: string) => setHidden(prev => {
     const next = new Set(prev); next.delete(id); persist(order, next); return next;
@@ -158,34 +209,19 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
     setOrder(def); setHidden(h); persist(def, h);
   };
 
-  // ── Drag-and-drop reorder (vertical, single column) ─────────────────
-  const onDragStart = (id: string) => (e: React.DragEvent) => {
-    setDragId(id);
-    e.dataTransfer.effectAllowed = "move";
-    try { e.dataTransfer.setData("text/plain", id); } catch {}
-  };
-  const onDragOver = (id: string) => (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    if (id !== dragOverId) setDragOverId(id);
-  };
-  const onDrop = (id: string) => (e: React.DragEvent) => {
-    e.preventDefault();
-    const from = dragId;
-    setDragId(null); setDragOverId(null);
-    if (!from || from === id) return;
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
     setOrder(prev => {
       const next = [...prev];
-      const fi = next.indexOf(from);
-      const ti = next.indexOf(id);
+      const fi = next.indexOf(String(active.id));
+      const ti = next.indexOf(String(over.id));
       if (fi < 0 || ti < 0) return prev;
-      next.splice(fi, 1);
-      next.splice(ti, 0, from);
-      persist(next, hidden);
-      return next;
+      const reordered = arrayMove(next, fi, ti);
+      persist(reordered, hidden);
+      return reordered;
     });
   };
-  const onDragEnd = () => { setDragId(null); setDragOverId(null); };
 
   // Collapsed rail shows icon + small label under it for clarity (request A.2).
   const W_COLLAPSED = 96;
@@ -214,25 +250,18 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
 
       {/* Scrollable nav items */}
       <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden py-2 gap-1.5 px-2">
-        {visibleItems.map((item) => {
-          const itemCat = (item as ServiceItem & { category?: string }).category;
-          const isActive = itemCat
-            ? location === "/" && currentCategory === itemCat
-            : item.id === "home"
-              ? location === "/" && !currentCategory
-              : location === item.path || location.startsWith(item.path + "/");
-          const Icon = item.icon;
-          const isDragOver = dragOverId === item.id && dragId !== item.id;
-          return (
-            <div
-              key={item.id}
-              draggable={editMode}
-              onDragStart={editMode ? onDragStart(item.id) : undefined}
-              onDragOver={editMode ? onDragOver(item.id) : undefined}
-              onDrop={editMode ? onDrop(item.id) : undefined}
-              onDragEnd={editMode ? onDragEnd : undefined}
-              className={`relative ${isDragOver ? "ring-2 ring-primary/60 rounded-xl" : ""}`}
-            >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={visibleItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
+            {visibleItems.map((item) => {
+              const itemCat = (item as ServiceItem & { category?: string }).category;
+              const isActive = itemCat
+                ? location === "/" && currentCategory === itemCat
+                : item.id === "home"
+                  ? location === "/" && !currentCategory
+                  : location === item.path || location.startsWith(item.path + "/");
+              const Icon = item.icon;
+              return (
+                <SortableNavSlot key={item.id} id={item.id} editMode={editMode}>
               <motion.button
                 onClick={() => {
                   if (editMode) return;
@@ -298,7 +327,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                   ) : (
                     <Icon className="h-[26px] w-[26px]" strokeWidth={2} />
                   )}
-                  {item.id === "cart" && cartCount > 0 && !editMode && (
+                  {(item.id as string) === "cart" && cartCount > 0 && !editMode && (
                     <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-primary text-[9px] font-bold text-primary-foreground flex items-center justify-center leading-none">
                       {cartCount > 9 ? "9+" : cartCount}
                     </span>
@@ -329,9 +358,11 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                   </button>
                 )}
               </motion.button>
-            </div>
-          );
-        })}
+                </SortableNavSlot>
+              );
+            })}
+          </SortableContext>
+        </DndContext>
 
         {/* Restore hidden items */}
         {editMode && hiddenItems.length > 0 && (

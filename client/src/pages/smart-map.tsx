@@ -746,7 +746,7 @@ export default function SmartMapPage() {
                                     <div className="text-xs font-medium truncate">{product.name}</div>
                                     <div className="text-[10px] text-muted-foreground">£{product.price}/{product.unit} · {product.stock} in stock</div>
                                   </div>
-                                  {product.isFree && <Badge className="text-[9px] bg-green-100 text-green-700 border-none">Free</Badge>}
+                                  {product.price === 0 && <Badge className="text-[9px] bg-green-100 text-green-700 border-none">Free</Badge>}
                                 </div>
                               ))}
                               {farmer.productItems.length > 6 && (
@@ -803,7 +803,7 @@ export default function SmartMapPage() {
                                 <div className="min-w-0 flex-1">
                                   <div className="text-[11px] font-medium truncate leading-tight">{product.name}</div>
                                   <div className="text-[10px] text-muted-foreground">
-                                    {product.isFree ? <span className="text-green-600 font-semibold">Free</span> : `£${product.price}/${product.unit}`}
+                                    {product.price === 0 ? <span className="text-green-600 font-semibold">Free</span> : `£${product.price}/${product.unit}`}
                                   </div>
                                   <div className="text-[9px] text-muted-foreground truncate">{product.farmerName}</div>
                                 </div>

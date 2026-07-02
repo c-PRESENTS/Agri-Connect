@@ -1,25 +1,70 @@
-/**
- * Gemini AI integration placeholder.
- *
- * To activate, add GEMINI_API_KEY to your .env and install the SDK:
- *   pnpm add @google/generative-ai
- *
- * When configured, this module exports a client factory. Otherwise
- * the unified AI service (./index.ts) falls back to OpenAI.
- */
+const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta";
 
-export function isGeminiAvailable(): boolean {
-  return !!process.env.GEMINI_API_KEY;
+type GeminiOptions = {
+  systemInstruction?: string;
+  prompt: string;
+  temperature?: number;
+  maxOutputTokens?: number;
+  responseMimeType?: "text/plain" | "application/json";
+};
+
+function getGeminiApiKey(): string | undefined {
+  return (
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.AI_INTEGRATIONS_GEMINI_API_KEY
+  );
 }
 
-export function getGeminiModel() {
-  if (!isGeminiAvailable()) return null;
-  // TODO: When @google/generative-ai is installed, initialise:
-  //
-  //   const { GoogleGenAI } = require("@google/generative-ai");
-  //   const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  //   return client.models.get("gemini-2.0-flash");
-  //
-  console.log("[gemini] SDK not yet installed — falling through to OpenAI");
-  return null;
+function getGeminiModelName(): string {
+  return process.env.GEMINI_MODEL || "gemini-1.5-flash";
+}
+
+export function isGeminiAvailable(): boolean {
+  return !!getGeminiApiKey();
+}
+
+function extractGeminiText(payload: any): string {
+  const parts = payload?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return "";
+  return parts.map((part) => part?.text).filter(Boolean).join("").trim();
+}
+
+export async function generateGeminiContent({
+  systemInstruction,
+  prompt,
+  temperature = 0.3,
+  maxOutputTokens = 300,
+  responseMimeType = "text/plain",
+}: GeminiOptions): Promise<string> {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) throw new Error("Gemini API key is not configured");
+
+  const model = encodeURIComponent(getGeminiModelName());
+  const response = await fetch(`${GEMINI_ENDPOINT}/models/${model}:generateContent?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...(systemInstruction
+        ? { systemInstruction: { parts: [{ text: systemInstruction }] } }
+        : {}),
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature,
+        maxOutputTokens,
+        responseMimeType,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(`Gemini request failed: ${response.status} ${message}`);
+  }
+
+  const payload = await response.json();
+  const text = extractGeminiText(payload);
+  if (!text) throw new Error("Gemini returned an empty response");
+  return text;
 }

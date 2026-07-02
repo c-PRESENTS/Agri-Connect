@@ -9,6 +9,9 @@ const serviceIcon: Record<ShipServiceType, typeof Truck> = {
   express: Zap,
   cold_chain: Snowflake,
   same_day: Zap,
+  next_day: Clock,
+  scheduled: Clock,
+  freight: Truck,
   milk_run: Leaf,
 };
 
@@ -17,6 +20,9 @@ const serviceLabel: Record<ShipServiceType, string> = {
   express: "Express",
   cold_chain: "Cold-Chain",
   same_day: "Same-Day",
+  next_day: "Next-Day",
+  scheduled: "Scheduled",
+  freight: "Freight",
   milk_run: "Milk Run",
 };
 
