@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, X, TrendingUp, Package, Leaf, History, RotateCcw } from "lucide-react";
+import { Search, X, TrendingUp, Package, Leaf, History, RotateCcw, Sparkles, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 import { categories } from "@/lib/categories";
+import { apiRequest } from "@/lib/queryClient";
 
 interface SearchAutocompleteProps {
   value: string;
@@ -36,16 +38,55 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   const [open, setOpen] = useState(false);
   const [inputVal, setInputVal] = useState(value);
   const [recentSearches, setRecentSearches] = useState<string[]>(getRecentSearches);
+  const [aiSearchEnabled, setAiSearchEnabled] = useState(() => localStorage.getItem("agriconnect-ai-search") !== "false");
+  const [aiResults, setAiResults] = useState<Product[] | null>(null);
+  const [aiExpandedQuery, setAiExpandedQuery] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiCategoryHint, setAiCategoryHint] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
   const { data: products = [] } = useQuery<Product[]>({
     queryKey: [inputVal ? `/api/products?search=${encodeURIComponent(inputVal)}` : "/api/products"],
-    enabled: inputVal.length >= 2,
+    enabled: inputVal.length >= 2 && !aiSearchEnabled,
   });
 
-  const suggestions = products.slice(0, 6);
+  const suggestions = aiResults ?? products.slice(0, 6);
+
+  const toggleAiSearch = useCallback((val: boolean) => {
+    setAiSearchEnabled(val);
+    localStorage.setItem("agriconnect-ai-search", String(val));
+    setAiResults(null);
+    setAiExpandedQuery("");
+    setAiCategoryHint(null);
+  }, []);
+
+  const performAiSearch = useCallback(async (query: string) => {
+    if (!query || query.length < 2) {
+      setAiResults(null);
+      setAiExpandedQuery("");
+      setAiCategoryHint(null);
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await apiRequest("POST", "/api/ai/search", {
+        query,
+        language: navigator.language.split("-")[0] || "en",
+      });
+      const data = await res.json();
+      setAiResults(data.results || []);
+      setAiExpandedQuery(data.expandedQuery || "");
+      setAiCategoryHint(data.categoryHint || null);
+    } catch {
+      setAiResults(null);
+      setAiExpandedQuery("");
+      setAiCategoryHint(null);
+    } finally {
+      setAiLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -62,6 +103,15 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
     setInputVal(val);
     onChange(val);
     setOpen(true);
+    // Trigger AI search with debounce
+    if (aiSearchEnabled && val.length >= 2) {
+      const timeout = setTimeout(() => performAiSearch(val), 300);
+      return () => clearTimeout(timeout);
+    } else {
+      setAiResults(null);
+      setAiExpandedQuery("");
+      setAiCategoryHint(null);
+    }
   };
 
   const handleSelect = (query: string) => {
@@ -100,6 +150,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   const showTrending = open && inputVal.length === 0;
   const showSuggestions = open && inputVal.length >= 2 && suggestions.length > 0;
   const showCategories = open && inputVal.length === 0;
+  const showNoResults = open && inputVal.length >= 2 && !aiLoading && aiResults !== null && aiResults.length === 0;
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -128,7 +179,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
       </form>
 
       <AnimatePresence>
-        {(showRecent || showTrending || showCategories || showSuggestions) && (
+        {(showRecent || showTrending || showCategories || showSuggestions || showNoResults) && (
           <motion.div
             initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -137,6 +188,44 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             className="absolute top-full left-0 right-0 mt-1.5 z-50 rounded-xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-xl shadow-black/8 overflow-hidden"
             data-testid="dropdown-search-results"
           >
+            {/* AI Search Toggle */}
+            {open && inputVal.length > 0 && (
+              <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-border/30 bg-muted/20">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="h-3 w-3 text-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">AI Search</span>
+                </div>
+                <Switch
+                  checked={aiSearchEnabled}
+                  onCheckedChange={toggleAiSearch}
+                  className="scale-75"
+                  data-testid="toggle-ai-search"
+                />
+              </div>
+            )}
+
+            {/* AI Expanded Query Indicator */}
+            {aiSearchEnabled && aiExpandedQuery && aiExpandedQuery !== inputVal && inputVal.length >= 2 && (
+              <div className="px-3 py-1.5 border-b border-border/30 bg-primary/5">
+                <p className="text-[10px] text-muted-foreground">
+                  <span className="font-semibold">Expanded:</span> {aiExpandedQuery}
+                  {aiCategoryHint && (
+                    <Badge variant="secondary" className="ml-1.5 text-[8px] py-0">
+                      {categories.find(c => c.id === aiCategoryHint)?.name || aiCategoryHint}
+                    </Badge>
+                  )}
+                </p>
+              </div>
+            )}
+
+            {/* Loading indicator */}
+            {aiLoading && (
+              <div className="flex items-center justify-center gap-2 px-3 py-3">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                <span className="text-[11px] text-muted-foreground">AI searching...</span>
+              </div>
+            )}
+
             {showRecent && (
               <div className="p-2 border-b border-border/30">
                 <div className="flex items-center justify-between gap-1.5 px-2 py-1 mb-1">
@@ -212,13 +301,20 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
               </div>
             )}
 
-            {showSuggestions && (
+            {showSuggestions && !aiLoading && (
               <div className="p-1.5">
                 <div className="flex items-center gap-1.5 px-2 py-1 mb-0.5">
-                  <Package className="h-3 w-3 text-primary" />
+                  {aiSearchEnabled ? (
+                    <Sparkles className="h-3 w-3 text-primary" />
+                  ) : (
+                    <Package className="h-3 w-3 text-primary" />
+                  )}
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    {t("search.products", "Products")}
+                    {aiSearchEnabled ? "AI Results" : t("search.products", "Products")}
                   </span>
+                  {aiSearchEnabled && suggestions.length > 0 && (
+                    <Badge variant="secondary" className="text-[8px] py-0 ml-auto">{suggestions.length} found</Badge>
+                  )}
                 </div>
                 {suggestions.map((product) => (
                   <button
@@ -245,6 +341,13 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                     <div className="text-[11px] font-bold text-primary shrink-0">£{product.price}</div>
                   </button>
                 ))}
+              </div>
+            )}
+
+            {showNoResults && (
+              <div className="px-3 py-4 text-center">
+                <p className="text-[11px] text-muted-foreground">No results for "{inputVal}"</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-0.5">Try different keywords or toggle off AI Search</p>
               </div>
             )}
           </motion.div>

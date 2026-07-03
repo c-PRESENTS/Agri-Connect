@@ -1134,10 +1134,10 @@ GUIDELINES:
     }
   });
 
-  // AI Voice Command — interprets voice transcript and returns action + response
+  // AI Voice Command — interprets voice transcript, supports multi-turn conversation
   app.post("/api/ai/voice", isAuthenticated, aiRateLimit(15, 60_000), async (req, res) => {
     try {
-      const { transcript, language = "en", context = "" } = req.body;
+      const { transcript, language = "en", context = "", conversationHistory = [] } = req.body;
 
       if (!transcript || typeof transcript !== "string") {
         return res.status(400).json({ error: "Transcript is required" });
@@ -1146,7 +1146,59 @@ GUIDELINES:
         return res.status(400).json({ error: "Transcript too long (max 500 characters)" });
       }
 
-      const parsed = await ai.interpretVoice(transcript, language, context);
+      const lang = normalizeLang(language);
+      const langName = lang === "en" ? "English" : lang === "hi" ? "Hindi" : lang === "pa" ? "Punjabi" : lang === "ta" ? "Tamil" : lang === "cy" ? "Welsh" : "Polish";
+
+      // Build conversation context for multi-turn
+      const historySnippet = conversationHistory.length > 0
+        ? "\n\nPrevious conversation:\n" + conversationHistory.map((turn: { role: string; text: string }) =>
+            `${turn.role === "user" ? "User" : "Assistant"}: ${turn.text}`
+          ).join("\n")
+        : "";
+
+      const systemPrompt = `You are the AgriConnect voice assistant for an agricultural marketplace. You speak ${langName}.
+
+The user spoke: "${transcript}" (language: ${langName})
+Context: ${context}${historySnippet}
+
+Interpret the command and return a JSON response with:
+- "response": a short, friendly spoken reply in the same language as the user (max 20 words). If the user asked a follow-up question that depends on previous context, use the conversation history to give a relevant answer.
+- "action": one of "search", "navigate", "info", or "search_text"
+- "query": if action is "search", the search term to use
+- "path": if action is "navigate", the URL path (e.g. "/dashboard", "/cart", "/land-leasing", "/share-care", "/logistics", "/farmers-help")
+
+Examples:
+- "show me organic potatoes" -> {"response": "Searching for organic potatoes now", "action": "search", "query": "organic potatoes"}
+- "go to my dashboard" -> {"response": "Opening your dashboard", "action": "navigate", "path": "/dashboard"}
+- "what vegetables are available" -> {"response": "Searching vegetables for you", "action": "search", "query": "vegetables"}
+- "open the cart" -> {"response": "Opening your cart", "action": "navigate", "path": "/cart"}
+- Follow-up: "show me more" after a search -> {"response": "Here are more results", "action": "search", "query": <reuse previous search context>}
+
+Respond only with valid JSON.`;
+
+      let parsed: Record<string, unknown>;
+
+      try {
+        // Use OpenAI with conversation context
+        const messages: Array<{ role: "user" | "system"; content: string }> = [
+          { role: "user", content: systemPrompt }
+        ];
+
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages,
+          max_tokens: 180,
+          temperature: 0.3,
+          response_format: { type: "json_object" },
+        });
+
+        const content = completion.choices[0]?.message?.content || "{}";
+        parsed = JSON.parse(content) as Record<string, unknown>;
+      } catch {
+        // Fallback to the basic AI service
+        parsed = await ai.interpretVoice(transcript, language, context);
+      }
+
       res.json(parsed);
     } catch (error) {
       console.error("Voice AI error:", error);
@@ -1154,6 +1206,142 @@ GUIDELINES:
         response: "I'll search for that",
         action: "search_text"
       });
+    }
+  });
+
+  // AI-Powered Search — expands query with synonyms, handles typos, returns enhanced results
+  app.post("/api/ai/search", isAuthenticated, aiRateLimit(30, 60_000), async (req, res) => {
+    try {
+      const { query, language = "en" } = req.body;
+
+      if (!query || typeof query !== "string") {
+        return res.status(400).json({ error: "Query is required" });
+      }
+      if (query.length > 200) {
+        return res.status(400).json({ error: "Query too long (max 200 characters)" });
+      }
+
+      const lang = normalizeLang(language);
+      const langName = lang === "en" ? "English" : lang === "hi" ? "Hindi" : lang === "pa" ? "Punjabi" : lang === "ta" ? "Tamil" : lang === "cy" ? "Welsh" : "Polish";
+
+      // Step 1: Get all products for context
+      const allProducts = await storage.getProducts({});
+      const productNames = allProducts.map(p => p.name).slice(0, 100);
+
+      // Step 2: Use AI to expand the search query
+      const systemPrompt = `You are a search engine for an agricultural marketplace called AgriConnect.
+
+The user searched for: "${query}" (language: ${langName})
+
+Available product names (sample): ${productNames.join(", ")}
+
+Your job is to:
+1. Correct any typos or misspellings
+2. Expand the query with synonyms and related agricultural terms (e.g. "veggies" → "vegetables", "taters" → "potatoes")
+3. If the query is in a non-English language, also provide the English equivalent
+4. Return a JSON object with:
+   - "expandedQuery": the corrected/expanded English search terms (space-separated keywords)
+   - "category": best matching category hint if obvious (one of: "daily-needs", "inputs-tools", "processed", "specialty", "other-agri", "supermarket", "dietary", "modern-farming", "services", "commercial-crops", "bio-products", or null)
+   - "intent": "search" or "browse" (is the user looking for a specific product or browsing a category?)
+
+Respond only with valid JSON, no markdown.`;
+
+      let expandedQuery = query;
+      let categoryHint = null;
+      let intent = "search";
+
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: systemPrompt }],
+          max_tokens: 150,
+          temperature: 0.2,
+          response_format: { type: "json_object" },
+        });
+
+        const aiResult = JSON.parse(completion.choices[0]?.message?.content || "{}");
+        expandedQuery = aiResult.expandedQuery || query;
+        categoryHint = aiResult.category || null;
+        intent = aiResult.intent || "search";
+      } catch {
+        // AI failed — fall back to raw query
+        expandedQuery = query;
+      }
+
+      // Step 3: Search with expanded query using multiple strategies
+      const keywords = expandedQuery.toLowerCase().split(/\s+/).filter(Boolean);
+
+      // Primary: exact match on expanded terms
+      let results = allProducts.filter(p => {
+        const haystack = `${p.name} ${p.description} ${p.farmerName}`.toLowerCase();
+        return keywords.some(kw => haystack.includes(kw));
+      });
+
+      // Fuzzy: Levenshtein-based matching for typos
+      if (results.length < 3) {
+        const levenshtein = (a: string, b: string): number => {
+          const m = a.length, n = b.length;
+          const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+          for (let i = 0; i <= m; i++) dp[i][0] = i;
+          for (let j = 0; j <= n; j++) dp[0][j] = j;
+          for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+              dp[i][j] = Math.min(
+                dp[i - 1][j] + 1,
+                dp[i][j - 1] + 1,
+                dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+              );
+            }
+          }
+          return dp[m][n];
+        };
+
+        const fuzzyResults = allProducts.filter(p => {
+          const nameLower = p.name.toLowerCase();
+          return keywords.some(kw => {
+            if (nameLower.includes(kw)) return true;
+            // Allow up to 2 character edits for words >= 4 chars
+            const words = nameLower.split(/\s+/);
+            return words.some(w => w.length >= 4 && levenshtein(w, kw) <= 2);
+          });
+        });
+
+        // Merge without duplicates
+        const existingIds = new Set(results.map(p => p.id));
+        fuzzyResults.forEach(p => { if (!existingIds.has(p.id)) results.push(p); });
+      }
+
+      // Category filter if AI suggested one
+      if (categoryHint && intent === "browse") {
+        const categoryMatches = results.filter(p => p.categoryId === categoryHint);
+        if (categoryMatches.length > 0) results = categoryMatches;
+      }
+
+      // Sort: name match first, then rating
+      results.sort((a, b) => {
+        const aNameMatch = keywords.some(kw => a.name.toLowerCase().includes(kw));
+        const bNameMatch = keywords.some(kw => b.name.toLowerCase().includes(kw));
+        if (aNameMatch && !bNameMatch) return -1;
+        if (!aNameMatch && bNameMatch) return 1;
+        return b.rating - a.rating;
+      });
+
+      res.json({
+        results: results.slice(0, 20),
+        expandedQuery,
+        categoryHint,
+        intent,
+        totalFound: results.length,
+      });
+    } catch (error) {
+      console.error("AI Search error:", error);
+      // Fallback: plain search
+      try {
+        const products = await storage.getProducts({ search: req.body.query });
+        res.json({ results: products, expandedQuery: req.body.query, categoryHint: null, intent: "search", totalFound: products.length });
+      } catch {
+        res.status(500).json({ error: "Search failed" });
+      }
     }
   });
 

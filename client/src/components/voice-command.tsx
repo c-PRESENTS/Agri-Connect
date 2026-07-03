@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { Mic, MicOff, Volume2, X, Loader2, Sparkles, Repeat } from "lucide-react";
+import { Mic, MicOff, Volume2, X, Loader2, Sparkles, Repeat, MessageSquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -20,6 +20,12 @@ interface VoiceCommandProps {
 }
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking";
+
+type ConversationTurn = {
+  role: "user" | "assistant";
+  text: string;
+  timestamp: number;
+};
 
 const LANG_BCP: Record<string, string> = {
   en: "en-GB",
@@ -105,6 +111,7 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
   const [transcript, setTranscript] = useState("");
   const [responseText, setResponseText] = useState("");
   const [aiResponse, setAiResponse] = useState("");
+  const [conversation, setConversation] = useState<ConversationTurn[]>([]);
   const recognitionRef = useRef<any>(null);
   const [continuous, setContinuous] = useState(false);
   const [audioCues, setAudioCues] = useState(() => localStorage.getItem("agri-voice-cues") !== "false");
@@ -179,6 +186,13 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
     }
   }, []);
 
+  const clearConversation = useCallback(() => {
+    setConversation([]);
+    setTranscript("");
+    setAiResponse("");
+    setResponseText("");
+  }, []);
+
   const speak = useCallback((text: string) => {
     if (!("speechSynthesis" in window)) return;
     const utterance = new SpeechSynthesisUtterance(text);
@@ -191,6 +205,10 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
     setVoiceState("processing");
     setAiResponse("");
     if (!silent) playBeep("start");
+
+    // Add user turn to conversation
+    const userTurn: ConversationTurn = { role: "user", text, timestamp: Date.now() };
+    setConversation(prev => [...prev, userTurn]);
 
     const patterns = NAV_PATTERNS[baseLang] || NAV_PATTERNS.en;
     const allPatterns = [...patterns, ...(baseLang !== "en" ? NAV_PATTERNS.en : [])];
@@ -211,7 +229,11 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
         const dest = destinations[cmd.action];
         const msg = t("voice.navigating", { destination: cmd.action });
         setResponseText(msg);
+        setAiResponse(msg);
         setVoiceState("speaking");
+        // Add assistant turn
+        const assistantTurn: ConversationTurn = { role: "assistant", text: msg, timestamp: Date.now() };
+        setConversation(prev => [...prev, assistantTurn]);
         speak(msg);
         setTimeout(() => { setLocation(dest); setIsOpen(false); setVoiceState("idle"); }, 1200);
         return;
@@ -219,15 +241,21 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
     }
 
     try {
+      // Send conversation history for multi-turn context
       const res = await apiRequest("POST", "/api/ai/voice", {
         transcript: text,
         language: baseLang,
         context: "marketplace navigation and product search",
+        conversationHistory: conversation.slice(-10).map(t => ({ role: t.role, text: t.text })),
       });
       const data = await res.json();
       const reply = data.response || t("voice.searching", { query: text });
       setAiResponse(reply);
+      setResponseText(reply);
       setVoiceState("speaking");
+      // Add assistant turn
+      const assistantTurn: ConversationTurn = { role: "assistant", text: reply, timestamp: Date.now() };
+      setConversation(prev => [...prev, assistantTurn]);
       speak(reply);
       playBeep("done");
 
@@ -244,12 +272,16 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
       setTimeout(completeCommand, 3000);
     } catch {
       onSearch?.(text);
-      setResponseText(t("voice.searching", { query: text }));
+      const fallbackMsg = t("voice.searching", { query: text });
+      setResponseText(fallbackMsg);
+      setAiResponse(fallbackMsg);
       setVoiceState("speaking");
-      speak(t("voice.searching", { query: text }));
+      const assistantTurn: ConversationTurn = { role: "assistant", text: fallbackMsg, timestamp: Date.now() };
+      setConversation(prev => [...prev, assistantTurn]);
+      speak(fallbackMsg);
       setTimeout(completeCommand, 2000);
     }
-  }, [onSearch, setLocation, speak, baseLang, t, playBeep, completeCommand]);
+  }, [onSearch, setLocation, speak, baseLang, t, playBeep, completeCommand, conversation]);
 
   const startListening = useCallback(() => {
     if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
@@ -316,6 +348,7 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
     setTranscript("");
     setAiResponse("");
     setResponseText("");
+    // Don't clear conversation on close — keep history for next open
   };
 
   const suggestions = [t("voice.find_organic"), t("voice.go_dashboard"), t("voice.open_cart"), t("voice.sell_produce"), t("voice.show_land")];
@@ -342,8 +375,47 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
               <Badge variant="secondary" className="text-[10px] ml-auto">
                 {baseLang.toUpperCase()}
               </Badge>
+              {conversation.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 ml-1"
+                  onClick={clearConversation}
+                  title="New conversation"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
             </DialogTitle>
           </DialogHeader>
+
+          {/* Conversation History */}
+          {conversation.length > 0 && (
+            <div className="max-h-[200px] overflow-y-auto space-y-2 px-1 py-2" data-testid="conversation-history">
+              {conversation.map((turn, i) => (
+                <div
+                  key={i}
+                  className={`flex ${turn.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-xl px-3 py-2 text-[12px] ${
+                      turn.role === "user"
+                        ? "bg-primary text-primary-foreground rounded-br-sm"
+                        : "bg-muted text-foreground rounded-bl-sm"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      {turn.role === "assistant" && <Sparkles className="h-2.5 w-2.5 text-primary" />}
+                      <span className="text-[9px] font-bold uppercase opacity-60">
+                        {turn.role === "user" ? "You" : "AI"}
+                      </span>
+                    </div>
+                    {turn.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="flex flex-col items-center py-6">
             <AnimatePresence mode="wait">
@@ -415,6 +487,14 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
                 </span>
               </label>
             </div>
+            {conversation.length > 0 && (
+              <div className="mt-2 pt-2 border-t">
+                <p className="text-[10px] text-muted-foreground text-center">
+                  <MessageSquare className="h-3 w-3 inline mr-1" />
+                  {conversation.length} turns in conversation
+                </p>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
