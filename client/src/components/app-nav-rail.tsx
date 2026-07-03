@@ -29,6 +29,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { categories as defaultCategories, categoryImages } from "@/lib/categories";
 import { AppLauncher } from "./app-launcher";
+import { useTranslation } from "react-i18next";
 
 function getCategoryImage(categoryId: string): string | undefined {
   if (categoryImages[categoryId]) return categoryImages[categoryId];
@@ -127,6 +128,7 @@ function SortableNavSlot({
 }
 
 export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
+  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const search = useSearch();
   const currentCategory = new URLSearchParams(search || "").get("category");
@@ -134,6 +136,33 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
   const [editMode, setEditMode] = useState(false);
   const [expanded, setExpanded] = useState<boolean>(() => readExpanded());
   const [appLauncherOpen, setAppLauncherOpen] = useState(false);
+
+  const LABEL_KEYS: Record<string, string> = {
+    "home": "nav.home",
+    "cat-daily": "category.daily",
+    "cat-inputs": "category.inputs",
+    "cat-processed": "category.processed",
+    "cat-specialty": "category.specialty",
+    "cat-other": "category.other_agri",
+    "cat-super": "category.market",
+    "cat-dietary": "category.dietary",
+    "cat-modern": "category.modern",
+    "cat-services": "category.services",
+    "cat-commerc": "category.commercial",
+    "cat-bio": "category.bio",
+    "help": "nav.help",
+    "map": "nav.map",
+    "land": "nav.land",
+    "share": "nav.share",
+    "ship": "nav.ship",
+    "cart": "nav.cart",
+    "dash": "nav.dashboard",
+    "settings": "nav.settings",
+  };
+  const getItemLabel = (item: ServiceItem) => {
+    const key = LABEL_KEYS[item.id];
+    return key ? t(key) : item.label;
+  };
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -241,7 +270,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
         <button
           onClick={() => setExpanded(v => !v)}
           className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          title={expanded ? "Collapse menu" : "Expand menu"}
+          title={expanded ? t("nav.collapse_menu") : t("nav.expand_menu")}
           data-testid="nav-rail-toggle"
         >
           {expanded ? <ChevronsLeft className="h-5 w-5" /> : <ChevronsRight className="h-5 w-5" />}
@@ -282,7 +311,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                 }}
                 whileHover={!editMode ? { scale: 1.03 } : {}}
                 whileTap={!editMode ? { scale: 0.96 } : {}}
-                title={item.label}
+                title={getItemLabel(item)}
                 className={`w-full relative flex rounded-xl transition-all duration-150 overflow-hidden ${
                   expanded
                     ? "items-center gap-3 py-2 px-2.5"
@@ -318,7 +347,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                   ) : itemCat && getCategoryImage(itemCat) ? (
                     <img
                       src={getCategoryImage(itemCat)}
-                      alt={item.label}
+                      alt={getItemLabel(item)}
                       loading="lazy"
                       className={`object-cover rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10 ${
                         expanded ? "h-9 w-9" : "h-12 w-12"
@@ -337,11 +366,11 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                 {/* Label — under icon when collapsed, inline when expanded */}
                 {expanded ? (
                   <span className="text-[15px] font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis flex-1 text-left">
-                    {item.label}
+                    {getItemLabel(item)}
                   </span>
                 ) : (
                   <span className="text-[10px] font-semibold leading-tight text-center w-full whitespace-nowrap overflow-hidden text-ellipsis">
-                    {item.label}
+                    {getItemLabel(item)}
                   </span>
                 )}
 
@@ -352,7 +381,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                     className={`ml-auto h-5 w-5 rounded flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950 ${
                       expanded ? "" : "absolute top-0.5 right-0.5"
                     }`}
-                    title={`Hide ${item.label}`}
+                    title={`${t("home.hide")} ${getItemLabel(item)}`}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -368,7 +397,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
         {editMode && hiddenItems.length > 0 && (
           <div className="mt-1 pt-1 border-t border-dashed border-border/50 space-y-px">
             {expanded && (
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground text-center font-semibold px-1 py-0.5">Hidden</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground text-center font-semibold px-1 py-0.5">{t("nav.hidden")}</p>
             )}
             {hiddenItems.map(item => {
               const Icon = item.icon;
@@ -379,11 +408,11 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                   className={`w-full rounded-xl text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 transition-all flex ${
                     expanded ? "items-center gap-2.5 px-2.5 py-2" : "flex-col items-center gap-0.5 px-1 py-2"
                   }`}
-                  title={`Restore ${item.label}`}
+                  title={`${t("home.restore_all")} ${getItemLabel(item)}`}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
                   <span className={expanded ? "text-[12px] font-medium truncate" : "text-[9px] font-medium truncate w-full text-center"}>
-                    {expanded ? `Restore ${item.label}` : item.label}
+                    {expanded ? `${t("home.restore_all")} ${getItemLabel(item)}` : getItemLabel(item)}
                   </span>
                 </button>
               );
@@ -399,11 +428,11 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
           className={`w-full rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all flex ${
             expanded ? "items-center gap-3 px-3 py-2.5" : "flex-col items-center gap-1 py-2"
           }`}
-          title="All Apps & Features"
+          title={t("nav.all_apps")}
           data-testid="nav-rail-apps"
         >
           <Grid3X3 className="h-5 w-5 flex-shrink-0" />
-          <span className={expanded ? "text-[13px] font-semibold" : "text-[10px] font-semibold"}>Apps</span>
+          <span className={expanded ? "text-[13px] font-semibold" : "text-[10px] font-semibold"}>{t("nav.apps")}</span>
         </button>
         {editMode && (
           <button
@@ -411,10 +440,10 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
             className={`w-full rounded-xl text-muted-foreground hover:bg-muted transition-all flex ${
               expanded ? "items-center gap-3 px-3 py-2.5" : "flex-col items-center gap-1 py-2"
             }`}
-            title="Reset menu"
+            title={t("nav.reset_menu")}
           >
             <RotateCcw className="h-5 w-5 flex-shrink-0" />
-            <span className={expanded ? "text-[13px] font-semibold" : "text-[10px] font-semibold"}>Reset</span>
+            <span className={expanded ? "text-[13px] font-semibold" : "text-[10px] font-semibold"}>{t("nav.reset")}</span>
           </button>
         )}
         <button
@@ -423,11 +452,11 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
             expanded ? "items-center gap-3 px-3 py-2.5" : "flex-col items-center gap-1 py-2"
           } ${editMode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
           data-testid="nav-rail-edit"
-          title={editMode ? "Done" : "Edit menu (drag to reorder, X to hide)"}
+          title={editMode ? t("nav.done") : t("nav.edit_menu_hint")}
         >
           {editMode ? <Check className="h-5 w-5 flex-shrink-0" /> : <Pencil className="h-5 w-5 flex-shrink-0" />}
           <span className={expanded ? "text-[13px] font-semibold whitespace-nowrap" : "text-[10px] font-semibold"}>
-            {editMode ? "Done" : "Edit"}
+            {editMode ? t("nav.done") : t("nav.edit")}
           </span>
         </button>
       </div>

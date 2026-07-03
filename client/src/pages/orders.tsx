@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   ShoppingBag, Package, Truck, CheckCircle, Clock, XCircle,
@@ -25,7 +26,18 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: t
   cancelled:          { label: "Cancelled",          color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",          icon: XCircle },
 };
 
+const statusKeyMap: Record<string, string> = {
+  order_placed: "orders.status_pending",
+  payment_confirmed: "orders.status_confirmed",
+  processing: "orders.status_confirmed",
+  shipped: "orders.status_shipped",
+  out_for_delivery: "orders.status_out_for_delivery",
+  delivered: "orders.status_delivered",
+  cancelled: "orders.status_cancelled",
+};
+
 export default function OrdersPage() {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -60,9 +72,9 @@ export default function OrdersPage() {
           </button>
           <div>
             <h1 className="text-2xl font-black flex items-center gap-2">
-              <ShoppingBag className="h-6 w-6 text-primary" /> My Orders
+              <ShoppingBag className="h-6 w-6 text-primary" /> {t("orders.title")}
             </h1>
-            <p className="text-sm text-muted-foreground">{orders.length} order{orders.length !== 1 ? "s" : ""} total</p>
+            <p className="text-sm text-muted-foreground">{orders.length} {t("orders.title").toLowerCase()}</p>
           </div>
         </div>
 
@@ -73,7 +85,7 @@ export default function OrdersPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search orders or products..."
+              placeholder={t("orders.search_placeholder")}
               className="pl-9"
               data-testid="input-order-search"
             />
@@ -81,12 +93,12 @@ export default function OrdersPage() {
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px]" data-testid="select-status-filter">
               <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="All statuses" />
+              <SelectValue placeholder={t("orders.tab_all")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="all">{t("orders.tab_all")}</SelectItem>
               {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-                <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
+                <SelectItem key={key} value={key}>{t(statusKeyMap[key] || key)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -103,16 +115,16 @@ export default function OrdersPage() {
           <div className="text-center py-10 sm:py-16">
             <ShoppingBag className="h-14 w-14 text-muted-foreground mx-auto mb-4 opacity-40" />
             <h2 className="text-xl font-bold mb-2">
-              {orders.length === 0 ? "No orders yet" : "No orders match your filter"}
+              {orders.length === 0 ? t("orders.empty_title") : t("orders.empty_title")}
             </h2>
             <p className="text-muted-foreground text-sm mb-6">
               {orders.length === 0
-                ? "When you place an order, it will appear here."
-                : "Try a different search or filter."}
+                ? t("orders.empty_description")
+                : t("orders.search_placeholder")}
             </p>
             {orders.length === 0 && (
               <Button onClick={() => navigate("/")} className="gap-2">
-                <ShoppingBag className="h-4 w-4" /> Start Shopping
+                <ShoppingBag className="h-4 w-4" /> {t("orders.start_shopping")}
               </Button>
             )}
           </div>
@@ -140,7 +152,7 @@ export default function OrdersPage() {
                             <span className="font-black text-sm font-mono">{order.orderNumber}</span>
                             <Badge className={`${cfg.color} border-none text-[10px] h-5 px-2 gap-1`}>
                               <StatusIcon className="h-2.5 w-2.5" />
-                              {cfg.label}
+                              {t(statusKeyMap[order.status] || order.status)}
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5">
@@ -184,7 +196,7 @@ export default function OrdersPage() {
                       {order.estimatedDelivery && order.status !== "delivered" && order.status !== "cancelled" && (
                         <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          Est. delivery: {new Date(order.estimatedDelivery).toLocaleDateString("en-GB", {
+                          {t("order_detail.estimated_delivery")}: {new Date(order.estimatedDelivery).toLocaleDateString("en-GB", {
                             weekday: "short", day: "numeric", month: "short"
                           })}
                         </div>

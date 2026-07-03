@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Search, Home, PanelLeftClose, PanelLeft, Sprout, ArrowUp, ArrowDown, GripVertical, ShoppingCart, HelpCircle, TrendingUp } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import {
@@ -82,6 +83,7 @@ interface SortableCategoryProps {
 }
 
 function SortableCategory({ category, isSelected, isExpanded, isCollapsed, onTap }: SortableCategoryProps) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   const image = getCategoryImage(category.id);
@@ -161,7 +163,7 @@ function SortableCategory({ category, isSelected, isExpanded, isCollapsed, onTap
         className="absolute top-1 right-1 opacity-0 group-hover/drag:opacity-60 hover:!opacity-100 p-0.5 rounded cursor-grab active:cursor-grabbing transition-opacity z-10"
         {...attributes}
         {...listeners}
-        title="Drag to reorder"
+        title={t("nav.edit_menu_hint")}
       >
         <GripVertical className="h-3 w-3 text-muted-foreground" />
       </button>
@@ -177,6 +179,7 @@ export function CategorySidebar({
   expandedCategory,
   isPanelOpen,
 }: CategorySidebarProps) {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const { setOpen, open, state, toggleSidebar } = useSidebar();
@@ -285,7 +288,7 @@ export function CategorySidebar({
                 </div>
                 <div className="flex flex-col">
                   <span className="font-bold text-[11px] tracking-tight uppercase leading-none">AgriConnect</span>
-                  <span className="text-[7px] text-muted-foreground uppercase tracking-widest font-medium">Market</span>
+                  <span className="text-[7px] text-muted-foreground uppercase tracking-widest font-medium">{t("category.market")}</span>
                 </div>
               </Link>
               <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-6 w-6 rounded-full hover:bg-muted" data-testid="button-collapse-sidebar">
@@ -295,7 +298,7 @@ export function CategorySidebar({
             <div className="relative group">
               <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
               <Input
-                placeholder="Search categories..."
+                placeholder={t("search.placeholder")}
                 className="pl-7 h-7 text-[10px] rounded-md bg-muted/50 border-0 focus-visible:ring-1 transition-all focus:bg-background"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -328,8 +331,8 @@ export function CategorySidebar({
                       <Sprout className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-[9px] uppercase tracking-tight">Farmer Help</span>
-                      <span className="text-[7px] text-muted-foreground">Expert Guide</span>
+                      <span className="font-bold text-[9px] uppercase tracking-tight">{t("help.title")}</span>
+                      <span className="text-[7px] text-muted-foreground">{t("help.guidance")}</span>
                     </div>
                   </div>
                 </div>
@@ -392,21 +395,21 @@ export function CategorySidebar({
         {/* A.6 Quick-Launch Panels */}
         <div className={`grid ${isCollapsed ? "grid-cols-1 gap-1" : "grid-cols-3 gap-1"}`}>
           {[
-            { icon: ShoppingCart, label: "Cart", href: "/cart", color: "text-orange-500" },
-            { icon: TrendingUp, label: "Market", href: "/land-leasing", color: "text-blue-500" },
-            { icon: HelpCircle, label: "Help", href: "/farmers-help", color: "text-green-500" },
+            { icon: ShoppingCart, label: "nav.cart", href: "/cart", color: "text-orange-500" },
+            { icon: TrendingUp, label: "nav.browse", href: "/land-leasing", color: "text-blue-500" },
+            { icon: HelpCircle, label: "nav.help", href: "/farmers-help", color: "text-green-500" },
           ].map(({ icon: Icon, label, href, color }) => (
             <Tooltip key={label} delayDuration={0}>
               <TooltipTrigger asChild>
                 <Link href={href} data-testid={`link-quick-${label.toLowerCase()}`}>
                   <button className={`w-full flex flex-col items-center justify-center gap-0.5 py-1 rounded-lg hover:bg-muted/60 transition-all group ${isCollapsed ? "py-1.5" : ""}`}>
                     <Icon className={`${isCollapsed ? "h-4 w-4" : "h-3.5 w-3.5"} ${color} transition-transform group-hover:scale-110`} />
-                    {!isCollapsed && <span className="text-[7px] uppercase font-bold tracking-wide text-muted-foreground">{label}</span>}
+                    {!isCollapsed && <span className="text-[7px] uppercase font-bold tracking-wide text-muted-foreground">{t(label)}</span>}
                   </button>
                 </Link>
               </TooltipTrigger>
               {isCollapsed && (
-                <TooltipContent side="right" className="text-[10px] font-bold uppercase tracking-widest">{label}</TooltipContent>
+                <TooltipContent side="right" className="text-[10px] font-bold uppercase tracking-widest">{t(label)}</TooltipContent>
               )}
             </Tooltip>
           ))}
@@ -418,7 +421,7 @@ export function CategorySidebar({
             <span className="mx-1.5 text-border">|</span>
             <span className="text-primary font-bold">{totalSubcategories}+</span> ITEMS
             <span className="mx-1.5 text-border">|</span>
-            <span className="text-muted-foreground">drag to reorder</span>
+            <span className="text-muted-foreground">{t("nav.edit_menu_hint")}</span>
           </div>
         )}
       </SidebarFooter>

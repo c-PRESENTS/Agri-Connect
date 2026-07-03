@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +25,7 @@ interface PublicShipment {
 }
 
 export default function ShipTrackPage() {
+  const { t } = useTranslation();
   const [, params] = useRoute<{ trackingId: string }>("/ship/track/:trackingId");
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -38,11 +40,10 @@ export default function ShipTrackPage() {
   return (
     <div className="container max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-4">
       <Button variant="ghost" size="sm" onClick={() => navigate("/ship")} className="-ml-2" data-testid="button-back">
-        <ArrowLeft className="h-4 w-4 mr-1" />Back to Ship
-      </Button>
+        <ArrowLeft className="h-4 w-4 mr-1" />{t("ship_track.back_to_shipping")}</Button>
 
       <div>
-        <p className="text-xs text-muted-foreground">Tracking ID</p>
+        <p className="text-xs text-muted-foreground">{t("ship_track.title")}</p>
         <div className="flex items-center gap-2">
           <p className="font-mono text-2xl sm:text-3xl font-bold tracking-wider" data-testid="text-tracking-id">{trackingId}</p>
           <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { navigator.clipboard.writeText(trackingId); toast({ title: "Copied!" }); }} data-testid="button-copy">
@@ -65,8 +66,8 @@ export default function ShipTrackPage() {
         <Card className="border-red-500/30 bg-red-500/5">
           <CardContent className="p-6 text-center space-y-2">
             <Package className="h-8 w-8 mx-auto text-red-500" />
-            <p className="font-semibold">Tracking ID not found</p>
-            <p className="text-xs text-muted-foreground">Double-check the ID and try again.</p>
+            <p className="font-semibold">{t("ship_track.error_title")}</p>
+            <p className="text-xs text-muted-foreground">{t("ship_track.error_description")}</p>
           </CardContent>
         </Card>
       )}
@@ -80,7 +81,7 @@ export default function ShipTrackPage() {
                   <CardTitle className="text-base flex items-center gap-2">
                     <Truck className="h-4 w-4 text-primary" />{data.partnerName}
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground capitalize mt-0.5">{data.service.replace("_", " ")} service</p>
+                  <p className="text-xs text-muted-foreground capitalize mt-0.5">{data.service.replace("_", " ")} {t("ship_track.tracking_number_placeholder")}</p>
                 </div>
                 <Badge variant="secondary" className="text-xs capitalize">{data.status.replace(/_/g, " ")}</Badge>
               </div>
@@ -107,7 +108,7 @@ export default function ShipTrackPage() {
                 </div>
                 {data.eta && (
                   <div className="col-span-2 bg-primary/5 border border-primary/20 rounded p-2">
-                    <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" />Estimated arrival</p>
+                    <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" />{t("ship.estimated_delivery")}</p>
                     <p className="font-semibold text-primary">{new Date(data.eta).toLocaleString(undefined, { weekday: "long", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                   </div>
                 )}
@@ -117,14 +118,14 @@ export default function ShipTrackPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Live tracking</CardTitle>
+              <CardTitle className="text-sm">{t("ship.tracking_title")}</CardTitle>
             </CardHeader>
             <CardContent>
               <TrackingTimeline currentStatus={data.status} events={data.events} />
             </CardContent>
           </Card>
 
-          <p className="text-[11px] text-muted-foreground text-center">Auto-refreshing every 15s · Updates from {data.events[0]?.source ?? "system"}</p>
+          <p className="text-[11px] text-muted-foreground text-center">{t("ship_track.loading_tracking")} · {t("ship_track.track_button")} {data.events[0]?.source ?? "system"}</p>
         </>
       )}
     </div>

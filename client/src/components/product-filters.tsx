@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Filter, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ interface ProductFiltersProps {
 }
 
 export function ProductFilters({ filters, onFiltersChange, totalProducts }: ProductFiltersProps) {
+  const { t } = useTranslation();
   const [localFilters, setLocalFilters] = useState<Filters>(filters);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -51,42 +53,42 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
     <div className="hidden lg:flex items-center gap-4 p-4 border-b bg-muted/30 backdrop-blur-sm dark:bg-muted/20 dark:border-white/[0.06]">
       <div className="flex items-center gap-2">
         <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
-        <span className="text-sm font-medium">Filters</span>
+        <span className="text-sm font-medium">{t("filters.title")}</span>
       </div>
 
       <Select value={filters.sortBy || ""} onValueChange={(value) => updateFilter("sortBy", value as Filters["sortBy"])}>
         <SelectTrigger className="w-40" data-testid="select-sort">
-          <SelectValue placeholder="Sort by" />
+          <SelectValue placeholder={t("filters.sort_by")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="newest">Newest</SelectItem>
-          <SelectItem value="price_asc">Price: Low to High</SelectItem>
-          <SelectItem value="price_desc">Price: High to Low</SelectItem>
-          <SelectItem value="rating">Top Rated</SelectItem>
-          <SelectItem value="distance">Nearest</SelectItem>
+          <SelectItem value="newest">{t("filters.newest")}</SelectItem>
+          <SelectItem value="price_asc">{t("filters.price_low_high")}</SelectItem>
+          <SelectItem value="price_desc">{t("filters.price_high_low")}</SelectItem>
+          <SelectItem value="rating">{t("filters.top_rated")}</SelectItem>
+          <SelectItem value="distance">{t("filters.nearest")}</SelectItem>
         </SelectContent>
       </Select>
 
       <Select value={filters.distance?.toString() || ""} onValueChange={(value) => updateFilter("distance", value ? parseInt(value) : undefined)}>
         <SelectTrigger className="w-36" data-testid="select-distance">
-          <SelectValue placeholder="Distance" />
+          <SelectValue placeholder={t("filters.distance")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="5">Within 5 km</SelectItem>
-          <SelectItem value="10">Within 10 km</SelectItem>
-          <SelectItem value="25">Within 25 km</SelectItem>
-          <SelectItem value="50">Within 50 km</SelectItem>
+          <SelectItem value="5">{t("filters.within_5km")}</SelectItem>
+          <SelectItem value="10">{t("filters.within_10km")}</SelectItem>
+          <SelectItem value="25">{t("filters.within_25km")}</SelectItem>
+          <SelectItem value="50">{t("filters.within_50km")}</SelectItem>
         </SelectContent>
       </Select>
 
       <Select value={filters.rating?.toString() || ""} onValueChange={(value) => updateFilter("rating", value ? parseFloat(value) : undefined)}>
         <SelectTrigger className="w-32" data-testid="select-rating">
-          <SelectValue placeholder="Rating" />
+          <SelectValue placeholder={t("filters.rating")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="4.5">4.5+ Stars</SelectItem>
-          <SelectItem value="4">4+ Stars</SelectItem>
-          <SelectItem value="3.5">3.5+ Stars</SelectItem>
+          <SelectItem value="4.5">{t("filters.stars_4_5")}</SelectItem>
+          <SelectItem value="4">{t("filters.stars_4")}</SelectItem>
+          <SelectItem value="3.5">{t("filters.stars_3_5")}</SelectItem>
         </SelectContent>
       </Select>
 
@@ -98,7 +100,7 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
           data-testid="switch-organic"
         />
         <Label htmlFor="organic-desktop" className="text-sm cursor-pointer">
-          Organic Only
+          {t("filters.organic_only")}
         </Label>
       </div>
 
@@ -110,38 +112,38 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
           data-testid="switch-instock"
         />
         <Label htmlFor="instock-desktop" className="text-sm cursor-pointer">
-          In Stock
+          {t("filters.in_stock")}
         </Label>
       </div>
 
       {activeFilterCount > 0 && (
         <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1" data-testid="button-clear-filters">
           <X className="h-4 w-4" />
-          Clear ({activeFilterCount})
+          {t("filters.clear")} ({activeFilterCount})
         </Button>
       )}
 
       <span className="ml-auto text-sm text-muted-foreground">
-        {totalProducts} products
+        {totalProducts} {t("filters.products")}
       </span>
     </div>
   );
 
   const MobileFilters = () => (
     <div className="lg:hidden flex items-center justify-between p-4 border-b bg-muted/30 backdrop-blur-sm dark:bg-muted/20 dark:border-white/[0.06]">
-      <span className="text-sm text-muted-foreground">{totalProducts} products</span>
+      <span className="text-sm text-muted-foreground">{totalProducts} {t("filters.products")}</span>
       
       <div className="flex items-center gap-2">
         <Select value={filters.sortBy || ""} onValueChange={(value) => updateFilter("sortBy", value as Filters["sortBy"])}>
           <SelectTrigger className="w-36" data-testid="select-sort-mobile">
-            <SelectValue placeholder="Sort" />
+            <SelectValue placeholder={t("filters.sort_by")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="price_asc">Price: Low</SelectItem>
-            <SelectItem value="price_desc">Price: High</SelectItem>
-            <SelectItem value="rating">Top Rated</SelectItem>
-            <SelectItem value="distance">Nearest</SelectItem>
+            <SelectItem value="newest">{t("filters.newest")}</SelectItem>
+            <SelectItem value="price_asc">{t("filters.price_low_high")}</SelectItem>
+            <SelectItem value="price_desc">{t("filters.price_high_low")}</SelectItem>
+            <SelectItem value="rating">{t("filters.top_rated")}</SelectItem>
+            <SelectItem value="distance">{t("filters.nearest")}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -149,7 +151,7 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
           <SheetTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2" data-testid="button-filters-mobile">
               <Filter className="h-4 w-4" />
-              Filters
+              {t("filters.title")}
               {activeFilterCount > 0 && (
                 <Badge variant="default" className="h-5 w-5 p-0 flex items-center justify-center">
                   {activeFilterCount}
@@ -159,21 +161,21 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
           </SheetTrigger>
           <SheetContent side="bottom" className="h-[70vh] backdrop-blur-2xl bg-background/95 dark:bg-background/90">
             <SheetHeader>
-              <SheetTitle>Filters</SheetTitle>
+              <SheetTitle>{t("filters.title")}</SheetTitle>
             </SheetHeader>
             
             <div className="py-6 space-y-6 overflow-y-auto">
               <div className="space-y-4">
-                <Label>Distance</Label>
+                <Label>{t("filters.distance")}</Label>
                 <Select value={localFilters.distance?.toString() || ""} onValueChange={(value) => setLocalFilters({ ...localFilters, distance: value ? parseInt(value) : undefined })}>
                   <SelectTrigger data-testid="select-distance-sheet">
-                    <SelectValue placeholder="Select distance" />
+                    <SelectValue placeholder={t("filters.select_distance")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="5">Within 5 km</SelectItem>
-                    <SelectItem value="10">Within 10 km</SelectItem>
-                    <SelectItem value="25">Within 25 km</SelectItem>
-                    <SelectItem value="50">Within 50 km</SelectItem>
+                    <SelectItem value="5">{t("filters.within_5km")}</SelectItem>
+                    <SelectItem value="10">{t("filters.within_10km")}</SelectItem>
+                    <SelectItem value="25">{t("filters.within_25km")}</SelectItem>
+                    <SelectItem value="50">{t("filters.within_50km")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -181,7 +183,7 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
               <Separator />
 
               <div className="space-y-4">
-                <Label>Price Range</Label>
+                <Label>{t("filters.price_range")}</Label>
                 <div className="px-2">
                   <Slider
                     value={[localFilters.minPrice || 0, localFilters.maxPrice || 1000]}
@@ -201,15 +203,15 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
               <Separator />
 
               <div className="space-y-4">
-                <Label>Rating</Label>
+                <Label>{t("filters.rating")}</Label>
                 <Select value={localFilters.rating?.toString() || ""} onValueChange={(value) => setLocalFilters({ ...localFilters, rating: value ? parseFloat(value) : undefined })}>
                   <SelectTrigger data-testid="select-rating-sheet">
-                    <SelectValue placeholder="Select rating" />
+                    <SelectValue placeholder={t("filters.select_rating")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="4.5">4.5+ Stars</SelectItem>
-                    <SelectItem value="4">4+ Stars</SelectItem>
-                    <SelectItem value="3.5">3.5+ Stars</SelectItem>
+                    <SelectItem value="4.5">{t("filters.stars_4_5")}</SelectItem>
+                    <SelectItem value="4">{t("filters.stars_4")}</SelectItem>
+                    <SelectItem value="3.5">{t("filters.stars_3_5")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -218,7 +220,7 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="organic-mobile" className="cursor-pointer">Organic Products Only</Label>
+                  <Label htmlFor="organic-mobile" className="cursor-pointer">{t("filters.organic_products_only")}</Label>
                   <Switch
                     id="organic-mobile"
                     checked={localFilters.isOrganic || false}
@@ -227,7 +229,7 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="instock-mobile" className="cursor-pointer">In Stock Only</Label>
+                  <Label htmlFor="instock-mobile" className="cursor-pointer">{t("filters.in_stock_only")}</Label>
                   <Switch
                     id="instock-mobile"
                     checked={localFilters.inStock || false}
@@ -240,7 +242,7 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
 
             <SheetFooter className="flex gap-2">
               <Button variant="outline" onClick={clearFilters} className="flex-1" data-testid="button-clear-filters-sheet">
-                Clear All
+                {t("filters.clear_all")}
               </Button>
               <Button 
                 onClick={() => {
@@ -250,7 +252,7 @@ export function ProductFilters({ filters, onFiltersChange, totalProducts }: Prod
                 className="flex-1"
                 data-testid="button-apply-filters"
               >
-                Apply Filters
+                {t("filters.apply")}
               </Button>
             </SheetFooter>
           </SheetContent>

@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Cart, ShipQuote, ShipServiceType } from "@shared/schema";
 import { COUNTRIES } from "@/lib/countries";
@@ -40,14 +41,15 @@ interface CartShippingResponse {
 }
 
 const STEPS = [
-  { id: 1, label: "Delivery", icon: MapPin },
-  { id: 2, label: "Shipping", icon: Truck },
-  { id: 3, label: "Payment", icon: CreditCard },
-  { id: 4, label: "Confirm", icon: CheckCircle },
+  { id: 1, label: "checkout.step_delivery", icon: MapPin },
+  { id: 2, label: "checkout.step_shipping", icon: Truck },
+  { id: 3, label: "checkout.step_payment", icon: CreditCard },
+  { id: 4, label: "checkout.step_review", icon: CheckCircle },
 ];
 
 
 export default function CheckoutPage() {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -114,8 +116,8 @@ export default function CheckoutPage() {
     },
     onError: (err: any) => {
       toast({
-        title: "Could not get shipping quotes",
-        description: err?.message || "Please check your address and try again",
+        title: t("checkout.shipping_title"),
+        description: err?.message || t("checkout.loading_description"),
         variant: "destructive",
       });
     },
@@ -175,7 +177,7 @@ export default function CheckoutPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        toast({ title: "Could not start checkout", variant: "destructive" });
+        toast({ title: t("checkout.title"), variant: "destructive" });
       }
     },
     onError: (err: any) => {
@@ -199,10 +201,10 @@ export default function CheckoutPage() {
 
   function validateStep1() {
     const errs: Record<string, string> = {};
-    if (!address.fullName.trim()) errs.fullName = "Full name is required";
-    if (!address.line1.trim()) errs.line1 = "Address line 1 is required";
-    if (!address.city.trim()) errs.city = "City is required";
-    if (!address.postcode.trim()) errs.postcode = "Postcode is required";
+    if (!address.fullName.trim()) errs.fullName = t("checkout.full_name");
+    if (!address.line1.trim()) errs.line1 = t("checkout.address_line1");
+    if (!address.city.trim()) errs.city = t("checkout.city");
+    if (!address.postcode.trim()) errs.postcode = t("checkout.postcode");
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -216,7 +218,7 @@ export default function CheckoutPage() {
     if (step === 2) {
       // Block if any group is missing a selection
       if (!shippingGroups || shippingGroups.length === 0) {
-        toast({ title: "Please wait for shipping quotes", variant: "destructive" });
+        toast({ title: t("checkout.shipping_title"), variant: "destructive" });
         return;
       }
       // Groups with zero quotes can't be selected — they will be flagged for
@@ -224,8 +226,8 @@ export default function CheckoutPage() {
       const missing = shippingGroups.filter((g) => g.quotes.length > 0 && !shippingChoices[g.farmerId]);
       if (missing.length > 0) {
         toast({
-          title: "Pick a shipping option",
-          description: `Choose a carrier for: ${missing.map((m) => m.farmerName).join(", ")}`,
+          title: t("checkout.select_carrier"),
+          description: `${t("checkout.shipping_title")}: ${missing.map((m) => m.farmerName).join(", ")}`,
           variant: "destructive",
         });
         return;
@@ -243,10 +245,10 @@ export default function CheckoutPage() {
           onClick={() => (step > 1 ? setStep((s) => s - 1) : navigate("/cart"))}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-5 transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" /> {step > 1 ? "Back" : "Back to Cart"}
+          <ArrowLeft className="h-4 w-4" /> {step > 1 ? t("common.back") : t("cart.title")}
         </button>
 
-        <h1 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6">Checkout</h1>
+        <h1 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6">{t("checkout.title")}</h1>
 
         {/* Step indicator */}
         <div className="flex items-center mb-6 sm:mb-8">
@@ -269,7 +271,7 @@ export default function CheckoutPage() {
                   )}
                 </div>
                 <span className={`text-[9px] sm:text-[10px] font-semibold mt-1 whitespace-nowrap ${step === s.id ? "text-primary" : "text-muted-foreground"}`}>
-                  {s.label}
+                  {t(s.label)}
                 </span>
               </div>
               {idx < STEPS.length - 1 && (
@@ -296,80 +298,80 @@ export default function CheckoutPage() {
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center gap-2 mb-5">
                         <MapPin className="h-5 w-5 text-primary" />
-                        <h2 className="text-lg font-bold">Delivery Address</h2>
+                        <h2 className="text-lg font-bold">{t("checkout.delivery_title")}</h2>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="sm:col-span-2">
-                          <Label htmlFor="fullName">Full Name *</Label>
+                          <Label htmlFor="fullName">{t("checkout.full_name")} *</Label>
                           <Input
                             id="fullName"
                             data-testid="input-fullName"
                             value={address.fullName}
                             onChange={(e) => setAddress({ ...address, fullName: e.target.value })}
-                            placeholder="Jane Smith"
+                            placeholder={t("checkout.full_name_placeholder")}
                             className={errors.fullName ? "border-destructive" : ""}
                           />
                           {errors.fullName && <p className="text-[11px] text-destructive mt-1">{errors.fullName}</p>}
                         </div>
                         <div className="sm:col-span-2">
-                          <Label htmlFor="line1">Address Line 1 *</Label>
+                          <Label htmlFor="line1">{t("checkout.address_line1")} *</Label>
                           <Input
                             id="line1"
                             data-testid="input-line1"
                             value={address.line1}
                             onChange={(e) => setAddress({ ...address, line1: e.target.value })}
-                            placeholder="123 Farm Road"
+                            placeholder={t("checkout.address_line1_placeholder")}
                             className={errors.line1 ? "border-destructive" : ""}
                           />
                           {errors.line1 && <p className="text-[11px] text-destructive mt-1">{errors.line1}</p>}
                         </div>
                         <div className="sm:col-span-2">
-                          <Label htmlFor="line2">Address Line 2</Label>
+                          <Label htmlFor="line2">{t("checkout.address_line2")}</Label>
                           <Input
                             id="line2"
                             value={address.line2}
                             onChange={(e) => setAddress({ ...address, line2: e.target.value })}
-                            placeholder="Apartment, suite, unit, etc. (optional)"
+                            placeholder={t("checkout.address_line2_placeholder")}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="city">City *</Label>
+                          <Label htmlFor="city">{t("checkout.city")} *</Label>
                           <Input
                             id="city"
                             data-testid="input-city"
                             value={address.city}
                             onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                            placeholder="London"
+                            placeholder={t("checkout.city_placeholder")}
                             className={errors.city ? "border-destructive" : ""}
                           />
                           {errors.city && <p className="text-[11px] text-destructive mt-1">{errors.city}</p>}
                         </div>
                         <div>
-                          <Label htmlFor="county">County</Label>
+                          <Label htmlFor="county">{t("checkout.county")}</Label>
                           <Input
                             id="county"
                             value={address.county}
                             onChange={(e) => setAddress({ ...address, county: e.target.value })}
-                            placeholder="Essex"
+                            placeholder={t("checkout.county_placeholder")}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="postcode">Postcode *</Label>
+                          <Label htmlFor="postcode">{t("checkout.postcode")} *</Label>
                           <Input
                             id="postcode"
                             data-testid="input-postcode"
                             value={address.postcode}
                             onChange={(e) => setAddress({ ...address, postcode: e.target.value.toUpperCase() })}
-                            placeholder="CM1 1AA"
+                            placeholder={t("checkout.postcode_placeholder")}
                             className={errors.postcode ? "border-destructive" : ""}
                           />
                           {errors.postcode && <p className="text-[11px] text-destructive mt-1">{errors.postcode}</p>}
                         </div>
                         <div>
-                          <Label htmlFor="country">Country *</Label>
+                          <Label htmlFor="country">{t("send_parcel.country")} *</Label>
                           <Select value={address.country} onValueChange={(v) => setAddress({ ...address, country: v })}>
                             <SelectTrigger id="country" data-testid="select-country">
-                              <SelectValue placeholder="Country" />
+                              <SelectValue placeholder={t("send_parcel.country")} />
                             </SelectTrigger>
                             <SelectContent>
                               {COUNTRIES.map((c) => (
@@ -379,22 +381,22 @@ export default function CheckoutPage() {
                           </Select>
                         </div>
                         <div>
-                          <Label htmlFor="phone">Phone</Label>
+                          <Label htmlFor="phone">{t("checkout.phone")}</Label>
                           <Input
                             id="phone"
                             value={address.phone}
                             onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                            placeholder="+44 7700 000000"
+                            placeholder={t("checkout.phone_placeholder")}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="email">Email (for delivery updates)</Label>
+                          <Label htmlFor="email">{t("support.email")}</Label>
                           <Input
                             id="email"
                             type="email"
                             value={address.email}
                             onChange={(e) => setAddress({ ...address, email: e.target.value })}
-                            placeholder="you@example.com"
+                            placeholder={t("login.email")}
                           />
                         </div>
                       </div>
@@ -408,16 +410,15 @@ export default function CheckoutPage() {
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center gap-2 mb-2">
                         <Truck className="h-5 w-5 text-primary" />
-                        <h2 className="text-lg font-bold">Choose Shipping</h2>
+                        <h2 className="text-lg font-bold">{t("checkout.shipping_title")}</h2>
                       </div>
                       <p className="text-xs text-muted-foreground mb-5">
-                        Your cart has items from {shippingGroups?.length ?? "…"} farm{shippingGroups && shippingGroups.length === 1 ? "" : "s"}.
-                        Pick a carrier per parcel.
+                        {t("checkout.shipping_description", { sellerCount: shippingGroups?.length ?? 0 })}
                       </p>
 
                       {cartQuotesMutation.isPending && (
                         <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-                          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Getting live quotes from carriers…
+                          <Loader2 className="h-5 w-5 animate-spin mr-2" /> {t("common.loading")}
                         </div>
                       )}
 
@@ -440,7 +441,7 @@ export default function CheckoutPage() {
                                 {group.quotes.length === 0 ? (
                                   <div className="p-4 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 rounded-b-xl flex items-start gap-2">
                                     <AlertCircle className="h-3.5 w-3.5 mt-0.5" />
-                                    No carriers cover this route. Please contact the farmer for collection.
+                                    {t("shipping_quote.no_quotes_title")}
                                   </div>
                                 ) : (
                                   <RadioGroup
@@ -474,7 +475,7 @@ export default function CheckoutPage() {
                                               </Badge>
                                               {q.coldChain && (
                                                 <Badge className="text-[10px] h-4 px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                                                  Cold-chain
+                                                  {t("shipping_quote_cards.service_cold_chain")}
                                                 </Badge>
                                               )}
                                             </div>
@@ -505,21 +506,21 @@ export default function CheckoutPage() {
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center gap-2 mb-2">
                         <CreditCard className="h-5 w-5 text-primary" />
-                        <h2 className="text-lg font-bold">Payment</h2>
+                        <h2 className="text-lg font-bold">{t("checkout.payment_title")}</h2>
                         <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-                          <Lock className="h-3 w-3" /> Secure with Stripe
+                          <Lock className="h-3 w-3" /> {t("checkout.secure_checkout")}
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground mb-5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 flex items-center gap-2">
                         <AlertCircle className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
-                        Test mode — on Stripe's page use card 4242 4242 4242 4242, any future expiry, any CVC, any postcode.
+                        {t("checkout.payment_description")}
                       </p>
 
                       <div className="rounded-2xl border border-border bg-muted/30 p-6 text-center">
                         <SiStripe className="h-10 w-auto mx-auto text-[#635BFF] mb-3" />
-                        <h3 className="font-bold text-base mb-1">Pay securely with Stripe Checkout</h3>
+                        <h3 className="font-bold text-base mb-1">{t("checkout.stripe_description")}</h3>
                         <p className="text-sm text-muted-foreground mb-5">
-                          You'll be redirected to Stripe to enter your card details. We never see or store your card.
+                          {t("checkout.stripe_description")}
                         </p>
 
                         <div className="flex items-center justify-center gap-4 text-muted-foreground mb-5">
@@ -531,11 +532,11 @@ export default function CheckoutPage() {
                         <ul className="text-xs text-muted-foreground space-y-1 max-w-sm mx-auto text-left">
                           <li className="flex items-start gap-2">
                             <Shield className="h-3.5 w-3.5 mt-0.5 text-green-600 flex-shrink-0" />
-                            PCI-compliant — handled entirely by Stripe.
+                            {t("cart.card_desc")}
                           </li>
                           <li className="flex items-start gap-2">
                             <Lock className="h-3.5 w-3.5 mt-0.5 text-green-600 flex-shrink-0" />
-                            Order created as <strong>pending</strong> until your payment is verified server-side.
+                            {t("checkout.secure_256bit")}
                           </li>
                         </ul>
                       </div>
@@ -549,7 +550,7 @@ export default function CheckoutPage() {
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center gap-2 mb-5">
                         <CheckCircle className="h-5 w-5 text-primary" />
-                        <h2 className="text-lg font-bold">Review Your Order</h2>
+                        <h2 className="text-lg font-bold">{t("checkout.review_title")}</h2>
                       </div>
 
                       <div className="space-y-4">
@@ -557,7 +558,7 @@ export default function CheckoutPage() {
                         <div className="bg-muted/50 rounded-xl p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <MapPin className="h-4 w-4 text-primary" />
-                            <span className="font-semibold text-sm">Delivering to</span>
+                            <span className="font-semibold text-sm">{t("checkout.deliver_to")}</span>
                           </div>
                           <p className="text-sm text-muted-foreground">
                             {address.fullName}<br />
@@ -570,7 +571,7 @@ export default function CheckoutPage() {
                         <div className="bg-muted/50 rounded-xl p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Truck className="h-4 w-4 text-primary" />
-                            <span className="font-semibold text-sm">Shipping</span>
+                            <span className="font-semibold text-sm">{t("checkout.shipping_title")}</span>
                           </div>
                           <div className="space-y-1.5">
                             {shippingGroups?.map((g) => {
@@ -595,7 +596,7 @@ export default function CheckoutPage() {
                         <div className="bg-muted/50 rounded-xl p-4">
                           <div className="flex items-center gap-2 mb-3">
                             <Package className="h-4 w-4 text-primary" />
-                            <span className="font-semibold text-sm">Items ({cart?.items.length})</span>
+                            <span className="font-semibold text-sm">{t("cart.order_items")} ({cart?.items.length})</span>
                           </div>
                           <div className="space-y-2">
                             {cart?.items.map((item) => (
@@ -619,10 +620,10 @@ export default function CheckoutPage() {
                         <div className="bg-muted/50 rounded-xl p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <CreditCard className="h-4 w-4 text-primary" />
-                            <span className="font-semibold text-sm">Payment</span>
+                            <span className="font-semibold text-sm">{t("checkout.payment_title")}</span>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            Stripe Checkout · Card / Apple Pay / Google Pay (test mode)
+                            {t("checkout.stripe_powered")}
                           </p>
                         </div>
                       </div>
@@ -636,12 +637,12 @@ export default function CheckoutPage() {
             <div className="flex gap-3 mt-5 sticky bottom-0 bg-background/95 backdrop-blur-sm py-3 -mx-4 px-4 md:static md:bg-transparent md:backdrop-blur-none md:py-0 md:mx-0 md:px-0 border-t border-border/40 md:border-0">
               {step > 1 && (
                 <Button variant="outline" onClick={() => setStep((s) => s - 1)} className="gap-2">
-                  <ChevronLeft className="h-4 w-4" /> Back
+                  <ChevronLeft className="h-4 w-4" /> {t("common.back")}
                 </Button>
               )}
               {step < 4 ? (
                 <Button onClick={nextStep} className="ml-auto gap-2 h-11 px-6" data-testid="btn-next-step">
-                  Continue <ChevronRight className="h-4 w-4" />
+                  {t("profile_wizard.continue_button")} <ChevronRight className="h-4 w-4" />
                 </Button>
               ) : (
                 <Button
@@ -651,9 +652,9 @@ export default function CheckoutPage() {
                   data-testid="btn-place-order"
                 >
                   {stripeCheckoutMutation.isPending ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Redirecting…</>
+                    <><Loader2 className="h-4 w-4 animate-spin" /> {t("checkout.processing_payment")}</>
                   ) : (
-                    <><Lock className="h-4 w-4" /> Pay £{total.toFixed(2)} with Stripe</>
+                    <><Lock className="h-4 w-4" /> {t("checkout.stripe_button")}</>
                   )}
                 </Button>
               )}
@@ -664,7 +665,7 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1 order-first lg:order-last">
             <Card className="lg:sticky lg:top-4">
               <CardContent className="p-4 sm:p-5">
-                <h3 className="font-bold mb-4">Order Summary</h3>
+                <h3 className="font-bold mb-4">{t("checkout.review_title")}</h3>
                 <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
                   {cart?.items.map((item) => (
                     <div key={item.id} className="flex items-center gap-2">
@@ -686,26 +687,26 @@ export default function CheckoutPage() {
                 <Separator className="mb-4" />
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground">{t("cart.subtotal")}</span>
                     <span>£{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Shipping{shippingGroups && shippingGroups.length > 1 ? ` (${shippingGroups.length} parcels)` : ""}</span>
+                    <span className="text-muted-foreground">{t("cart.delivery")}{shippingGroups && shippingGroups.length > 1 ? ` (${shippingGroups.length} ${t("logistics.parcels_tab").toLowerCase()})` : ""}</span>
                     <span data-testid="text-shipping-total">{shippingTotal === 0 ? <span className="text-muted-foreground">—</span> : `£${shippingTotal.toFixed(2)}`}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">VAT (20%)</span>
+                    <span className="text-muted-foreground">{t("checkout.vat")}</span>
                     <span>£{tax.toFixed(2)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-bold text-base">
-                    <span>Total</span>
+                    <span>{t("cart.total")}</span>
                     <span>£{total.toFixed(2)}</span>
                   </div>
                 </div>
                 <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
                   <Shield className="h-4 w-4 text-green-600 flex-shrink-0" />
-                  Secure checkout · 256-bit SSL encryption
+                  {t("checkout.secure_checkout")} · {t("checkout.secure_256bit")}
                 </div>
               </CardContent>
             </Card>

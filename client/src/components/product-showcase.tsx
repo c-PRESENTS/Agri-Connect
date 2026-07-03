@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, Star, Leaf, ShoppingCart, Package, Truck, Shield, Grid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ export function ProductShowcase({
   onSectionVisible,
   onFarmerClick
 }: ProductShowcaseProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const sectionRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
   const [visibleSection, setVisibleSection] = useState<string | null>(null);
@@ -183,9 +185,9 @@ export function ProductShowcase({
           <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
             <Package className="h-10 w-10 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Select a Category</h3>
+          <h3 className="text-lg font-semibold mb-2">{t("category.browse_by_category")}</h3>
           <p className="text-muted-foreground text-sm">
-            Choose a category from the sidebar to browse products. Our marketplace connects you directly with local farmers.
+            {t("category.explore_description")}
           </p>
         </div>
       </div>
@@ -213,17 +215,17 @@ export function ProductShowcase({
           <div className="flex items-center gap-3 text-[10px]">
             <div className="flex items-center gap-1">
               <Package className="h-4 w-4 text-primary" />
-              <span className="font-bold">{products.length} Items</span>
+              <span className="font-bold">{t("product_showcase.item_count", { count: products.length })}</span>
             </div>
             <div className="flex items-center gap-1">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span>{new Set(products.map(p => p.farmerId)).size} Farmers</span>
+              <span>{new Set(products.map(p => p.farmerId)).size} {t("features.farmers_label")}</span>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
             <Badge variant="outline" className="text-[9px] h-5 px-1.5">
               <Truck className="h-2.5 w-2.5 mr-1" />
-              Free Delivery
+              {t("product_showcase.same_day_delivery")}
             </Badge>
           </div>
         </div>
@@ -260,7 +262,7 @@ export function ProductShowcase({
                 <div className="h-1 w-1 rounded-full bg-primary" />
                 <h2 className="text-[10px] font-bold uppercase tracking-tight">{section.title}</h2>
                 <div className="flex-1 h-px bg-border/30" />
-                <span className="text-[8px] text-muted-foreground uppercase font-bold">{section.items.length} Varieties</span>
+                <span className="text-[8px] text-muted-foreground uppercase font-bold">{section.items.length} {t("product_showcase.item_count", { count: section.items.length })}</span>
               </div>
 
               {/* Product Grid */}
@@ -314,7 +316,7 @@ export function ProductShowcase({
                           <div className="absolute top-1 left-1 flex flex-col gap-0.5">
                             {product.isOrganic && (
                               <Badge className="text-[7px] h-3.5 px-1 py-0 bg-green-600/90 border-0">
-                                ORG
+                                {t("product.org_short")}
                               </Badge>
                             )}
                           </div>
@@ -325,7 +327,7 @@ export function ProductShowcase({
                             className="absolute bottom-1 right-1 h-7 w-7 shadow-md bg-primary hover:bg-primary/90 text-primary-foreground border border-background"
                             onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
                             data-testid={`button-quick-add-${product.id}`}
-                            title="Add to basket"
+                            title={t("product.add_to_cart")}
                           >
                             <ShoppingCart className="h-3.5 w-3.5" />
                           </Button>
@@ -347,7 +349,7 @@ export function ProductShowcase({
                             </div>
                           </div>
 
-                          {/* Always-visible Add to basket button */}
+                          {/* Always-visible {t("product.add_to_cart")} button */}
                           <Button
                             size="sm"
                             className="w-full mt-1.5 h-6 px-2 text-[9px] font-bold uppercase tracking-tight gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -355,7 +357,7 @@ export function ProductShowcase({
                             data-testid={`button-tile-add-${product.id}`}
                           >
                             <ShoppingCart className="h-2.5 w-2.5" />
-                            Add
+                            {t("product.add_short")}
                           </Button>
                         </CardContent>
                       </Card>
@@ -394,19 +396,19 @@ export function ProductShowcase({
                           </div>
                         )}
                         
-                        {product.isOrganic && (
-                          <Badge className="absolute top-1.5 left-1.5 text-[8px] px-1.5 py-0 bg-green-600 hover:bg-green-600">
-                            <Leaf className="h-2 w-2 mr-0.5" />
-                            Organic
-                          </Badge>
-                        )}
+                          {product.isOrganic && (
+                            <Badge className="absolute top-1.5 left-1.5 text-[8px] px-1.5 py-0 bg-green-600 hover:bg-green-600">
+                              <Leaf className="h-2 w-2 mr-0.5" />
+                              {t("product.organic")}
+                            </Badge>
+                          )}
 
                         <Button
                           size="icon"
                           className="absolute bottom-1.5 right-1.5 h-8 w-8 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground border border-background"
                           onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
                           data-testid={`button-add-${product.id}`}
-                          title="Add to basket"
+                          title={t("product.add_to_cart")}
                         >
                           <ShoppingCart className="h-4 w-4" />
                         </Button>
@@ -441,7 +443,7 @@ export function ProductShowcase({
                           <span className="text-[8px] text-muted-foreground truncate">{product.farmerLocation}</span>
                         </div>
 
-                        {/* Always-visible Add to basket button */}
+                        {/* Always-visible {t("product.add_to_cart")} button */}
                         <Button
                           size="sm"
                           className="w-full mt-2 h-7 text-[10px] font-bold uppercase tracking-tight gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -449,7 +451,7 @@ export function ProductShowcase({
                           data-testid={`button-tile-add-fallback-${product.id}`}
                         >
                           <ShoppingCart className="h-3 w-3" />
-                          Add to basket
+                          {t("product.add_to_cart")}
                         </Button>
                       </CardContent>
                     </Card>
@@ -471,22 +473,22 @@ export function ProductShowcase({
                 <Leaf className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-sm">AgriConnect Direct</h3>
-                <p className="text-xs text-muted-foreground">Premium products from our verified farms</p>
+                <h3 className="font-bold text-sm">{t("product_showcase.badge")}</h3>
+                <p className="text-xs text-muted-foreground">{t("product_showcase.verified_farmers")}</p>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3 text-center text-xs">
               <div className="p-2 rounded-md bg-background/50">
                 <div className="font-bold text-lg text-primary">{products.length}+</div>
-                <div className="text-muted-foreground">Products</div>
+                <div className="text-muted-foreground">{t("features.products_label")}</div>
               </div>
               <div className="p-2 rounded-md bg-background/50">
                 <div className="font-bold text-lg text-primary">100%</div>
-                <div className="text-muted-foreground">Verified</div>
+                <div className="text-muted-foreground">{t("common.verified")}</div>
               </div>
               <div className="p-2 rounded-md bg-background/50">
                 <div className="font-bold text-lg text-primary">24hr</div>
-                <div className="text-muted-foreground">Delivery</div>
+                <div className="text-muted-foreground">{t("product_showcase.same_day_delivery")}</div>
               </div>
             </div>
           </motion.div>

@@ -4,11 +4,20 @@ import { apiRequest } from "@/lib/queryClient";
 
 const A_TR = "data-agri-tr";
 const A_OR = "data-agri-or";
+const A_ATTR_TR = "data-agri-attr-tr";
+const ATTRS = ["placeholder", "title", "aria-label", "alt"] as const;
 const SKIP = `[${A_TR}],script,style,noscript,svg,code,pre,input,textarea,select,option,.lucide,[hidden],[aria-hidden="true"],[data-no-tr]`;
 const MIN_LEN = 2;
 const CONCURRENCY = 3;
 
 type TextEntry = { text: string; node: Text };
+type AttrEntry = { text: string; el: HTMLElement; attr: typeof ATTRS[number] };
+
+function isTranslatableText(text: string) {
+  const t = text.trim();
+  if (t.length < MIN_LEN) return false;
+  return !/^[\d\s\-.,;:!?()%$€£+×÷=<>@#&*\\/]+$/.test(t);
+}
 
 function scanTextNodes(): TextEntry[] {
   const out: TextEntry[] = [];
@@ -17,9 +26,7 @@ function scanTextNodes(): TextEntry[] {
       const p = (n as Text).parentElement;
       if (!p || p.closest(SKIP)) return NodeFilter.FILTER_REJECT;
       const t = (n as Text).textContent?.trim() || "";
-      if (t.length < MIN_LEN) return NodeFilter.FILTER_REJECT;
-      if (/^[\d\s\-.,;:!?()%$€£+×÷=<>@#&*\\/]+$/.test(t))
-        return NodeFilter.FILTER_REJECT;
+      if (!isTranslatableText(t)) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     },
   });
@@ -27,6 +34,20 @@ function scanTextNodes(): TextEntry[] {
   while ((n = walker.nextNode() as Text | null)) {
     out.push({ text: n.textContent!.trim(), node: n });
   }
+  return out;
+}
+
+function scanAttributeNodes(): AttrEntry[] {
+  const out: AttrEntry[] = [];
+  document.querySelectorAll<HTMLElement>("body *").forEach((el) => {
+    if (el.closest(SKIP) || el.hasAttribute("data-no-tr")) return;
+    for (const attr of ATTRS) {
+      const text = el.getAttribute(attr);
+      if (text && isTranslatableText(text)) {
+        out.push({ text: text.trim(), el, attr });
+      }
+    }
+  });
   return out;
 }
 
@@ -39,12 +60,32 @@ function wrapWithTranslation(node: Text, original: string, translated: string) {
   node.parentNode?.replaceChild(span, node);
 }
 
+function setTranslatedAttribute(el: HTMLElement, attr: typeof ATTRS[number], original: string, translated: string) {
+  const originalAttr = `data-agri-or-${attr}`;
+  if (!el.hasAttribute(originalAttr)) {
+    el.setAttribute(originalAttr, original);
+  }
+  el.setAttribute(attr, translated);
+  el.setAttribute(A_ATTR_TR, "true");
+}
+
 function restoreAll() {
   document.querySelectorAll<HTMLElement>(`[${A_TR}]`).forEach((el) => {
     const orig = el.getAttribute(A_OR);
     if (orig !== null) el.textContent = orig;
     el.removeAttribute(A_TR);
     el.removeAttribute(A_OR);
+  });
+  document.querySelectorAll<HTMLElement>(`[${A_ATTR_TR}]`).forEach((el) => {
+    for (const attr of ATTRS) {
+      const originalAttr = `data-agri-or-${attr}`;
+      const orig = el.getAttribute(originalAttr);
+      if (orig !== null) {
+        el.setAttribute(attr, orig);
+        el.removeAttribute(originalAttr);
+      }
+    }
+    el.removeAttribute(A_ATTR_TR);
   });
 }
 
@@ -63,9 +104,10 @@ export function usePageTranslation() {
     if (lang === "en") return;
 
     const entries = scanTextNodes();
-    if (entries.length === 0) return;
+    const attrEntries = scanAttributeNodes();
+    if (entries.length === 0 && attrEntries.length === 0) return;
 
-    const uniqueTexts = Array.from(new Set(entries.map((e) => e.text)));
+    const uniqueTexts = Array.from(new Set([...entries.map((e) => e.text), ...attrEntries.map((e) => e.text)]));
     const toFetch = uniqueTexts.filter(
       (t) => !cacheRef.current.has(cacheKey(t, lang)),
     );
@@ -100,6 +142,12 @@ export function usePageTranslation() {
         wrapWithTranslation(entry.node, entry.text, cached);
       }
     }
+    for (const entry of attrEntries) {
+      const cached = cacheRef.current.get(cacheKey(entry.text, lang));
+      if (cached) {
+        setTranslatedAttribute(entry.el, entry.attr, entry.text, cached);
+      }
+    }
   }, [i18n.language]);
 
   const handleEnable = useCallback(() => {
@@ -113,6 +161,8 @@ export function usePageTranslation() {
       }
     });
     observerRef.current.observe(document.body, {
+      attributes: true,
+      attributeFilter: [...ATTRS],
       childList: true,
       subtree: true,
     });

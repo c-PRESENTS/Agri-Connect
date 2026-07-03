@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Home, Map, Sprout, Cpu, Landmark, Truck, HeartHandshake,
@@ -19,24 +20,24 @@ interface AppItem {
 }
 
 const ALL_APPS: AppItem[] = [
-  { id: "home",          path: "/",                       icon: Home,            label: "Home",          color: "from-green-500 to-emerald-600",    public: true },
+  { id: "home",          path: "/",                       icon: Home,            label: "nav.home",          color: "from-green-500 to-emerald-600",    public: true },
   { id: "marketplace",   path: "/?category=daily-needs",  icon: ShoppingBasket,  label: "Marketplace",   color: "from-blue-500 to-indigo-600",      public: true },
-  { id: "smart-map",     path: "/map",                    icon: Map,             label: "Smart Map",     color: "from-cyan-500 to-teal-600",        public: true },
-  { id: "land",          path: "/land-leasing",            icon: Landmark,        label: "Land Leasing",  color: "from-amber-500 to-orange-600",     public: true },
-  { id: "share",         path: "/share-care",              icon: HeartHandshake,  label: "Share & Care",  color: "from-rose-500 to-pink-600",        public: true },
-  { id: "ship",          path: "/ship",                    icon: Truck,           label: "Shipping",      color: "from-violet-500 to-purple-600",    public: true },
+  { id: "smart-map",     path: "/map",                    icon: Map,             label: "home.smart_map",     color: "from-cyan-500 to-teal-600",        public: true },
+  { id: "land",          path: "/land-leasing",            icon: Landmark,        label: "land.title",  color: "from-amber-500 to-orange-600",     public: true },
+  { id: "share",         path: "/share-care",              icon: HeartHandshake,  label: "share.title",  color: "from-rose-500 to-pink-600",        public: true },
+  { id: "ship",          path: "/ship",                    icon: Truck,           label: "ship.title",      color: "from-violet-500 to-purple-600",    public: true },
   { id: "agritech",      path: "/agritech",                icon: Cpu,             label: "AgriTech",      color: "from-sky-500 to-blue-600",        public: true },
   { id: "schemes",       path: "/government-schemes",      icon: FileText,        label: "Gov Schemes",   color: "from-emerald-500 to-green-600",    public: true },
-  { id: "learn",         path: "/farmers-help",            icon: Sprout,          label: "Knowledge Hub", color: "from-lime-500 to-green-600",       public: true },
+  { id: "learn",         path: "/farmers-help",            icon: Sprout,          label: "help.title", color: "from-lime-500 to-green-600",       public: true },
   { id: "modern-farming",path: "/?category=modern-farming",icon: Sparkles,        label: "Modern Farming",color: "from-yellow-500 to-amber-600",     public: true },
   { id: "dietary",       path: "/?category=dietary",       icon: Salad,           label: "Dietary",       color: "from-red-500 to-rose-600",        public: true },
-  { id: "supermarket",   path: "/?category=supermarket",   icon: Store,           label: "Supermarket",   color: "from-orange-500 to-red-600",      public: true },
+  { id: "supermarket",   path: "/?category=supermarket",   icon: Store,           label: "home.supermarket",   color: "from-orange-500 to-red-600",      public: true },
   { id: "commercial",    path: "/?category=commercial-crops", icon: Factory,      label: "Commercial",    color: "from-stone-500 to-neutral-600",   public: true },
   { id: "bio",           path: "/?category=bio-products",  icon: Leaf,            label: "Bio Products",  color: "from-teal-500 to-emerald-600",    public: true },
-  { id: "cart",          path: "/cart",                    icon: ShoppingCart,    label: "Cart",          color: "from-pink-500 to-rose-600",       public: true },
-  { id: "dashboard",     path: "/dashboard",               icon: LayoutDashboard, label: "Dashboard",     color: "from-indigo-500 to-violet-600",   public: false },
-  { id: "sell",          path: "/dashboard/photo-sell",     icon: Camera,          label: "Sell Produce",  color: "from-amber-500 to-yellow-600",    public: false },
-  { id: "settings",      path: "/settings",                 icon: Settings,        label: "Settings",      color: "from-gray-500 to-slate-600",      public: false },
+  { id: "cart",          path: "/cart",                    icon: ShoppingCart,    label: "nav.cart",          color: "from-pink-500 to-rose-600",       public: true },
+  { id: "dashboard",     path: "/dashboard",               icon: LayoutDashboard, label: "nav.dashboard",     color: "from-indigo-500 to-violet-600",   public: false },
+  { id: "sell",          path: "/dashboard/photo-sell",     icon: Camera,          label: "home.sell_list",  color: "from-amber-500 to-yellow-600",    public: false },
+  { id: "settings",      path: "/settings",                 icon: Settings,        label: "nav.settings",      color: "from-gray-500 to-slate-600",      public: false },
 ];
 
 interface AppLauncherProps {
@@ -45,6 +46,7 @@ interface AppLauncherProps {
 }
 
 export function AppLauncher({ open, onClose }: AppLauncherProps) {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
 
@@ -80,7 +82,7 @@ export function AppLauncher({ open, onClose }: AppLauncherProps) {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Grid3X3 className="h-5 w-5 text-primary" />
-                <h2 className="text-base font-bold">All Apps & Features</h2>
+                <h2 className="text-base font-bold">{t("nav.all_apps")}</h2>
               </div>
               <button
                 onClick={onClose}
@@ -103,7 +105,7 @@ export function AppLauncher({ open, onClose }: AppLauncherProps) {
                     <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${app.color} flex items-center justify-center shadow-sm`}>
                       <Icon className="h-5 w-5 text-white" />
                     </div>
-                    <span className="text-[10px] font-bold text-center leading-tight">{app.label}</span>
+                    <span className="text-[10px] font-bold text-center leading-tight">{t(app.label)}</span>
                   </motion.button>
                 );
               })}

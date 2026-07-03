@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ function deriveDisplayName(user: { name?: string | null; firstName?: string | nu
 }
 
 export function ProfileWizard() {
+  const { t } = useTranslation();
   const { user, updateProfile } = useAuth();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
@@ -50,9 +52,9 @@ export function ProfileWizard() {
         avatar: avatar || fallbackAvatar,
         profileComplete: true,
       });
-      toast({ title: "Profile complete!", description: "Welcome to AgriConnect." });
+      toast({ title: t("profile_wizard.profile_complete_title"), description: t("profile_wizard.profile_complete_description") });
     } catch {
-      toast({ title: "Error", description: "Failed to update profile", variant: "destructive" });
+      toast({ title: t("profile_wizard.error_title"), description: t("profile_wizard.error_description"), variant: "destructive" });
     }
   };
 
@@ -66,7 +68,7 @@ export function ProfileWizard() {
         profileComplete: true,
       });
     } catch {
-      toast({ title: "Error", description: "Failed to update profile", variant: "destructive" });
+      toast({ title: t("profile_wizard.error_title"), description: t("profile_wizard.error_description"), variant: "destructive" });
     }
   };
 
@@ -74,8 +76,8 @@ export function ProfileWizard() {
     <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4" data-testid="modal-profile-wizard">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <CardTitle>Complete Your Profile</CardTitle>
-          <CardDescription>Step {step} of {totalSteps} — Help us personalize your experience</CardDescription>
+          <CardTitle>{t("profile_wizard.title")}</CardTitle>
+          <CardDescription>{t("profile_wizard.step_of", { step, total: totalSteps })}</CardDescription>
           <div className="flex gap-1 mt-3">
             {Array.from({ length: totalSteps }).map((_, i) => (
               <div
@@ -88,7 +90,7 @@ export function ProfileWizard() {
         <CardContent className="space-y-6">
           {step === 1 && (
             <div className="space-y-4">
-              <Label className="text-base font-semibold">I am a...</Label>
+              <Label className="text-base font-semibold">{t("profile_wizard.i_am_a")}</Label>
               <RadioGroup value={role} onValueChange={(v) => setRole(v as "buyer" | "farmer")} className="grid grid-cols-2 gap-4">
                 <Label
                   htmlFor="role-farmer"
@@ -96,8 +98,8 @@ export function ProfileWizard() {
                 >
                   <RadioGroupItem value="farmer" id="role-farmer" className="sr-only" />
                   <Sprout className="h-10 w-10 text-green-600" />
-                  <span className="font-medium">Farmer</span>
-                  <span className="text-xs text-muted-foreground text-center">I grow and sell produce</span>
+                  <span className="font-medium">{t("profile_wizard.farmer")}</span>
+                  <span className="text-xs text-muted-foreground text-center">{t("profile_wizard.farmer_description")}</span>
                 </Label>
                 <Label
                   htmlFor="role-buyer"
@@ -105,8 +107,8 @@ export function ProfileWizard() {
                 >
                   <RadioGroupItem value="buyer" id="role-buyer" className="sr-only" />
                   <ShoppingCart className="h-10 w-10 text-blue-600" />
-                  <span className="font-medium">Buyer</span>
-                  <span className="text-xs text-muted-foreground text-center">I buy fresh produce</span>
+                  <span className="font-medium">{t("profile_wizard.buyer")}</span>
+                  <span className="text-xs text-muted-foreground text-center">{t("profile_wizard.buyer_description")}</span>
                 </Label>
               </RadioGroup>
             </div>
@@ -115,28 +117,28 @@ export function ProfileWizard() {
           {step === 2 && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="wizard-name">Full Name</Label>
+                <Label htmlFor="wizard-name">{t("profile_wizard.full_name")}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="wizard-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Your full name"
+                    placeholder={t("profile_wizard.full_name_placeholder")}
                     className="pl-10"
                     data-testid="input-wizard-name"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="wizard-phone">Phone Number</Label>
+                <Label htmlFor="wizard-phone">{t("profile_wizard.phone_number")}</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="wizard-phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+44 7XXX XXXXXX"
+                    placeholder={t("profile_wizard.phone_placeholder")}
                     className="pl-10"
                     data-testid="input-wizard-phone"
                   />
@@ -148,14 +150,14 @@ export function ProfileWizard() {
           {step === 3 && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="wizard-location">Location</Label>
+                <Label htmlFor="wizard-location">{t("profile_wizard.location")}</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="wizard-location"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Your city or area"
+                    placeholder={t("profile_wizard.location_placeholder")}
                     className="pl-10"
                     data-testid="input-wizard-location"
                   />
@@ -175,15 +177,15 @@ export function ProfileWizard() {
                   )}
                 </div>
                 <div className="space-y-2 w-full">
-                  <Label htmlFor="wizard-avatar">Avatar URL</Label>
+                  <Label htmlFor="wizard-avatar">{t("profile_wizard.avatar_url")}</Label>
                   <Input
                     id="wizard-avatar"
                     value={avatar}
                     onChange={(e) => setAvatar(e.target.value)}
-                    placeholder="https://example.com/avatar.jpg"
+                    placeholder={t("profile_wizard.avatar_placeholder")}
                     data-testid="input-wizard-avatar"
                   />
-                  <p className="text-xs text-muted-foreground">Paste an image URL or leave blank for a generated avatar</p>
+                  <p className="text-xs text-muted-foreground">{t("profile_wizard.avatar_hint")}</p>
                 </div>
               </div>
             </div>
@@ -191,12 +193,12 @@ export function ProfileWizard() {
 
           <div className="flex justify-between pt-2">
             {step > 1 ? (
-              <Button variant="outline" onClick={handleBack} data-testid="button-wizard-back">Back</Button>
+              <Button variant="outline" onClick={handleBack} data-testid="button-wizard-back">{t("profile_wizard.back_button")}</Button>
             ) : (
-              <Button variant="ghost" onClick={handleSkip} data-testid="button-wizard-skip">Skip</Button>
+              <Button variant="ghost" onClick={handleSkip} data-testid="button-wizard-skip">{t("profile_wizard.skip_button")}</Button>
             )}
             {step < totalSteps ? (
-              <Button onClick={handleNext} data-testid="button-wizard-next">Continue</Button>
+              <Button onClick={handleNext} data-testid="button-wizard-next">{t("profile_wizard.continue_button")}</Button>
             ) : (
               <Button onClick={handleComplete} disabled={updateProfile.isPending} data-testid="button-wizard-complete">
                 {updateProfile.isPending ? (
@@ -204,7 +206,7 @@ export function ProfileWizard() {
                 ) : (
                   <Check className="mr-2 h-4 w-4" />
                 )}
-                Complete Profile
+                {t("profile_wizard.complete_profile")}
               </Button>
             )}
           </div>

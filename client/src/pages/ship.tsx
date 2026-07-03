@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +38,7 @@ const statusLabel: Record<ShipmentStatus, string> = {
 };
 
 export default function ShipPage() {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [trackInput, setTrackInput] = useState("");
   const [tab, setTab] = useState("track");
@@ -70,12 +72,12 @@ export default function ShipPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
             <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-            Ship
+            {t("ship.title")}
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">Tracking, deliveries, send-anything & milk runs</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{t("ship.description")}</p>
         </div>
         <Button size="sm" onClick={() => setTab("send")} data-testid="button-quick-send">
-          <Plus className="h-4 w-4 mr-1" />Send
+          <Plus className="h-4 w-4 mr-1" />{t("ship.send_parcel_button")}
         </Button>
       </div>
 
@@ -85,14 +87,14 @@ export default function ShipPage() {
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <Input
-              placeholder="Enter tracking ID e.g. AGS-XXXXXX"
+              placeholder={t("ship_track.tracking_number_placeholder")}
               value={trackInput}
               onChange={(e) => setTrackInput(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === "Enter" && handleTrack()}
               className="border-0 bg-transparent focus-visible:ring-0 px-0 font-mono"
               data-testid="input-track-quick"
             />
-            <Button size="sm" onClick={handleTrack} disabled={!trackInput.trim()} data-testid="button-track-quick">Track</Button>
+            <Button size="sm" onClick={handleTrack} disabled={!trackInput.trim()} data-testid="button-track-quick">{t("ship_track.track_button")}</Button>
           </div>
         </CardContent>
       </Card>
@@ -100,16 +102,16 @@ export default function ShipPage() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="grid grid-cols-5 w-full h-auto">
           <TabsTrigger value="track" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-track"><Package className="h-3.5 w-3.5" />Track</TabsTrigger>
-          <TabsTrigger value="orders" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-orders"><Truck className="h-3.5 w-3.5" />Orders</TabsTrigger>
-          <TabsTrigger value="send" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-send"><Send className="h-3.5 w-3.5" />Send</TabsTrigger>
-          <TabsTrigger value="milk" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-milk"><Calendar className="h-3.5 w-3.5" />Milk Runs</TabsTrigger>
-          <TabsTrigger value="partner" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-partner"><Building2 className="h-3.5 w-3.5" />Partners</TabsTrigger>
+          <TabsTrigger value="orders" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-orders"><Truck className="h-3.5 w-3.5" />{t("ship.parcels_tab")}</TabsTrigger>
+          <TabsTrigger value="send" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-send"><Send className="h-3.5 w-3.5" />{t("ship.send_parcel_button")}</TabsTrigger>
+          <TabsTrigger value="milk" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-milk"><Calendar className="h-3.5 w-3.5" />{t("ship.settings_tab")}</TabsTrigger>
+          <TabsTrigger value="partner" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-partner"><Building2 className="h-3.5 w-3.5" />{t("ship.parcels_tab")}</TabsTrigger>
         </TabsList>
 
         {/* TRACK — list of my shipments */}
         <TabsContent value="track" className="space-y-3 mt-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">My shipments</h2>
+            <h2 className="text-sm font-semibold">{t("ship.active_parcels")}</h2>
             {myShipments && myShipments.length > 0 && (
               <Badge variant="outline" className="text-[10px]">{myShipments.length}</Badge>
             )}
@@ -120,8 +122,8 @@ export default function ShipPage() {
             <Card>
               <CardContent className="p-6 text-center space-y-2">
                 <Package className="h-8 w-8 mx-auto text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">No shipments yet.</p>
-                <Button size="sm" onClick={() => setTab("send")} data-testid="button-empty-send">Send your first parcel</Button>
+                <p className="text-sm text-muted-foreground">{t("ship.no_parcels_yet")}</p>
+                <Button size="sm" onClick={() => setTab("send")} data-testid="button-empty-send">{t("ship.send_parcel_button")}</Button>
               </CardContent>
             </Card>
           ) : (
@@ -149,13 +151,13 @@ export default function ShipPage() {
                     <div className="text-right flex-shrink-0">
                       <p className="font-bold text-sm">£{s.price.toFixed(2)}</p>
                       <Button size="sm" variant="outline" className="h-7 text-[11px] mt-1" onClick={() => navigate(`/ship/track/${s.trackingId}`)} data-testid={`button-track-${s.id}`}>
-                        Track
+                        {t("ship.track_parcel_button")}
                       </Button>
                     </div>
                   </div>
                   {s.status !== "delivered" && s.status !== "cancelled" && (
                     <Button size="sm" variant="ghost" className="h-7 text-[10px] mt-2 text-muted-foreground" onClick={() => advanceMut.mutate(s.id)} disabled={advanceMut.isPending} data-testid={`button-advance-${s.id}`}>
-                      Advance status (demo) →
+                      {t("ship.update_status_button")} →
                     </Button>
                   )}
                 </CardContent>
@@ -176,8 +178,8 @@ export default function ShipPage() {
                 <Card>
                   <CardContent className="p-6 text-center space-y-2">
                     <Truck className="h-8 w-8 mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Marketplace order deliveries appear here once you check out.</p>
-                    <Button size="sm" variant="outline" onClick={() => navigate("/cart")} data-testid="button-go-cart">Go to cart</Button>
+                    <p className="text-sm text-muted-foreground">{t("ship.no_tracking_data")}</p>
+                    <Button size="sm" variant="outline" onClick={() => navigate("/cart")} data-testid="button-go-cart">{t("ship.back_to_shipping")}</Button>
                   </CardContent>
                 </Card>
               );
@@ -210,14 +212,14 @@ export default function ShipPage() {
                   </div>
                   <div className="flex gap-2 pt-1">
                     <Button size="sm" variant="outline" className="h-7 text-[11px] flex-1" onClick={() => navigate(`/orders/${s.orderId}`)} data-testid={`button-view-order-${s.id}`}>
-                      View order
+                      {t("ship.recent_parcels")}
                     </Button>
                     <Button size="sm" variant="outline" className="h-7 text-[11px] flex-1" onClick={() => navigate(`/ship/track/${s.trackingId}`)} data-testid={`button-track-order-${s.id}`}>
-                      Track parcel
+                      {t("ship.track_parcel_button")}
                     </Button>
                     {s.externalTrackingUrl && (
                       <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => window.open(s.externalTrackingUrl!, "_blank")} data-testid={`button-carrier-${s.id}`}>
-                        Carrier site →
+                        {t("ship.carrier")} →
                       </Button>
                     )}
                   </div>
@@ -231,8 +233,8 @@ export default function ShipPage() {
         <TabsContent value="send" className="mt-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2"><Send className="h-4 w-4" />Send a parcel anywhere</CardTitle>
-              <p className="text-xs text-muted-foreground">From farm produce to equipment — instant quotes from our 3rd-party carrier network (Royal Mail, DPD, FedEx, DHL & more). Worldwide delivery.</p>
+              <CardTitle className="text-base flex items-center gap-2"><Send className="h-4 w-4" />{t("ship.send_parcel_button")}</CardTitle>
+              <p className="text-xs text-muted-foreground">{t("ship.description")}</p>
             </CardHeader>
             <CardContent>
               <SendParcelWizard />
@@ -244,8 +246,8 @@ export default function ShipPage() {
         <TabsContent value="milk" className="mt-4 space-y-3">
           <Card>
             <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2"><Leaf className="h-4 w-4 text-green-600" /><h3 className="font-semibold text-sm">Scheduled milk runs</h3></div>
-              <p className="text-xs text-muted-foreground">Shared recurring routes — lower cost & lower CO₂.</p>
+              <div className="flex items-center gap-2"><Leaf className="h-4 w-4 text-green-600" /><h3 className="font-semibold text-sm">{t("ship.parcels_tab")}</h3></div>
+              <p className="text-xs text-muted-foreground">{t("ship.description")}</p>
             </CardContent>
           </Card>
           {[
@@ -271,7 +273,7 @@ export default function ShipPage() {
               </CardContent>
             </Card>
           ))}
-          <p className="text-[11px] text-muted-foreground text-center pt-2">Live capacity & booking arrives in Phase 3.</p>
+          <p className="text-[11px] text-muted-foreground text-center pt-2">{t("ship.no_tracking_data")}</p>
         </TabsContent>
 
         {/* PARTNERS */}
@@ -281,13 +283,10 @@ export default function ShipPage() {
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Handshake className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-sm">How AgriConnect ships</h3>
+                <h3 className="font-semibold text-sm">{t("ship.quick_actions")}</h3>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                We don't own trucks. AgriConnect is a <span className="font-semibold text-foreground">marketplace aggregator</span> —
-                we collaborate with established 3rd-party logistics partners (Royal Mail, DPD, Evri, FedEx, DHL, UPS, Stuart) plus a
-                community-organised <span className="font-semibold text-foreground">Farmer Milk Run</span> network.
-                You always book through us; we forward the job to the best-priced carrier and handle tracking, payments and disputes.
+                {t("ship.description")}
               </p>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="bg-background rounded p-2"><p className="text-base font-bold text-primary">8+</p><p className="text-[10px] text-muted-foreground">carriers</p></div>
@@ -300,7 +299,7 @@ export default function ShipPage() {
 
           {/* Carrier list */}
           <div>
-            <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Building2 className="h-4 w-4" />Our logistics partners</h3>
+            <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Building2 className="h-4 w-4" />{t("ship.parcels_tab")}</h3>
             {[
               { name: "Royal Mail", icon: Truck, color: "text-red-600", svc: "UK · Tracked 24/48", from: "from £4.99" },
               { name: "Evri", icon: Truck, color: "text-blue-600", svc: "UK · cheapest courier", from: "from £3.95" },
@@ -323,7 +322,7 @@ export default function ShipPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-xs font-semibold">{p.from}</p>
-                      <Badge variant="secondary" className="text-[10px] h-4">Active</Badge>
+                      <Badge variant="secondary" className="text-[10px] h-4">{t("common.live")}</Badge>
                     </div>
                   </CardContent>
                 </Card>
@@ -334,9 +333,9 @@ export default function ShipPage() {
           {/* Become a partner CTA */}
           <Card>
             <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" /><h3 className="font-semibold text-sm">Run a fleet? Join us</h3></div>
-              <p className="text-xs text-muted-foreground">Local couriers, cold-chain operators and refrigerated hauliers — get matched with farm shipments in your region.</p>
-              <Button size="sm" variant="outline" className="w-full" disabled data-testid="button-partner-apply">Carrier signup opens in Phase 5</Button>
+              <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" /><h3 className="font-semibold text-sm">{t("ship.quick_actions")}</h3></div>
+              <p className="text-xs text-muted-foreground">{t("ship.description")}</p>
+              <Button size="sm" variant="outline" className="w-full" disabled data-testid="button-partner-apply">{t("ship.view_all_button")}</Button>
             </CardContent>
           </Card>
         </TabsContent>

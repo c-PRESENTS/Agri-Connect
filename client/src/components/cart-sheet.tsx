@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ export function CartSheet({
   onRemoveItem,
   onCheckout,
 }: CartSheetProps) {
+  const { t } = useTranslation();
   const subtotal = items.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   const deliveryFee = subtotal >= 30 || subtotal === 0 ? 0 : 4.99;
   const total = subtotal + deliveryFee;
@@ -42,9 +44,9 @@ export function CartSheet({
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ShoppingBag className="h-6 w-6" />
-            Your Cart
+            {t("cart_sheet.title")}
             {items.length > 0 && (
-              <Badge variant="secondary">{items.length} items</Badge>
+              <Badge variant="secondary">{t("cart_sheet.item_count", { count: items.length })}</Badge>
             )}
           </SheetTitle>
         </SheetHeader>
@@ -54,12 +56,12 @@ export function CartSheet({
             <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mb-4">
               <ShoppingBag className="h-12 w-12 text-muted-foreground" />
             </div>
-            <h3 className="font-semibold mb-1">Your cart is empty</h3>
+            <h3 className="font-semibold mb-1">{t("cart_sheet.empty_description")}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Add some fresh products from local farmers
+              {t("cart.empty_description")}
             </p>
             <Button onClick={onClose} data-testid="button-continue-shopping">
-              Continue Shopping
+              {t("cart_sheet.continue_shopping")}
             </Button>
           </div>
         ) : (
@@ -139,31 +141,31 @@ export function CartSheet({
             <div className="border-t pt-4 space-y-3">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">{t("cart_sheet.subtotal")}</span>
                   <span>{currencySymbol}{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Delivery</span>
-                  <span>{deliveryFee === 0 ? "Free" : `${currencySymbol}${deliveryFee}`}</span>
+                  <span className="text-muted-foreground">{t("cart.delivery")}</span>
+                  <span>{deliveryFee === 0 ? t("cart.free_delivery") : `${currencySymbol}${deliveryFee}`}</span>
                 </div>
                 {deliveryFee > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Add {currencySymbol}{(30 - subtotal).toFixed(2)} more for free delivery
+                    {t("cart.add_more_for_free", { amount: (30 - subtotal).toFixed(2) })}
                   </p>
                 )}
                 <Separator />
                 <div className="flex justify-between font-semibold text-base">
-                  <span>Total</span>
+                  <span>{t("cart.total")}</span>
                   <span>{currencySymbol}{total.toFixed(2)}</span>
                 </div>
               </div>
 
               <SheetFooter className="flex gap-2 sm:flex-col">
                 <Button className="w-full btn-glow" size="lg" onClick={onCheckout} data-testid="button-checkout">
-                  Proceed to Checkout
+                  {t("cart_sheet.checkout_button")}
                 </Button>
                 <Button variant="outline" className="w-full" onClick={onClose} data-testid="button-continue-shopping-footer">
-                  Continue Shopping
+                  {t("cart_sheet.continue_shopping")}
                 </Button>
               </SheetFooter>
             </div>

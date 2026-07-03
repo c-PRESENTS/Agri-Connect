@@ -13,18 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { LifeBuoy, Mail, MessageCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
-
-const TOPICS = [
-  { value: "order", label: "Order issue" },
-  { value: "payment", label: "Payment problem" },
-  { value: "delivery", label: "Delivery question" },
-  { value: "account", label: "Account / login" },
-  { value: "seller", label: "Seller onboarding" },
-  { value: "feedback", label: "Feedback or feature request" },
-  { value: "other", label: "Something else" },
-];
+import { useTranslation } from "react-i18next";
 
 export default function SupportPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const search = useSearch();
@@ -35,6 +27,16 @@ export default function SupportPage() {
     topic: "other",
     message: "",
   });
+
+  const TOPICS = [
+    { value: "order", label: t("support.topic_order") },
+    { value: "payment", label: t("support.topic_payment") },
+    { value: "delivery", label: t("support.topic_delivery") },
+    { value: "account", label: t("support.topic_account") },
+    { value: "seller", label: t("support.topic_seller") },
+    { value: "feedback", label: t("support.topic_feedback") },
+    { value: "other", label: t("support.topic_other") },
+  ];
 
   // Pre-fill the form when the user arrives from an order detail page.
   useEffect(() => {
@@ -64,12 +66,12 @@ export default function SupportPage() {
     onSuccess: () => {
       setSubmitted(true);
       toast({
-        title: "Message received",
-        description: "Our support team will reply within one business day.",
+        title: t("support.message_received"),
+        description: t("support.message_received_desc"),
       });
     },
     onError: (err: Error) => {
-      toast({ title: "Could not send", description: err.message, variant: "destructive" });
+      toast({ title: t("support.could_not_send"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -88,10 +90,10 @@ export default function SupportPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold" data-testid="text-support-heading">
-              Customer support
+              {t("support.title")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              We&apos;re here to help with orders, payments, deliveries and your account.
+              {t("support.subtitle")}
             </p>
           </div>
         </div>
@@ -101,7 +103,7 @@ export default function SupportPage() {
             <CardContent className="pt-6 flex gap-3 items-start">
               <Mail className="h-5 w-5 text-primary mt-0.5" />
               <div>
-                <p className="text-sm font-medium">Email us</p>
+                <p className="text-sm font-medium">{t("support.email_us")}</p>
                 <a
                   href="mailto:support@agriconnect.app"
                   className="text-sm text-primary underline"
@@ -109,7 +111,7 @@ export default function SupportPage() {
                 >
                   support@agriconnect.app
                 </a>
-                <p className="text-xs text-muted-foreground mt-1">Replies within 1 business day</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("support.replies_within")}</p>
               </div>
             </CardContent>
           </Card>
@@ -117,15 +119,15 @@ export default function SupportPage() {
             <CardContent className="pt-6 flex gap-3 items-start">
               <MessageCircle className="h-5 w-5 text-primary mt-0.5" />
               <div>
-                <p className="text-sm font-medium">Knowledge Hub</p>
+                <p className="text-sm font-medium">{t("support.knowledge_hub")}</p>
                 <Link
                   href="/farmers-help"
                   className="text-sm text-primary underline"
                   data-testid="link-knowledge-hub"
                 >
-                  Browse articles & guides
+                  {t("support.browse_articles")}
                 </Link>
-                <p className="text-xs text-muted-foreground mt-1">Self-serve answers in seconds</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("support.self_serve")}</p>
               </div>
             </CardContent>
           </Card>
@@ -133,20 +135,18 @@ export default function SupportPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Send us a message</CardTitle>
+            <CardTitle>{t("support.send_message")}</CardTitle>
             <CardDescription>
-              Tell us what&apos;s happening. The more detail you give, the faster we can help.
+              {t("support.send_message_desc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {submitted ? (
               <div className="text-center py-10" data-testid="text-support-thanks">
                 <CheckCircle2 className="h-14 w-14 text-primary mx-auto mb-3" />
-                <h2 className="text-lg font-semibold mb-1">Thank you — message received</h2>
+                <h2 className="text-lg font-semibold mb-1">{t("support.thank_you")}</h2>
                 <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-                  Our support team will respond to{" "}
-                  <span className="font-medium">{user?.email || form.email}</span> within one
-                  business day.
+                  {t("support.thank_you_desc", { email: user?.email || form.email })}
                 </p>
                 <Button
                   variant="outline"
@@ -156,14 +156,14 @@ export default function SupportPage() {
                   }}
                   data-testid="button-send-another"
                 >
-                  Send another message
+                  {t("support.send_another")}
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="s-name">Your name</Label>
+                    <Label htmlFor="s-name">{t("support.your_name")}</Label>
                     <Input
                       id="s-name"
                       value={form.name}
@@ -173,7 +173,7 @@ export default function SupportPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="s-email">Email{user?.email ? "" : <span className="text-rose-500"> *</span>}</Label>
+                    <Label htmlFor="s-email">{t("support.email")}{user?.email ? "" : <span className="text-rose-500"> *</span>}</Label>
                     <Input
                       id="s-email"
                       type="email"
@@ -185,7 +185,7 @@ export default function SupportPage() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="s-topic">Topic</Label>
+                  <Label htmlFor="s-topic">{t("support.topic")}</Label>
                   <Select
                     value={form.topic}
                     onValueChange={(v) => setForm((f) => ({ ...f, topic: v }))}
@@ -194,9 +194,9 @@ export default function SupportPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {TOPICS.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.label}
+                      {TOPICS.map((topic) => (
+                        <SelectItem key={topic.value} value={topic.value}>
+                          {topic.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -204,18 +204,18 @@ export default function SupportPage() {
                 </div>
                 <div>
                   <Label htmlFor="s-message">
-                    Message <span className="text-rose-500">*</span>
+                    {t("support.message")} <span className="text-rose-500">*</span>
                   </Label>
                   <Textarea
                     id="s-message"
                     rows={6}
                     value={form.message}
                     onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-                    placeholder="Describe the issue or question. Include order numbers if relevant."
+                    placeholder={t("support.message_placeholder")}
                     data-testid="input-support-message"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Minimum 10 characters. Currently {form.message.trim().length}.
+                    {t("support.char_count", { count: form.message.trim().length })}
                   </p>
                 </div>
                 <div className="flex justify-end pt-2">
@@ -225,7 +225,7 @@ export default function SupportPage() {
                     data-testid="button-send-support"
                   >
                     {submit.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Send message
+                    {t("support.send_button")}
                   </Button>
                 </div>
               </div>

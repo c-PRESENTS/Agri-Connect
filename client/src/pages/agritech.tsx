@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { 
   Cpu, Satellite, Map, Wifi, CloudRain, Thermometer, Sprout, Zap, BarChart3,
   Bot, ArrowLeft, ChevronRight, TrendingUp, Shield, Layers, Eye, Radio,
@@ -151,49 +152,49 @@ const agriTechProducts: AgriTechProduct[] = [
 const technologies = [
   {
     icon: Wifi,
-    title: "IoT Sensor Networks",
-    description: "Real-time soil, weather, and crop monitoring with wireless sensor arrays covering your entire farm.",
-    stats: "99.8% uptime",
+    titleKey: "tech_iot_title",
+    descKey: "tech_iot_desc",
+    statsKey: "tech_iot_stat",
     color: "text-blue-600 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/30",
   },
   {
     icon: Satellite,
-    title: "Satellite Imagery",
-    description: "Weekly multispectral satellite images providing NDVI stress maps and growth stage analysis.",
-    stats: "3m resolution",
+    titleKey: "tech_satellite_title",
+    descKey: "tech_satellite_desc",
+    statsKey: "tech_satellite_stat",
     color: "text-purple-600 dark:text-purple-400",
     bg: "bg-purple-50 dark:bg-purple-950/30",
   },
   {
     icon: Navigation,
-    title: "GPS & GIS Mapping",
-    description: "Sub-meter precision field mapping, boundary delineation, and soil sampling grid generation.",
-    stats: "<1m accuracy",
+    titleKey: "tech_gis_title",
+    descKey: "tech_gis_desc",
+    statsKey: "tech_gis_stat",
     color: "text-green-600 dark:text-green-400",
     bg: "bg-green-50 dark:bg-green-950/30",
   },
   {
     icon: Bot,
-    title: "AI & Machine Learning",
-    description: "Predictive models for yield forecasting, disease risk, and optimal application timing.",
-    stats: "94% accuracy",
+    titleKey: "tech_ai_title",
+    descKey: "tech_ai_desc",
+    statsKey: "tech_ai_stat",
     color: "text-orange-600 dark:text-orange-400",
     bg: "bg-orange-50 dark:bg-orange-950/30",
   },
   {
     icon: Eye,
-    title: "Drone & UAV Imaging",
-    description: "On-demand aerial NDVI, RGB, and thermal imaging for scouting and precision applications.",
-    stats: "200 acres/hr",
+    titleKey: "tech_drone_title",
+    descKey: "tech_drone_desc",
+    statsKey: "tech_drone_stat",
     color: "text-cyan-600 dark:text-cyan-400",
     bg: "bg-cyan-50 dark:bg-cyan-950/30",
   },
   {
     icon: Gauge,
-    title: "Precision Equipment",
-    description: "Auto-steer, variable-rate seeding and spraying, and yield monitoring for data-driven operations.",
-    stats: "±2.5cm precision",
+    titleKey: "tech_equipment_title",
+    descKey: "tech_equipment_desc",
+    statsKey: "tech_equipment_stat",
     color: "text-red-600 dark:text-red-400",
     bg: "bg-red-50 dark:bg-red-950/30",
   },
@@ -201,47 +202,48 @@ const technologies = [
 
 const caseStudies = [
   {
-    farm: "Hartley Arable Farm",
-    location: "Cambridgeshire, UK",
-    area: "850 acres",
-    technology: "Variable-Rate Seeding + NDVI Mapping",
-    result: "18% yield increase, 12% input cost reduction",
-    roi: "£42,000 annual saving",
-    testimonial: "The prescription maps from satellite imagery transformed how we manage the farm. Every part of the field now gets exactly what it needs.",
-    farmer: "James Hartley",
+    nameKey: "case_farm_1_name",
+    locationKey: "case_farm_1_location",
+    areaKey: "case_farm_1_size",
+    techKey: "case_farm_1_techs",
+    resultKey: "case_farm_1_yield",
+    roiKey: "case_farm_1_roi",
+    quoteKey: "case_farm_1_quote",
+    authorKey: "case_farm_1_author",
   },
   {
-    farm: "Willowbrook Vegetable Growers",
-    location: "Kent, UK",
-    area: "120 acres",
-    technology: "IoT Sensor Network + Weather Station",
-    result: "30% reduction in irrigation water use",
-    roi: "£18,500 annual saving",
-    testimonial: "The soil moisture sensors pay for themselves in the first season. We irrigate only when the data says so, not by guesswork.",
-    farmer: "Sarah Mitchell",
+    nameKey: "case_farm_2_name",
+    locationKey: "case_farm_2_location",
+    areaKey: "case_farm_2_size",
+    techKey: "case_farm_2_techs",
+    resultKey: "case_farm_2_yield",
+    roiKey: "case_farm_2_roi",
+    quoteKey: "case_farm_2_quote",
+    authorKey: "case_farm_2_author",
   },
   {
-    farm: "Penrhyn Organic Farms",
-    location: "Wales, UK",
-    area: "340 acres",
-    technology: "Drone Scouting + Disease Forecasting",
-    result: "25% reduction in fungicide applications",
-    roi: "£28,000 annual saving",
-    testimonial: "Early disease detection from drone flights means we treat exactly where needed, when needed. Our spray costs have plummeted.",
-    farmer: "Tom Penrhyn",
+    nameKey: "case_farm_3_name",
+    locationKey: "case_farm_3_location",
+    areaKey: "case_farm_3_size",
+    techKey: "case_farm_3_techs",
+    resultKey: "case_farm_3_yield",
+    roiKey: "case_farm_3_roi",
+    quoteKey: "case_farm_3_quote",
+    authorKey: "case_farm_3_author",
   },
 ];
 
 const categoryFilters = ["All", "sensors", "remote-sensing", "gis", "precision"];
 const categoryLabels: Record<string, string> = {
-  "All": "All Products",
-  "sensors": "IoT Sensors",
-  "remote-sensing": "Remote Sensing",
-  "gis": "GIS & Mapping",
-  "precision": "Precision Farming",
+  "All": "agritech.filter_all_products",
+  "sensors": "agritech.filter_iot_sensors",
+  "remote-sensing": "agritech.filter_remote_sensing",
+  "gis": "agritech.filter_gis_mapping",
+  "precision": "agritech.filter_precision_farming",
 };
 
 export default function AgriTechPage() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -269,42 +271,42 @@ export default function AgriTechPage() {
             className="text-green-200 hover:text-white hover:bg-green-800/50 mb-4 sm:mb-6 -ml-2"
             data-testid="button-back-home"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Marketplace
+            <ArrowLeft className="h-4 w-4 mr-2" /> {t("agritech.back_to_marketplace")}
           </Button>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10 items-center">
             <div>
               <Badge className="bg-green-500/30 text-green-100 border-green-500/50 mb-3 sm:mb-4">
-                <Cpu className="h-3 w-3 mr-1" /> Precision AgriTech Catalog
+                <Cpu className="h-3 w-3 mr-1" /> {t("agritech.precision_catalog_badge")}
               </Badge>
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 leading-tight">
-                Farm Smarter with Precision Technology
+                {t("agritech.hero_title")}
               </h1>
               <p className="text-green-100 text-sm sm:text-lg mb-4 sm:mb-6 leading-relaxed">
-                From soil sensors to satellite imagery, auto-steer to AI-powered analytics — discover the complete range of precision farming tools trusted by UK farmers.
+                {t("agritech.hero_description")}
               </p>
               <div className="flex flex-wrap gap-3">
                 <div className="flex items-center gap-2 bg-green-800/50 rounded-lg px-3 py-2 text-sm">
                   <TrendingUp className="h-4 w-4 text-green-300" />
-                  <span>Avg 22% yield increase</span>
+                  <span>{t("agritech.avg_yield_increase")}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-green-800/50 rounded-lg px-3 py-2 text-sm">
                   <Shield className="h-4 w-4 text-green-300" />
-                  <span>ROI in 2–3 seasons</span>
+                  <span>{t("agritech.roi_seasons")}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-green-800/50 rounded-lg px-3 py-2 text-sm">
                   <Leaf className="h-4 w-4 text-green-300" />
-                  <span>30% fewer inputs</span>
+                  <span>{t("agritech.fewer_inputs")}</span>
                 </div>
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               {[
-                { value: "200+", label: "Products", icon: Cpu },
-                { value: "4,500+", label: "UK Farms Equipped", icon: Sprout },
-                { value: "£2.8M", label: "Farmer Savings/Year", icon: TrendingUp },
-                { value: "94%", label: "AI Accuracy Rate", icon: Bot },
+                { value: "200+", label: t("agritech.stat_products"), icon: Cpu },
+                { value: "4,500+", label: t("agritech.stat_uk_farms"), icon: Sprout },
+                { value: "£2.8M", label: t("agritech.stat_farmer_savings"), icon: TrendingUp },
+                { value: "94%", label: t("agritech.stat_ai_accuracy"), icon: Bot },
               ].map(({ value, label, icon: Icon }) => (
                 <div key={label} className="bg-green-800/40 rounded-xl p-4 text-center border border-green-600/30">
                   <Icon className="h-6 w-6 text-green-300 mx-auto mb-2" />
@@ -321,10 +323,10 @@ export default function AgriTechPage() {
         <Tabs defaultValue="catalog">
           <div className="overflow-x-auto -mx-4 px-4 mb-6 sm:mb-8 no-scrollbar">
           <TabsList className="h-10 sm:h-12 p-1 flex w-max min-w-full" data-testid="tabs-agritech">
-            <TabsTrigger value="catalog" className="px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap">Product Catalog</TabsTrigger>
-            <TabsTrigger value="technology" className="px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">Technologies</TabsTrigger>
-            <TabsTrigger value="casestudies" className="px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">Case Studies</TabsTrigger>
-            <TabsTrigger value="roi" className="px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">ROI Calculator</TabsTrigger>
+            <TabsTrigger value="catalog" className="px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap">{t("agritech.tab_catalog")}</TabsTrigger>
+            <TabsTrigger value="technology" className="px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">{t("agritech.tab_technologies")}</TabsTrigger>
+            <TabsTrigger value="casestudies" className="px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">{t("agritech.tab_case_studies")}</TabsTrigger>
+            <TabsTrigger value="roi" className="px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">{t("agritech.tab_roi_calculator")}</TabsTrigger>
           </TabsList>
           </div>
 
@@ -332,7 +334,7 @@ export default function AgriTechPage() {
           <TabsContent value="catalog">
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <Input
-                placeholder="Search products..."
+                placeholder={t("agritech.search_placeholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="max-w-xs"
@@ -347,7 +349,7 @@ export default function AgriTechPage() {
                     onClick={() => setActiveCategory(cat)}
                     data-testid={`filter-cat-${cat}`}
                   >
-                    {categoryLabels[cat] || cat}
+                    {t(categoryLabels[cat] || cat)}
                   </Button>
                 ))}
               </div>
@@ -435,8 +437,8 @@ export default function AgriTechPage() {
             {filteredProducts.length === 0 && (
               <div className="text-center py-10 sm:py-16 text-muted-foreground">
                 <Cpu className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p className="text-lg font-medium">No products found</p>
-                <p className="text-sm">Try adjusting your search or filters</p>
+                <p className="text-lg font-medium">{t("agritech.no_products_found")}</p>
+                <p className="text-sm">{t("agritech.try_different_search")}</p>
               </div>
             )}
           </TabsContent>
@@ -444,21 +446,21 @@ export default function AgriTechPage() {
           {/* TECHNOLOGIES TAB */}
           <TabsContent value="technology">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-2">Core Technologies</h2>
-              <p className="text-muted-foreground">The building blocks of modern precision farming</p>
+              <h2 className="text-2xl font-bold mb-2">{t("agritech.stack_title")}</h2>
+              <p className="text-muted-foreground">{t("agritech.stack_subtitle")}</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {technologies.map((tech) => {
                 const Icon = tech.icon;
                 return (
-                  <Card key={tech.title} className="border-border/60">
+                  <Card key={tech.titleKey} className="border-border/60">
                     <CardContent className="pt-6">
                       <div className={`${tech.bg} rounded-xl p-3 w-fit mb-4`}>
                         <Icon className={`h-6 w-6 ${tech.color}`} />
                       </div>
-                      <h3 className="font-semibold text-base mb-2">{tech.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">{tech.description}</p>
-                      <Badge variant="secondary" className="text-xs">{tech.stats}</Badge>
+                      <h3 className="font-semibold text-base mb-2">{t(`agritech.${tech.titleKey}`)}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">{t(`agritech.${tech.descKey}`)}</p>
+                      <Badge variant="secondary" className="text-xs">{t(`agritech.${tech.statsKey}`)}</Badge>
                     </CardContent>
                   </Card>
                 );
@@ -468,29 +470,29 @@ export default function AgriTechPage() {
             {/* Technology Stack Diagram */}
             <Card className="mt-8 border-border/60">
               <CardHeader>
-                <CardTitle>Precision Farming Technology Stack</CardTitle>
-                <CardDescription>How the layers connect to power your farm decisions</CardDescription>
+                <CardTitle>{t("agritech.stack_title")}</CardTitle>
+                <CardDescription>{t("agritech.stack_subtitle")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {[
-                    { layer: "Data Collection", tools: "IoT Sensors, Drones, GPS, Weather Stations", color: "bg-blue-100 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800", icon: Wifi },
-                    { layer: "Data Transmission", tools: "LoRaWAN, 4G, Satellite, WiFi Gateway", color: "bg-purple-100 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800", icon: Radio },
-                    { layer: "Data Processing", tools: "Cloud Platform, Edge AI, NDVI Analysis", color: "bg-green-100 dark:bg-green-950/40 border-green-200 dark:border-green-800", icon: FlaskConical },
-                    { layer: "Decision Support", tools: "Prescription Maps, Alerts, Forecasting, Reports", color: "bg-amber-100 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800", icon: BarChart3 },
-                    { layer: "Field Application", tools: "Auto-Steer, Variable Rate, Smart Irrigation", color: "bg-red-100 dark:bg-red-950/40 border-red-200 dark:border-red-800", icon: Sprout },
+                    { layerKey: "stack_layer_collection", toolsKey: "stack_layer_collection_techs", color: "bg-blue-100 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800", icon: Wifi },
+                    { layerKey: "stack_layer_transmission", toolsKey: "stack_layer_transmission_techs", color: "bg-purple-100 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800", icon: Radio },
+                    { layerKey: "stack_layer_processing", toolsKey: "stack_layer_processing_techs", color: "bg-green-100 dark:bg-green-950/40 border-green-200 dark:border-green-800", icon: FlaskConical },
+                    { layerKey: "stack_layer_decisions", toolsKey: "stack_layer_decisions_techs", color: "bg-amber-100 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800", icon: BarChart3 },
+                    { layerKey: "stack_layer_application", toolsKey: "stack_layer_application_techs", color: "bg-red-100 dark:bg-red-950/40 border-red-200 dark:border-red-800", icon: Sprout },
                   ].map((item, index) => {
                     const Icon = item.icon;
                     return (
-                      <div key={item.layer} className={`flex items-center gap-4 p-3 rounded-lg border ${item.color}`}>
+                      <div key={item.layerKey} className={`flex items-center gap-4 p-3 rounded-lg border ${item.color}`}>
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div className="font-semibold text-sm w-6 h-6 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center text-xs border shadow-sm shrink-0">
                             {index + 1}
                           </div>
                           <Icon className="h-4 w-4 shrink-0" />
                           <div>
-                            <div className="font-medium text-sm">{item.layer}</div>
-                            <div className="text-xs text-muted-foreground">{item.tools}</div>
+                            <div className="font-medium text-sm">{t(`agritech.${item.layerKey}`)}</div>
+                            <div className="text-xs text-muted-foreground">{t(`agritech.${item.toolsKey}`)}</div>
                           </div>
                         </div>
                       </div>
@@ -504,8 +506,8 @@ export default function AgriTechPage() {
           {/* CASE STUDIES TAB */}
           <TabsContent value="casestudies">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-2">UK Farmer Success Stories</h2>
-              <p className="text-muted-foreground">Real results from real farms using precision technology</p>
+              <h2 className="text-2xl font-bold mb-2">{t("agritech.case_title")}</h2>
+              <p className="text-muted-foreground">{t("agritech.case_subtitle")}</p>
             </div>
             <div className="space-y-6">
               {caseStudies.map((cs, i) => (
@@ -514,24 +516,24 @@ export default function AgriTechPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                       <div className="lg:col-span-2">
                         <div className="flex items-center gap-2 mb-3">
-                          <Badge variant="secondary">{cs.location}</Badge>
-                          <Badge variant="outline">{cs.area}</Badge>
+                          <Badge variant="secondary">{t(`agritech.${cs.locationKey}`)}</Badge>
+                          <Badge variant="outline">{t(`agritech.${cs.areaKey}`)}</Badge>
                         </div>
-                        <h3 className="font-bold text-lg mb-1">{cs.farm}</h3>
-                        <p className="text-sm text-muted-foreground mb-3">Technology: {cs.technology}</p>
+                        <h3 className="font-bold text-lg mb-1">{t(`agritech.${cs.nameKey}`)}</h3>
+                        <p className="text-sm text-muted-foreground mb-3">{t(`agritech.${cs.techKey}`)}</p>
                         <blockquote className="border-l-4 border-green-500 pl-4 text-sm italic text-muted-foreground mb-4">
-                          "{cs.testimonial}"
-                          <cite className="block not-italic font-medium text-foreground mt-1">— {cs.farmer}</cite>
+                          "{t(`agritech.${cs.quoteKey}`)}"
+                          <cite className="block not-italic font-medium text-foreground mt-1">— {t(`agritech.${cs.authorKey}`)}</cite>
                         </blockquote>
                         <div className="flex flex-wrap gap-2">
                           <Badge className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800">
-                            <TrendingUp className="h-3 w-3 mr-1" /> {cs.result}
+                            <TrendingUp className="h-3 w-3 mr-1" /> {t(`agritech.${cs.resultKey}`)}
                           </Badge>
                         </div>
                       </div>
                       <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 flex flex-col items-center justify-center text-center border border-green-100 dark:border-green-900">
-                        <div className="text-3xl font-bold text-green-700 dark:text-green-400">{cs.roi}</div>
-                        <div className="text-sm text-muted-foreground mt-1">Annual ROI</div>
+                        <div className="text-3xl font-bold text-green-700 dark:text-green-400">{t(`agritech.${cs.roiKey}`)}</div>
+                        <div className="text-sm text-muted-foreground mt-1">{t("agritech.roi_results_title")}</div>
                         <TrendingUp className="h-8 w-8 text-green-500 mt-3 opacity-60" />
                       </div>
                     </div>
@@ -548,10 +550,10 @@ export default function AgriTechPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-green-600" />
-                    Precision Farming ROI Estimator
+                    {t("agritech.roi_title")}
                   </CardTitle>
                   <CardDescription>
-                    Estimate your potential return on investment from precision farming technology
+                    {t("agritech.roi_subtitle")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -640,6 +642,7 @@ export default function AgriTechPage() {
 }
 
 function ROICalculator() {
+  const { t } = useTranslation();
   const [farmSize, setFarmSize] = useState("200");
   const [cropType, setCropType] = useState("wheat");
   const [techBundle, setTechBundle] = useState("starter");
@@ -667,7 +670,7 @@ function ROICalculator() {
   return (
     <div className="space-y-5">
       <div className="space-y-3">
-        <label className="text-sm font-medium">Farm size (acres)</label>
+        <label className="text-sm font-medium">{t("agritech.roi_farm_size_label")}</label>
         <Input
           type="number"
           value={farmSize}
@@ -676,9 +679,11 @@ function ROICalculator() {
         />
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium">Main crop</label>
+        <label className="text-sm font-medium">{t("agritech.roi_crop_type_label")}</label>
         <div className="flex flex-wrap gap-2">
-          {Object.keys(cropPrices).map((crop) => (
+              {Object.keys(cropPrices).map((crop) => {
+            const cropKey = `roi_crop_${crop}`;
+            return (
             <Button
               key={crop}
               size="sm"
@@ -686,13 +691,14 @@ function ROICalculator() {
               onClick={() => setCropType(crop)}
               data-testid={`crop-${crop}`}
             >
-              {crop.charAt(0).toUpperCase() + crop.slice(1)}
+              {t(`agritech.${cropKey}`)}
             </Button>
-          ))}
+          );
+          })}
         </div>
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium">Technology bundle</label>
+        <label className="text-sm font-medium">{t("agritech.roi_investment_label")}</label>
         <div className="flex flex-wrap gap-2">
           {Object.entries(bundles).map(([key, b]) => (
             <Button
@@ -709,19 +715,19 @@ function ROICalculator() {
       </div>
 
       <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-5 space-y-3 border border-green-100 dark:border-green-900">
-        <h4 className="font-bold text-base">Estimated Annual Returns</h4>
+        <h4 className="font-bold text-base">{t("agritech.roi_results_title")}</h4>
         
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Extra yield revenue</span>
+            <span className="text-muted-foreground">{t("agritech.roi_yield_increase")}</span>
             <span className="font-semibold text-green-600">+£{extraRevenue.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Input cost savings</span>
+            <span className="text-muted-foreground">{t("agritech.roi_input_savings")}</span>
             <span className="font-semibold text-green-600">+£{inputSaving.toLocaleString()}</span>
           </div>
           <div className="border-t pt-2 flex justify-between font-bold">
-            <span>Total annual benefit</span>
+            <span>{t("agritech.roi_total_benefit")}</span>
             <span className="text-green-700 dark:text-green-400">£{totalAnnualBenefit.toLocaleString()}</span>
           </div>
         </div>
@@ -729,20 +735,20 @@ function ROICalculator() {
         <div className="grid grid-cols-2 gap-3 pt-1">
           <div className="bg-white dark:bg-gray-900/50 rounded-lg p-3 text-center">
             <div className="text-xl font-bold">{paybackYears} yrs</div>
-            <div className="text-xs text-muted-foreground">Payback period</div>
+            <div className="text-xs text-muted-foreground">{t("agritech.roi_payback_period")}</div>
           </div>
           <div className="bg-white dark:bg-gray-900/50 rounded-lg p-3 text-center">
             <div className="text-xl font-bold text-green-600">£{(fiveYearReturn / 1000).toFixed(0)}k</div>
-            <div className="text-xs text-muted-foreground">5-year net return</div>
+            <div className="text-xs text-muted-foreground">{t("agritech.roi_net_profit")}</div>
           </div>
         </div>
 
         <Progress value={Math.min(100, (1 / paybackYears) * 100 * 3)} className="h-2" />
-        <p className="text-xs text-muted-foreground">Investment confidence score: {Math.min(99, Math.round(100 - paybackYears * 8))}%</p>
+        <p className="text-xs text-muted-foreground">{t("agritech.roi_disclaimer")}</p>
       </div>
 
       <Button className="w-full" data-testid="button-get-quote">
-        Get Full ROI Report & Quote
+        {t("agritech.roi_button")}
       </Button>
     </div>
   );

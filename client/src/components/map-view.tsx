@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { MapPin, Navigation, ZoomIn, ZoomOut, Locate, Search, Filter, User, X, Globe, AlertCircle, Navigation2, Layers, MoreHorizontal, Maximize2, Map as MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -61,6 +62,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export function MapView({ products, onFarmerClick, autoLocate = true, compact = false }: MapViewProps) {
+  const { t } = useTranslation();
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([51.7356, 0.4685]); // Chelmsford, UK default
   const [zoom, setZoom] = useState(9);
@@ -170,7 +172,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
     setLocationError(null);
     
     if (!("geolocation" in navigator)) {
-      setLocationError("Geolocation is not supported by your browser");
+      setLocationError(t("map.geolocation_not_supported"));
       setIsLocating(false);
       return;
     }
@@ -185,16 +187,16 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
         setLocationError(null);
       },
       (error) => {
-        let message = "Could not get your location";
+        let message = t("map.location_get_failed");
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            message = "Location access denied. Please enable location in your browser settings.";
+            message = t("map.location_permission_denied");
             break;
           case error.POSITION_UNAVAILABLE:
-            message = "Location information unavailable";
+            message = t("map.location_unavailable");
             break;
           case error.TIMEOUT:
-            message = "Location request timed out";
+            message = t("map.location_get_failed");
             break;
         }
         setLocationError(message);
@@ -483,7 +485,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                         </p>
                         {marker.distance !== undefined && (
                           <p className="text-[11px] text-primary font-medium">
-                            {marker.distance.toFixed(1)} km away
+                            {marker.distance.toFixed(1)} {t("map.km_away")}
                           </p>
                         )}
                         <div className="flex flex-wrap gap-1 mt-1.5">
@@ -506,7 +508,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                       onClick={() => onFarmerClick?.(marker.id)}
                       data-testid={`button-view-products-${marker.id}`}
                     >
-                      View Products
+                      {t("map.view_products")}
                     </Button>
                   </Card>
                 )}
@@ -522,7 +524,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                 <div className="relative flex-1 min-w-32">
                   <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Search farmers..."
+                    placeholder={t("map.search_farmers")}
                     className="pl-8 h-8 text-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -534,7 +536,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-1 h-8">
                       <Filter className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline text-xs">Filters</span>
+                      <span className="hidden sm:inline text-xs">{t("filters.title")}</span>
                       {(filterOnlineOnly || filterRating > 0) && (
                         <Badge variant="default" className="h-4 w-4 p-0 justify-center text-[10px]">
                           {(filterOnlineOnly ? 1 : 0) + (filterRating > 0 ? 1 : 0)}
@@ -545,7 +547,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                   <PopoverContent className="w-64" align="end">
                     <div className="space-y-3">
                       <div>
-                        <Label className="text-xs font-medium">Radius: {radiusKm} km</Label>
+                        <Label className="text-xs font-medium">{t("map.radius", { radius: radiusKm })}</Label>
                         <Slider
                           value={[radiusKm]}
                           onValueChange={([value]) => setRadiusKm(value)}
@@ -557,29 +559,29 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                       </div>
                       
                       <div>
-                        <Label className="text-xs font-medium">Min Rating</Label>
+                        <Label className="text-xs font-medium">{t("map.min_rating")}</Label>
                         <Select value={filterRating.toString()} onValueChange={(v) => setFilterRating(Number(v))}>
                           <SelectTrigger className="mt-1.5 h-8">
-                            <SelectValue placeholder="Any" />
+                            <SelectValue placeholder={t("filters.any_rating")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="0">Any rating</SelectItem>
-                            <SelectItem value="3">3+ stars</SelectItem>
-                            <SelectItem value="4">4+ stars</SelectItem>
-                            <SelectItem value="4.5">4.5+ stars</SelectItem>
+                            <SelectItem value="0">{t("map.any_rating")}</SelectItem>
+                            <SelectItem value="3">{t("map.stars_3_plus")}</SelectItem>
+                            <SelectItem value="4">{t("map.stars_4_plus")}</SelectItem>
+                            <SelectItem value="4.5">{t("map.stars_45_plus")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <Label className="text-xs font-medium">Online only</Label>
+                        <Label className="text-xs font-medium">{t("map.online_only")}</Label>
                         <Button
                           variant={filterOnlineOnly ? "default" : "outline"}
                           size="sm"
                           className="h-7 text-xs"
                           onClick={() => setFilterOnlineOnly(!filterOnlineOnly)}
                         >
-                          {filterOnlineOnly ? "On" : "Off"}
+                          {filterOnlineOnly ? t("map.on_off_on") : t("map.on_off_off")}
                         </Button>
                       </div>
                       
@@ -593,7 +595,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                           setRadiusKm(50);
                         }}
                       >
-                        Reset
+                        {t("filters.clear_all")}
                       </Button>
                     </div>
                   </PopoverContent>
@@ -607,7 +609,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                   className="gap-1 h-8"
                 >
                   <Locate className={`h-3.5 w-3.5 ${isLocating ? 'animate-spin' : ''}`} />
-                  <span className="hidden sm:inline text-xs">{userLocation ? "Located" : "Locate"}</span>
+                  <span className="hidden sm:inline text-xs">{userLocation ? t("map.located") : t("map.locate")}</span>
                 </Button>
               </div>
               
@@ -629,22 +631,22 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Map Style</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("map.style")}</DropdownMenuLabel>
               <DropdownMenuCheckboxItem checked={mapType === 'standard'} onCheckedChange={() => setMapType('standard')}>
-                Standard
+                {t("map.layer_standard")}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem checked={mapType === 'satellite'} onCheckedChange={() => setMapType('satellite')}>
-                Satellite
+                {t("map.layer_satellite")}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem checked={mapType === 'terrain'} onCheckedChange={() => setMapType('terrain')}>
-                Terrain
+                {t("map.layer_terrain")}
               </DropdownMenuCheckboxItem>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem checked={showTraffic} onCheckedChange={setShowTraffic}>
-                Show Traffic
+                {t("map.show_traffic")}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem checked={showLabels} onCheckedChange={setShowLabels}>
-                Show Labels
+                {t("map.show_labels")}
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -658,15 +660,15 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
             <DropdownMenuContent align="end">
               <DropdownMenuItem>
                 <Maximize2 className="h-4 w-4 mr-2" />
-                Full Screen
+                {t("map.full_screen")}
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <MapIcon className="h-4 w-4 mr-2" />
-                Offline Maps
+                {t("map.offline_maps")}
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Globe className="h-4 w-4 mr-2" />
-                3D View
+                {t("map.view_3d")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -708,17 +710,17 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
             <div className="flex items-center gap-3 text-xs flex-wrap">
               <div className="flex items-center gap-1.5">
                 <Navigation className="h-3.5 w-3.5 text-primary" />
-                <span className="font-medium">{filteredMarkers.length} farmers</span>
-                {userLocation && <span className="text-muted-foreground">in {radiusKm}km</span>}
+                <span className="font-medium">{filteredMarkers.length} {t("map.farmers_label")}</span>
+                {userLocation && <span className="text-muted-foreground">{t("map.in_radius")} {radiusKm}{t("map.km_unit")}</span>}
               </div>
               <div className="hidden sm:flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <span className="text-muted-foreground">Online</span>
+                  <span className="text-muted-foreground">{t("map.online_status")}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="h-2 w-2 rounded-full bg-gray-400" />
-                  <span className="text-muted-foreground">Offline</span>
+                  <span className="text-muted-foreground">{t("map.offline_status")}</span>
                 </div>
               </div>
             </div>
@@ -731,7 +733,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
         <div className="border-t bg-muted/30 p-3">
           <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
             <MapPin className="h-3 w-3" />
-            Nearby Products ({nearbyProducts.length})
+            {t("map.nearby_products")} ({nearbyProducts.length})
           </h4>
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {nearbyProducts.map((product) => (

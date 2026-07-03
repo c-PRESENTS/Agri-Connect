@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useTranslation } from "react-i18next";
 import type { Order, OrderStatus } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { getProductImage } from "@/lib/product-images";
@@ -60,6 +61,7 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
 }
 
 export default function OrderDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -132,8 +134,8 @@ export default function OrderDetailPage() {
         <TopNavigation />
         <div className="text-center py-10 sm:py-16">
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-bold">Order not found</h2>
-          <Button onClick={() => navigate("/orders")} className="mt-4">My Orders</Button>
+          <h2 className="text-xl font-bold">{t("order_detail.error_title")}</h2>
+          <Button onClick={() => navigate("/orders")} className="mt-4">{t("orders.title")}</Button>
         </div>
       </div>
     );
@@ -177,7 +179,7 @@ export default function OrderDetailPage() {
                 className="gap-1"
               >
                 {cancelMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
-                Cancel
+                {t("common.cancel")}
               </Button>
             )}
             <Button
@@ -187,7 +189,7 @@ export default function OrderDetailPage() {
               data-testid="btn-contact-support"
               className="gap-1"
             >
-              <MessageSquare className="h-3.5 w-3.5" /> Support
+              <MessageSquare className="h-3.5 w-3.5" /> {t("support.title")}
             </Button>
           </div>
         </div>
@@ -199,15 +201,15 @@ export default function OrderDetailPage() {
               <div className="flex items-start gap-3">
                 <Truck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm mb-1">Tracking information</p>
+                  <p className="font-semibold text-sm mb-1">{t("ship.tracking_description")}</p>
                   {order.carrier && (
                     <p className="text-xs text-muted-foreground">
-                      Carrier: <span className="font-medium text-foreground" data-testid="text-carrier">{order.carrier}</span>
+                      {t("ship.carrier")}: <span className="font-medium text-foreground" data-testid="text-carrier">{order.carrier}</span>
                     </p>
                   )}
                   {order.trackingNumber && (
                     <p className="text-xs text-muted-foreground">
-                      Tracking #: <span className="font-mono font-medium text-foreground" data-testid="text-tracking-number">{order.trackingNumber}</span>
+                      {t("ship.tracking_number")}: <span className="font-mono font-medium text-foreground" data-testid="text-tracking-number">{order.trackingNumber}</span>
                     </p>
                   )}
                   {order.trackingUrl && (
@@ -218,7 +220,7 @@ export default function OrderDetailPage() {
                       className="text-xs text-primary hover:underline mt-1 inline-block"
                       data-testid="link-tracking-url"
                     >
-                      Open carrier tracking page →
+                      {t("ship.tracking_title")} →
                     </a>
                   )}
                 </div>
@@ -232,7 +234,7 @@ export default function OrderDetailPage() {
           <Card className="mb-4 border-amber-500/30 bg-amber-50 dark:bg-amber-950/20" data-testid="card-refunded">
             <CardContent className="p-3 flex items-center gap-2 text-sm">
               <RefreshCw className="h-4 w-4 text-amber-600" />
-              <span>Your payment has been refunded. It may take 5–10 business days to appear in your account.</span>
+              <span>{t("payment_success.title")}</span>
             </CardContent>
           </Card>
         )}
@@ -243,8 +245,8 @@ export default function OrderDetailPage() {
             <CardContent className="p-4 flex items-center gap-3">
               <XCircle className="h-5 w-5 text-destructive flex-shrink-0" />
               <div>
-                <p className="font-semibold text-destructive">Order Cancelled</p>
-                <p className="text-xs text-muted-foreground">This order was cancelled and will not be fulfilled.</p>
+                <p className="font-semibold text-destructive">{t("orders.status_cancelled")}</p>
+                <p className="text-xs text-muted-foreground">{t("order_detail.error_description")}</p>
               </div>
             </CardContent>
           </Card>
@@ -255,7 +257,7 @@ export default function OrderDetailPage() {
           <Card className="mb-4">
             <CardContent className="p-5">
               <h3 className="font-bold mb-5 flex items-center gap-2">
-                <Truck className="h-4 w-4 text-primary" /> Order Tracking
+                <Truck className="h-4 w-4 text-primary" /> {t("ship.tracking_title")}
               </h3>
               <div className="space-y-0">
                 {ORDER_STAGES.map((stage, idx) => {
@@ -282,9 +284,9 @@ export default function OrderDetailPage() {
                           <span className={`font-semibold text-sm ${completed ? "text-foreground" : "text-muted-foreground/60"}`}>
                             {stage.label}
                           </span>
-                          {current && (
+                            {current && (
                             <Badge className="bg-primary/10 text-primary border-primary/30 text-[10px] h-4 px-1.5 animate-pulse">
-                              Current
+                              {t("order_detail.payment_status")}
                             </Badge>
                           )}
                         </div>
@@ -307,7 +309,7 @@ export default function OrderDetailPage() {
               {estimatedDate && order.status !== "delivered" && (
                 <div className="mt-4 pt-4 border-t border-border flex items-center gap-2 text-sm">
                   <Clock className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span className="text-muted-foreground">Est. delivery:</span>
+                  <span className="text-muted-foreground">{t("order_detail.estimated_delivery")}:</span>
                   <span className="font-bold">{estimatedDate}</span>
                 </div>
               )}
@@ -324,7 +326,7 @@ export default function OrderDetailPage() {
                   <MapPin className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-0.5">Delivery Address</p>
+                  <p className="text-xs font-semibold text-muted-foreground mb-0.5">{t("order_detail.delivery_details")}</p>
                   <p className="text-sm">{order.deliveryAddress}</p>
                 </div>
               </div>
@@ -333,8 +335,8 @@ export default function OrderDetailPage() {
                   <Truck className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-0.5">Delivery Method</p>
-                  <p className="text-sm capitalize">{order.deliveryMethod || "Standard"}</p>
+                  <p className="text-xs font-semibold text-muted-foreground mb-0.5">{t("order_detail.delivery_method")}</p>
+                  <p className="text-sm capitalize">{order.deliveryMethod || t("cart.standard_delivery")}</p>
                 </div>
               </div>
             </div>
@@ -345,10 +347,10 @@ export default function OrderDetailPage() {
         <Card className="mb-4">
           <CardContent className="p-5">
             <h3 className="font-bold mb-4 flex items-center gap-2">
-              <Package className="h-4 w-4 text-primary" /> Items
+              <Package className="h-4 w-4 text-primary" /> {t("cart.order_items")}
               {order.status === "delivered" && (
                 <span className="ml-auto text-xs text-muted-foreground font-normal">
-                  ✓ Delivered — you can now leave reviews
+                  ✓ {t("orders.status_delivered")}
                 </span>
               )}
             </h3>
@@ -383,12 +385,12 @@ export default function OrderDetailPage() {
                           data-testid={`btn-review-${item.productId}`}
                         >
                           <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                          {reviewingProductId === item.productId ? "Cancel" : "Review"}
+                          {reviewingProductId === item.productId ? t("common.cancel") : t("product_detail.write_review")}
                         </button>
                       )}
                       {submittedReviews.has(item.productId) && (
                         <p className="text-[11px] text-green-600 mt-1 ml-auto flex items-center gap-0.5">
-                          <CheckCircle className="h-3 w-3" /> Reviewed
+                          <CheckCircle className="h-3 w-3" /> {t("product_detail.verified_badge")}
                         </p>
                       )}
                     </div>
@@ -403,20 +405,20 @@ export default function OrderDetailPage() {
                     >
                       <div className="flex items-center gap-2 mb-3">
                         <MessageSquare className="h-4 w-4 text-amber-600" />
-                        <span className="font-semibold text-sm">Review {item.productName}</span>
+                        <span className="font-semibold text-sm">{t("product_detail.write_review")} {item.productName}</span>
                       </div>
                       <div className="mb-3">
-                        <Label className="text-xs text-muted-foreground mb-2 block">Rating</Label>
+                        <Label className="text-xs text-muted-foreground mb-2 block">{t("filters.rating")}</Label>
                         <StarRating value={reviewRating} onChange={setReviewRating} />
                       </div>
                       <div className="mb-3">
-                        <Label htmlFor="review-comment" className="text-xs text-muted-foreground mb-1 block">Your Review</Label>
+                        <Label htmlFor="review-comment" className="text-xs text-muted-foreground mb-1 block">{t("product_detail.write_review")}</Label>
                         <Textarea
                           id="review-comment"
                           data-testid="input-review-comment"
                           value={reviewComment}
                           onChange={(e) => setReviewComment(e.target.value)}
-                          placeholder="Share your honest experience..."
+                          placeholder={t("support.message_placeholder")}
                           rows={3}
                           className="resize-none"
                         />
@@ -430,10 +432,10 @@ export default function OrderDetailPage() {
                           className="gap-2"
                         >
                           {reviewMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Star className="h-3 w-3" />}
-                          Submit Review
+                          {t("product_detail.write_review")}
                         </Button>
                         <Button size="sm" variant="ghost" onClick={() => setReviewingProductId(null)}>
-                          Cancel
+                          {t("common.cancel")}
                         </Button>
                       </div>
                     </motion.div>
@@ -445,20 +447,20 @@ export default function OrderDetailPage() {
             <Separator className="my-4" />
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal</span><span>£{order.subtotal?.toFixed(2) ?? order.total.toFixed(2)}</span>
+                <span>{t("cart.subtotal")}</span><span>£{order.subtotal?.toFixed(2) ?? order.total.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Delivery</span>
-                <span>{(order.deliveryFee ?? 0) === 0 ? <span className="text-green-600 font-medium">Free</span> : `£${order.deliveryFee?.toFixed(2)}`}</span>
+                <span>{t("cart.delivery")}</span>
+                <span>{(order.deliveryFee ?? 0) === 0 ? <span className="text-green-600 font-medium">{t("cart.free_delivery")}</span> : `£${order.deliveryFee?.toFixed(2)}`}</span>
               </div>
               {order.tax !== undefined && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>VAT (20%)</span><span>£{order.tax.toFixed(2)}</span>
+                  <span>{t("checkout.vat")}</span><span>£{order.tax.toFixed(2)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between font-bold text-base">
-                <span>Total</span><span>£{order.total.toFixed(2)}</span>
+                <span>{t("cart.total")}</span><span>£{order.total.toFixed(2)}</span>
               </div>
             </div>
           </CardContent>
@@ -467,10 +469,10 @@ export default function OrderDetailPage() {
         {/* Navigation */}
         <div className="flex gap-3 flex-wrap">
           <Button variant="outline" onClick={() => navigate("/orders")} className="gap-2 flex-1">
-            <ShoppingBag className="h-4 w-4" /> All Orders
+            <ShoppingBag className="h-4 w-4" /> {t("orders.title")}
           </Button>
           <Button variant="outline" onClick={() => navigate("/")} className="gap-2 flex-1">
-            <Home className="h-4 w-4" /> Continue Shopping
+            <Home className="h-4 w-4" /> {t("order_detail.continue_shopping")}
           </Button>
         </div>
       </div>

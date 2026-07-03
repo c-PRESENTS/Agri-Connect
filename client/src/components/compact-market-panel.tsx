@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { ChevronRight, ChevronLeft, ShoppingCart, Star, Leaf } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ interface CompactMarketPanelProps {
 }
 
 export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelProps) {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [open, setOpen] = useState(defaultOpen);
   const [activeCat, setActiveCat] = useState(QUICK_CATS[0]);
@@ -52,7 +54,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
       <button
         onClick={() => setOpen(v => !v)}
         className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-6 h-10 rounded-full border border-border bg-background shadow-md flex items-center justify-center hover:bg-muted transition-colors"
-        title={open ? "Hide quick shop" : "Quick shop"}
+        title={open ? t("market.hide_quick_shop") : t("market.quick_shop")}
       >
         {open ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
       </button>
@@ -61,7 +63,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
         <>
           {/* Header */}
           <div className="px-2 py-2 border-b border-border flex-shrink-0">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Quick Shop</p>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{t("market.quick_shop")}</p>
           </div>
 
           {/* Category pills */}
@@ -86,7 +88,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
           <ScrollArea className="flex-1">
             <div className="p-1.5 space-y-1.5">
               {products.length === 0 ? (
-                <p className="text-[10px] text-muted-foreground text-center py-4">No products</p>
+                <p className="text-[10px] text-muted-foreground text-center py-4">{t("market.no_products")}</p>
               ) : (
                 products.map(p => (
                   <button
@@ -108,7 +110,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                       <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{p.name}</p>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-[11px] font-bold text-primary">
-                          {p.price === 0 ? "Free" : `£${p.price}`}
+                          {p.price === 0 ? t("common.free") : `£${p.price}`}
                         </span>
                         <div className="flex items-center gap-0.5">
                           <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
@@ -118,7 +120,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                       <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                         {p.isOrganic && (
                           <Badge className="text-[8px] px-1 py-0 bg-green-500/10 text-green-600 border-green-500/20 h-4">
-                            <Leaf className="h-2 w-2 mr-0.5" />Org
+                            <Leaf className="h-2 w-2 mr-0.5" />{t("product.org_short")}
                           </Badge>
                         )}
                         <span className="text-[9px] text-muted-foreground">/{p.unit}</span>
@@ -138,7 +140,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                 onClick={() => navigate(`/?${activeCat.catKey}=${activeCat.id}`)}
               >
                 <ShoppingCart className="h-3 w-3 mr-1" />
-                Browse All
+                {t("market.browse_all")}
               </Button>
             </div>
           </ScrollArea>

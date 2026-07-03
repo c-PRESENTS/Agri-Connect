@@ -9,7 +9,11 @@ import cy from "./locales/cy.json";
 import pl from "./locales/pl.json";
 import ta from "./locales/ta.json";
 
-const savedLang = localStorage.getItem("agriconnect-lang") || "en";
+export const SUPPORTED_LANGUAGES = ["en", "hi", "pa", "cy", "pl", "ta"] as const;
+export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
+
+const isBrowser = typeof window !== "undefined";
+const savedLang = isBrowser ? localStorage.getItem("agriconnect-lang") || "en" : "en";
 
 i18n
   .use(LanguageDetector)
@@ -25,8 +29,20 @@ i18n
     },
     lng: savedLang,
     fallbackLng: "en",
+    supportedLngs: SUPPORTED_LANGUAGES,
+    nonExplicitSupportedLngs: true,
+    returnEmptyString: false,
+    returnNull: false,
+    detection: {
+      order: ["localStorage", "navigator", "htmlTag"],
+      lookupLocalStorage: "agriconnect-lang",
+      caches: ["localStorage"],
+    },
     interpolation: {
       escapeValue: false,
+    },
+    react: {
+      useSuspense: false,
     },
   });
 

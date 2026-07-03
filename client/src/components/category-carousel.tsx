@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ export function CategoryCarousel({
   currencySymbol,
   onAddToCart
 }: CategoryCarouselProps) {
+  const { t } = useTranslation();
   const [scrollPosition, setScrollPosition] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -60,12 +62,12 @@ export function CategoryCarousel({
         >
           <div className="min-w-0">
             <span className="text-primary font-semibold text-[10px] sm:text-xs md:text-sm uppercase tracking-wider">
-              Shop by Category
+              {t("category.browse_by_category")}
             </span>
             <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold mt-0.5 sm:mt-1 md:mt-2 leading-tight">
-              Explore Our
+              {t("category.explore_description")}
               <span className="bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent ml-2">
-                Categories
+                {t("category.view_all_categories")}
               </span>
             </h2>
           </div>
@@ -140,7 +142,7 @@ export function CategoryCarousel({
                       size="sm"
                       className="w-fit h-7 sm:h-8 md:h-9 px-2 sm:px-3 text-[11px] sm:text-xs md:text-sm bg-white/20 backdrop-blur-sm border-0 text-white hover:bg-white/30"
                     >
-                      Explore
+                      {t("category.see_all")}
                       <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </div>

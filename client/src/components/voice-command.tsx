@@ -381,7 +381,7 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
                   size="icon"
                   className="h-6 w-6 ml-1"
                   onClick={clearConversation}
-                  title="New conversation"
+                  title={t("voice.new_conversation")}
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
@@ -407,7 +407,7 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
                     <div className="flex items-center gap-1.5 mb-0.5">
                       {turn.role === "assistant" && <Sparkles className="h-2.5 w-2.5 text-primary" />}
                       <span className="text-[9px] font-bold uppercase opacity-60">
-                        {turn.role === "user" ? "You" : "AI"}
+                        {turn.role === "user" ? t("voice.you") : t("voice.ai_label")}
                       </span>
                     </div>
                     {turn.text}
@@ -491,7 +491,7 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
               <div className="mt-2 pt-2 border-t">
                 <p className="text-[10px] text-muted-foreground text-center">
                   <MessageSquare className="h-3 w-3 inline mr-1" />
-                  {conversation.length} turns in conversation
+                  {t("voice.turns_count", { count: conversation.length })}
                 </p>
               </div>
             )}

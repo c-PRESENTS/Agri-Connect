@@ -2,8 +2,10 @@ import { TopNavigation } from "@/components/top-navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sprout, Globe, Truck, ShieldCheck, Users, Leaf } from "lucide-react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 
 export default function AboutPage() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-background">
       <TopNavigation />
@@ -15,28 +17,23 @@ export default function AboutPage() {
               <Sprout className="h-6 w-6 text-primary" />
             </div>
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              About AgriConnect
+              {t("about.badge")}
             </span>
           </div>
           <h1 className="font-serif text-4xl md:text-5xl font-bold mb-4" data-testid="text-about-heading">
-            Connecting growers and buyers, one harvest at a time.
+            {t("about.headline")}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
-            AgriConnect is a marketplace and knowledge platform for the agricultural community —
-            built for growers who care about quality and buyers who want to know where their food
-            comes from.
+            {t("about.description")}
           </p>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-6 sm:space-y-12">
         <section>
-          <h2 className="font-serif text-2xl font-bold mb-4">Our mission</h2>
+          <h2 className="font-serif text-2xl font-bold mb-4">{t("about.mission")}</h2>
           <p className="text-[15px] leading-relaxed text-foreground/85">
-            We believe that the people who grow our food deserve fair pay, modern tools, and a
-            direct line to the people who buy it. AgriConnect removes the friction between farm
-            and fork — letting independent growers list produce, manage orders, accept secure
-            payments, and reach buyers across their region without a middleman.
+            {t("about.mission_text")}
           </p>
         </section>
 
@@ -44,33 +41,33 @@ export default function AboutPage() {
           {[
             {
               icon: Globe,
-              title: "Global reach, local roots",
-              text: "Region-aware pricing, language and currency. Buyers see local sellers first; sellers reach customers worldwide when they want to.",
+              title: t("about.global_reach"),
+              text: t("about.global_reach_desc"),
             },
             {
               icon: Truck,
-              title: "Live logistics",
-              text: "Real-time order tracking, milk-run pickups, and a built-in marketplace of trusted logistics partners.",
+              title: t("about.live_logistics"),
+              text: t("about.live_logistics_desc"),
             },
             {
               icon: ShieldCheck,
-              title: "Secure by design",
-              text: "Replit Auth, Stripe payments and per-user data isolation. We never store your payment card details.",
+              title: t("about.secure"),
+              text: t("about.secure_desc"),
             },
             {
               icon: Users,
-              title: "Community-driven",
-              text: "Share-and-care lets growers donate surplus produce. Government schemes and farmer support are built in.",
+              title: t("about.community"),
+              text: t("about.community_desc"),
             },
             {
               icon: Leaf,
-              title: "Knowledge Hub",
-              text: "A curated, scholar-grade reference library covering agronomy, horticulture, post-harvest and market intelligence.",
+              title: t("about.knowledge_hub"),
+              text: t("about.knowledge_hub_desc"),
             },
             {
               icon: Sprout,
-              title: "Built to grow",
-              text: "From a single market garden to a multi-farm cooperative — the platform scales with you.",
+              title: t("about.built_to_grow"),
+              text: t("about.built_to_grow_desc"),
             },
           ].map(({ icon: Icon, title, text }) => (
             <Card key={title}>
@@ -84,35 +81,35 @@ export default function AboutPage() {
         </section>
 
         <section>
-          <h2 className="font-serif text-2xl font-bold mb-4">How it works</h2>
+          <h2 className="font-serif text-2xl font-bold mb-4">{t("about.how_it_works")}</h2>
           <ol className="space-y-3 list-decimal list-inside text-[15px] leading-relaxed text-foreground/85">
             <li>
-              <strong>Sellers</strong> list their produce with photos, prices and stock counts —
+              <strong>{t("about.sellers")}</strong> list their produce with photos, prices and stock counts —
               free to start.
             </li>
             <li>
-              <strong>Buyers</strong> browse the live map, search by category, compare options,
+              <strong>{t("about.buyers")}</strong> browse the live map, search by category, compare options,
               and add items to a cart.
             </li>
             <li>
-              <strong>Stripe Checkout</strong> handles payment securely. Sellers never see card
+              <strong>{t("about.stripe_checkout")}</strong> handles payment securely. Sellers never see card
               numbers.
             </li>
             <li>
-              <strong>Orders</strong> flow into the seller&apos;s dashboard with live status
+              <strong>{t("about.orders")}</strong> flow into the seller&apos;s dashboard with live status
               updates from order placed through to delivered.
             </li>
             <li>
-              <strong>Buyers</strong> can review sellers, track deliveries, and reorder favourites
+              <strong>{t("about.buyers")}</strong> can review sellers, track deliveries, and reorder favourites
               in one click.
             </li>
           </ol>
         </section>
 
         <section>
-          <h2 className="font-serif text-2xl font-bold mb-4">Get in touch</h2>
+          <h2 className="font-serif text-2xl font-bold mb-4">{t("about.get_in_touch")}</h2>
           <p className="text-[15px] text-foreground/85 mb-3">
-            Questions, ideas, partnerships — we&apos;d love to hear from you.
+            {t("about.get_in_touch_desc")}
           </p>
           <div className="flex flex-wrap gap-3 text-sm">
             <Link
@@ -120,7 +117,7 @@ export default function AboutPage() {
               className="px-4 py-2 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/90"
               data-testid="link-about-support"
             >
-              Contact support
+              {t("about.contact_support")}
             </Link>
             <a
               href="mailto:hello@agriconnect.app"
@@ -134,14 +131,13 @@ export default function AboutPage() {
               className="px-4 py-2 rounded-md border font-medium hover:bg-muted"
               data-testid="link-about-knowledge"
             >
-              Knowledge Hub
+              {t("about.knowledge_hub_link")}
             </Link>
           </div>
         </section>
 
         <footer className="border-t pt-6 text-xs text-muted-foreground text-center">
-          © {new Date().getFullYear()} AgriConnect. Building the agricultural marketplace of the
-          future, together.
+          © {new Date().getFullYear()} AgriConnect. {t("about.footer")}
         </footer>
       </main>
     </div>

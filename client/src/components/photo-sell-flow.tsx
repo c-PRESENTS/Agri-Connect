@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Camera, Check, Edit3, Sparkles, Upload, X, ArrowLeft, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,6 +53,7 @@ const mockDetect = (): AIDetectionResult => {
 };
 
 export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<Step>("capture");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [detection, setDetection] = useState<AIDetectionResult | null>(null);
@@ -115,7 +117,7 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
         <Button variant="ghost" size="icon" onClick={onCancel} data-testid="button-back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="font-semibold text-lg">Photo Sell</h1>
+        <h1 className="font-semibold text-lg">{t("photo_sell.title")}</h1>
       </div>
 
       <AnimatePresence mode="wait">
@@ -138,9 +140,9 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
             />
             
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-2">Take a Photo</h2>
+              <h2 className="text-2xl font-bold mb-2">{t("photo_sell.take_photo_title")}</h2>
               <p className="text-muted-foreground">
-                Click a photo of your produce to list it instantly
+                {t("photo_sell.take_photo_description")}
               </p>
             </div>
 
@@ -161,7 +163,7 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
               data-testid="button-upload-photo"
             >
               <Upload className="h-4 w-4" />
-              Upload from Gallery
+              {t("photo_sell.upload_from_gallery")}
             </Button>
           </motion.div>
         )}
@@ -182,13 +184,13 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
             
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="h-5 w-5 text-primary animate-pulse" />
-              <span className="font-medium">AI is analyzing your image...</span>
+              <span className="font-medium">{t("photo_sell.ai_analyzing")}</span>
             </div>
             
             <div className="w-64">
               <Progress value={analyzeProgress} className="h-2" />
               <p className="text-center text-sm text-muted-foreground mt-2">
-                {analyzeProgress}% complete
+                {t("photo_sell.percent_complete", { percent: analyzeProgress })}
               </p>
             </div>
           </motion.div>
@@ -212,12 +214,12 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
                 <div className="flex items-center gap-2 mb-2">
                   <Badge className="bg-green-500">
                     <Check className="h-4 w-4 mr-1" />
-                    {detection?.confidence}% Match
+                    {t("photo_sell.match_badge", { percent: detection?.confidence })}
                   </Badge>
                 </div>
                 <h2 className="text-xl font-bold">{detection?.productName}</h2>
                 <p className="text-sm text-muted-foreground">
-                  AI detected this as {detection?.productName}
+                  {t("photo_sell.ai_detected_description", { productName: detection?.productName })}
                 </p>
               </div>
             </div>
@@ -225,7 +227,7 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
             <Card className="mb-4">
               <CardContent className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Product Name</span>
+                  <span className="text-muted-foreground">{t("photo_sell.product_name")}</span>
                   <div className="flex items-center gap-2">
                     <Input
                       value={editedDetection.productName}
@@ -237,7 +239,7 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Quantity</span>
+                  <span className="text-muted-foreground">{t("photo_sell.quantity")}</span>
                   <Input
                     value={editedDetection.estimatedQuantity}
                     onChange={(e) => handleEdit("estimatedQuantity", e.target.value)}
@@ -247,7 +249,7 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Quality Grade</span>
+                  <span className="text-muted-foreground">{t("photo_sell.quality_grade")}</span>
                   <Select
                     value={editedDetection.qualityGrade}
                     onValueChange={(value) => handleEdit("qualityGrade", value)}
@@ -256,15 +258,15 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="A">Grade A</SelectItem>
-                      <SelectItem value="B">Grade B</SelectItem>
-                      <SelectItem value="C">Grade C</SelectItem>
+                      <SelectItem value="A">{t("photo_sell.grade_a")}</SelectItem>
+                      <SelectItem value="B">{t("photo_sell.grade_b")}</SelectItem>
+                      <SelectItem value="C">{t("photo_sell.grade_c")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Suggested Price</span>
+                  <span className="text-muted-foreground">{t("photo_sell.suggested_price")}</span>
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground">₹</span>
                     <Input
@@ -283,11 +285,11 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
             <div className="space-y-3">
               <Button className="w-full gap-2" size="lg" onClick={handleAccept} data-testid="button-accept-list">
                 <Check className="h-5 w-5" />
-                Accept & List
+                {t("photo_sell.accept_list")}
               </Button>
               <Button variant="outline" className="w-full gap-2" size="lg" data-testid="button-start-auction">
                 <Megaphone className="h-5 w-5" />
-                Start Auction
+                {t("photo_sell.start_auction")}
               </Button>
               <Button
                 variant="ghost"
@@ -298,7 +300,7 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
                 }}
                 data-testid="button-retake"
               >
-                Retake Photo
+                {t("photo_sell.retake_photo")}
               </Button>
             </div>
           </motion.div>
@@ -320,14 +322,14 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
               <Check className="h-12 w-12 text-white" />
             </motion.div>
             
-            <h2 className="text-2xl font-bold mb-2">Listed Successfully!</h2>
+            <h2 className="text-2xl font-bold mb-2">{t("photo_sell.listed_successfully")}</h2>
             <p className="text-muted-foreground text-center mb-6">
-              Your {editedDetection?.productName} is now visible to nearby buyers
+              {t("photo_sell.listed_description", { productName: editedDetection?.productName })}
             </p>
 
             <div className="flex gap-3">
               <Button variant="outline" onClick={onCancel} data-testid="button-view-listing">
-                View Listing
+                {t("photo_sell.view_listing")}
               </Button>
               <Button
                 onClick={() => {
@@ -338,7 +340,7 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
                 }}
                 data-testid="button-list-another"
               >
-                List Another
+                {t("photo_sell.list_another")}
               </Button>
             </div>
           </motion.div>

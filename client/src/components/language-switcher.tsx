@@ -66,7 +66,7 @@ export function LanguageSwitcher() {
             size="icon"
             className="h-8 w-8 hover:bg-primary/5 transition-colors relative"
             data-testid="button-language-switcher"
-            title="Change language"
+            title={t("language.change")}
           >
             <Globe className="h-5 w-5" />
             <span className="absolute -bottom-0.5 -right-0.5 text-[8px] leading-none">{current.flag}</span>

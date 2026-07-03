@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, Circle, Truck, Package, MapPin, Home } from "lucide-react";
 import type { ShipmentStatus } from "@shared/schema";
 
@@ -10,17 +11,7 @@ interface TimelineEvent {
 }
 
 const statusOrder: ShipmentStatus[] = ["booked", "assigned", "picked_up", "in_transit", "out_for_delivery", "delivered"];
-const statusLabel: Record<ShipmentStatus, string> = {
-  quote_pending: "Quote pending",
-  booked: "Booked",
-  assigned: "Driver assigned",
-  picked_up: "Picked up",
-  in_transit: "In transit",
-  out_for_delivery: "Out for delivery",
-  delivered: "Delivered",
-  exception: "Exception",
-  cancelled: "Cancelled",
-};
+
 const statusIcon: Record<string, typeof Package> = {
   booked: Package,
   assigned: Truck,
@@ -31,7 +22,19 @@ const statusIcon: Record<string, typeof Package> = {
 };
 
 export function TrackingTimeline({ currentStatus, events }: { currentStatus: ShipmentStatus; events: TimelineEvent[] }) {
+  const { t } = useTranslation();
   const currentIdx = statusOrder.indexOf(currentStatus);
+  const statusLabel: Record<ShipmentStatus, string> = {
+    quote_pending: t("tracking_timeline.status_quote_pending"),
+    booked: t("tracking_timeline.status_booked"),
+    assigned: t("tracking_timeline.status_assigned"),
+    picked_up: t("tracking_timeline.status_picked_up"),
+    in_transit: t("tracking_timeline.status_in_transit"),
+    out_for_delivery: t("tracking_timeline.status_out_for_delivery"),
+    delivered: t("tracking_timeline.status_delivered"),
+    exception: t("tracking_timeline.status_exception"),
+    cancelled: t("tracking_timeline.status_cancelled"),
+  };
 
   return (
     <div className="space-y-6">
@@ -64,9 +67,9 @@ export function TrackingTimeline({ currentStatus, events }: { currentStatus: Shi
 
       {/* Events */}
       <div className="space-y-3">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Activity</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("tracking_timeline.activity")}</p>
         {events.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No updates yet.</p>
+          <p className="text-sm text-muted-foreground">{t("tracking_timeline.no_updates")}</p>
         ) : (
           <ol className="relative border-l-2 border-muted ml-3 space-y-4">
             {events.slice().reverse().map((e, idx) => (

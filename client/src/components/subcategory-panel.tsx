@@ -1,4 +1,5 @@
 import { useMemo, useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { X, ChevronDown, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
 import * as LucideIcons from "lucide-react";
@@ -42,6 +43,7 @@ export function SubcategoryPanel({
   onSubcategoryClick,
   onSectionClick
 }: SubcategoryPanelProps) {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollPosition, setScrollPosition] = useState<'top' | 'middle' | 'bottom'>('top');

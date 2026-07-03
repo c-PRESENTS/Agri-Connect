@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,20 @@ interface Props {
 }
 
 export function QuoteCards({ quotes, selectedId, onSelect, loading }: Props) {
+  const { t } = useTranslation();
+  const getServiceLabel = (s: ShipServiceType) => {
+    const key: Record<ShipServiceType, string> = {
+      standard: "shipping_quote_cards.service_standard",
+      express: "shipping_quote_cards.service_express",
+      cold_chain: "shipping_quote_cards.service_cold_chain",
+      same_day: "shipping_quote_cards.service_same_day",
+      next_day: "shipping_quote_cards.service_next_day",
+      scheduled: "shipping_quote_cards.service_scheduled",
+      freight: "shipping_quote_cards.service_freight",
+      milk_run: "shipping_quote_cards.service_milk_run",
+    };
+    return t(key[s]);
+  };
   if (loading) {
     return (
       <div className="space-y-2">
@@ -44,7 +59,7 @@ export function QuoteCards({ quotes, selectedId, onSelect, loading }: Props) {
     );
   }
   if (!quotes.length) {
-    return <p className="text-sm text-muted-foreground py-8 text-center">No quotes available for this route yet.</p>;
+    return <p className="text-sm text-muted-foreground py-8 text-center">{t("shipping_quote_cards.no_quotes")}</p>;
   }
   const cheapest = quotes[0];
   const greenest = [...quotes].sort((a, b) => a.co2Kg - b.co2Kg)[0];
@@ -56,9 +71,9 @@ export function QuoteCards({ quotes, selectedId, onSelect, loading }: Props) {
         const Icon = serviceIcon[q.service];
         const isSelected = q.id === selectedId;
         const tags: string[] = [];
-        if (q.id === cheapest.id) tags.push("Best price");
-        if (q.id === fastest.id && q.id !== cheapest.id) tags.push("Fastest");
-        if (q.id === greenest.id && q.id !== cheapest.id) tags.push("Greenest");
+        if (q.id === cheapest.id) tags.push(t("shipping_quote_cards.tag_best_price"));
+        if (q.id === fastest.id && q.id !== cheapest.id) tags.push(t("shipping_quote_cards.tag_fastest"));
+        if (q.id === greenest.id && q.id !== cheapest.id) tags.push(t("shipping_quote_cards.tag_greenest"));
         return (
           <Card
             key={q.id}
@@ -75,11 +90,11 @@ export function QuoteCards({ quotes, selectedId, onSelect, loading }: Props) {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-semibold text-sm truncate" data-testid={`text-partner-${q.partnerId}`}>{q.partnerName}</p>
-                      <p className="text-[11px] text-muted-foreground">{serviceLabel[q.service]} · {q.notes}</p>
+                      <p className="text-[11px] text-muted-foreground">{getServiceLabel(q.service)} · {q.notes}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="font-bold text-base" data-testid={`text-price-${q.partnerId}`}>£{q.price.toFixed(2)}</p>
-                      <p className="text-[11px] text-muted-foreground">incl. fees</p>
+                      <p className="text-[11px] text-muted-foreground">{t("shipping_quote_cards.incl_fees")}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -89,7 +104,7 @@ export function QuoteCards({ quotes, selectedId, onSelect, loading }: Props) {
                     {tags.map((t) => (
                       <Badge key={t} variant="secondary" className="text-[10px] h-5">{t}</Badge>
                     ))}
-                    {isSelected && <Badge className="text-[10px] h-5 bg-primary"><CheckCircle2 className="h-3 w-3 mr-1" />Selected</Badge>}
+                    {isSelected && <Badge className="text-[10px] h-5 bg-primary"><CheckCircle2 className="h-3 w-3 mr-1" />{t("shipping_quote_cards.selected")}</Badge>}
                   </div>
                 </div>
               </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Wallet, ShoppingBag, Clock, Package, Star, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ export function FarmerStatsCard({
   onWithdraw,
   onArrangeDelivery,
 }: FarmerStatsCardProps) {
+  const { t } = useTranslation();
   return (
     <div className="p-4 space-y-4">
       <motion.div
@@ -28,7 +30,7 @@ export function FarmerStatsCard({
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <p className="text-primary-foreground/80 text-sm mb-1">Total Earnings</p>
+                <p className="text-primary-foreground/80 text-sm mb-1">{t("farmer_stats.earnings")}</p>
                 <h2 className="text-3xl sm:text-4xl font-bold" data-testid="text-total-earnings">
                   {currencySymbol}{stats.totalEarnings.toLocaleString()}
                 </h2>
@@ -40,7 +42,7 @@ export function FarmerStatsCard({
             <div className="flex items-center gap-2 mb-6">
               <Badge variant="secondary" className="bg-white/20 text-primary-foreground border-0">
                 <ArrowUpRight className="h-4 w-4 mr-1" />
-                +12% this month
+                {t("farmer_stats.earnings")}
               </Badge>
             </div>
             <div className="flex gap-2">
@@ -51,7 +53,7 @@ export function FarmerStatsCard({
                 data-testid="button-withdraw"
               >
                 <Wallet className="h-4 w-4 mr-2" />
-                Withdraw to Bank
+                {t("farmer_stats.withdraw_button")}
               </Button>
               <Button
                 variant="secondary"
@@ -60,7 +62,7 @@ export function FarmerStatsCard({
                 data-testid="button-arrange-delivery"
               >
                 <Package className="h-4 w-4 mr-2" />
-                Arrange Delivery
+                {t("farmer_stats.arrange_delivery")}
               </Button>
             </div>
           </CardContent>
@@ -81,7 +83,7 @@ export function FarmerStatsCard({
                 </div>
                 <div>
                   <p className="text-2xl font-bold" data-testid="text-today-orders">{stats.todayOrders}</p>
-                  <p className="text-xs text-muted-foreground">Today's Orders</p>
+                  <p className="text-xs text-muted-foreground">{t("farmer_stats.orders")}</p>
                 </div>
               </div>
             </CardContent>
@@ -101,7 +103,7 @@ export function FarmerStatsCard({
                 </div>
                 <div>
                   <p className="text-2xl font-bold" data-testid="text-pending-orders">{stats.pendingOrders}</p>
-                  <p className="text-xs text-muted-foreground">Pending</p>
+                  <p className="text-xs text-muted-foreground">{t("seller.pending")}</p>
                 </div>
               </div>
             </CardContent>
@@ -121,7 +123,7 @@ export function FarmerStatsCard({
                 </div>
                 <div>
                   <p className="text-2xl font-bold" data-testid="text-total-products">{stats.totalProducts}</p>
-                  <p className="text-xs text-muted-foreground">Products</p>
+                  <p className="text-xs text-muted-foreground">{t("farmer_stats.products")}</p>
                 </div>
               </div>
             </CardContent>
@@ -141,7 +143,7 @@ export function FarmerStatsCard({
                 </div>
                 <div>
                   <p className="text-2xl font-bold" data-testid="text-avg-rating">{stats.averageRating.toFixed(1)}</p>
-                  <p className="text-xs text-muted-foreground">Avg Rating</p>
+                  <p className="text-xs text-muted-foreground">{t("farmer_stats.rating")}</p>
                 </div>
               </div>
             </CardContent>

@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Star, MapPin, Leaf, BadgeCheck, Check, X as XIcon,
@@ -15,6 +16,7 @@ import { getProductImage } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
 
 export default function ComparePage() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { ids, remove, clear } = useCompare();
   const { toast } = useToast();
@@ -28,7 +30,7 @@ export default function ComparePage() {
     mutationFn: (productId: string) => apiRequest("POST", "/api/cart", { productId, quantity: 1 }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-      toast({ title: "Added to cart!" });
+      toast({ title: t("product.add_to_cart") });
     },
   });
 
@@ -52,12 +54,12 @@ export default function ComparePage() {
         <TopNavigation />
         <div className="max-w-2xl mx-auto px-4 py-20 text-center">
           <GitCompareArrows className="h-16 w-16 mx-auto mb-4 text-muted-foreground/40" />
-          <h2 className="text-2xl font-bold mb-2">No products to compare</h2>
+          <h2 className="text-2xl font-bold mb-2">{t("compare.no_products")}</h2>
           <p className="text-muted-foreground mb-6">
-            Tap the <strong>Compare</strong> button on any product card to add it here. You can compare up to 4 products side by side.
+            {t("compare.empty_description")}
           </p>
           <Button onClick={() => setLocation("/")} data-testid="button-back-to-shop">
-            <ArrowLeft className="h-4 w-4 mr-2" />Back to Shop
+            <ArrowLeft className="h-4 w-4 mr-2" />{t("checkout.back_to_marketplace")}
           </Button>
         </div>
       </div>
@@ -79,21 +81,21 @@ export default function ComparePage() {
     render: (p: Product) => React.ReactNode;
     isWinner?: (p: Product) => boolean;
   }> = [
-    { label: "Price", render: p => `£${p.price.toFixed(2)} / ${p.unit}`, isWinner: p => p.price === lowestPrice },
-    { label: "Rating", render: p => `${p.rating.toFixed(1)} ★ (${p.reviewCount.toLocaleString()})`, isWinner: p => p.rating === highestRating },
-    { label: "Stock", render: p => `${p.stock} ${p.unit}` },
-    { label: "Distance", render: p => typeof p.distance === "number" ? `${p.distance.toFixed(1)} km` : "—", isWinner: p => closest !== null && p.id === closest.id },
-    { label: "Farmer", render: p => p.farmerName },
-    { label: "Origin", render: p => <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{p.farmerLocation}</span> },
-    { label: "Farmer Rating", render: p => `${p.farmerRating.toFixed(1)} ★` },
-    { label: "Organic", render: p => p.isOrganic ? <Check className="h-4 w-4 text-green-600 mx-auto" /> : <XIcon className="h-4 w-4 text-muted-foreground mx-auto" /> },
-    { label: "Featured", render: p => p.isFeatured ? <Award className="h-4 w-4 text-amber-500 mx-auto" /> : <XIcon className="h-4 w-4 text-muted-foreground mx-auto" /> },
-    { label: "Diet Tags", render: p => p.dietaryTags?.length ? (
+    { label: t("cart.subtotal"), render: p => `£${p.price.toFixed(2)} / ${p.unit}`, isWinner: p => p.price === lowestPrice },
+    { label: t("filters.rating"), render: p => `${p.rating.toFixed(1)} ★ (${p.reviewCount.toLocaleString()})`, isWinner: p => p.rating === highestRating },
+    { label: t("product.in_stock"), render: p => `${p.stock} ${p.unit}` },
+    { label: t("filters.distance"), render: p => typeof p.distance === "number" ? `${p.distance.toFixed(1)} km` : "—", isWinner: p => closest !== null && p.id === closest.id },
+    { label: t("home.farmers"), render: p => p.farmerName },
+    { label: t("land.map_view"), render: p => <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{p.farmerLocation}</span> },
+    { label: t("seller.avg_rating"), render: p => `${p.farmerRating.toFixed(1)} ★` },
+    { label: t("product.organic"), render: p => p.isOrganic ? <Check className="h-4 w-4 text-green-600 mx-auto" /> : <XIcon className="h-4 w-4 text-muted-foreground mx-auto" /> },
+    { label: t("product.featured"), render: p => p.isFeatured ? <Award className="h-4 w-4 text-amber-500 mx-auto" /> : <XIcon className="h-4 w-4 text-muted-foreground mx-auto" /> },
+    { label: t("dietary.vegetarian"), render: p => p.dietaryTags?.length ? (
         <div className="flex flex-wrap gap-1 justify-center">
           {p.dietaryTags.slice(0, 3).map(t => <Badge key={t} variant="outline" className="text-[10px]">{t}</Badge>)}
         </div>
       ) : "—" },
-    { label: "Description", render: p => <p className="text-xs text-muted-foreground line-clamp-3 leading-snug">{p.description}</p> },
+    { label: t("product_detail.specs_title"), render: p => <p className="text-xs text-muted-foreground line-clamp-3 leading-snug">{p.description}</p> },
   ];
 
   return (
@@ -108,16 +110,16 @@ export default function ComparePage() {
               className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 mb-2"
               data-testid="button-back"
             >
-              <ArrowLeft className="h-3.5 w-3.5" />Marketplace
+              <ArrowLeft className="h-3.5 w-3.5" />{t("home.browse")}
             </button>
             <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-compare-title">
               <GitCompareArrows className="h-6 w-6 text-primary" />
-              Compare Products ({items.length})
+              {t("compare.badge_title")} ({items.length})
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">Best value highlighted in green.</p>
+            <p className="text-sm text-muted-foreground mt-1">{t("compare.best_value")}</p>
           </div>
           <Button variant="outline" size="sm" onClick={clear} className="gap-1.5" data-testid="button-clear-all">
-            <Trash2 className="h-3.5 w-3.5" />Clear All
+            <Trash2 className="h-3.5 w-3.5" />{t("compare.clear_all")}
           </Button>
         </div>
 
@@ -139,7 +141,7 @@ export default function ComparePage() {
                   <button
                     onClick={() => remove(p.id)}
                     className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-foreground text-background flex items-center justify-center hover:scale-110 transition-transform z-10 shadow"
-                    title="Remove from comparison"
+                    title={t("compare.remove_title")}
                     data-testid={`button-remove-${p.id}`}
                   >
                     <XIcon className="h-3 w-3" strokeWidth={3} />
@@ -167,7 +169,7 @@ export default function ComparePage() {
                     disabled={p.stock === 0 || addToCart.isPending}
                     data-testid={`button-add-cart-${p.id}`}
                   >
-                    <ShoppingCart className="h-3 w-3" />Add
+                    <ShoppingCart className="h-3 w-3" />{t("product.add_short")}
                   </Button>
                 </motion.div>
               ))}
@@ -201,27 +203,26 @@ export default function ComparePage() {
           <div className="mt-8 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-green-500/5 p-5">
             <h3 className="font-bold mb-3 flex items-center gap-2">
               <BadgeCheck className="h-5 w-5 text-primary" />
-              Our Recommendation
+              {t("compare.add_product_dialog_title")}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
               <div className="bg-background/70 rounded-xl p-3 border border-border/40">
-                <div className="text-xs text-muted-foreground uppercase mb-1">Best Value</div>
+                <div className="text-xs text-muted-foreground uppercase mb-1">{t("compare.best_value")}</div>
                 <div className="font-semibold">{items.find(p => p.price === lowestPrice)?.name}</div>
-                <div className="text-xs text-green-700 dark:text-green-400 mt-1">£{lowestPrice.toFixed(2)} — lowest price</div>
+                <div className="text-xs text-green-700 dark:text-green-400 mt-1">£{lowestPrice.toFixed(2)} — {t("compare.price_low_to_high")}</div>
               </div>
               <div className="bg-background/70 rounded-xl p-3 border border-border/40">
-                <div className="text-xs text-muted-foreground uppercase mb-1">Top Rated</div>
+                <div className="text-xs text-muted-foreground uppercase mb-1">{t("compare.top_rated")}</div>
                 <div className="font-semibold">{items.find(p => p.rating === highestRating)?.name}</div>
-                <div className="text-xs text-amber-700 dark:text-amber-400 mt-1">{highestRating.toFixed(1)} ★ — highest rating</div>
+                <div className="text-xs text-amber-700 dark:text-amber-400 mt-1">{highestRating.toFixed(1)} ★ — {t("filters.top_rated")}</div>
               </div>
               <div className="bg-background/70 rounded-xl p-3 border border-border/40">
-                <div className="text-xs text-muted-foreground uppercase mb-1">Closest to You</div>
+                <div className="text-xs text-muted-foreground uppercase mb-1">{t("compare.closest_match")}</div>
                 <div className="font-semibold">{closest?.name ?? "—"}</div>
                 <div className="text-xs text-blue-700 dark:text-blue-400 mt-1">
                   {closest && typeof closest.distance === "number"
-                    ? `${closest.distance.toFixed(1)} km away`
-                    : "Distance not available"}
-                </div>
+                    ? `${closest.distance.toFixed(1)} ${t("map.km_away")}`
+                    : t("map.distance")}</div>
               </div>
             </div>
           </div>

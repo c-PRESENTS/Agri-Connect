@@ -68,21 +68,21 @@ export default function Dashboard() {
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6"
             data-testid="tab-overview"
           >
-            Overview
+            {t("dashboard.overview")}
           </TabsTrigger>
           <TabsTrigger
             value="menu"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6"
             data-testid="tab-menu"
           >
-            Quick Actions
+            {t("dashboard.quick_actions")}
           </TabsTrigger>
           <TabsTrigger
             value="activity"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6"
             data-testid="tab-activity"
           >
-            Activity
+            {t("dashboard.activity")}
           </TabsTrigger>
         </TabsList>
 

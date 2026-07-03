@@ -1,5 +1,6 @@
 import { useLocation, useSearch } from "wouter";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { SubcategoryPanel } from "@/components/subcategory-panel";
 import { categories } from "@/lib/categories";
 
@@ -88,6 +89,7 @@ function getRouteMeta(location: string) {
 }
 
 function SecondaryMetaPanel({ location }: { location: string }) {
+  const { t } = useTranslation();
   const meta = getRouteMeta(location);
 
   return (
@@ -97,7 +99,7 @@ function SecondaryMetaPanel({ location }: { location: string }) {
       aria-label="Secondary navigation metadata"
     >
       <div className="sticky top-0 z-10 border-b border-border/40 bg-sidebar/90 px-3 py-3">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Context</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("category.browse_by_category")}</p>
         <h2 className="mt-1 text-sm font-bold text-sidebar-foreground">{meta.title}</h2>
         <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{meta.context}</p>
       </div>

@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { X, Package, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,6 +15,7 @@ interface DeepNavPanelProps {
 }
 
 export function DeepNavPanel({ subId, activeSection, onClose, onSectionClick }: DeepNavPanelProps) {
+  const { t } = useTranslation();
   const content = useMemo(() => {
     if (!subId) return [];
     return getSubSubcategories(subId);
@@ -24,7 +26,7 @@ export function DeepNavPanel({ subId, activeSection, onClose, onSectionClick }: 
       const sub = cat.subcategories.find(s => s.id === subId);
       if (sub) return sub.name;
     }
-    return "Products";
+    return t("nav.browse");
   }, [subId]);
 
   const totalItems = useMemo(() => 

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Check, Clock, X, AlertTriangle, TrendingUp, Hotel, Factory, Store } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,15 +24,15 @@ interface FarmerActivityFeedProps {
 }
 
 const statusConfig = {
-  sold: { icon: Check, color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30", label: "SOLD" },
-  pending: { icon: Clock, color: "text-yellow-600", bg: "bg-yellow-100 dark:bg-yellow-900/30", label: "Pending" },
-  cancelled: { icon: X, color: "text-red-600", bg: "bg-red-100 dark:bg-red-900/30", label: "Cancelled" },
+  sold: { icon: Check, color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30", label: "product.add_short" },
+  pending: { icon: Clock, color: "text-yellow-600", bg: "bg-yellow-100 dark:bg-yellow-900/30", label: "product.out_short" },
+  cancelled: { icon: X, color: "text-red-600", bg: "bg-red-100 dark:bg-red-900/30", label: "nav.close" },
 };
 
 const urgencyConfig = {
-  high: { color: "bg-red-500", label: "URGENT" },
-  medium: { color: "bg-orange-500", label: "THIS WEEK" },
-  low: { color: "bg-blue-500", label: "STANDARD" },
+  high: { color: "bg-red-500", label: "demand.tab_urgent" },
+  medium: { color: "bg-orange-500", label: "demand.sort_urgency" },
+  low: { color: "bg-blue-500", label: "product.org_short" },
 };
 
 const buyerIcons: Record<string, React.ReactNode> = {
@@ -48,18 +49,19 @@ export function FarmerActivityFeed({
   currencySymbol = "₹",
   onAcceptDemand,
 }: FarmerActivityFeedProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4 p-4">
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Today's Activity
+            {t("farmer_activity.today_transactions")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {activities.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No activity today</p>
+            <p className="text-muted-foreground text-center py-4">{t("farmer_activity.title")}</p>
           ) : (
             <div className="space-y-3">
               {activities.map((activity, index) => {
@@ -87,7 +89,7 @@ export function FarmerActivityFeed({
                     <div className="text-right">
                       <span className="font-bold">{currencySymbol}{activity.amount.toLocaleString()}</span>
                       <Badge variant="outline" className={`ml-2 ${status.color}`}>
-                        {status.label}
+                        {t(status.label)}
                       </Badge>
                     </div>
                   </motion.div>
@@ -102,7 +104,7 @@ export function FarmerActivityFeed({
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-orange-500" />
-            Buyers Want Near You
+            {t("farmer_activity.local_buyer_demand")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -125,13 +127,13 @@ export function FarmerActivityFeed({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium">{alert.buyerType || "Buyer"}</span>
-                        <span className="text-muted-foreground">needs</span>
+                        <span className="font-medium">{alert.buyerType || t("profile_wizard.buyer")}</span>
+                        <span className="text-muted-foreground">{t("farmer_activity.demand_for")}</span>
                         <span className="font-semibold text-primary">{alert.quantity} {alert.productName}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge className={`${urgency.color} text-white text-xs`}>
-                          {urgency.label}
+                          {t(urgency.label)}
                         </Badge>
                         <span className="text-xs text-muted-foreground">{alert.location}</span>
                         <span className="text-xs text-muted-foreground">{alert.priceRange}</span>
@@ -142,7 +144,7 @@ export function FarmerActivityFeed({
                       onClick={() => onAcceptDemand?.(alert.id)}
                       data-testid={`button-accept-demand-${alert.id}`}
                     >
-                      Accept
+                      {t("common.accept")}
                     </Button>
                   </motion.div>
                 );

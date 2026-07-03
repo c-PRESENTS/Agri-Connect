@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -113,6 +114,7 @@ const ADDITIONAL_IMAGES = [
 ];
 
 export default function ProductDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -173,13 +175,13 @@ export default function ProductDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       setAddedToCart(true);
-      toast({ title: "Added to cart!", description: `${quantity} × ${product?.name}` });
+      toast({ title: t("product_detail.add_to_cart"), description: `${quantity} × ${product?.name}` });
       setTimeout(() => setAddedToCart(false), 2000);
     },
     onError: (err: any) => {
       toast({
-        title: "Couldn't add to cart",
-        description: err?.message || "Please try again in a moment.",
+        title: t("product_detail.out_of_stock"),
+        description: err?.message || t("product_detail.loading"),
         variant: "destructive",
       });
     },
@@ -217,10 +219,10 @@ export default function ProductDetailPage() {
       setShowReviewForm(false);
       setReviewComment("");
       setReviewRating(5);
-      toast({ title: "Review submitted!", description: "Thank you for your feedback." });
+      toast({ title: t("product_detail.reviews_title"), description: t("common.loading") });
     },
     onError: (e: any) => {
-      toast({ title: "Could not submit review", description: e.message, variant: "destructive" });
+      toast({ title: t("product_detail.no_reviews_yet"), description: e.message, variant: "destructive" });
     },
   });
 
@@ -263,8 +265,8 @@ export default function ProductDetailPage() {
       <div className="min-h-screen bg-background">
         <TopNavigation />
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <p className="text-muted-foreground text-lg">Product not found</p>
-          <Button onClick={() => setLocation("/")} variant="outline"><ArrowLeft className="h-4 w-4 mr-2" />Back to Marketplace</Button>
+          <p className="text-muted-foreground text-lg">{t("product_detail.breadcrumb_products")}</p>
+          <Button onClick={() => setLocation("/")} variant="outline"><ArrowLeft className="h-4 w-4 mr-2" />{t("product_detail.breadcrumb_home")}</Button>
         </div>
       </div>
     );
@@ -302,7 +304,7 @@ export default function ProductDetailPage() {
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
           <button onClick={() => setLocation("/")} className="hover:text-primary transition-colors flex items-center gap-1">
             <ArrowLeft className="h-3.5 w-3.5" />
-            Marketplace
+            {t("product_detail.breadcrumb_home")}
           </button>
           <span>/</span>
           <span className="capitalize text-muted-foreground">{(product.categoryId || "").replace(/-/g, " ")}</span>
@@ -389,9 +391,9 @@ export default function ProductDetailPage() {
             {/* Trust badges */}
             <div className="grid grid-cols-3 gap-2 mt-2">
               {[
-                { icon: Shield, label: "Verified Seller", color: "text-blue-500" },
-                { icon: Truck, label: "Fast Delivery", color: "text-green-500" },
-                { icon: Package, label: "Secure Packaging", color: "text-amber-500" },
+                { icon: Shield, label: t("product_detail.verified_seller"), color: "text-blue-500" },
+                { icon: Truck, label: t("product_detail.standard_delivery"), color: "text-green-500" },
+                { icon: Package, label: t("product_detail.freshness_guarantee"), color: "text-amber-500" },
               ].map(({ icon: Icon, label, color }) => (
                 <div key={label} className="flex flex-col items-center gap-1 bg-muted/50 rounded-xl p-3 text-center border border-border/30">
                   <Icon className={`h-5 w-5 ${color}`} />
@@ -406,7 +408,7 @@ export default function ProductDetailPage() {
             {/* Brand / sold-by line */}
             <div className="flex items-center gap-2 text-xs">
               <a href="#seller" className="text-primary hover:underline font-medium" data-testid="link-brand">
-                Brand: {product.farmerName}
+                {t("product_detail.specs_brand")}: {product.farmerName}
               </a>
               <span className="text-muted-foreground">·</span>
               <span className="text-muted-foreground capitalize">{(product.categoryId || "").replace(/-/g, " ")}</span>
@@ -438,14 +440,14 @@ export default function ProductDetailPage() {
                 {product.reviewCount.toLocaleString()} ratings
               </a>
               <span className="text-muted-foreground text-sm">|</span>
-              <span className="text-sm text-muted-foreground">{product.stock > 0 ? `${product.stock} ${product.unit} in stock` : "Out of stock"}</span>
+              <span className="text-sm text-muted-foreground">{product.stock > 0 ? `${product.stock} ${product.unit} ${t("product_detail.in_stock")}` : t("product_detail.out_of_stock")}</span>
             </div>
 
             {/* Trust strip — Climate Pledge / Organic / Verified */}
             <div className="flex flex-wrap items-center gap-2">
               {product.isOrganic && (
                 <Badge className="bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-900 gap-1 font-medium" data-testid="badge-organic">
-                  <Leaf className="h-3 w-3" />Organic Certified
+                  <Leaf className="h-3 w-3" />{t("product_detail.specs_organic_certified")}
                 </Badge>
               )}
               <Badge className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 gap-1 font-medium">
@@ -480,22 +482,22 @@ export default function ProductDetailPage() {
                 </span>
                 <span className="text-sm text-muted-foreground">/{product.unit}</span>
               </div>
-              <div className="text-xs text-muted-foreground">All prices include VAT.</div>
+              <div className="text-xs text-muted-foreground">{t("product_detail.quality_assurance_1")}</div>
               <div className="flex items-center gap-1.5 text-xs pt-1">
                 <Leaf className="h-3.5 w-3.5 text-green-600" />
-                <span className="text-green-700 dark:text-green-400 font-medium">Farm-gate price — no middlemen</span>
+                <span className="text-green-700 dark:text-green-400 font-medium">{t("product_detail.quality_assurance_2")}</span>
               </div>
             </div>
 
             {/* PRODUCT HIGHLIGHTS — Amazon-style icon grid (the F.7 signature feature) */}
             <div className="grid grid-cols-3 gap-3 py-4 px-1 border-y border-border/50" data-testid="grid-product-highlights">
               {[
-                { icon: Globe, label: "Origin", value: (product.farmerLocation || "UK").split(",")[0] || "UK" },
-                { icon: product.isOrganic ? Sprout : Wheat, label: "Type", value: product.isOrganic ? "Organic" : "Conventional" },
-                { icon: Tag, label: "Brand", value: (product.farmerName || "Farm").split(" ")[0] },
-                { icon: Package, label: "Unit", value: product.unit },
-                { icon: Snowflake, label: "Storage", value: "Cool/Dry" },
-                { icon: Tractor, label: "Farm-fresh", value: "< 48 hrs" },
+                { icon: Globe, label: t("product_detail.specs_certifications"), value: (product.farmerLocation || "UK").split(",")[0] || "UK" },
+                { icon: product.isOrganic ? Sprout : Wheat, label: t("product_detail.specs_category"), value: product.isOrganic ? "Organic" : "Conventional" },
+                { icon: Tag, label: t("product_detail.specs_brand"), value: (product.farmerName || "Farm").split(" ")[0] },
+                { icon: Package, label: t("product_detail.specs_sku"), value: product.unit },
+                { icon: Snowflake, label: t("product_detail.specs_weight"), value: "Cool/Dry" },
+                { icon: Tractor, label: t("product_detail.specs_model"), value: "< 48 hrs" },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex flex-col items-center text-center gap-1.5 px-1" data-testid={`highlight-${label.toLowerCase()}`}>
                   <div className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center">
@@ -509,7 +511,7 @@ export default function ProductDetailPage() {
 
             {/* ABOUT THIS ITEM — Amazon-style bullets */}
             <div className="space-y-2">
-              <h3 className="text-base font-bold">About this item</h3>
+              <h3 className="text-base font-bold">{t("product_detail.specs_title")}</h3>
               <ul className="space-y-1.5 text-sm text-foreground/85 list-disc pl-5 marker:text-muted-foreground">
                 {[
                   `${product.isOrganic ? "Organically grown" : "Sustainably grown"} by ${product.farmerName} in ${product.farmerLocation}.`,
@@ -540,16 +542,16 @@ export default function ProductDetailPage() {
                   <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
                     <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                     <span className="font-medium">{product.farmerRating.toFixed(1)}</span>
-                    <span>seller rating</span>
+                    <span>{t("product_detail.verified_seller")}</span>
                     <span>·</span>
                     <BadgeCheck className="h-3 w-3 text-blue-500" />
-                    <span>Verified Farmer</span>
+                    <span>{t("product_detail.verified_seller")}</span>
                   </div>
                   <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                     <MapPin className="h-3 w-3" />
                     <span>{product.farmerLocation}</span>
                     {product.distance && (
-                      <><span>·</span><span>{product.distance.toFixed(1)} km from you</span></>
+                      <><span>·</span><span>{product.distance.toFixed(1)} {t("map.km_away")}</span></>
                     )}
                   </div>
                   <div className="sm:hidden flex items-center gap-1 text-[11px] text-muted-foreground leading-tight">
@@ -560,9 +562,9 @@ export default function ProductDetailPage() {
                     <span className="truncate">Verified</span>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="text-xs h-8 px-2 sm:px-3 flex-none" onClick={() => toast({ title: "Contact feature coming soon!" })} data-testid="button-contact-seller">
+                <Button size="sm" variant="outline" className="text-xs h-8 px-2 sm:px-3 flex-none" onClick={() => toast({ title: t("common.loading") })} data-testid="button-contact-seller">
                   <MessageSquare className="h-3.5 w-3.5 sm:mr-1.5" />
-                  <span className="hidden sm:inline">Contact</span>
+                  <span className="hidden sm:inline">{t("product_detail.verified_seller")}</span>
                 </Button>
               </div>
               <div className="sm:hidden flex items-center gap-1 text-[11px] text-muted-foreground -mt-1">
@@ -572,9 +574,9 @@ export default function ProductDetailPage() {
 
               <div className="grid grid-cols-3 gap-2 text-center">
                 {[
-                  { label: "Response Rate", value: "98%" },
-                  { label: "On-time Delivery", value: "96%" },
-                  { label: "Repeat Buyers", value: "82%" },
+                  { label: t("seller_profile.response_time"), value: "98%" },
+                  { label: t("product_detail.standard_delivery"), value: "96%" },
+                  { label: t("product_detail.subscription_title"), value: "82%" },
                 ].map(({ label, value }) => (
                   <div key={label} className="bg-background/70 rounded-xl p-2 border border-border/30">
                     <div className="text-sm font-bold text-primary">{value}</div>
@@ -615,7 +617,7 @@ export default function ProductDetailPage() {
                 <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 p-3" data-testid="card-bulk-tiers">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold uppercase tracking-wide text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-                      <Tag className="h-3.5 w-3.5" />Bulk Pricing
+                      <Tag className="h-3.5 w-3.5" />{t("product_detail.bulk_pricing_title")}
                     </span>
                     {currentTier.discountPct > 0 && (
                       <Badge className="bg-amber-600 text-white hover:bg-amber-600 text-[10px]">
@@ -658,8 +660,8 @@ export default function ProductDetailPage() {
                 {/* Free delivery line */}
                 <div className="text-sm space-y-1">
                   <div>
-                    <span className="font-bold">FREE delivery </span>
-                    <span className="text-muted-foreground">on orders over £50</span>
+                    <span className="font-bold">{t("product_detail.freshness_guarantee")} </span>
+                    <span className="text-muted-foreground">{t("product_detail.standard_delivery")}</span>
                   </div>
                   <div className="text-xs">
                     <span className="text-muted-foreground">Estimated arrival </span>
@@ -673,24 +675,24 @@ export default function ProductDetailPage() {
                   </div>
                   <div className="flex items-center gap-1 text-xs text-primary">
                     <MapPin className="h-3 w-3" />
-                    <button className="hover:underline">Deliver to UK</button>
+                    <button className="hover:underline">{t("product_detail.express_delivery")}</button>
                   </div>
                 </div>
 
                 {/* Stock status */}
                 <div className={`text-base font-bold ${product.stock > 50 ? "text-green-600" : product.stock > 10 ? "text-amber-600" : product.stock > 0 ? "text-red-600" : "text-muted-foreground"}`}>
                   {product.stock > 50
-                    ? "In Stock"
+                    ? t("product_detail.in_stock")
                     : product.stock > 10
-                    ? `Only ${product.stock} ${product.unit} left in stock.`
+                    ? `${t("product_detail.low_stock")} ${product.stock} ${product.unit}`
                     : product.stock > 0
-                    ? `Only ${product.stock} left — order soon!`
-                    : "Currently unavailable"}
+                    ? `${t("product_detail.low_stock")} ${product.stock}`
+                    : t("product_detail.out_of_stock")}
                 </div>
 
                 {/* Quantity */}
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground w-16">Quantity:</span>
+                  <span className="text-sm text-muted-foreground w-16">{t("product_detail.specs_weight")}:</span>
                   <div className="flex items-center border border-border rounded-lg overflow-hidden">
                     <button
                       onClick={() => setQuantity(q => Math.max(1, q - 1))}
@@ -725,7 +727,7 @@ export default function ProductDetailPage() {
                       {purchaseMode === "one-time" && <div className="w-2 h-2 rounded-full bg-primary" />}
                     </div>
                     <div className="flex-1">
-                      <div className="text-sm font-semibold">One-time purchase</div>
+                      <div className="text-sm font-semibold">{t("product_detail.buy_now")}</div>
                       <div className="text-xs text-muted-foreground">£{bulkUnitPrice.toFixed(2)} / {product.unit}</div>
                     </div>
                   </button>
@@ -740,15 +742,15 @@ export default function ProductDetailPage() {
                     <div className="flex-1">
                       <div className="text-sm font-semibold flex items-center gap-1.5">
                         <Repeat className="h-3.5 w-3.5 text-primary" />
-                        Subscribe & Save
+                        {t("product_detail.subscription_title")}
                         <Badge className="bg-green-600 text-white hover:bg-green-600 text-[10px] ml-1">−{SUBSCRIBE_DISCOUNT_PCT}%</Badge>
                       </div>
-                      <div className="text-xs text-muted-foreground">£{subUnitPrice.toFixed(2)} / {product.unit} • Cancel anytime</div>
+                      <div className="text-xs text-muted-foreground">£{subUnitPrice.toFixed(2)} / {product.unit} • {t("common.cancel")}</div>
                     </div>
                   </button>
                   {purchaseMode === "subscribe" && (
                     <div className="px-3 py-2.5 border-t border-border/60 bg-muted/20 space-y-2">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Delivery frequency</label>
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("cart.subscription")}</label>
                       <div className="grid grid-cols-3 gap-1.5">
                         {(Object.keys(FREQUENCY_LABELS) as Array<keyof typeof FREQUENCY_LABELS>).map(f => (
                           <button
@@ -795,11 +797,11 @@ export default function ProductDetailPage() {
                       data-testid="button-add-to-cart-detail"
                     >
                       {addedToCart ? (
-                        <><Check className="h-4 w-4 mr-1.5" />Added to Cart</>
+                        <><Check className="h-4 w-4 mr-1.5" />{t("product_detail.added_to_cart")}</>
                       ) : purchaseMode === "subscribe" ? (
-                        <><Repeat className="h-4 w-4 mr-1.5" />Subscribe Now</>
+                        <><Repeat className="h-4 w-4 mr-1.5" />{t("product_detail.subscribe_button")}</>
                       ) : (
-                        <><ShoppingCart className="h-4 w-4 mr-1.5" />Add to Cart</>
+                        <><ShoppingCart className="h-4 w-4 mr-1.5" />{t("product_detail.add_to_cart")}</>
                       )}
                     </Button>
                   </motion.div>
@@ -819,7 +821,7 @@ export default function ProductDetailPage() {
                       data-testid="button-buy-now"
                     >
                       <Zap className="h-4 w-4 mr-1.5" />
-                      {addToCartMutation.isPending ? "Adding…" : "Buy Now"}
+                      {addToCartMutation.isPending ? t("product_detail.add_to_cart") : t("product_detail.buy_now")}
                     </Button>
                   </motion.div>
                 </div>
@@ -827,14 +829,14 @@ export default function ProductDetailPage() {
                 {/* Secure transaction */}
                 <div className="space-y-1.5 text-xs">
                   <div className="grid grid-cols-[80px_1fr] gap-x-2 gap-y-1">
-                    <span className="text-muted-foreground">Payment</span>
-                    <span className="text-primary hover:underline cursor-pointer">Secure transaction</span>
-                    <span className="text-muted-foreground">Ships from</span>
+                    <span className="text-muted-foreground">{t("product_detail.security_payment")}</span>
+                    <span className="text-primary hover:underline cursor-pointer">{t("product_detail.security_title")}</span>
+                    <span className="text-muted-foreground">{t("cart_sheet.ship_from")}</span>
                     <span className="text-foreground">{product.farmerLocation}</span>
-                    <span className="text-muted-foreground">Sold by</span>
+                    <span className="text-muted-foreground">{t("product_detail.security_seller")}</span>
                     <a href="#seller" className="text-primary hover:underline">{product.farmerName}</a>
-                    <span className="text-muted-foreground">Returns</span>
-                    <span className="text-primary hover:underline cursor-pointer">Freshness Guarantee</span>
+                    <span className="text-muted-foreground">{t("product_detail.security_returns")}</span>
+                    <span className="text-primary hover:underline cursor-pointer">{t("product_detail.freshness_guarantee")}</span>
                   </div>
                 </div>
 
@@ -845,21 +847,21 @@ export default function ProductDetailPage() {
                   variant="outline"
                   size="sm"
                   className={`w-full h-9 rounded-full text-sm gap-2 ${isWishlisted ? "border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" : ""}`}
-                  onClick={() => { setIsWishlisted(w => !w); toast({ title: isWishlisted ? "Removed from wishlist" : "Added to wishlist!" }); }}
+                  onClick={() => { setIsWishlisted(w => !w); toast({ title: isWishlisted ? t("compare.removed") : t("compare.added") }); }}
                   data-testid="button-wishlist-detail"
                 >
                   <Heart className={`h-3.5 w-3.5 ${isWishlisted ? "fill-current" : ""}`} />
-                  {isWishlisted ? "Saved to Wishlist" : "Add to Wishlist"}
+                  {isWishlisted ? t("compare.added") : t("compare.add_product_button")}
                 </Button>
               </div>
 
               {/* Delivery & policy info card */}
               <div className="rounded-2xl border border-border/50 bg-muted/30 p-4 space-y-2.5" data-testid="card-delivery-info">
                 {[
-                  { icon: Truck, label: "Standard Delivery", detail: "2–4 days · Free over £50", color: "text-blue-500" },
-                  { icon: Clock, label: "Express Delivery", detail: "Next-day · £4.99", color: "text-amber-500" },
-                  { icon: Shield, label: "Freshness Guarantee", detail: "100% refund if not satisfied", color: "text-green-500" },
-                  { icon: Calendar, label: "Subscribe & Save", detail: "Up to 10% off recurring orders", color: "text-purple-500" },
+                  { icon: Truck, label: t("product_detail.standard_delivery"), detail: "2–4 days", color: "text-blue-500" },
+                  { icon: Clock, label: t("product_detail.express_delivery"), detail: "Next-day", color: "text-amber-500" },
+                  { icon: Shield, label: t("product_detail.freshness_guarantee"), detail: "100% refund", color: "text-green-500" },
+                  { icon: Calendar, label: t("product_detail.subscription_title"), detail: "Up to 10% off", color: "text-purple-500" },
                 ].map(({ icon: Icon, label, detail, color }) => (
                   <div key={label} className="flex items-start gap-2.5">
                     <Icon className={`h-4 w-4 mt-0.5 flex-none ${color}`} />
@@ -877,7 +879,7 @@ export default function ProductDetailPage() {
         {/* FREQUENTLY BOUGHT TOGETHER — Amazon-style row */}
         {relatedProducts.filter(p => p.id !== product.id).length >= 2 && (
           <div className="mt-6 sm:mt-12 rounded-xl sm:rounded-2xl border border-border/50 bg-muted/20 p-3 sm:p-6" data-testid="section-frequently-bought">
-            <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-4">Frequently bought together</h3>
+            <h3 className="text-sm sm:text-lg font-bold mb-2 sm:mb-4">{t("product_detail.frequently_bought_title")}</h3>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               {/* Current product */}
               <div className="flex flex-col items-center w-16 sm:w-32" data-testid="fbt-current">
@@ -911,7 +913,7 @@ export default function ProductDetailPage() {
 
               {/* Bundle total + add */}
               <div className="w-full sm:w-auto sm:ml-auto sm:pl-4 sm:border-l sm:border-border/50 space-y-1.5 sm:space-y-2 sm:min-w-[180px] mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
-                <div className="text-[10px] sm:text-xs text-muted-foreground">Bundle price:</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">{t("product_detail.bulk_pricing_title")}:</div>
                 <div className="text-base sm:text-2xl font-bold text-foreground" data-testid="text-bundle-price">
                   £{(product.price + relatedProducts.filter(p => p.id !== product.id).slice(0, 2).reduce((sum, p) => sum + p.price, 0)).toFixed(2)}
                 </div>
@@ -940,7 +942,7 @@ export default function ProductDetailPage() {
                   data-testid="button-add-bundle"
                 >
                   <ShoppingCart className="h-3.5 w-3.5" />
-                  {isAddingBundle ? "Adding bundle…" : "Add all 3 to Cart"}
+                  {isAddingBundle ? t("product_detail.add_to_cart") : t("product_detail.add_to_cart")}
                 </Button>
               </div>
             </div>
@@ -951,9 +953,9 @@ export default function ProductDetailPage() {
         {recommended.length > 0 && (
           <div className="mt-8 lg:mt-10">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base lg:text-lg font-bold">Customers also viewed</h3>
+              <h3 className="text-base lg:text-lg font-bold">{t("product_detail.similar_title")}</h3>
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
-                Similar in {(product.subcategoryId || product.categoryId || "").replace(/-/g, " ")}
+                {t("product_detail.similar_description")}
               </span>
             </div>
             <div className="flex gap-2.5 overflow-x-auto pb-2 no-scrollbar lg:grid lg:grid-cols-4 xl:grid-cols-8 lg:gap-3 lg:overflow-visible">
@@ -995,10 +997,10 @@ export default function ProductDetailPage() {
         <div className="mt-8 lg:mt-12">
           <Tabs defaultValue="details" id="reviews">
             <TabsList className="w-full justify-start h-auto flex-wrap gap-1 bg-muted/50 p-1 rounded-xl">
-              <TabsTrigger value="details" className="rounded-lg">Product Details</TabsTrigger>
-              <TabsTrigger value="reviews" className="rounded-lg">Reviews ({product.reviewCount})</TabsTrigger>
-              <TabsTrigger value="nutrition" className="rounded-lg">Nutrition & Tags</TabsTrigger>
-              <TabsTrigger value="more" className="rounded-lg">More From Seller</TabsTrigger>
+              <TabsTrigger value="details" className="rounded-lg">{t("product_detail.specs_title")}</TabsTrigger>
+              <TabsTrigger value="reviews" className="rounded-lg">{t("product_detail.reviews_title")} ({product.reviewCount})</TabsTrigger>
+              <TabsTrigger value="nutrition" className="rounded-lg">{t("product_detail.nutrition_title")}</TabsTrigger>
+              <TabsTrigger value="more" className="rounded-lg">{t("seller_profile.recent_products")}</TabsTrigger>
             </TabsList>
 
             {/* Details tab */}
@@ -1006,7 +1008,7 @@ export default function ProductDetailPage() {
               <Card className="border-border/50">
                 <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold mb-3">About This Product</h3>
+                    <h3 className="text-lg font-bold mb-3">{t("product_detail.specs_title")}</h3>
                     <div className={`text-muted-foreground leading-relaxed text-sm transition-all ${showFullDesc ? "" : "line-clamp-4"}`}>
                       {product.description}
                       {" "}This premium produce is grown with care by {product.farmerName} in {product.farmerLocation},
@@ -1019,7 +1021,7 @@ export default function ProductDetailPage() {
                       onClick={() => setShowFullDesc(d => !d)}
                       className="mt-2 flex items-center gap-1 text-primary text-sm hover:underline"
                     >
-                      {showFullDesc ? <><ChevronUp className="h-4 w-4" />Show less</> : <><ChevronDown className="h-4 w-4" />Read more</>}
+                      {showFullDesc ? <><ChevronUp className="h-4 w-4" />{t("common.close")}</> : <><ChevronDown className="h-4 w-4" />{t("help.read_more")}</>}
                     </button>
                   </div>
 
@@ -1027,7 +1029,7 @@ export default function ProductDetailPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">Product Specs</h4>
+                      <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">{t("product_detail.specs_title")}</h4>
                       <div className="space-y-2">
                         {[
                           ["Category", (product.categoryId || "").replace(/-/g, " ")],
@@ -1045,7 +1047,7 @@ export default function ProductDetailPage() {
                       </div>
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">Farm Practices</h4>
+                      <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">{t("product_detail.specs_farm_practices")}</h4>
                       <div className="space-y-2">
                         {[
                           "No synthetic pesticides",
@@ -1080,7 +1082,7 @@ export default function ProductDetailPage() {
                           <Star key={s} className={`h-5 w-5 ${s <= Math.round(product.rating) ? "fill-amber-400 text-amber-400" : "fill-muted text-muted"}`} />
                         ))}
                       </div>
-                      <div className="text-sm text-muted-foreground">{product.reviewCount.toLocaleString()} global ratings</div>
+                      <div className="text-sm text-muted-foreground">{t("product_detail.based_on_reviews", { count: product.reviewCount })}</div>
                     </div>
                     <Separator />
                     <div className="space-y-2">
@@ -1095,23 +1097,23 @@ export default function ProductDetailPage() {
                     {/* Review eligibility / write form toggle */}
                     {!isAuthenticated ? (
                       <Button variant="outline" className="w-full text-sm gap-2" onClick={() => setLocation("/login")}>
-                        <Lock className="h-3.5 w-3.5" /> Sign in to Review
+                        <Lock className="h-3.5 w-3.5" /> {t("product_detail.write_review")}
                       </Button>
                     ) : reviewEligibility?.hasReviewed ? (
                       <div className="flex items-center gap-2 justify-center text-green-600 text-sm bg-green-50 dark:bg-green-950/20 rounded-lg py-2 px-3">
-                        <CheckCircle className="h-4 w-4" /> You reviewed this product
+                        <CheckCircle className="h-4 w-4" /> {t("product_detail.verified_badge")}
                       </div>
                     ) : reviewEligibility?.canReview ? (
                       <Button
                         className="w-full text-sm gap-2"
                         onClick={() => setShowReviewForm(!showReviewForm)}
                       >
-                        <Star className="h-3.5 w-3.5" /> {showReviewForm ? "Cancel" : "Write a Review"}
+                        <Star className="h-3.5 w-3.5" /> {showReviewForm ? t("common.cancel") : t("product_detail.write_review")}
                       </Button>
                     ) : (
                       <div className="text-center text-xs text-muted-foreground bg-muted/50 rounded-lg py-3 px-3">
                         <Package className="h-4 w-4 mx-auto mb-1" />
-                        Purchase & receive this product to leave a review
+                        {t("product_detail.no_reviews_yet")}
                       </div>
                     )}
                   </CardContent>
@@ -1128,10 +1130,10 @@ export default function ProductDetailPage() {
                       <Card className="border-primary/30 bg-primary/5">
                         <CardContent className="p-5">
                           <h4 className="font-bold mb-3 flex items-center gap-2">
-                            <MessageSquare className="h-4 w-4 text-primary" /> Your Review
+                            <MessageSquare className="h-4 w-4 text-primary" /> {t("product_detail.write_review")}
                           </h4>
                           <div className="mb-3">
-                            <Label className="text-xs text-muted-foreground mb-2 block">Rating</Label>
+                            <Label className="text-xs text-muted-foreground mb-2 block">{t("filters.rating")}</Label>
                             <div className="flex gap-1">
                               {[1, 2, 3, 4, 5].map((s) => (
                                 <button
@@ -1148,7 +1150,7 @@ export default function ProductDetailPage() {
                             </div>
                           </div>
                           <div className="mb-3">
-                            <Label htmlFor="pd-review-comment" className="text-xs text-muted-foreground mb-1 block">Review</Label>
+                            <Label htmlFor="pd-review-comment" className="text-xs text-muted-foreground mb-1 block">{t("product_detail.reviews_title")}</Label>
                             <Textarea
                               id="pd-review-comment"
                               data-testid="input-pd-review"
@@ -1167,7 +1169,7 @@ export default function ProductDetailPage() {
                             data-testid="btn-submit-pd-review"
                           >
                             {submitReviewMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Star className="h-3 w-3" />}
-                            Submit Review
+                            {t("product_detail.write_review")}
                           </Button>
                         </CardContent>
                       </Card>
@@ -1199,7 +1201,7 @@ export default function ProductDetailPage() {
                                   <div className="font-semibold text-sm">{review.buyerName}</div>
                                   <div className="flex items-center gap-1.5">
                                     <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-green-300 text-green-600 dark:border-green-800 dark:text-green-400">
-                                      ✓ Verified Purchase
+                                      ✓ {t("product_detail.verified_badge")}
                                     </Badge>
                                     <span className="text-[11px] text-muted-foreground">
                                       {new Date(review.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
@@ -1243,7 +1245,7 @@ export default function ProductDetailPage() {
                                   <div className="flex items-center gap-1.5">
                                     {review.verified && (
                                       <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-green-300 text-green-600 dark:border-green-800 dark:text-green-400">
-                                        ✓ Verified Purchase
+                                        ✓ {t("product_detail.verified_badge")}
                                       </Badge>
                                     )}
                                     <span className="text-[11px] text-muted-foreground">{review.date}</span>
@@ -1259,7 +1261,7 @@ export default function ProductDetailPage() {
                             <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <ThumbsUp className="h-3.5 w-3.5" />
-                              <span>{review.helpful} people found this helpful</span>
+                              <span>{t("product_detail.helpful_button", { count: review.helpful })}</span>
                             </div>
                           </CardContent>
                         </Card>
@@ -1276,7 +1278,7 @@ export default function ProductDetailPage() {
                 <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                   {product.dietaryTags && product.dietaryTags.length > 0 ? (
                     <div>
-                      <h3 className="text-lg font-bold mb-3">Dietary Tags</h3>
+                      <h3 className="text-lg font-bold mb-3">{t("product_detail.nutrition_title")}</h3>
                       <div className="flex flex-wrap gap-2">
                         {product.dietaryTags.map(tag => (
                           <Badge key={tag} className="text-sm px-3 py-1.5 bg-primary/10 text-primary border border-primary/20">
@@ -1288,12 +1290,12 @@ export default function ProductDetailPage() {
                   ) : (
                     <div className="text-muted-foreground text-sm flex items-center gap-2">
                       <Info className="h-4 w-4" />
-                      No specific dietary tags for this product.
+                      {t("product_detail.nutrition_ingredients")}
                     </div>
                   )}
                   <Separator />
                   <div>
-                    <h3 className="text-lg font-bold mb-3">Quality Certifications</h3>
+                    <h3 className="text-lg font-bold mb-3">{t("product_detail.quality_title")}</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {[
                         { label: "Farm Verified", icon: BadgeCheck, color: "text-blue-500 bg-blue-50 dark:bg-blue-950" },
@@ -1317,7 +1319,7 @@ export default function ProductDetailPage() {
             <TabsContent value="more" className="mt-6">
               {relatedProducts.length > 0 ? (
                 <div>
-                  <h3 className="text-lg font-bold mb-4">More from {product.farmerName}</h3>
+                  <h3 className="text-lg font-bold mb-4">{t("seller_profile.recent_products")}</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                     {relatedProducts.filter(p => p.id !== product.id).slice(0, 8).map(p => (
                       <motion.div
@@ -1352,7 +1354,7 @@ export default function ProductDetailPage() {
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>No other products from this seller yet.</p>
+                  <p>{t("seller_profile.no_products_available")}</p>
                 </div>
               )}
             </TabsContent>
@@ -1389,7 +1391,7 @@ export default function ProductDetailPage() {
           onClick={() => addToCartMutation.mutate(quantity)}
           disabled={product.stock === 0 || addedToCart || addToCartMutation.isPending}
         >
-          {addedToCart ? <><Check className="h-4 w-4" />Added</> : <><ShoppingCart className="h-4 w-4" />Add</>}
+          {addedToCart ? <><Check className="h-4 w-4" />{t("product_detail.added_to_cart")}</> : <><ShoppingCart className="h-4 w-4" />{t("product_detail.add_to_cart")}</>}
         </Button>
       </div>
     </div>

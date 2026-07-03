@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ const blankDrop: AddressForm = { name: "", phone: "", email: "", line1: "", line
 const blankItem: ItemForm = { name: "", quantity: 1, weightKg: 1, coldChain: false, fragile: false };
 
 export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, trackUrl: string) => void }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [step, setStep] = useState<Step>(1);
   const [items, setItems] = useState<ItemForm[]>([{ ...blankItem }]);
@@ -53,12 +55,12 @@ export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, tr
       setSelected(data.quotes[0] ?? null);
       setStep(3);
     },
-    onError: (e: Error) => toast({ title: "Could not get quotes", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: t("send_parcel.could_not_get_quotes"), description: e.message, variant: "destructive" }),
   });
 
   const bookMut = useMutation({
     mutationFn: async () => {
-      if (!selected) throw new Error("Pick a shipping option first");
+      if (!selected) throw new Error(t("send_parcel.pick_shipping_first"));
       const res = await apiRequest("POST", "/api/shipping/book", {
         pickup, drop, items, pickupWindow, notes,
         quoteId: selected.id, service: selected.service,
@@ -72,7 +74,7 @@ export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, tr
       setStep(4);
       onComplete?.(data.shipment, data.trackUrl);
     },
-    onError: (e: Error) => toast({ title: "Booking failed", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: t("send_parcel.booking_failed"), description: e.message, variant: "destructive" }),
   });
 
   const addItem = () => setItems((v) => [...v, { ...blankItem }]);
@@ -90,30 +92,30 @@ export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, tr
           <div className="mx-auto h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
             <CheckCircle2 className="h-7 w-7 text-primary" />
           </div>
-          <h3 className="text-lg font-bold">Shipment booked!</h3>
-          <p className="text-sm text-muted-foreground">Confirmation has been sent to {booked.shipment.notifyEmail || "the recipient"}.</p>
+          <h3 className="text-lg font-bold">{t("send_parcel.shipment_booked")}</h3>
+          <p className="text-sm text-muted-foreground">{t("send_parcel.confirmation_sent_to", { email: booked.shipment.notifyEmail || "the recipient" })}</p>
         </div>
         <Card className="bg-primary/5 border-primary/30">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Tracking ID</p>
+              <p className="text-xs text-muted-foreground">{t("send_parcel.tracking_id")}</p>
               <Button
                 size="sm" variant="ghost" className="h-7 px-2 text-xs"
-                onClick={() => { navigator.clipboard.writeText(booked.shipment.trackingId); toast({ title: "Copied!" }); }}
+                onClick={() => { navigator.clipboard.writeText(booked.shipment.trackingId); toast({ title: t("send_parcel.copied_toast") }); }}
                 data-testid="button-copy-tracking"
-              ><Copy className="h-3 w-3 mr-1" />Copy</Button>
+              ><Copy className="h-3 w-3 mr-1" />{t("send_parcel.copy_button")}</Button>
             </div>
             <p className="font-mono text-2xl font-bold tracking-wider" data-testid="text-tracking-id">{booked.shipment.trackingId}</p>
             <p className="text-xs text-muted-foreground break-all">{booked.trackUrl}</p>
           </CardContent>
         </Card>
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <div><p className="text-xs text-muted-foreground">Carrier</p><p className="font-medium">{booked.shipment.partnerName}</p></div>
-          <div><p className="text-xs text-muted-foreground">Total</p><p className="font-medium">£{booked.shipment.price.toFixed(2)}</p></div>
-          <div><p className="text-xs text-muted-foreground">Distance</p><p className="font-medium">{booked.shipment.distanceKm} km</p></div>
-          <div><p className="text-xs text-muted-foreground">Weight</p><p className="font-medium">{booked.shipment.weightKg.toFixed(1)} kg</p></div>
+          <div><p className="text-xs text-muted-foreground">{t("send_parcel.carrier")}</p><p className="font-medium">{booked.shipment.partnerName}</p></div>
+          <div><p className="text-xs text-muted-foreground">{t("send_parcel.total")}</p><p className="font-medium">£{booked.shipment.price.toFixed(2)}</p></div>
+          <div><p className="text-xs text-muted-foreground">{t("send_parcel.distance")}</p><p className="font-medium">{booked.shipment.distanceKm} km</p></div>
+          <div><p className="text-xs text-muted-foreground">{t("send_parcel.weight")}</p><p className="font-medium">{booked.shipment.weightKg.toFixed(1)} kg</p></div>
         </div>
-        <Button className="w-full" onClick={() => { setBooked(null); setStep(1); setItems([{ ...blankItem }]); setPickup({ ...blankPickup }); setDrop({ ...blankDrop }); setQuotes([]); setSelected(null); }} data-testid="button-send-another">Send another parcel</Button>
+        <Button className="w-full" onClick={() => { setBooked(null); setStep(1); setItems([{ ...blankItem }]); setPickup({ ...blankPickup }); setDrop({ ...blankDrop }); setQuotes([]); setSelected(null); }} data-testid="button-send-another">{t("send_parcel.send_another")}</Button>
       </div>
     );
   }
@@ -135,48 +137,48 @@ export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, tr
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 text-primary" />
-            <h3 className="font-semibold text-sm">What are you sending?</h3>
+            <h3 className="font-semibold text-sm">{t("send_parcel.what_sending")}</h3>
           </div>
           {items.map((it, i) => (
             <Card key={i}>
               <CardContent className="p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-muted-foreground">Item {i + 1}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{t("send_parcel.item_number", { number: i + 1 })}</p>
                   {items.length > 1 && (
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeItem(i)} data-testid={`button-remove-item-${i}`}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   )}
                 </div>
-                <Input placeholder="e.g. Apples crate" value={it.name} onChange={(e) => updateItem(i, { name: e.target.value })} data-testid={`input-item-name-${i}`} />
+                <Input placeholder={t("send_parcel.item_name_placeholder")} value={it.name} onChange={(e) => updateItem(i, { name: e.target.value })} data-testid={`input-item-name-${i}`} />
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs">Quantity</Label>
+                    <Label className="text-xs">{t("send_parcel.quantity")}</Label>
                     <Input type="number" min={1} value={it.quantity} onChange={(e) => updateItem(i, { quantity: Math.max(1, +e.target.value || 1) })} data-testid={`input-item-qty-${i}`} />
                   </div>
                   <div>
-                    <Label className="text-xs">Weight (kg)</Label>
+                    <Label className="text-xs">{t("send_parcel.weight_kg")}</Label>
                     <Input type="number" min={0.1} step={0.1} value={it.weightKg} onChange={(e) => updateItem(i, { weightKg: Math.max(0.1, +e.target.value || 0.1) })} data-testid={`input-item-weight-${i}`} />
                   </div>
                 </div>
                 <div className="flex gap-3 pt-1">
                   <label className="flex items-center gap-2 text-xs">
                     <Checkbox checked={it.coldChain} onCheckedChange={(v) => updateItem(i, { coldChain: !!v })} data-testid={`check-cold-${i}`} />
-                    Cold-chain
+                    {t("send_parcel.cold_chain")}
                   </label>
                   <label className="flex items-center gap-2 text-xs">
                     <Checkbox checked={it.fragile} onCheckedChange={(v) => updateItem(i, { fragile: !!v })} data-testid={`check-fragile-${i}`} />
-                    Fragile
+                    {t("send_parcel.fragile")}
                   </label>
                 </div>
               </CardContent>
             </Card>
           ))}
           <Button variant="outline" size="sm" onClick={addItem} className="w-full" data-testid="button-add-item">
-            <Plus className="h-3 w-3 mr-1" />Add another item
+            <Plus className="h-3 w-3 mr-1" />{t("send_parcel.add_another_item")}
           </Button>
           <Button className="w-full" disabled={!validStep1} onClick={() => setStep(2)} data-testid="button-next-step1">
-            Next: Pickup & drop <ArrowRight className="h-4 w-4 ml-1" />
+            {t("send_parcel.next_pickup_drop")} <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
       )}
@@ -188,13 +190,13 @@ export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, tr
           <Separator />
           <AddressBlock title="Deliver to" addr={drop} onChange={setDrop} testPrefix="drop" />
           <div>
-            <Label className="text-xs">Preferred pickup window (optional)</Label>
-            <Input placeholder="e.g. Tomorrow morning, 8–11am" value={pickupWindow} onChange={(e) => setPickupWindow(e.target.value)} data-testid="input-pickup-window" />
+            <Label className="text-xs">{t("send_parcel.pickup_window_label")}</Label>
+            <Input placeholder={t("send_parcel.pickup_window_placeholder")} value={pickupWindow} onChange={(e) => setPickupWindow(e.target.value)} data-testid="input-pickup-window" />
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => setStep(1)} data-testid="button-back-step2"><ArrowLeft className="h-4 w-4 mr-1" />Back</Button>
+            <Button variant="outline" className="flex-1" onClick={() => setStep(1)} data-testid="button-back-step2"><ArrowLeft className="h-4 w-4 mr-1" />{t("send_parcel.back_button")}</Button>
             <Button className="flex-1" disabled={!validStep2 || quoteMut.isPending} onClick={() => quoteMut.mutate()} data-testid="button-get-quotes">
-              {quoteMut.isPending ? "Getting quotes…" : "Get shipping quotes"}<ArrowRight className="h-4 w-4 ml-1" />
+              {quoteMut.isPending ? t("send_parcel.getting_quotes") : t("send_parcel.get_shipping_quotes")}<ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
         </div>
@@ -204,18 +206,18 @@ export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, tr
       {step === 3 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm">Choose a shipping option</h3>
-            <Badge variant="outline" className="text-[10px]">{quotes.length} option{quotes.length === 1 ? "" : "s"}</Badge>
+            <h3 className="font-semibold text-sm">{t("send_parcel.choose_option")}</h3>
+            <Badge variant="outline" className="text-[10px]">{t("send_parcel.options_count", { count: quotes.length })}</Badge>
           </div>
           <QuoteCards quotes={quotes} selectedId={selected?.id} onSelect={setSelected} loading={quoteMut.isPending} />
           <div>
-            <Label className="text-xs">Driver notes (optional)</Label>
-            <Textarea rows={2} placeholder="Gate code, fragile, etc." value={notes} onChange={(e) => setNotes(e.target.value)} data-testid="input-notes" />
+            <Label className="text-xs">{t("send_parcel.driver_notes")}</Label>
+            <Textarea rows={2} placeholder={t("send_parcel.driver_notes_placeholder")} value={notes} onChange={(e) => setNotes(e.target.value)} data-testid="input-notes" />
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => setStep(2)} data-testid="button-back-step3"><ArrowLeft className="h-4 w-4 mr-1" />Back</Button>
+            <Button variant="outline" className="flex-1" onClick={() => setStep(2)} data-testid="button-back-step3"><ArrowLeft className="h-4 w-4 mr-1" />{t("send_parcel.back_button")}</Button>
             <Button className="flex-1" disabled={!selected || bookMut.isPending} onClick={() => bookMut.mutate()} data-testid="button-confirm-booking">
-              {bookMut.isPending ? "Booking…" : `Book · £${selected?.price.toFixed(2) ?? "0.00"}`}
+              {bookMut.isPending ? t("send_parcel.booking") : t("send_parcel.book_button", { price: `£${selected?.price.toFixed(2) ?? "0.00"}` })}
             </Button>
           </div>
         </div>
@@ -225,6 +227,7 @@ export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, tr
 }
 
 function AddressBlock({ title, addr, onChange, testPrefix }: { title: string; addr: AddressForm; onChange: (a: AddressForm) => void; testPrefix: string }) {
+  const { t } = useTranslation();
   const set = (patch: Partial<AddressForm>) => onChange({ ...addr, ...patch });
   return (
     <div className="space-y-2">
@@ -233,21 +236,21 @@ function AddressBlock({ title, addr, onChange, testPrefix }: { title: string; ad
         <h3 className="font-semibold text-sm">{title}</h3>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Input placeholder="Contact name" value={addr.name} onChange={(e) => set({ name: e.target.value })} data-testid={`input-${testPrefix}-name`} />
-        <Input placeholder="Phone" value={addr.phone} onChange={(e) => set({ phone: e.target.value })} data-testid={`input-${testPrefix}-phone`} />
+        <Input placeholder={t("send_parcel.contact_name")} value={addr.name} onChange={(e) => set({ name: e.target.value })} data-testid={`input-${testPrefix}-name`} />
+        <Input placeholder={t("send_parcel.phone")} value={addr.phone} onChange={(e) => set({ phone: e.target.value })} data-testid={`input-${testPrefix}-phone`} />
       </div>
-      <Input type="email" placeholder="Email (for tracking updates)" value={addr.email} onChange={(e) => set({ email: e.target.value })} data-testid={`input-${testPrefix}-email`} />
-      <Input placeholder="Address line 1" value={addr.line1} onChange={(e) => set({ line1: e.target.value })} data-testid={`input-${testPrefix}-line1`} />
-      <Input placeholder="Address line 2 (optional)" value={addr.line2} onChange={(e) => set({ line2: e.target.value })} data-testid={`input-${testPrefix}-line2`} />
+      <Input type="email" placeholder={t("send_parcel.email_tracking")} value={addr.email} onChange={(e) => set({ email: e.target.value })} data-testid={`input-${testPrefix}-email`} />
+      <Input placeholder={t("send_parcel.address_line1")} value={addr.line1} onChange={(e) => set({ line1: e.target.value })} data-testid={`input-${testPrefix}-line1`} />
+      <Input placeholder={t("send_parcel.address_line2")} value={addr.line2} onChange={(e) => set({ line2: e.target.value })} data-testid={`input-${testPrefix}-line2`} />
       <div className="grid grid-cols-2 gap-2">
-        <Input placeholder="City" value={addr.city} onChange={(e) => set({ city: e.target.value })} data-testid={`input-${testPrefix}-city`} />
-        <Input placeholder="Postcode / ZIP" value={addr.postcode} onChange={(e) => set({ postcode: e.target.value.toUpperCase() })} data-testid={`input-${testPrefix}-postcode`} />
+        <Input placeholder={t("send_parcel.city")} value={addr.city} onChange={(e) => set({ city: e.target.value })} data-testid={`input-${testPrefix}-city`} />
+        <Input placeholder={t("send_parcel.postcode_zip")} value={addr.postcode} onChange={(e) => set({ postcode: e.target.value.toUpperCase() })} data-testid={`input-${testPrefix}-postcode`} />
       </div>
       <div>
-        <Label className="text-[11px] flex items-center gap-1 text-muted-foreground"><Globe className="h-3 w-3" />Country</Label>
+        <Label className="text-[11px] flex items-center gap-1 text-muted-foreground"><Globe className="h-3 w-3" />{t("send_parcel.country")}</Label>
         <Select value={addr.country || ""} onValueChange={(v) => set({ country: v })}>
           <SelectTrigger data-testid={`select-${testPrefix}-country`}>
-            <SelectValue placeholder="Select country (worldwide)" />
+            <SelectValue placeholder={t("send_parcel.select_country")} />
           </SelectTrigger>
           <SelectContent className="max-h-72">
             {COUNTRIES.map((c) => (

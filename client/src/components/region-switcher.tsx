@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { regions } from "@/lib/categories";
 import type { Region } from "@shared/schema";
+import { useTranslation } from "react-i18next";
 
 interface RegionSwitcherProps {
   onRegionChange?: (region: Region) => void;
@@ -88,6 +89,7 @@ function detectRegionFromBrowser(): Region | undefined {
 }
 
 export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [detectedRegion, setDetectedRegion] = useState<Region | null>(null);
@@ -159,7 +161,7 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
           variant="ghost" 
           className="gap-2 px-2 sm:px-3" 
           data-testid="button-region-switcher"
-          aria-label={`Current region: ${selectedRegion.name}. Click to change region.`}
+          aria-label={t("region.current_label", { region: selectedRegion.name })}
         >
           <span className="text-base" aria-hidden="true">{getCountryFlag(selectedRegion.code)}</span>
           <span className="hidden md:inline text-sm">{selectedRegion.code}</span>
@@ -169,17 +171,17 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <div className="p-3 border-b">
-          <Label htmlFor="region-search" className="sr-only">Search countries</Label>
+          <Label htmlFor="region-search" className="sr-only">{t("region.search_aria_label")}</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <Input
               id="region-search"
-              placeholder="Search country or currency..."
+              placeholder={t("region.search_placeholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-9"
               data-testid="input-region-search"
-              aria-label="Search for a country by name, code, or currency"
+              aria-label={t("region.search_aria_label")}
             />
           </div>
         </div>
@@ -189,7 +191,7 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
             <div className="p-3 border-b bg-muted/30">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 <MapPin className="h-3 w-3" aria-hidden="true" />
-                <span>Detected Location</span>
+                <span>{t("region.detected_location")}</span>
               </div>
               <Button
                 variant="ghost"
@@ -215,7 +217,7 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
             <div className="p-3 border-b">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 <Star className="h-3 w-3" aria-hidden="true" />
-                <span>Popular Regions</span>
+                <span>{t("region.popular_regions")}</span>
               </div>
               <div className="space-y-0.5">
                 {popularRegions.map((region) => (
@@ -243,7 +245,7 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
           <div className="p-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
               <Globe className="h-3 w-3" aria-hidden="true" />
-              <span>{searchQuery ? `Results for "${searchQuery}"` : "All Countries"}</span>
+              <span>{searchQuery ? t("region.results_for", { query: searchQuery }) : t("region.all_countries")}</span>
               <Badge variant="secondary" className="ml-auto text-[10px]">
                 {filteredRegions.length}
               </Badge>
@@ -285,8 +287,8 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
             {filteredRegions.length === 0 && (
               <div className="text-center py-8 text-muted-foreground" role="status">
                 <Globe className="h-8 w-8 mx-auto mb-2 opacity-50" aria-hidden="true" />
-                <p className="text-sm">No countries found</p>
-                <p className="text-xs">Try a different search term</p>
+                <p className="text-sm">{t("region.no_results")}</p>
+                <p className="text-xs">{t("region.try_different")}</p>
               </div>
             )}
           </div>
@@ -294,7 +296,7 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
 
         <div className="p-2 border-t bg-muted/30 text-center">
           <p className="text-[10px] text-muted-foreground">
-            {regions.length} countries supported
+            {t("region.countries_supported", { count: regions.length })}
           </p>
         </div>
       </PopoverContent>

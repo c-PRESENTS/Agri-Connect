@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { LiveSellersRail } from "@/components/live-sellers-rail";
 
 interface SplitMapLayoutProps {
@@ -28,11 +29,12 @@ export function SplitMapLayout({
   bottomSubtitle,
   mapProps,
 }: SplitMapLayoutProps) {
-  const title = bottomTitle ?? mapProps?.title ?? "Nearby sellers & live activity";
+  const { t } = useTranslation();
+  const title = bottomTitle ?? mapProps?.title ?? t("map.farmers_and_products");
   const subtitle =
     bottomSubtitle ??
     mapProps?.subtitle ??
-    "Click a marker on the map to see seller details on the right";
+    t("map.nearby_products");
   return (
     <div className="flex flex-col w-full">
       {/* Top: full-width page content */}

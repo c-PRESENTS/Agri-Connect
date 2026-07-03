@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Bell, TrendingUp, MapPin, Clock, Megaphone, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ interface DemandAlertsProps {
 }
 
 export function DemandAlerts({ className, compact = false }: DemandAlertsProps) {
+  const { t } = useTranslation();
   const { data: alerts = [], isLoading } = useQuery<DemandAlert[]>({
     queryKey: ["/api/demand-alerts"],
   });
@@ -23,11 +25,11 @@ export function DemandAlerts({ className, compact = false }: DemandAlertsProps) 
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Megaphone className="h-4 w-4 text-primary" />
-            Demand Alerts
+            {t("demand.badge_title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center p-4 sm:p-8">
-          <div className="animate-pulse text-muted-foreground">Loading alerts...</div>
+          <div className="animate-pulse text-muted-foreground">{t("common.loading")}</div>
         </CardContent>
       </Card>
     );
@@ -40,7 +42,7 @@ export function DemandAlerts({ className, compact = false }: DemandAlertsProps) 
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Megaphone className="h-4 w-4 text-primary" />
-              Demand Alerts
+              {t("demand.badge_title")}
             </CardTitle>
             <Badge variant="secondary">{alerts.length}</Badge>
           </div>
@@ -74,7 +76,7 @@ export function DemandAlerts({ className, compact = false }: DemandAlertsProps) 
           ))}
           {alerts.length > 3 && (
             <Button variant="ghost" className="w-full gap-2 text-sm" data-testid="button-view-all-alerts">
-              View all {alerts.length} alerts
+              {t("demand.view_all_button")} {alerts.length} {t("demand.badge_title")}
               <ChevronRight className="h-4 w-4" />
             </Button>
           )}
@@ -89,12 +91,12 @@ export function DemandAlerts({ className, compact = false }: DemandAlertsProps) 
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-primary" />
-            Demand Alerts Near You
+            {t("demand.title")}
           </CardTitle>
-          <Badge variant="secondary">{alerts.length} Active</Badge>
+          <Badge variant="secondary">{alerts.length} {t("demand.tab_active")}</Badge>
         </div>
         <p className="text-sm text-muted-foreground">
-          Buyers in your area are looking for these products
+          {t("demand.description")}
         </p>
       </CardHeader>
       <CardContent>
@@ -111,6 +113,7 @@ export function DemandAlerts({ className, compact = false }: DemandAlertsProps) 
 }
 
 function AlertCard({ alert }: { alert: DemandAlert }) {
+  const { t } = useTranslation();
   return (
     <Card className="overflow-visible" data-testid={`demand-alert-${alert.id}`}>
       <CardContent className="p-4">
@@ -140,14 +143,14 @@ function AlertCard({ alert }: { alert: DemandAlert }) {
                 }
               >
                 {alert.urgency === "high"
-                  ? "Urgent"
+                  ? t("demand.tab_urgent")
                   : alert.urgency === "medium"
-                  ? "Moderate"
+                  ? t("demand.sort_urgency")
                   : "Standard"}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mb-2">
-              Quantity needed: <span className="font-medium text-foreground">{alert.quantity}</span>
+              {t("map.quantity")}: <span className="font-medium text-foreground">{alert.quantity}</span>
             </p>
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
@@ -162,12 +165,12 @@ function AlertCard({ alert }: { alert: DemandAlert }) {
           </div>
           <div className="text-right">
             <p className="text-lg font-bold text-primary">{alert.priceRange}</p>
-            <p className="text-xs text-muted-foreground">per {alert.unit}</p>
+            <p className="text-xs text-muted-foreground">{t("product.add_short")} {alert.unit}</p>
           </div>
         </div>
         <div className="flex gap-2 mt-4">
           <Button className="flex-1" data-testid={`button-respond-alert-${alert.id}`}>
-            Respond to Demand
+            {t("demand.respond_button")}
           </Button>
           <Button variant="outline" size="icon" data-testid={`button-save-alert-${alert.id}`}>
             <Bell className="h-4 w-4" />

@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TopNavigation } from "@/components/top-navigation";
+import { useTranslation } from "react-i18next";
 
 import { getProductImage } from "@/lib/product-images";
 import { isSellerOnline } from "@/lib/seller-presence";
@@ -152,15 +153,16 @@ interface FarmerMarker {
 const URGENCY_COLORS = { high: "bg-red-100 text-red-700 border-red-200", medium: "bg-amber-100 text-amber-700 border-amber-200", low: "bg-green-100 text-green-700 border-green-200" };
 const BUYER_ICONS: Record<string, string> = { restaurant: "🍽️", retailer: "🏪", individual: "👤", processor: "🏭", school: "🏫", hospital: "🏥" };
 
-const RIGHT_PANEL_TABS: { id: RightPanelType; icon: any; label: string; shortLabel: string; color: string }[] = [
-  { id: "farmers", icon: Users, label: "Farmers", shortLabel: "Farm", color: "text-green-600" },
-  { id: "food", icon: Wheat, label: "Available Food", shortLabel: "Food", color: "text-amber-600" },
-  { id: "needs", icon: Radio, label: "Live Needs", shortLabel: "Need", color: "text-red-500" },
-  { id: "post", icon: Plus, label: "Post Need", shortLabel: "Post", color: "text-blue-600" },
-  { id: "shapes", icon: PenTool, label: "My Parcels", shortLabel: "Plot", color: "text-purple-600" },
+const RIGHT_PANEL_TABS: { id: RightPanelType; icon: any; labelKey: string; shortLabelKey: string; color: string }[] = [
+  { id: "farmers", icon: Users, labelKey: "map.tab_farmers", shortLabelKey: "map.tab_farmers_short", color: "text-green-600" },
+  { id: "food", icon: Wheat, labelKey: "map.tab_food", shortLabelKey: "map.tab_food_short", color: "text-amber-600" },
+  { id: "needs", icon: Radio, labelKey: "map.tab_needs", shortLabelKey: "map.tab_needs_short", color: "text-red-500" },
+  { id: "post", icon: Plus, labelKey: "map.tab_post", shortLabelKey: "map.tab_post_short", color: "text-blue-600" },
+  { id: "shapes", icon: PenTool, labelKey: "map.tab_parcels", shortLabelKey: "map.tab_parcels_short", color: "text-purple-600" },
 ];
 
 export default function SmartMapPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [activeLayer, setActiveLayer] = useState<keyof typeof TILE_LAYERS>("standard");
   const [showHeatmap, setShowHeatmap] = useState(false);
@@ -246,11 +248,11 @@ export default function SmartMapPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/local-needs"] });
       refetchNeeds();
-      toast({ title: "Demand posted!", description: "Farmers in your area will see your need." });
+      toast({ title: t("map.demand_posted"), description: t("map.demand_posted_desc") });
       setPostForm({ productName: "", quantity: "", unit: "kg", priceRange: "", addressLine: "", city: "", postcode: "", location: "", urgency: "medium", buyerType: "individual", description: "", deadline: "" });
       setRightPanel("needs");
     },
-    onError: () => toast({ title: "Failed to post demand", variant: "destructive" }),
+    onError: () => toast({ title: t("map.demand_posted_failed"), variant: "destructive" }),
   });
 
   const farmerMarkers: FarmerMarker[] = products.reduce((acc, product) => {
@@ -309,9 +311,9 @@ export default function SmartMapPage() {
       pos => {
         const loc: [number, number] = [pos.coords.latitude, pos.coords.longitude];
         setUserLocation(loc); setFlyTo(loc); setIsLocating(false);
-        toast({ title: "Location found!" });
+        toast({ title: t("map.location_found") });
       },
-      () => { setIsLocating(false); toast({ title: "Could not get location", variant: "destructive" }); },
+      () => { setIsLocating(false); toast({ title: t("map.location_failed"), variant: "destructive" }); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, [toast]);
@@ -320,19 +322,19 @@ export default function SmartMapPage() {
   const handleUndoPoint = useCallback(() => setDrawnPoints(prev => prev.slice(0, -1)), []);
 
   const handleSavePolygon = () => {
-    if (drawnPoints.length < 3) { toast({ title: "Need at least 3 points", variant: "destructive" }); return; }
+    if (drawnPoints.length < 3) { toast({ title: t("map.need_3_points"), variant: "destructive" }); return; }
     const area = calcArea(drawnPoints);
     const colors = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
     setSavedPolygons(prev => [...prev, { id: `poly-${Date.now()}`, coords: [...drawnPoints], label: `Land Parcel ${prev.length + 1}`, area, color: colors[prev.length % colors.length] }]);
     setDrawnPoints([]); setDrawMode("none");
-    toast({ title: "Land parcel saved!", description: `Area: ${area.toFixed(2)} ha` });
+    toast({ title: t("map.parcel_saved"), description: `Area: ${area.toFixed(2)} ha` });
   };
 
   const handleExportGDB = () => {
     const geoJson = { type: "FeatureCollection", features: savedPolygons.map(p => ({ type: "Feature", properties: { id: p.id, label: p.label, area_ha: p.area.toFixed(2) }, geometry: { type: "Polygon", coordinates: [[...p.coords.map(c => [c[1], c[0]]), [p.coords[0][1], p.coords[0][0]]]] } })) };
     const blob = new Blob([JSON.stringify(geoJson, null, 2)], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "land-parcels.geojson"; a.click();
-    toast({ title: "Exported GeoJSON / GDB format" });
+    toast({ title: t("map.exported_geojson") });
   };
 
   const handleImportGDB = () => {
@@ -346,9 +348,9 @@ export default function SmartMapPage() {
           if (data.type === "FeatureCollection") {
             const imported = data.features.filter((f: any) => f.geometry?.type === "Polygon").map((f: any, i: number) => ({ id: `imported-${Date.now()}-${i}`, coords: f.geometry.coordinates[0].slice(0, -1).map((c: number[]) => [c[1], c[0]] as [number, number]), label: f.properties?.label || `Imported ${i + 1}`, area: f.properties?.area_ha ? Number(f.properties.area_ha) : 0, color: "#8b5cf6" }));
             setSavedPolygons(prev => [...prev, ...imported]);
-            toast({ title: `Imported ${imported.length} parcels` });
+            toast({ title: t("map.imported_count", { count: imported.length }) });
           }
-        } catch { toast({ title: "Invalid GeoJSON file", variant: "destructive" }); }
+        } catch { toast({ title: t("map.invalid_geojson"), variant: "destructive" }); }
       };
       reader.readAsText(file);
     };
@@ -375,12 +377,12 @@ export default function SmartMapPage() {
             data-testid="btn-group-layers"
           >
             <LayerIcon className="h-3.5 w-3.5" />
-            <span>Layers</span>
+            <span>{t('map.layers')}</span>
             <ChevronDown className={`h-3 w-3 transition-transform ${openGroup === "layers" ? "rotate-180" : ""}`} />
           </button>
           {openGroup === "layers" && (
             <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-xl shadow-xl z-[1002] p-1.5 min-w-[160px]">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-2 py-1">Map Style</div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-2 py-1">{t('map.style')}</div>
               {(Object.keys(TILE_LAYERS) as Array<keyof typeof TILE_LAYERS>).map(key => {
                 const layer = TILE_LAYERS[key];
                 const Icon = layer.icon;
@@ -405,18 +407,18 @@ export default function SmartMapPage() {
             data-testid="btn-group-overlays"
           >
             <Layers className="h-3.5 w-3.5" />
-            <span>Overlays</span>
+            <span>{t('map.overlays')}</span>
             <ChevronDown className={`h-3 w-3 transition-transform ${openGroup === "overlays" ? "rotate-180" : ""}`} />
           </button>
           {openGroup === "overlays" && (
             <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-xl shadow-xl z-[1002] p-1.5 min-w-[180px]">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-2 py-1">Toggle Overlays</div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-2 py-1">{t('map.toggle_overlays')}</div>
               {[
-                { label: "Farmers", state: showFarmers, set: setShowFarmers, color: "text-green-600", icon: Users },
-                { label: "Demand Pins", state: showDemand, set: setShowDemand, color: "text-amber-600", icon: ShoppingBag },
-                { label: "Heatmap", state: showHeatmap, set: setShowHeatmap, color: "text-red-500", icon: BarChart3 },
-                { label: "Survey Layer", state: showSurveyLayer, set: setShowSurveyLayer, color: "text-purple-600", icon: FileText },
-                { label: "Irrigation", state: showIrrigationLayer, set: setShowIrrigationLayer, color: "text-blue-500", icon: Droplets },
+                { label: t('map.tab_farmers'), state: showFarmers, set: setShowFarmers, color: "text-green-600", icon: Users },
+                { label: t('map.demand_pins'), state: showDemand, set: setShowDemand, color: "text-amber-600", icon: ShoppingBag },
+                { label: t('map.heatmap_legend'), state: showHeatmap, set: setShowHeatmap, color: "text-red-500", icon: BarChart3 },
+                { label: t('map.survey_layer'), state: showSurveyLayer, set: setShowSurveyLayer, color: "text-purple-600", icon: FileText },
+                { label: t('map.irrigation_legend'), state: showIrrigationLayer, set: setShowIrrigationLayer, color: "text-blue-500", icon: Droplets },
               ].map(({ label, state, set, color, icon: Icon }) => (
                 <button key={label} onClick={() => set(v => !v)}
                   className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-all ${state ? "bg-muted font-medium" : "hover:bg-muted text-muted-foreground"}`}>
@@ -439,37 +441,37 @@ export default function SmartMapPage() {
             data-testid="btn-group-drawing"
           >
             <PenTool className="h-3.5 w-3.5" />
-            <span>Drawing</span>
+            <span>{t('map.drawing')}</span>
             <ChevronDown className={`h-3 w-3 transition-transform ${openGroup === "drawing" ? "rotate-180" : ""}`} />
           </button>
           {openGroup === "drawing" && (
             <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-xl shadow-xl z-[1002] p-1.5 min-w-[180px]">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-2 py-1">Land Parcel Tools</div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-2 py-1">{t('map.land_parcel_tools')}</div>
               <button onClick={() => { setDrawMode(drawMode === "polygon" ? "none" : "polygon"); setDrawnPoints([]); setOpenGroup(null); }}
                 className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-all ${drawMode === "polygon" ? "bg-green-100 text-green-700 font-semibold dark:bg-green-900 dark:text-green-300" : "hover:bg-muted text-foreground"}`}>
                 <PenTool className="h-3.5 w-3.5" />
-                {drawMode === "polygon" ? "Stop Drawing" : "Draw Polygon"}
+                {drawMode === "polygon" ? t('map.stop_drawing') : t('map.draw_polygon')}
               </button>
               {drawMode !== "none" && (
                 <>
                   <button onClick={() => { handleUndoPoint(); setOpenGroup(null); }} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs hover:bg-muted text-foreground">
-                    <span className="text-base leading-none">↩</span> Undo Last Point
+                    <span className="text-base leading-none">↩</span> {t('map.undo_last_point')}
                   </button>
                   <button onClick={() => { handleSavePolygon(); setOpenGroup(null); }} disabled={drawnPoints.length < 3}
                     className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs bg-primary/10 text-primary font-semibold disabled:opacity-40">
-                    Save ({drawnPoints.length} pts)
+                    {t('common.save')} ({drawnPoints.length} pts)
                   </button>
                   <button onClick={() => { setDrawnPoints([]); setDrawMode("none"); setOpenGroup(null); }} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-destructive hover:bg-red-50 dark:hover:bg-red-950">
-                    <X className="h-3.5 w-3.5" /> Clear Drawing
+                    <X className="h-3.5 w-3.5" /> {t('map.clear_drawing')}
                   </button>
                 </>
               )}
               <div className="border-t border-border/40 my-1" />
               <button onClick={() => { handleExportGDB(); setOpenGroup(null); }} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs hover:bg-muted text-muted-foreground">
-                <Download className="h-3.5 w-3.5" /> Export GeoJSON
+                <Download className="h-3.5 w-3.5" /> {t('map.export_geojson')}
               </button>
               <button onClick={() => { handleImportGDB(); setOpenGroup(null); }} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs hover:bg-muted text-muted-foreground">
-                <Upload className="h-3.5 w-3.5" /> Import GeoJSON
+                <Upload className="h-3.5 w-3.5" /> {t('map.import_geojson')}
               </button>
             </div>
           )}
@@ -483,7 +485,7 @@ export default function SmartMapPage() {
           data-testid="btn-locate"
         >
           {isLocating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Crosshair className="h-3.5 w-3.5" />}
-          <span>My Location</span>
+          <span>{t('map.my_location')}</span>
         </button>
 
         {/* Live stats */}
@@ -491,14 +493,14 @@ export default function SmartMapPage() {
           <div className="flex-shrink-0 flex items-center gap-1 lg:gap-1.5 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md lg:rounded-lg px-1.5 lg:px-2.5 py-0.5 lg:py-1 whitespace-nowrap">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
             <span className="font-semibold text-green-700 dark:text-green-300">{farmerMarkers.filter(f => f.isOnline).length}</span>
-            <span className="text-green-600 dark:text-green-400">on</span>
+            <span className="text-green-600 dark:text-green-400">{t('map.on_label')}</span>
           </div>
           <div className="flex-shrink-0 flex items-center gap-1 bg-muted rounded-md lg:rounded-lg px-1.5 lg:px-2.5 py-0.5 lg:py-1 whitespace-nowrap">
-            <span className="font-semibold text-foreground">{products.length}</span><span className="hidden lg:inline">products</span><span className="lg:hidden">prod</span>
+            <span className="font-semibold text-foreground">{products.length}</span><span className="hidden lg:inline">{t('map.products_count')}</span><span className="lg:hidden">{t('map.prod_short')}</span>
           </div>
           <div className="flex-shrink-0 flex items-center gap-1 bg-muted rounded-md lg:rounded-lg px-1.5 lg:px-2.5 py-0.5 lg:py-1 whitespace-nowrap">
             <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="font-semibold text-foreground">{localNeeds.length}</span><span>need</span>
+            <span className="font-semibold text-foreground">{localNeeds.length}</span><span>{t('map.need_count')}</span>
           </div>
         </div>
       </div>
@@ -510,7 +512,7 @@ export default function SmartMapPage() {
         {drawMode !== "none" && (
           <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] bg-background/90 backdrop-blur-sm border border-border rounded-xl px-4 py-2 shadow-xl text-sm font-medium flex items-center gap-3">
             <PenTool className="h-4 w-4 text-primary animate-pulse" />
-            <span>Click map to add points</span>
+            <span>{t('map.click_to_add_points')}</span>
             {drawnPoints.length >= 3 && <Badge className="bg-primary/10 text-primary border-primary/20">{currentArea.toFixed(2)} ha</Badge>}
             <span className="text-xs text-muted-foreground">{drawnPoints.length} pts</span>
           </div>
@@ -664,13 +666,13 @@ export default function SmartMapPage() {
                 <button
                   key={tab.id}
                   onClick={() => setRightPanel(tab.id)}
-                  title={tab.label}
+                  title={t(tab.labelKey)}
                   className={`flex flex-col items-center gap-0.5 w-8 lg:w-12 py-1 lg:py-2.5 rounded-md lg:rounded-xl text-[7px] lg:text-[9px] font-semibold transition-all ${active ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted text-muted-foreground"}`}
                   data-testid={`tab-${tab.id}`}
                 >
                   <Icon className={`h-3 w-3 lg:h-4 lg:w-4 ${active ? "" : tab.color}`} />
-                  <span className="leading-tight text-center w-full lg:hidden">{tab.shortLabel}</span>
-                  <span className="leading-tight text-center hidden lg:block" style={{ maxWidth: 44 }}>{tab.label.split(" ").map((w, i) => <span key={i} className="block">{w}</span>)}</span>
+                  <span className="leading-tight text-center w-full lg:hidden">{t(tab.shortLabelKey)}</span>
+                  <span className="leading-tight text-center hidden lg:block" style={{ maxWidth: 44 }}>{t(tab.labelKey).split(" ").map((w, i) => <span key={i} className="block">{w}</span>)}</span>
                 </button>
               );
             })}
@@ -688,16 +690,16 @@ export default function SmartMapPage() {
                 <div className="p-2 lg:p-4 border-b border-border/50 flex-shrink-0">
                   <h2 className="font-bold text-xs lg:text-base flex items-center gap-1.5 lg:gap-2">
                     <Users className="h-3.5 w-3.5 lg:h-4 lg:w-4 text-green-600" />
-                    Farmers & Products
+                    {t("map.farmers_and_products")}
                   </h2>
-                  <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5">{farmerMarkers.filter(f => f.isOnline).length} online · {farmerMarkers.length} total · sorted by distance{userLocation ? " from you" : " from map view"}</p>
+                  <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5">{farmerMarkers.filter(f => f.isOnline).length} {t("map.on_label")} · {farmerMarkers.length} {t("map.total")} · {t(userLocation ? "map.sorted_by_distance_you" : "map.sorted_by_distance_map")}</p>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-1.5 lg:p-3 space-y-1.5 lg:space-y-2">
                     {sortedFarmerMarkers.length === 0 && (
                       <div className="text-center py-10 text-muted-foreground">
                         <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">Loading farmers...</p>
+                        <p className="text-sm">{t("map.loading_farmers")}</p>
                       </div>
                     )}
                     {sortedFarmerMarkers.map(farmer => (
@@ -768,9 +770,9 @@ export default function SmartMapPage() {
                 <div className="p-4 border-b border-border/50 flex-shrink-0">
                   <h2 className="font-bold text-base flex items-center gap-2">
                     <Wheat className="h-4 w-4 text-amber-600" />
-                    Available Food with Farmers
+                    {t("map.available_food_with_farmers")}
                   </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">{products.length} products from {farmerMarkers.length} local farmers</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("map.products_from_farmers", { count: products.length, farmers: farmerMarkers.length })}</p>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-3 space-y-3">
@@ -826,26 +828,26 @@ export default function SmartMapPage() {
                     <div>
                       <h2 className="font-bold text-base flex items-center gap-2">
                         <Radio className="h-4 w-4 text-red-500 animate-pulse" />
-                        Live Local Needs
+                        {t("map.live_local_needs")}
                       </h2>
-                      <p className="text-xs text-muted-foreground mt-0.5">Real-time buyer demand in your area</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t("map.realtime_buyer_demand")}</p>
                     </div>
                     <Button size="sm" className="text-xs h-7" onClick={() => setRightPanel("post")}>
-                      <Plus className="h-3.5 w-3.5 mr-1" />Post
+                      <Plus className="h-3.5 w-3.5 mr-1" />{t("map.post_btn")}
                     </Button>
                   </div>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                      <Input placeholder="Search needs..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-7 h-8 text-xs" />
+                      <Input placeholder={t("map.search_needs")} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-7 h-8 text-xs" />
                     </div>
                     <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
                       <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="high">🔴 High</SelectItem>
-                        <SelectItem value="medium">🟡 Medium</SelectItem>
-                        <SelectItem value="low">🟢 Low</SelectItem>
+                        <SelectItem value="all">{t("common.all")}</SelectItem>
+                        <SelectItem value="high">🔴 {t("map.urgency_high")}</SelectItem>
+                        <SelectItem value="medium">🟡 {t("map.urgency_medium")}</SelectItem>
+                        <SelectItem value="low">🟢 {t("map.urgency_low")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -888,7 +890,7 @@ export default function SmartMapPage() {
                     {filteredNeeds.length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
                         <ShoppingBag className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">No needs match your filters</p>
+                        <p className="text-sm">{t("map.no_needs_match")}</p>
                       </div>
                     )}
                   </div>
@@ -901,26 +903,26 @@ export default function SmartMapPage() {
               <div className="flex flex-col h-full">
                 <div className="p-4 border-b border-border/50 flex-shrink-0 flex items-center justify-between">
                   <div>
-                    <h2 className="font-bold text-base">Post a Need</h2>
-                    <p className="text-xs text-muted-foreground">Let farmers know what you need</p>
+                    <h2 className="font-bold text-base">{t("map.post_a_need")}</h2>
+                    <p className="text-xs text-muted-foreground">{t("map.post_need_desc")}</p>
                   </div>
                   <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => setRightPanel("needs")}>
-                    <ChevronLeft className="h-3.5 w-3.5 mr-1" />Back
+                    <ChevronLeft className="h-3.5 w-3.5 mr-1" />{t("common.back")}
                   </Button>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-4 space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-xs">Product Name *</Label>
-                      <Input placeholder="e.g. Organic Tomatoes" value={postForm.productName} onChange={e => setPostForm(p => ({ ...p, productName: e.target.value }))} className="h-9 text-sm" />
+                      <Label className="text-xs">{t("map.product_name")}</Label>
+                      <Input placeholder={t("map.product_name_placeholder")} value={postForm.productName} onChange={e => setPostForm(p => ({ ...p, productName: e.target.value }))} className="h-9 text-sm" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-2">
-                        <Label className="text-xs">Quantity *</Label>
+                        <Label className="text-xs">{t("map.quantity")}</Label>
                         <Input type="number" placeholder="100" value={postForm.quantity} onChange={e => setPostForm(p => ({ ...p, quantity: e.target.value }))} className="h-9 text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs">Unit</Label>
+                        <Label className="text-xs">{t("map.unit")}</Label>
                         <Select value={postForm.unit} onValueChange={v => setPostForm(p => ({ ...p, unit: v }))}>
                           <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -930,25 +932,25 @@ export default function SmartMapPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs">Price Range</Label>
-                      <Input placeholder="e.g. £1.50-2.00/kg" value={postForm.priceRange} onChange={e => setPostForm(p => ({ ...p, priceRange: e.target.value }))} className="h-9 text-sm" />
+                      <Label className="text-xs">{t("map.price_range")}</Label>
+                      <Input placeholder={t("map.price_range_placeholder")} value={postForm.priceRange} onChange={e => setPostForm(p => ({ ...p, priceRange: e.target.value }))} className="h-9 text-sm" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs">Address Line</Label>
-                      <Input placeholder="e.g. 14 High Street (optional)" value={postForm.addressLine} onChange={e => setPostForm(p => ({ ...p, addressLine: e.target.value }))} className="h-9 text-sm" />
+                      <Label className="text-xs">{t("map.address_line")}</Label>
+                      <Input placeholder={t("map.address_placeholder")} value={postForm.addressLine} onChange={e => setPostForm(p => ({ ...p, addressLine: e.target.value }))} className="h-9 text-sm" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-2">
-                        <Label className="text-xs">City / Town *</Label>
-                        <Input placeholder="e.g. Bristol" value={postForm.city} onChange={e => {
+                        <Label className="text-xs">{t("map.city_town")}</Label>
+                        <Input placeholder={t("map.city_placeholder")} value={postForm.city} onChange={e => {
                           const city = e.target.value;
                           const loc = [postForm.addressLine, city, postForm.postcode].filter(Boolean).join(", ");
                           setPostForm(p => ({ ...p, city, location: loc || city }));
                         }} className="h-9 text-sm" data-testid="input-city" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs">Postcode</Label>
-                        <Input placeholder="e.g. BS1 1AA" value={postForm.postcode} onChange={e => {
+                        <Label className="text-xs">{t("map.postcode")}</Label>
+                        <Input placeholder={t("map.postcode_placeholder")} value={postForm.postcode} onChange={e => {
                           const postcode = e.target.value;
                           const loc = [postForm.addressLine, postForm.city, postcode].filter(Boolean).join(", ");
                           setPostForm(p => ({ ...p, postcode, location: loc || postForm.city }));
@@ -957,18 +959,18 @@ export default function SmartMapPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-2">
-                        <Label className="text-xs">Urgency</Label>
+                        <Label className="text-xs">{t("map.urgency")}</Label>
                         <Select value={postForm.urgency} onValueChange={v => setPostForm(p => ({ ...p, urgency: v as any }))}>
                           <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="high">🔴 High</SelectItem>
-                            <SelectItem value="medium">🟡 Medium</SelectItem>
-                            <SelectItem value="low">🟢 Low</SelectItem>
+                            <SelectItem value="high">🔴 {t("map.urgency_high")}</SelectItem>
+                            <SelectItem value="medium">🟡 {t("map.urgency_medium")}</SelectItem>
+                            <SelectItem value="low">🟢 {t("map.urgency_low")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs">Buyer Type</Label>
+                        <Label className="text-xs">{t("map.buyer_type")}</Label>
                         <Select value={postForm.buyerType} onValueChange={v => setPostForm(p => ({ ...p, buyerType: v }))}>
                           <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -980,17 +982,17 @@ export default function SmartMapPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs">Deadline</Label>
+                      <Label className="text-xs">{t("map.deadline")}</Label>
                       <Input type="date" value={postForm.deadline} onChange={e => setPostForm(p => ({ ...p, deadline: e.target.value }))} className="h-9 text-sm" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs">Description</Label>
-                      <Textarea placeholder="Additional requirements, quality specs, delivery info..." value={postForm.description} onChange={e => setPostForm(p => ({ ...p, description: e.target.value }))} className="text-sm resize-none" rows={3} />
+                      <Label className="text-xs">{t("map.description")}</Label>
+                      <Textarea placeholder={t("map.description_placeholder")} value={postForm.description} onChange={e => setPostForm(p => ({ ...p, description: e.target.value }))} className="text-sm resize-none" rows={3} />
                     </div>
                     <Button className="w-full" onClick={() => postNeedMutation.mutate(postForm)}
                       disabled={!postForm.productName || !postForm.quantity || !postForm.city || postNeedMutation.isPending}>
                       {postNeedMutation.isPending ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-                      Post to Live Feed
+                      {t("map.post_to_live_feed")}
                     </Button>
                   </div>
                 </ScrollArea>
@@ -1002,8 +1004,8 @@ export default function SmartMapPage() {
               <div className="flex flex-col h-full">
                 <div className="p-4 border-b border-border/50 flex-shrink-0 flex items-center justify-between">
                   <div>
-                    <h2 className="font-bold text-base">My Land Parcels</h2>
-                    <p className="text-xs text-muted-foreground">{savedPolygons.length} parcel{savedPolygons.length !== 1 ? "s" : ""} saved</p>
+                    <h2 className="font-bold text-base">{t("map.my_land_parcels")}</h2>
+                    <p className="text-xs text-muted-foreground">{savedPolygons.length} {t("map.parcel")}{savedPolygons.length !== 1 ? "s" : ""} {t("map.saved")}</p>
                   </div>
                   <div className="flex gap-1">
                     <Button size="sm" variant="outline" className="text-xs h-7" onClick={handleExportGDB}><Download className="h-3.5 w-3.5 mr-1" />Export</Button>

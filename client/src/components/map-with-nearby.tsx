@@ -1,5 +1,6 @@
 import "leaflet/dist/leaflet.css";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
@@ -120,13 +121,16 @@ export function MapWithNearby({
   products: providedProducts,
   center = [54.0, -2.5],
   zoom = 6,
-  title = "Sellers near you",
-  subtitle = "Browse live listings from the map area below",
+  title = "",
+  subtitle = "",
   mapHeight,
   listHeight,
   compact = false,
   className = "",
 }: MapWithNearbyProps) {
+  const { t } = useTranslation();
+  const resolvedTitle = title || t("map.nearby_products");
+  const resolvedSubtitle = subtitle || t("map.available_food_with_farmers");
   const effectiveMapHeight = mapHeight ?? (compact ? 220 : 320);
   const effectiveListHeight = listHeight ?? (compact ? 260 : 420);
   const { data: fetched = [] } = useQuery<Product[]>({
@@ -150,8 +154,8 @@ export function MapWithNearby({
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
-            <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{resolvedTitle}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{resolvedSubtitle}</p>
           </div>
           <Button
             variant="ghost"
@@ -161,7 +165,7 @@ export function MapWithNearby({
             data-testid="button-toggle-map-tile"
           >
             <Layers className="w-3.5 h-3.5 mr-1" />
-            {tile === "standard" ? "Satellite" : "Standard"}
+            {tile === "standard" ? t("map.layer_satellite") : t("map.layer_standard")}
           </Button>
         </div>
         <div style={{ height: effectiveMapHeight }} className="relative">
@@ -197,12 +201,12 @@ export function MapWithNearby({
                         {s.rating.toFixed(1)}
                       </span>
                       <span>·</span>
-                      <span>{s.productCount} listings</span>
+                      <span>{s.productCount} {t("map.products_short")}</span>
                     </div>
                     <Link href={`/sellers/${s.id}`}>
-                      <Button size="sm" className="mt-2 w-full h-7 text-xs" data-testid={`button-view-seller-${s.id}`}>
-                        View shop
-                      </Button>
+                        <Button size="sm" className="mt-2 w-full h-7 text-xs" data-testid={`button-view-seller-${s.id}`}>
+                          {t("live_sellers.visit_shop")}
+                        </Button>
                     </Link>
                   </div>
                 </Popup>
@@ -216,10 +220,10 @@ export function MapWithNearby({
         <div className="flex items-center justify-between px-3 py-2 border-b">
           <div className="flex items-center gap-2 min-w-0">
             <Navigation className="w-4 h-4 text-primary shrink-0" />
-            <p className="text-sm font-semibold truncate">In view</p>
+            <p className="text-sm font-semibold truncate">{t("map.nearby_products")}</p>
           </div>
           <Badge variant="secondary" className="text-[11px]" data-testid="badge-nearby-count">
-            {visibleSellers.length} sellers
+            {visibleSellers.length} {t("map.farmers_label")}
           </Badge>
         </div>
         <ScrollArea style={{ height: effectiveListHeight }}>
@@ -227,7 +231,7 @@ export function MapWithNearby({
             {visibleSellers.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
                 <MapPin className="w-6 h-6 mx-auto mb-2 opacity-50" />
-                Pan or zoom the map to find sellers in another area.
+                {t("map.no_needs_match")}
               </div>
             ) : (
               visibleSellers.map((s) => {
@@ -250,7 +254,7 @@ export function MapWithNearby({
                           <p className="text-sm font-semibold truncate">{s.name}</p>
                           {s.isOnline && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-600 dark:text-green-400 shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Live
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> {t("common.live")}
                             </span>
                           )}
                         </div>
@@ -264,7 +268,7 @@ export function MapWithNearby({
                             {s.rating.toFixed(1)}
                           </span>
                           <span className="text-muted-foreground">·</span>
-                          <span className="text-muted-foreground">{s.productCount} listings</span>
+                          <span className="text-muted-foreground">{s.productCount} {t("map.products_short")}</span>
                           <span className="text-muted-foreground">·</span>
                           <span className="font-semibold text-primary">
                             from £{s.topProduct.price.toFixed(2)}

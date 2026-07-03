@@ -199,12 +199,12 @@ export default function CartPage() {
                         </p>
                         {item.purchaseMode === "subscribe" && (
                           <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                            ↻ Subscribe • {item.subFrequency === "weekly" ? "Weekly" : item.subFrequency === "biweekly" ? "Every 2 weeks" : "Monthly"}
+                            ↻ Subscribe • {item.subFrequency === "weekly" ? t("cart.weekly") : item.subFrequency === "biweekly" ? t("cart.biweekly") : t("cart.monthly")}
                           </span>
                         )}
                         {item.unitPrice !== undefined && item.unitPrice < item.product.price && item.purchaseMode !== "subscribe" && (
                           <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 px-1.5 py-0.5 rounded">
-                            🏷 Bulk discount
+                            🏷 {t("cart.bulk_discount")}
                           </span>
                         )}
                       </div>
@@ -241,7 +241,7 @@ export default function CartPage() {
               </div>
               {deliveryFee > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Add £{(FREE_DELIVERY_THRESHOLD - subtotal).toFixed(2)} more for free standard delivery
+                  {t("cart.add_more_for_free", { amount: (FREE_DELIVERY_THRESHOLD - subtotal).toFixed(2) })}
                 </p>
               )}
               <Separator />

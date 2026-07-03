@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { X, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,6 +14,7 @@ interface DeepSubPanelProps {
 }
 
 export function DeepSubPanel({ subId, onClose, onItemSelect }: DeepSubPanelProps) {
+  const { t } = useTranslation();
   const content = useMemo(() => {
     if (!subId) return [];
     return getSubSubcategories(subId);
@@ -23,7 +25,7 @@ export function DeepSubPanel({ subId, onClose, onItemSelect }: DeepSubPanelProps
       const sub = cat.subcategories.find(s => s.id === subId);
       if (sub) return sub.name;
     }
-    return "Details";
+    return t("nav.more");
   }, [subId]);
 
   // Don't render if no content
@@ -47,7 +49,7 @@ export function DeepSubPanel({ subId, onClose, onItemSelect }: DeepSubPanelProps
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm truncate">{subName}</h3>
-              <p className="text-[10px] text-muted-foreground">{content.reduce((acc, c) => acc + c.items.length, 0)} varieties</p>
+              <p className="text-[10px] text-muted-foreground">{content.reduce((acc, c) => acc + c.items.length, 0)} {t("nav.more")}</p>
             </div>
             <Button
               variant="ghost"

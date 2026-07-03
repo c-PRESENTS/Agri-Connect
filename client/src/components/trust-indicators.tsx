@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -17,34 +18,34 @@ import { SiFacebook, SiInstagram, SiX } from "react-icons/si";
 const trustBadges = [
   {
     icon: Shield,
-    title: "Secure Payments",
-    description: "256-bit SSL encryption",
+    title: "trust.secure_payments",
+    description: "trust.secure_desc",
   },
   {
     icon: Truck,
-    title: "Fast Delivery",
-    description: "Same-day available",
+    title: "trust.fast_delivery",
+    description: "trust.fast_desc",
   },
   {
     icon: RefreshCw,
-    title: "Easy Returns",
-    description: "30-day guarantee",
+    title: "trust.easy_returns",
+    description: "trust.returns_desc",
   },
   {
     icon: CreditCard,
-    title: "Multiple Payments",
-    description: "Cards, UPI, COD",
+    title: "trust.multiple_payments",
+    description: "trust.payments_desc",
   },
 ];
 
-const certifications = [
-  "Soil Association Certified",
-  "DEFRA Approved",
-  "Red Tractor Assured",
-  "LEAF Marque",
-];
-
 export function TrustIndicators() {
+  const { t } = useTranslation();
+  const certifications = [
+    t("trust.soil_association"),
+    t("trust.defra_approved"),
+    "Red Tractor Assured",
+    "LEAF Marque",
+  ];
   return (
     <>
       <section className="py-5 sm:py-10 md:py-14 px-4 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
@@ -65,8 +66,8 @@ export function TrustIndicators() {
                 >
                   <badge.icon className="h-8 w-8 text-primary" />
                 </motion.div>
-                <h3 className="font-semibold mb-1">{badge.title}</h3>
-                <p className="text-sm text-muted-foreground">{badge.description}</p>
+                <h3 className="font-semibold mb-1">{t(badge.title)}</h3>
+                <p className="text-sm text-muted-foreground">{t(badge.description)}</p>
               </motion.div>
             ))}
           </div>
@@ -162,15 +163,15 @@ export function TrustIndicators() {
             
             {[
               {
-                title: "Products",
+                title: t("trust.footer_products"),
                 links: ["Fresh Vegetables", "Fruits", "Dairy & Eggs", "Meat & Poultry", "Organic Range"],
               },
               {
-                title: "For Farmers",
+                title: t("trust.footer_farmers"),
                 links: ["Sell Your Produce", "Photo-Sell AI", "Demand Alerts", "Government Schemes", "Training"],
               },
               {
-                title: "Support",
+                title: t("trust.footer_support"),
                 links: ["Help Centre", "Contact Us", "FAQs", "Delivery Info", "Returns Policy"],
               },
             ].map((section) => (

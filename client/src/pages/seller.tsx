@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { TopNavigation } from "@/components/top-navigation";
 import { motion } from "framer-motion";
@@ -46,14 +47,15 @@ const quickActions = [
 
 const tips = [
   { icon: Camera,     title: "Use Photo-Sell",       body: "Take a photo of your produce — AI detects the product, quantity and suggests a price in seconds." },
-  { icon: Zap,        title: "Set Demand Alerts",    body: "Get notified instantly when buyers near you request a product you grow." },
+  { icon: Zap,        title: "Set Demand Alerts",    body: "Get notified instantly when buyers near you search a product you grow." },
   { icon: Star,       title: "Build Your Rating",    body: "Prompt delivery and fresh produce earns 5-star reviews, boosting your visibility." },
   { icon: TrendingUp, title: "Track Market Prices",  body: "Check the Farmers Help Point daily for live market prices before you list." },
-];
+ ];
 
 type TabId = "overview" | "orders";
 
 export default function SellerPage() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -140,12 +142,12 @@ export default function SellerPage() {
               <Store className="h-6 w-6 text-white" />
             </div>
             <div>
-              <div className="text-white/60 text-sm">Welcome back{user?.name ? `, ${user.name}` : ""}</div>
-              <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">Seller Hub</h1>
+              <div className="text-white/60 text-sm">{t("seller.title")}{user?.name ? `, ${user.name}` : ""}</div>
+              <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">{t("seller.title")}</h1>
             </div>
             {isAuthenticated && (
               <Badge className="ml-auto bg-green-500/20 text-green-300 border-green-500/30 text-xs">
-                Active Seller
+                {t("seller.title")}
               </Badge>
             )}
           </div>
@@ -153,9 +155,9 @@ export default function SellerPage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: "My Listings",    value: myProducts.length || "0",          icon: Package,    color: "text-emerald-400" },
-              { label: "Pending Orders", value: pendingOrders || "—",              icon: Clock,      color: "text-amber-400" },
-              { label: "Revenue",        value: totalRevenue > 0 ? `£${totalRevenue.toFixed(0)}` : "—", icon: DollarSign, color: "text-sky-400" },
+              { label: t("seller.total_products"),    value: myProducts.length || "0",          icon: Package,    color: "text-emerald-400" },
+              { label: t("seller.pending_orders"), value: pendingOrders || "—",              icon: Clock,      color: "text-amber-400" },
+              { label: t("seller.total_revenue"),        value: totalRevenue > 0 ? `£${totalRevenue.toFixed(0)}` : "—", icon: DollarSign, color: "text-sky-400" },
             ].map((s) => (
               <div key={s.label} className="bg-white/10 border border-white/15 rounded-xl px-3 py-2.5 flex items-center gap-2">
                 <s.icon className={`h-5 w-5 ${s.color} flex-shrink-0`} />
@@ -180,7 +182,7 @@ export default function SellerPage() {
                     : "text-white/70 hover:text-white"
                 }`}
               >
-                {tab === "orders" ? `Orders${sellerOrders.length > 0 ? ` (${sellerOrders.length})` : ""}` : "Overview"}
+                {tab === "orders" ? `${t("seller.orders_title")}${sellerOrders.length > 0 ? ` (${sellerOrders.length})` : ""}` : t("seller.performance_title")}
               </button>
             ))}
           </div>
@@ -193,9 +195,9 @@ export default function SellerPage() {
           <div className="space-y-8">
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-bold">Quick Actions</h2>
+                <h2 className="text-base font-bold">{t("seller.quick_actions")}</h2>
                 <Button size="sm" onClick={() => setLocation("/dashboard/photo-sell")} className="gap-1.5 rounded-full h-8 text-xs">
-                  <Plus className="h-3.5 w-3.5" /> List a Product
+                  <Plus className="h-3.5 w-3.5" /> {t("seller.list_product_button")}
                 </Button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -222,9 +224,9 @@ export default function SellerPage() {
 
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-bold">Order Management</h2>
+                <h2 className="text-base font-bold">{t("seller.orders_title")}</h2>
                 <Button size="sm" variant="outline" onClick={() => setActiveTab("orders")} className="gap-1.5 h-8 text-xs">
-                  <ClipboardList className="h-3.5 w-3.5" /> View All Orders
+                  <ClipboardList className="h-3.5 w-3.5" /> {t("seller.view_all_orders")}
                 </Button>
               </div>
               <Card className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
@@ -233,20 +235,20 @@ export default function SellerPage() {
                     <ClipboardList className="h-6 w-6 text-blue-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-black text-base">Manage Your Orders</div>
+                    <div className="font-black text-base">{t("seller.orders_title")}</div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      View incoming orders, update fulfillment status, and track deliveries from your buyers.
+                      {t("seller.orders_description")}
                     </p>
                   </div>
                   <Button onClick={() => setActiveTab("orders")} size="sm" className="rounded-full gap-2 flex-shrink-0">
-                    Open <ArrowRight className="h-3.5 w-3.5" />
+                    {t("seller.performance_title")} <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </Card>
             </section>
 
             <section>
-              <h2 className="text-base font-bold mb-3">Seller Tips</h2>
+              <h2 className="text-base font-bold mb-3">{t("seller.performance_metrics")}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {tips.map((t, i) => (
                   <motion.div
@@ -274,13 +276,13 @@ export default function SellerPage() {
                   <Camera className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-black text-base">Ready to sell?</div>
+                  <div className="font-black text-base">{t("seller.cta_title")}</div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Take a photo of your produce and list it in under 30 seconds with AI-assisted pricing.
+                    {t("seller.cta_description")}
                   </p>
                 </div>
                 <Button onClick={() => setLocation("/dashboard/photo-sell")} className="rounded-full gap-2 flex-shrink-0">
-                  Start Selling <ArrowRight className="h-4 w-4" />
+                  {t("seller.cta_button")} <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </Card>
@@ -292,16 +294,16 @@ export default function SellerPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <h2 className="text-base font-bold flex items-center gap-2">
-                <ClipboardList className="h-4 w-4 text-primary" /> Orders
+                <ClipboardList className="h-4 w-4 text-primary" /> {t("seller.orders_title")}
                 <Badge variant="secondary">{sellerOrders.length}</Badge>
               </h2>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[180px] h-8 text-xs" data-testid="select-order-filter">
                   <Filter className="h-3.5 w-3.5 mr-1.5" />
-                  <SelectValue placeholder="Filter status" />
+                  <SelectValue placeholder={t("filters.title")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="all">{t("filters.clear_all")}</SelectItem>
                   {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
                     <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
                   ))}
@@ -319,10 +321,10 @@ export default function SellerPage() {
               <div className="text-center py-16">
                 <ShoppingBag className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-40" />
                 <p className="font-semibold text-muted-foreground">
-                  {sellerOrders.length === 0 ? "No orders yet" : "No orders match this filter"}
+                  {sellerOrders.length === 0 ? t("seller.no_orders_yet") : t("seller.no_orders_yet")}
                 </p>
                 <p className="text-sm text-muted-foreground/70 mt-1">
-                  {sellerOrders.length === 0 ? "Orders containing your products will appear here." : "Try a different status filter."}
+                  {sellerOrders.length === 0 ? t("seller.your_orders_will_appear") : t("seller.your_orders_will_appear")}
                 </p>
               </div>
             ) : (
@@ -390,7 +392,7 @@ export default function SellerPage() {
                             {/* Status update */}
                             {order.status !== "cancelled" && order.status !== "delivered" && (
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground flex-shrink-0">Update status:</span>
+                                <span className="text-xs text-muted-foreground flex-shrink-0">{t("seller.performance_title")}:</span>
                                 <Select
                                   value={order.status}
                                   onValueChange={(val) => handleStatusChange(order.id, val as OrderStatus)}
@@ -415,8 +417,8 @@ export default function SellerPage() {
                             {(order.status === "delivered" || order.status === "cancelled") && (
                               <div className={`flex items-center gap-1.5 text-xs ${order.status === "delivered" ? "text-green-600" : "text-destructive"}`}>
                                 {order.status === "delivered"
-                                  ? <><CheckCircle className="h-3.5 w-3.5" /> Delivered successfully</>
-                                  : <><XCircle className="h-3.5 w-3.5" /> Order cancelled</>
+                                  ? <><CheckCircle className="h-3.5 w-3.5" /> {t("seller.delivered")}</>
+                                  : <><XCircle className="h-3.5 w-3.5" /> {t("seller.pending")}</>
                                 }
                               </div>
                             )}
@@ -436,15 +438,15 @@ export default function SellerPage() {
         <DialogContent className="sm:max-w-md" data-testid="dialog-tracking">
           <DialogHeader>
             <DialogTitle>
-              {trackingDialog?.status === "shipped" ? "Mark as Shipped" : "Mark as Out for Delivery"}
+              {t("seller.orders_title")}
             </DialogTitle>
             <DialogDescription>
-              Add tracking details so the buyer can follow their order. You can leave fields blank to skip.
+              {t("seller.orders_description")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="tracking-carrier" className="text-xs">Carrier</Label>
+              <Label htmlFor="tracking-carrier" className="text-xs">{t("ship.carrier")}</Label>
               <Input
                 id="tracking-carrier"
                 placeholder="e.g. Royal Mail, DPD, Local courier"
@@ -454,7 +456,7 @@ export default function SellerPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="tracking-number" className="text-xs">Tracking number</Label>
+              <Label htmlFor="tracking-number" className="text-xs">{t("ship.tracking_number")}</Label>
               <Input
                 id="tracking-number"
                 placeholder="e.g. AB123456789GB"
@@ -480,7 +482,7 @@ export default function SellerPage() {
               onClick={() => setTrackingDialog(null)}
               data-testid="btn-tracking-cancel"
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={() => {
@@ -498,9 +500,9 @@ export default function SellerPage() {
               data-testid="btn-tracking-save"
             >
               {updateStatusMutation.isPending ? (
-                <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> Saving…</>
+                <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> {t("common.save")}…</>
               ) : (
-                "Save & update status"
+                t("common.save")
               )}
             </Button>
           </DialogFooter>

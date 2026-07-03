@@ -1,4 +1,5 @@
 import "leaflet/dist/leaflet.css";
+import { useTranslation } from "react-i18next";
 import { LeafletFarmerMap } from "./leaflet-farmer-map";
 import type { Product } from "@shared/schema";
 
@@ -8,6 +9,7 @@ interface CompactMapViewProps {
 }
 
 export function CompactMapView({ products, onFarmerClick }: CompactMapViewProps) {
+  const { t } = useTranslation();
   return (
     <div className="w-full h-full min-h-[280px]">
       <LeafletFarmerMap

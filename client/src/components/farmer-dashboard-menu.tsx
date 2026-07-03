@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { 
   Wheat, 
   ShoppingCart, 
@@ -26,7 +27,7 @@ const menuItems: MenuItem[] = [
   {
     id: "my-crops",
     icon: <Wheat className="h-8 w-8" />,
-    label: "My Crops",
+    label: "farmer_dashboard.crop_management",
     description: "List my produce",
     href: "/dashboard/products",
     color: "bg-green-500",
@@ -42,7 +43,7 @@ const menuItems: MenuItem[] = [
   {
     id: "my-animals",
     icon: <Beef className="h-8 w-8" />,
-    label: "My Animals",
+    label: "farmer_dashboard.livestock",
     description: "Sell livestock",
     href: "/dashboard/animals",
     color: "bg-orange-500",
@@ -58,7 +59,7 @@ const menuItems: MenuItem[] = [
   {
     id: "my-money",
     icon: <Wallet className="h-8 w-8" />,
-    label: "My Money",
+    label: "farmer_dashboard.financial_overview",
     description: "Earnings & payments",
     href: "/dashboard/earnings",
     color: "bg-yellow-500",
@@ -74,7 +75,7 @@ const menuItems: MenuItem[] = [
   {
     id: "orders",
     icon: <Package className="h-8 w-8" />,
-    label: "Orders",
+    label: "nav.cart",
     description: "View all orders",
     href: "/dashboard/orders",
     color: "bg-teal-500",
@@ -90,7 +91,7 @@ const menuItems: MenuItem[] = [
   {
     id: "help",
     icon: <Phone className="h-8 w-8" />,
-    label: "Help",
+    label: "nav.help",
     description: "Voice help, support",
     href: "/dashboard/help",
     color: "bg-pink-500",
@@ -98,6 +99,7 @@ const menuItems: MenuItem[] = [
 ];
 
 export function FarmerDashboardMenu() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
 
   return (
@@ -117,7 +119,7 @@ export function FarmerDashboardMenu() {
             <div className={`${item.color} text-white p-3 rounded-xl mb-3`}>
               {item.icon}
             </div>
-            <span className="font-semibold text-sm mb-0.5">{item.label}</span>
+            <span className="font-semibold text-sm mb-0.5">{t(item.label)}</span>
             <span className="text-xs text-muted-foreground">{item.description}</span>
           </Card>
         </motion.div>

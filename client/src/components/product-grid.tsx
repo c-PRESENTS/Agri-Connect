@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ProductCard } from "./product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Product } from "@shared/schema";
@@ -42,6 +43,7 @@ export function ProductGrid({
   onAddToCart,
   onProductClick 
 }: ProductGridProps) {
+  const { t } = useTranslation();
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 p-2 sm:p-4">
@@ -64,9 +66,9 @@ export function ProductGrid({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold mb-1">No products found</h3>
+        <h3 className="text-lg font-semibold mb-1">{t("product_grid.no_products_title")}</h3>
         <p className="text-muted-foreground text-center max-w-sm">
-          Try adjusting your filters or search query to find what you're looking for.
+          {t("product_grid.no_products_description")}
         </p>
       </motion.div>
     );

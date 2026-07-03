@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from "react-i18next";
 
 interface Message {
   id: string;
@@ -14,12 +15,13 @@ interface Message {
 }
 
 export function AIChatAssistant() {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
       role: "assistant",
-      content: "Hello! I'm your AgriConnect Assistant. I can help you find fresh produce, learn about farmers, get farming tips, or answer questions about the platform. What would you like to know?",
+      content: t("chat.welcome"),
     },
   ]);
   const [input, setInput] = useState("");
@@ -60,20 +62,20 @@ export function AIChatAssistant() {
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        content: data.reply || "Sorry, I didn't get a response. Please try again.",
+        content: data.reply || t("chat.no_response"),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error: any) {
       console.error("Chat error:", error);
       const status = error?.status ?? (typeof error?.message === "string" && error.message.match(/^(\d{3}):/)?.[1]);
-      let content = "I'm sorry, I encountered an error. Please try again.";
+      let content = t("chat.error_generic");
       if (status === 401 || String(error?.message || "").includes("401")) {
-        content = "Please sign in first to use the AI Assistant. Click the user icon in the top bar to log in.";
+        content = t("chat.error_auth");
       } else if (status === 429 || String(error?.message || "").includes("429")) {
-        content = "You're sending messages too quickly. Please wait a moment and try again.";
+        content = t("chat.error_rate_limit");
       } else if (String(error?.message || "").toLowerCase().includes("failed to fetch")) {
-        content = "Can't reach the server right now. Check your connection and try again.";
+        content = t("chat.error_network");
       }
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
@@ -94,10 +96,10 @@ export function AIChatAssistant() {
   };
 
   const suggestedQuestions = [
-    "What organic vegetables are available?",
-    "How do I list my products?",
-    "Show me farmers near London",
-    "What government schemes help farmers?",
+    t("chat.q1"),
+    t("chat.q2"),
+    t("chat.q3"),
+    t("chat.q4"),
   ];
 
   return (
@@ -118,8 +120,8 @@ export function AIChatAssistant() {
                   <Bot className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">AgriConnect Assistant</h3>
-                  <p className="text-xs text-white/80">Powered by AI</p>
+                  <h3 className="font-semibold text-white">{t("chat.title")}</h3>
+                  <p className="text-xs text-white/80">{t("chat.powered_by_ai")}</p>
                 </div>
               </div>
               <Button
@@ -178,7 +180,7 @@ export function AIChatAssistant() {
 
                 {messages.length === 1 && !isLoading && (
                   <div className="mt-4">
-                    <p className="text-xs text-muted-foreground mb-2">Try asking:</p>
+                    <p className="text-xs text-muted-foreground mb-2">{t("chat.try_asking")}</p>
                     <div className="flex flex-wrap gap-2">
                       {suggestedQuestions.map((question, i) => (
                         <Badge
@@ -205,7 +207,7 @@ export function AIChatAssistant() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask me anything..."
+                  placeholder={t("chat.placeholder")}
                   disabled={isLoading}
                   className="flex-1"
                   data-testid="input-chat-message"
@@ -231,7 +233,7 @@ export function AIChatAssistant() {
       >
         <Button
           onClick={() => setIsOpen(!isOpen)}
-          aria-label={isOpen ? "Close AI assistant" : "Open AI assistant"}
+          aria-label={isOpen ? t("chat.close_label") : t("chat.open_label")}
           className="h-12 w-12 md:h-14 md:w-14 p-0 rounded-full bg-gradient-to-br from-primary to-green-600 shadow-xl shadow-primary/40 ring-2 ring-white/40 hover:shadow-primary/60 transition-shadow flex items-center justify-center"
           data-testid="button-open-chat"
         >

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import { useGoBack } from "@/hooks/use-go-back";
 import type { Product } from "@shared/schema";
 
 export default function SellerProfilePage() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const sellerId = params.id;
 
@@ -43,7 +45,7 @@ export default function SellerProfilePage() {
     return (
       <div>
         <TopNavigation />
-        <div className="p-4 sm:p-8 text-center text-muted-foreground">Loading seller…</div>
+        <div className="p-4 sm:p-8 text-center text-muted-foreground">{t("common.loading")}</div>
       </div>
     );
   }
@@ -53,10 +55,10 @@ export default function SellerProfilePage() {
       <div>
         <TopNavigation />
         <div className="p-4 sm:p-8 text-center">
-          <p className="text-lg font-semibold mb-2">Seller not found</p>
-          <p className="text-muted-foreground mb-4">This seller may no longer be active.</p>
+          <p className="text-lg font-semibold mb-2">{t("seller_profile.description_title")}</p>
+          <p className="text-muted-foreground mb-4">{t("seller_profile.no_products_available")}</p>
           <Link href="/">
-            <Button variant="outline" data-testid="button-back-home"><ArrowLeft className="w-4 h-4 mr-2" />Back home</Button>
+            <Button variant="outline" data-testid="button-back-home"><ArrowLeft className="w-4 h-4 mr-2" />{t("common.back")}</Button>
           </Link>
         </div>
       </div>
@@ -73,7 +75,7 @@ export default function SellerProfilePage() {
       <div className="border-b bg-muted/20">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={goBack} data-testid="button-back">
-            <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back
+            <ArrowLeft className="w-3.5 h-3.5 mr-1" /> {t("common.back")}
           </Button>
         </div>
       </div>
@@ -89,7 +91,7 @@ export default function SellerProfilePage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold" data-testid="text-seller-name">{seller.farmerName}</h1>
-                <Badge variant="secondary" className="gap-1"><ShieldCheck className="w-3 h-3" /> Verified</Badge>
+                <Badge variant="secondary" className="gap-1"><ShieldCheck className="w-3 h-3" /> {t("seller_profile.verified_badge")}</Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1" data-testid="text-seller-location">
                 <MapPin className="w-3.5 h-3.5" />
@@ -99,22 +101,22 @@ export default function SellerProfilePage() {
                 <span className="flex items-center gap-1" data-testid="text-seller-rating">
                   <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
                   <span className="font-semibold">{seller.farmerRating.toFixed(1)}</span>
-                  <span className="text-muted-foreground">rating</span>
+                  <span className="text-muted-foreground">{t("seller_profile.rating_suffix")}</span>
                 </span>
                 <span className="text-muted-foreground">·</span>
-                <span data-testid="text-listing-count"><span className="font-semibold">{totalListings}</span> listings</span>
+                <span data-testid="text-listing-count"><span className="font-semibold">{totalListings}</span> {t("seller_profile.product_listings")}</span>
                 <span className="text-muted-foreground">·</span>
-                <span><span className="font-semibold">{categories}</span> categories</span>
+                <span><span className="font-semibold">{categories}</span> {t("seller_profile.specialties_title")}</span>
                 <span className="text-muted-foreground">·</span>
-                <span>Avg <span className="font-semibold">£{avgPrice.toFixed(2)}</span></span>
+                <span>{t("seller_profile.rating_suffix")} <span className="font-semibold">£{avgPrice.toFixed(2)}</span></span>
               </div>
             </div>
             <div className="hidden md:flex flex-col gap-2">
               <Button size="sm" className="gap-2" data-testid="button-message-seller">
-                <MessageSquare className="w-4 h-4" /> Message
+                <MessageSquare className="w-4 h-4" /> {t("seller_profile.message_button")}
               </Button>
               <Button size="sm" variant="outline" className="gap-2" data-testid="button-follow-seller">
-                <Store className="w-4 h-4" /> Follow shop
+                <Store className="w-4 h-4" /> {t("seller_profile.view_details")}
               </Button>
             </div>
           </div>
@@ -127,9 +129,9 @@ export default function SellerProfilePage() {
           <Tabs defaultValue="all">
             <TabsList>
               <TabsTrigger value="all" data-testid="tab-all-listings">
-                All listings <Badge variant="secondary" className="ml-2">{totalListings}</Badge>
+                {t("seller_profile.product_listings")} <Badge variant="secondary" className="ml-2">{totalListings}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="about" data-testid="tab-about">About</TabsTrigger>
+              <TabsTrigger value="about" data-testid="tab-about">{t("seller_profile.description_title")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="mt-4">
@@ -149,13 +151,11 @@ export default function SellerProfilePage() {
               <Card>
                 <CardContent className="p-6 space-y-3 text-sm">
                   <p>
-                    <span className="font-semibold">{seller.farmerName}</span> is a verified seller on AgriConnect,
-                    based in {seller.farmerLocation || "the UK"}. They have {totalListings} active listings across{" "}
-                    {categories} {categories === 1 ? "category" : "categories"}.
+                    <span className="font-semibold">{seller.farmerName}</span> {t("seller_profile.verified_badge")}
                   </p>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Package className="w-4 h-4" />
-                    Ships nationwide · Pickup available
+                    {t("seller_profile.standard_delivery")}
                   </div>
                 </CardContent>
               </Card>
@@ -169,8 +169,8 @@ export default function SellerProfilePage() {
             products={sellerProducts}
             center={[seller.farmerLatitude || 54, seller.farmerLongitude || -2.5]}
             zoom={11}
-            title="Shop location"
-            subtitle={`${seller.farmerName} is here`}
+            title={t("seller_profile.location_title")}
+            subtitle={seller.farmerName}
             mapHeight={260}
           />
         </aside>

@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { categories } from "@/lib/categories";
 import { getProductImage } from "@/lib/product-images";
 import { getSubSubcategories } from "@/lib/sub-subcategories";
+import { useTranslation } from "react-i18next";
 
 type RailItem = {
   id: string;
@@ -58,11 +59,39 @@ function shortLabel(name: string) {
 }
 
 export function MobileNavSheet() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [expandedSub, setExpandedSub] = useState<string | null>(null);
+
+  const LABEL_KEYS: Record<string, string> = {
+    "home": "nav.home",
+    "cat-daily": "category.daily",
+    "cat-inputs": "category.inputs",
+    "cat-processed": "category.processed",
+    "cat-specialty": "category.specialty",
+    "cat-other": "category.other_agri",
+    "cat-super": "category.market",
+    "cat-dietary": "category.dietary",
+    "cat-modern": "category.modern",
+    "cat-services": "category.services",
+    "cat-commerc": "category.commercial",
+    "cat-bio": "category.bio",
+    "help": "nav.help",
+    "map": "nav.map",
+    "land": "nav.land",
+    "share": "nav.share",
+    "ship": "nav.ship",
+    "cart": "nav.cart",
+    "dash": "nav.dashboard",
+    "settings": "nav.more",
+  };
+  const getItemLabel = (item: RailItem) => {
+    const key = LABEL_KEYS[item.id];
+    return key ? t(key) : item.label;
+  };
 
   useEffect(() => {
     const onOpen = () => setOpen(true);
@@ -195,12 +224,12 @@ export function MobileNavSheet() {
         {/* ── Column 1: 64px icon rail ── */}
         <div className="w-[64px] shrink-0 flex flex-col bg-sidebar/95 border-r border-border/40">
           <div className="px-1 py-1.5 border-b border-border/40 flex items-center justify-between">
-            <span className="text-[9px] font-black uppercase tracking-widest text-primary pl-1">Browse</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-primary pl-1">{t("nav.browse")}</span>
             <button
               onClick={() => setOpen(false)}
               data-testid="mobile-nav-close"
               className="h-5 w-5 rounded flex items-center justify-center hover:bg-destructive/10 hover:text-destructive active:scale-95"
-              title="Close"
+              title={t("nav.close")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -216,14 +245,14 @@ export function MobileNavSheet() {
                   key={item.id}
                   onClick={() => handleItemTap(item)}
                   data-testid={`mobile-nav-item-${item.id}`}
-                  title={item.label}
+                  title={getItemLabel(item)}
                   className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-lg transition-all active:scale-[0.94] ${
                     isActive ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
                   <span className="text-[8px] font-bold uppercase tracking-tight leading-[1.05] w-full text-center break-words line-clamp-2">
-                    {item.label}
+                    {getItemLabel(item)}
                   </span>
                 </button>
               );
@@ -243,7 +272,7 @@ export function MobileNavSheet() {
                 onClick={() => { setActiveCat(null); setExpandedSub(null); }}
                 data-testid="mobile-nav-col2-close"
                 className="h-5 w-5 rounded flex items-center justify-center hover:bg-destructive/10 hover:text-destructive active:scale-95"
-                title="Close"
+                title={t("nav.close")}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -255,7 +284,7 @@ export function MobileNavSheet() {
                 className="flex items-center gap-1.5 py-1.5 px-1.5 rounded-lg bg-primary/15 text-primary active:scale-[0.98] transition-all"
               >
                 <Sparkles className="h-4 w-4 shrink-0" />
-                <span className="text-[10px] font-black uppercase tracking-wider truncate">See all →</span>
+                <span className="text-[10px] font-black uppercase tracking-wider truncate">{t("nav.see_all")}</span>
               </button>
               {activeCategory.subcategories.map((sub) => {
                 const deep = getSubSubcategories(sub.id);
@@ -299,7 +328,7 @@ export function MobileNavSheet() {
                           className="text-[7px] font-black uppercase tracking-wider text-primary py-0.5 px-0.5 rounded hover:bg-primary/10 text-left"
                           data-testid={`mobile-nav-leaf-all-${sub.id}`}
                         >
-                          See all →
+                          {t("nav.see_all")}
                         </button>
                         {deep.map((section, si) => (
                           <div key={si} className="flex flex-col">

@@ -1,5 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   CheckCircle, Package, Truck, MapPin, Clock, ArrowRight,
@@ -14,6 +15,7 @@ import { TopNavigation } from "@/components/top-navigation";
 import { getProductImage } from "@/lib/product-images";
 
 export default function OrderConfirmationPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
 
@@ -43,8 +45,8 @@ export default function OrderConfirmationPage() {
         <TopNavigation />
         <div className="text-center py-20">
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-bold">Order not found</h2>
-          <Button onClick={() => navigate("/")} className="mt-4">Back to Home</Button>
+          <h2 className="text-xl font-bold">{t("order_detail.error_title")}</h2>
+          <Button onClick={() => navigate("/")} className="mt-4">{t("order_detail.continue_shopping")}</Button>
         </div>
       </div>
     );
@@ -69,9 +71,9 @@ export default function OrderConfirmationPage() {
           <div className="h-20 w-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="h-10 w-10 text-green-600" />
           </div>
-          <h1 className="text-3xl font-black text-foreground mb-2">Order Confirmed!</h1>
+          <h1 className="text-3xl font-black text-foreground mb-2">{t("order_detail.confirmation_title")}</h1>
           <p className="text-muted-foreground">
-            Thank you for your order. We've received your payment and are preparing your items.
+            {t("order_detail.confirmation_description")}
           </p>
         </motion.div>
 
@@ -85,11 +87,11 @@ export default function OrderConfirmationPage() {
             <CardContent className="p-5">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Order Number</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t("payment_success.order_number")}</p>
                   <p className="text-2xl font-black text-primary font-mono tracking-wide">{order.orderNumber}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Placed on</p>
+                  <p className="text-xs text-muted-foreground">{t("order_detail.payment_status")}</p>
                   <p className="text-sm font-semibold">
                     {new Date(order.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                   </p>
@@ -113,7 +115,7 @@ export default function OrderConfirmationPage() {
                     <Clock className="h-4 w-4 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground">Est. Delivery</p>
+                    <p className="text-xs font-semibold text-muted-foreground">{t("order_detail.estimated_delivery")}</p>
                     <p className="text-sm font-bold">{estimatedDate}</p>
                   </div>
                 </div>
@@ -122,8 +124,8 @@ export default function OrderConfirmationPage() {
                     <Truck className="h-4 w-4 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground">Delivery</p>
-                    <p className="text-sm font-bold capitalize">{order.deliveryMethod || "Standard"}</p>
+                    <p className="text-xs font-semibold text-muted-foreground">{t("order_detail.delivery_method")}</p>
+                    <p className="text-sm font-bold capitalize">{order.deliveryMethod || t("cart.standard_delivery")}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -131,7 +133,7 @@ export default function OrderConfirmationPage() {
                     <MapPin className="h-4 w-4 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground">Delivering to</p>
+                    <p className="text-xs font-semibold text-muted-foreground">{t("checkout.deliver_to")}</p>
                     <p className="text-sm font-bold truncate max-w-[120px]">{order.deliveryAddress.split(",")[0]}</p>
                   </div>
                 </div>
@@ -150,7 +152,7 @@ export default function OrderConfirmationPage() {
             <CardContent className="p-5">
               <h3 className="font-bold mb-4 flex items-center gap-2">
                 <Package className="h-4 w-4 text-primary" />
-                Items Ordered ({order.items.length})
+                {t("cart.order_items")} ({order.items.length})
               </h3>
               <div className="space-y-3">
                 {order.items.map((item, idx) => (
@@ -171,18 +173,18 @@ export default function OrderConfirmationPage() {
               <Separator className="my-4" />
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span><span>£{order.subtotal?.toFixed(2) || "—"}</span>
+                  <span>{t("cart.subtotal")}</span><span>£{order.subtotal?.toFixed(2) || "—"}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Delivery</span>
-                  <span>{(order.deliveryFee ?? 0) === 0 ? <span className="text-green-600">Free</span> : `£${order.deliveryFee?.toFixed(2)}`}</span>
+                  <span>{t("cart.delivery")}</span>
+                  <span>{(order.deliveryFee ?? 0) === 0 ? <span className="text-green-600">{t("cart.free_delivery")}</span> : `£${order.deliveryFee?.toFixed(2)}`}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>VAT (20%)</span><span>£{order.tax?.toFixed(2) || "—"}</span>
+                  <span>{t("checkout.vat")}</span><span>£{order.tax?.toFixed(2) || "—"}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-base">
-                  <span>Total</span><span>£{order.total.toFixed(2)}</span>
+                  <span>{t("cart.total")}</span><span>£{order.total.toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
@@ -201,21 +203,21 @@ export default function OrderConfirmationPage() {
             className="flex-1 gap-2"
             data-testid="btn-track-order"
           >
-            <Truck className="h-4 w-4" /> Track Order
+            <Truck className="h-4 w-4" /> {t("order_detail.view_products")}
           </Button>
           <Button
             variant="outline"
             onClick={() => navigate("/orders")}
             className="flex-1 gap-2"
           >
-            <ShoppingBag className="h-4 w-4" /> My Orders
+            <ShoppingBag className="h-4 w-4" /> {t("orders.title")}
           </Button>
           <Button
             variant="outline"
             onClick={() => navigate("/")}
             className="flex-1 gap-2"
           >
-            <Home className="h-4 w-4" /> Continue Shopping
+            <Home className="h-4 w-4" /> {t("order_detail.continue_shopping")}
           </Button>
         </motion.div>
       </div>

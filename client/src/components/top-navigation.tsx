@@ -178,7 +178,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
             onClick={() => window.history.back()}
             className="h-7 w-7 hover:bg-primary/10 transition-colors"
             data-testid="button-nav-back"
-            title="Go back"
+            title={t("nav.go_back")}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
@@ -188,7 +188,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
             onClick={() => window.history.forward()}
             className="h-7 w-7 hover:bg-primary/10 transition-colors"
             data-testid="button-nav-forward"
-            title="Go forward"
+            title={t("nav.go_forward")}
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
@@ -329,28 +329,28 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
               className="h-6 px-1.5 rounded text-[9px] font-bold uppercase tracking-tight text-muted-foreground hover:text-primary hover:bg-primary/5 shrink-0 flex items-center gap-1"
             >
               <MoreHorizontal className="h-3 w-3" />
-              More
+              {t("nav.more")}
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="h-auto max-h-[60vh] rounded-t-2xl">
             <SheetHeader>
-              <SheetTitle className="text-sm font-bold">Tools & preferences</SheetTitle>
+              <SheetTitle className="text-sm font-bold">{t("nav.tools_preferences")}</SheetTitle>
             </SheetHeader>
             <div className="grid grid-cols-2 gap-3 pt-3">
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Voice</span>
+                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t("nav.voice_label")}</span>
                 <VoiceCommand onSearch={onSearch} />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Language</span>
+                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t("nav.language_label")}</span>
                 <LanguageSwitcher />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Theme</span>
+                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t("nav.theme_label")}</span>
                 <ThemeToggle />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Currency</span>
+                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t("nav.currency_label")}</span>
                 <RegionSwitcher />
               </div>
             </div>

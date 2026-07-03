@@ -3,8 +3,10 @@ import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/theme-provider";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export function ThemeToggle() {
+  const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -54,7 +56,7 @@ export function ThemeToggle() {
           </motion.div>
         )}
       </AnimatePresence>
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">{t("theme.toggle")}</span>
     </Button>
   );
 }

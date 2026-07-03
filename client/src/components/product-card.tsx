@@ -162,13 +162,13 @@ export function ProductCard({
               onClick={(e) => {
                 e.stopPropagation();
                 if (!isComparing && isFull) {
-                  pcToast({ title: "Compare list full", description: "Remove a product first (max 4).", variant: "destructive" });
+                  pcToast({ title: t("compare.list_full"), description: t("compare.list_full_desc"), variant: "destructive" });
                   return;
                 }
                 const added = toggleCompare(product.id);
-                pcToast({ title: added ? "Added to compare" : "Removed from compare" });
+                pcToast({ title: added ? t("compare.added") : t("compare.removed") });
               }}
-              title={isComparing ? "Remove from comparison" : "Add to comparison"}
+              title={isComparing ? t("compare.remove_title") : t("compare.add_title")}
               data-testid={`button-compare-${product.id}`}
             >
               <GitCompareArrows className="h-4 w-4" />
@@ -245,7 +245,7 @@ export function ProductCard({
               variant={product.stock > 20 ? "secondary" : "destructive"} 
               className="text-[8px] sm:text-[10px] font-mono"
             >
-              {product.stock > 0 ? `${product.stock}` : "Out"}
+              {product.stock > 0 ? `${product.stock}` : t("product.out_short")}
             </Badge>
           </div>
 
@@ -265,7 +265,7 @@ export function ProductCard({
                 <>
                   <ShoppingCart className="h-3 w-3" />
                   <span className="hidden sm:inline">{t("product.add_to_cart", "Add to Cart")}</span>
-                  <span className="sm:hidden">Add</span>
+                  <span className="sm:hidden">{t("product.add_short")}</span>
                 </>
               )}
             </Button>

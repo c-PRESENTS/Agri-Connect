@@ -5,9 +5,11 @@ import { GitCompareArrows, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCompare } from "@/hooks/use-compare";
 import { getProductImage } from "@/lib/product-images";
+import { useTranslation } from "react-i18next";
 import type { Product } from "@shared/schema";
 
 export function CompareBar() {
+  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const { ids, remove, clear, max } = useCompare();
   const { data: products = [] } = useQuery<Product[]>({ queryKey: ["/api/products"] });
@@ -31,7 +33,7 @@ export function CompareBar() {
         <div className="flex items-center gap-3 bg-background/95 backdrop-blur-xl border-2 border-primary/30 rounded-2xl shadow-2xl shadow-primary/10 p-2.5 pl-4">
           <div className="flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap">
             <GitCompareArrows className="h-4 w-4 text-primary" />
-            <span className="hidden sm:inline">Compare</span>
+            <span className="hidden sm:inline">{t("compare.button")}</span>
             <span className="text-xs text-muted-foreground">({items.length}/{max})</span>
           </div>
 
@@ -69,13 +71,13 @@ export function CompareBar() {
             className="rounded-full font-semibold gap-1.5"
             data-testid="button-view-compare"
           >
-            <span className="hidden sm:inline">Compare</span>
+            <span className="hidden sm:inline">{t("compare.button")}</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Button>
           <button
             onClick={clear}
             className="p-1.5 hover:bg-muted rounded-full transition-colors text-muted-foreground"
-            title="Clear all"
+            title={t("compare.clear_all")}
             data-testid="button-clear-compare"
           >
             <X className="h-4 w-4" />

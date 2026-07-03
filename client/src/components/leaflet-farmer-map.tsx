@@ -1,5 +1,6 @@
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,10 +25,10 @@ L.Icon.Default.mergeOptions({
 });
 
 const TILE_LAYERS = {
-  standard: { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: "© OpenStreetMap", label: "Standard", icon: Map },
-  satellite: { url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "© Esri", label: "Satellite", icon: Satellite },
-  terrain: { url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", attribution: "© OpenTopoMap", label: "Terrain", icon: Mountain },
-  hybrid: { url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", attribution: "© Esri", label: "Hybrid", icon: Globe },
+  standard: { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: "© OpenStreetMap", icon: Map },
+  satellite: { url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "© Esri", icon: Satellite },
+  terrain: { url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", attribution: "© OpenTopoMap", icon: Mountain },
+  hybrid: { url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", attribution: "© Esri", icon: Globe },
 } as const;
 
 type LayerKey = keyof typeof TILE_LAYERS;
@@ -151,9 +152,10 @@ export function LeafletFarmerMap({
   mapOverlays,
   selectedFarmerId,
 }: LeafletFarmerMapProps) {
-  const markerRefs = useRef<Record<string, L.Marker | null>>({});
-  const qc = useQueryClient();
+  const { t } = useTranslation();
+  const markersRef = useRef<Record<string, L.Marker>>({});
   const [activeLayer, setActiveLayer] = useState<LayerKey>(tileStyle);
+  const layerLabel = (key: LayerKey) => t(`map.layer_${key}`);
   const [_showFarmers, _setShowFarmers] = useState(true);
   const [_showNeeds, _setShowNeeds] = useState(true);
   const [_showHeatmap, _setShowHeatmap] = useState(false);
@@ -205,7 +207,7 @@ export function LeafletFarmerMap({
   // updated on every position event.
   const handleLocate = () => {
     if (!("geolocation" in navigator)) {
-      setLocateError("Geolocation not supported in this browser");
+      setLocateError(t("map.geolocation_not_supported"));
       return;
     }
     if (tracking) {
@@ -233,10 +235,10 @@ export function LeafletFarmerMap({
         setTracking(false);
         setLocateError(
           err.code === err.PERMISSION_DENIED
-            ? "Location permission denied. Enable it in your browser settings."
+            ? t("map.location_permission_denied")
             : err.code === err.POSITION_UNAVAILABLE
-              ? "Location unavailable right now"
-              : "Couldn't get your location — try again"
+              ? t("map.location_unavailable")
+              : t("map.location_get_failed")
         );
         if (watchIdRef.current != null) {
           navigator.geolocation.clearWatch(watchIdRef.current);
@@ -307,7 +309,7 @@ export function LeafletFarmerMap({
                 <button key={key} onClick={() => setActiveLayer(key)} data-testid={`map-layer-${key}`}
                   className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wide transition-all ${activeLayer === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
                   <Icon className="h-3 w-3" />
-                  <span className="hidden sm:inline">{layer.label}</span>
+                  <span className="hidden sm:inline">{layerLabel(key)}</span>
                 </button>
               );
             })}
@@ -322,17 +324,17 @@ export function LeafletFarmerMap({
           <button onClick={() => _setShowFarmers(v => !v)} data-testid="toggle-farmers"
             className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-[9px] font-bold border shadow-sm transition-all backdrop-blur-md ${showFarmers ? "bg-green-100 border-green-300 text-green-700 dark:bg-green-900/60 dark:border-green-600 dark:text-green-300" : "bg-background/90 border-border/60 text-muted-foreground"}`}>
             <Users className="h-3 w-3" />
-            <span className="hidden sm:inline">Farmers</span>
+            <span className="hidden sm:inline">{t("map.tab_farmers")}</span>
           </button>
           <button onClick={() => _setShowNeeds(v => !v)} data-testid="toggle-needs"
             className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-[9px] font-bold border shadow-sm transition-all backdrop-blur-md ${showNeeds ? "bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/60 dark:border-amber-600 dark:text-amber-300" : "bg-background/90 border-border/60 text-muted-foreground"}`}>
             <ShoppingBag className="h-3 w-3" />
-            <span className="hidden sm:inline">Needs ({localNeeds.length})</span>
+            <span className="hidden sm:inline">{t("map.needs_label")} ({localNeeds.length})</span>
           </button>
           <button onClick={() => _setShowHeatmap(v => !v)} data-testid="toggle-heatmap"
             className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-[9px] font-bold border shadow-sm transition-all backdrop-blur-md ${showHeatmap ? "bg-red-100 border-red-300 text-red-700 dark:bg-red-900/60 dark:border-red-600 dark:text-red-300" : "bg-background/90 border-border/60 text-muted-foreground"}`}>
             <BarChart3 className="h-3 w-3" />
-            <span className="hidden sm:inline">Heat</span>
+            <span className="hidden sm:inline">{t("map.heatmap_legend")}</span>
           </button>
         </div>
       </div>
@@ -359,7 +361,7 @@ export function LeafletFarmerMap({
               ? "bg-blue-500 text-white border-blue-400 hover:bg-blue-600"
               : "bg-background/95 border-border/60 hover:bg-primary hover:text-primary-foreground hover:border-primary"
           }`}
-          title={tracking ? "Stop live tracking" : "Track my location"}
+          title={tracking ? t("map.stop_tracking") : t("map.track_location")}
         >
           {locating ? (
             <Navigation className="h-4 w-4 animate-spin text-blue-500" />
@@ -376,7 +378,7 @@ export function LeafletFarmerMap({
         {/* Post a Need */}
         <button onClick={() => setPostPanel(true)} data-testid="btn-post-need"
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-primary text-primary-foreground border border-primary/50 shadow-md hover:bg-primary/90 transition-all"
-          title="Post a Need">
+          title={t("map.post_a_need")}>
           <Plus className="h-4 w-4" />
         </button>
         {/* Zoom to Chelmsford */}
@@ -399,7 +401,7 @@ export function LeafletFarmerMap({
               selectedId={selectedFarmerId ?? null}
               lat={selF?.latitude ?? null}
               lng={selF?.longitude ?? null}
-              markerRefs={markerRefs}
+              markerRefs={markersRef}
             />
           );
         })()}
@@ -417,8 +419,8 @@ export function LeafletFarmerMap({
             position={[farmer.latitude, farmer.longitude]}
             icon={makeFarmerIcon(farmer.isOnline, farmer.id === selectedFarmerId)}
             ref={(ref) => {
-              if (ref) markerRefs.current[farmer.id] = ref;
-              else delete markerRefs.current[farmer.id];
+              if (ref) markersRef.current[farmer.id] = ref;
+              else delete markersRef.current[farmer.id];
             }}
           >
             <Popup minWidth={240} maxWidth={280}>
@@ -436,7 +438,7 @@ export function LeafletFarmerMap({
                     <div className="flex items-center gap-1 mt-0.5">
                       <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
                       <span className="text-xs font-semibold">{farmer.rating.toFixed(1)}</span>
-                      <span className="text-xs text-muted-foreground">· {farmer.productCount} products</span>
+                      <span className="text-xs text-muted-foreground">· {farmer.productCount} {t("map.products_short")}</span>
                     </div>
                   </div>
                 </div>
@@ -453,18 +455,18 @@ export function LeafletFarmerMap({
                   {farmer.products.slice(0, 3).map((p, i) => (
                     <span key={i} className="text-[9px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">{p.length > 14 ? p.slice(0, 14) + "…" : p}</span>
                   ))}
-                  {farmer.products.length > 3 && <span className="text-[9px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">+{farmer.products.length - 3} more</span>}
+                  {farmer.products.length > 3 && <span className="text-[9px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">{t("map.more_products", { count: farmer.products.length - 3 })}</span>}
                 </div>
                 <div className="flex gap-1.5 text-xs text-muted-foreground mb-2">
                   <Package className="h-3.5 w-3.5" />
                   <span>{farmer.totalStock} units</span>
                   <span>·</span>
                   <Wifi className={`h-3.5 w-3.5 ${farmer.isOnline ? "text-green-500" : ""}`} />
-                  <span className={farmer.isOnline ? "text-green-600 font-medium" : ""}>{farmer.isOnline ? "Online" : "Offline"}</span>
+                  <span className={farmer.isOnline ? "text-green-600 font-medium" : ""}>{farmer.isOnline ? t("map.online_status") : t("map.offline_status")}</span>
                 </div>
                 <button onClick={() => onFarmerClick?.(farmer.id)}
                   className="w-full bg-primary text-primary-foreground text-xs font-bold py-1.5 rounded-lg hover:bg-primary/90 transition-colors">
-                  View All Products →
+                  {t("map.view_all_products")}
                 </button>
               </div>
             </Popup>
@@ -504,7 +506,7 @@ export function LeafletFarmerMap({
                   href="/map"
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
                 >
-                  <Phone className="h-3 w-3" /> Respond to Need
+                  <Phone className="h-3 w-3" /> {t("map.respond_to_need")}
                 </a>
               </div>
             </Popup>
@@ -530,11 +532,11 @@ export function LeafletFarmerMap({
             <Popup>
               <div className="text-xs font-bold flex items-center gap-1.5 mb-1">
                 <Locate className="h-3.5 w-3.5 text-blue-500" />
-                Your current location
+                {t("map.your_current_location")}
               </div>
               {userAccuracy && (
                 <div className="text-[10px] text-muted-foreground">
-                  Accuracy: ±{Math.round(userAccuracy)} m
+                  {t("map.accuracy", { value: Math.round(userAccuracy) })}
                 </div>
               )}
               {tracking && (
@@ -543,7 +545,7 @@ export function LeafletFarmerMap({
                     <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
                   </span>
-                  Tracking live
+                  {t("map.tracking_live")}
                 </div>
               )}
             </Popup>
@@ -555,9 +557,9 @@ export function LeafletFarmerMap({
       {showControls && (
         <div className="absolute bottom-2.5 left-2.5 z-[1000] flex items-center gap-1.5">
           <div className="bg-background/95 backdrop-blur-md border border-border/60 rounded-xl px-2.5 py-1.5 shadow-md text-[10px] flex items-center gap-2">
-            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /><span className="font-bold text-green-700 dark:text-green-400">{onlineFarmers}</span><span className="text-muted-foreground">online</span></div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /><span className="font-bold text-green-700 dark:text-green-400">{onlineFarmers}</span><span className="text-muted-foreground">{t("map.online_status")}</span></div>
             <span className="text-border/80">·</span>
-            <div className="flex items-center gap-1"><ShoppingBag className="h-3 w-3 text-amber-500" /><span className="font-bold text-amber-600 dark:text-amber-400">{localNeeds.length}</span><span className="text-muted-foreground">needs</span></div>
+            <div className="flex items-center gap-1"><ShoppingBag className="h-3 w-3 text-amber-500" /><span className="font-bold text-amber-600 dark:text-amber-400">{localNeeds.length}</span><span className="text-muted-foreground">{t("map.needs_label")}</span></div>
           </div>
         </div>
       )}
@@ -566,7 +568,7 @@ export function LeafletFarmerMap({
       <div className="absolute bottom-2.5 right-2.5 z-[1000] hidden sm:block">
         <div className="bg-background/95 backdrop-blur-md border border-border/60 rounded-xl px-2 py-1.5 shadow-md flex items-center gap-1.5">
           {(() => { const Icon = TILE_LAYERS[activeLayer].icon; return <Icon className="h-3 w-3 text-primary" />; })()}
-          <span className="text-[9px] font-bold text-primary uppercase tracking-wide">{TILE_LAYERS[activeLayer].label}</span>
+          <span className="text-[9px] font-bold text-primary uppercase tracking-wide">{layerLabel(activeLayer)}</span>
         </div>
       </div>
 
@@ -576,8 +578,8 @@ export function LeafletFarmerMap({
           <div className="bg-background border border-border rounded-2xl shadow-2xl p-5 w-[320px] max-h-[85%] overflow-y-auto mx-3">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-black text-foreground">Post a Need</h3>
-                <p className="text-[10px] text-muted-foreground">Tell farmers what you need</p>
+                <h3 className="text-sm font-black text-foreground">{t("map.post_a_need")}</h3>
+                <p className="text-[10px] text-muted-foreground">{t("map.post_need_desc")}</p>
               </div>
               <button onClick={() => setPostPanel(false)} className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center hover:bg-muted/80">
                 <X className="h-3.5 w-3.5" />
@@ -586,11 +588,11 @@ export function LeafletFarmerMap({
 
             <div className="space-y-3">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">Product Needed *</label>
+                <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.product_needed")}</label>
                 <input
                   value={form.productName}
                   onChange={e => setForm(f => ({ ...f, productName: e.target.value }))}
-                  placeholder="e.g. Organic Tomatoes, Fresh Milk"
+                  placeholder={t("map.product_needed_placeholder")}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-background focus:outline-none focus:border-primary"
                   data-testid="input-product-name"
                 />
@@ -598,7 +600,7 @@ export function LeafletFarmerMap({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">Quantity *</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.quantity")}</label>
                   <input
                     type="number"
                     value={form.quantity}
@@ -609,7 +611,7 @@ export function LeafletFarmerMap({
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">Unit</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.unit")}</label>
                   <select value={form.unit} onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
                     className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-background focus:outline-none focus:border-primary">
                     {["kg", "liter", "units", "bunch", "box", "tonne"].map(u => <option key={u} value={u}>{u}</option>)}
@@ -618,18 +620,18 @@ export function LeafletFarmerMap({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">Address Line</label>
+                <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.address_line")}</label>
                 <input
                   value={form.addressLine}
                   onChange={e => setForm(f => ({ ...f, addressLine: e.target.value }))}
-                  placeholder="e.g. 14 High Street (optional)"
+                  placeholder={t("map.address_placeholder")}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-background focus:outline-none focus:border-primary"
                   data-testid="input-address-line"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">City / Town *</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.city_town")}</label>
                   <input
                     value={form.city}
                     onChange={e => {
@@ -637,13 +639,13 @@ export function LeafletFarmerMap({
                       const loc = [form.addressLine, city, form.postcode].filter(Boolean).join(", ");
                       setForm(f => ({ ...f, city, location: loc || city }));
                     }}
-                    placeholder="e.g. Chelmsford"
+                    placeholder={t("map.city_placeholder")}
                     className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-background focus:outline-none focus:border-primary"
                     data-testid="input-city"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">Postcode</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.postcode")}</label>
                   <input
                     value={form.postcode}
                     onChange={e => {
@@ -659,22 +661,22 @@ export function LeafletFarmerMap({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">Price Range</label>
+                <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.price_range")}</label>
                 <input
                   value={form.priceRange}
                   onChange={e => setForm(f => ({ ...f, priceRange: e.target.value }))}
-                  placeholder="e.g. £1.50-2.00/kg"
+                  placeholder={t("map.price_range_placeholder")}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-background focus:outline-none focus:border-primary"
                   data-testid="input-price-range"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">Your Name / Business</label>
+                <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.your_name_business")}</label>
                 <input
                   value={form.buyerName}
                   onChange={e => setForm(f => ({ ...f, buyerName: e.target.value }))}
-                  placeholder="e.g. The Green Café"
+                  placeholder={t("map.your_name_placeholder")}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-background focus:outline-none focus:border-primary"
                   data-testid="input-buyer-name"
                 />
@@ -682,16 +684,16 @@ export function LeafletFarmerMap({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">Urgency</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.urgency")}</label>
                   <select value={form.urgency} onChange={e => setForm(f => ({ ...f, urgency: e.target.value as any }))}
                     className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-background focus:outline-none focus:border-primary" data-testid="select-urgency">
-                    <option value="high">🔴 High</option>
-                    <option value="medium">🟡 Medium</option>
-                    <option value="low">🟢 Low</option>
+                    <option value="high">{t("map.urgency_high")}</option>
+                    <option value="medium">{t("map.urgency_medium")}</option>
+                    <option value="low">{t("map.urgency_low")}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">Buyer Type</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.buyer_type")}</label>
                   <select value={form.buyerType} onChange={e => setForm(f => ({ ...f, buyerType: e.target.value as any }))}
                     className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-background focus:outline-none focus:border-primary" data-testid="select-buyer-type">
                     <option value="individual">Individual</option>
@@ -705,11 +707,11 @@ export function LeafletFarmerMap({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">Description</label>
+                <label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1 block">{t("map.description")}</label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="Any specific requirements, quality, variety..."
+                  placeholder={t("map.any_requirements")}
                   rows={2}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-background focus:outline-none focus:border-primary resize-none"
                   data-testid="input-description"
@@ -722,7 +724,7 @@ export function LeafletFarmerMap({
                 className="w-full h-9 text-xs font-bold bg-primary hover:bg-primary/90 rounded-xl"
                 data-testid="btn-submit-need"
               >
-                {postNeed.isPending ? "Posting…" : "Post to Live Map →"}
+                {postNeed.isPending ? t("map.posting") : t("map.post_to_live_map")}
               </Button>
             </div>
           </div>
@@ -733,7 +735,7 @@ export function LeafletFarmerMap({
       {postSuccess && (
         <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[2000] bg-green-600 text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-bold animate-in slide-in-from-top-2">
           <CheckCircle2 className="h-4 w-4" />
-          Posted! Farmers near {postSuccess.location} can now see your need.
+          {t("map.posted_successfully", { location: postSuccess.location })}
           <button onClick={() => setPostSuccess(null)}><X className="h-3.5 w-3.5" /></button>
         </div>
       )}

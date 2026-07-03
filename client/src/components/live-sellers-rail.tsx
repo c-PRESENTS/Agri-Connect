@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { LeafletFarmerMap } from "@/components/leaflet-farmer-map";
@@ -73,6 +74,7 @@ export function LiveSellersRail({
   listHeight = 460,
   layout = "stacked",
 }: LiveSellersRailProps) {
+  const { t } = useTranslation();
   const { data: fetched = [], dataUpdatedAt, isFetching } = useQuery<Product[]>({
     queryKey: ["/api/products"],
     enabled: !providedProducts,
@@ -145,7 +147,7 @@ export function LiveSellersRail({
                 <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
               </span>
-              Live activity
+              {t("live_sellers.title")}
             </p>
             <p className="text-[11px] text-muted-foreground truncate" data-testid="text-live-status">
               {onlineCount} of {sellers.length} sellers online · Updated <UpdatedAgo since={dataUpdatedAt} />
@@ -179,11 +181,11 @@ export function LiveSellersRail({
         <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
           <p className="text-sm font-semibold flex items-center gap-1.5">
             <Wifi className="w-3.5 h-3.5 text-green-600" />
-            Sellers near you
+            {t("live_sellers.title")}
           </p>
           <Badge variant="outline" className="text-[10px]" data-testid="badge-online-count">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1 animate-pulse" />
-            {onlineCount} online
+            {t("live_sellers.online_count", { count: onlineCount })}
           </Badge>
         </div>
 
@@ -192,7 +194,7 @@ export function LiveSellersRail({
             {sellers.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
                 <MapPin className="w-6 h-6 mx-auto mb-2 opacity-50" />
-                No sellers in this category yet.
+                {t("product_grid.no_products_title")}
               </div>
             ) : (
               sellers.map((s) => {
@@ -247,7 +249,7 @@ export function LiveSellersRail({
                               s.isOnline ? "text-green-600 dark:text-green-400" : "text-muted-foreground"
                             }`}
                           >
-                            {s.isOnline ? "Live" : "Offline"}
+                            {s.isOnline ? t("live_sellers.live_status") : t("map.offline_status")}
                           </span>
                         </div>
                         <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
@@ -327,7 +329,7 @@ export function LiveSellersRail({
                             data-testid={`button-visit-shop-${s.id}`}
                           >
                             <Link href={`/sellers/${s.id}`} onClick={(e) => e.stopPropagation()}>
-                              Visit shop
+                              {t("live_sellers.visit_shop")}
                               <ChevronRight className="w-3 h-3 ml-0.5" />
                             </Link>
                           </Button>

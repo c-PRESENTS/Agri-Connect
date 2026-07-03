@@ -193,7 +193,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
               <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-border/30 bg-muted/20">
                 <div className="flex items-center gap-1.5">
                   <Sparkles className="h-3 w-3 text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">AI Search</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("search.ai_search")}</span>
                 </div>
                 <Switch
                   checked={aiSearchEnabled}
@@ -208,7 +208,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             {aiSearchEnabled && aiExpandedQuery && aiExpandedQuery !== inputVal && inputVal.length >= 2 && (
               <div className="px-3 py-1.5 border-b border-border/30 bg-primary/5">
                 <p className="text-[10px] text-muted-foreground">
-                  <span className="font-semibold">Expanded:</span> {aiExpandedQuery}
+                  <span className="font-semibold">{t("search.expanded")}</span> {aiExpandedQuery}
                   {aiCategoryHint && (
                     <Badge variant="secondary" className="ml-1.5 text-[8px] py-0">
                       {categories.find(c => c.id === aiCategoryHint)?.name || aiCategoryHint}
@@ -222,7 +222,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             {aiLoading && (
               <div className="flex items-center justify-center gap-2 px-3 py-3">
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                <span className="text-[11px] text-muted-foreground">AI searching...</span>
+                <span className="text-[11px] text-muted-foreground">{t("search.ai_searching")}</span>
               </div>
             )}
 
@@ -232,14 +232,14 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                   <div className="flex items-center gap-1.5">
                     <History className="h-3 w-3 text-muted-foreground" />
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                      Recent
+                      {t("search.recent")}
                     </span>
                   </div>
                   <button
                     onClick={handleClearRecent}
                     className="text-[9px] font-semibold text-muted-foreground hover:text-destructive flex items-center gap-0.5"
                   >
-                    <RotateCcw className="h-2.5 w-2.5" /> Clear
+                    <RotateCcw className="h-2.5 w-2.5" /> {t("search.clear")}
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-1.5 px-2">
@@ -261,7 +261,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                 <div className="flex items-center gap-1.5 px-2 py-1 mb-1">
                   <Package className="h-3 w-3 text-primary" />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Browse Categories
+                    {t("search.browse_categories")}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 px-2">
@@ -310,10 +310,10 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                     <Package className="h-3 w-3 text-primary" />
                   )}
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    {aiSearchEnabled ? "AI Results" : t("search.products", "Products")}
+                    {aiSearchEnabled ? t("search.ai_results") : t("search.products")}
                   </span>
                   {aiSearchEnabled && suggestions.length > 0 && (
-                    <Badge variant="secondary" className="text-[8px] py-0 ml-auto">{suggestions.length} found</Badge>
+                    <Badge variant="secondary" className="text-[8px] py-0 ml-auto">{t("search.found_count", { count: suggestions.length })}</Badge>
                   )}
                 </div>
                 {suggestions.map((product) => (
@@ -346,8 +346,8 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
 
             {showNoResults && (
               <div className="px-3 py-4 text-center">
-                <p className="text-[11px] text-muted-foreground">No results for "{inputVal}"</p>
-                <p className="text-[10px] text-muted-foreground/60 mt-0.5">Try different keywords or toggle off AI Search</p>
+                <p className="text-[11px] text-muted-foreground">{t("search.no_results", { query: inputVal })}</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-0.5">{t("search.no_results_hint")}</p>
               </div>
             )}
           </motion.div>

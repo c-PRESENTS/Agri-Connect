@@ -1,4 +1,6 @@
 import { Switch, Route, useLocation } from "wouter";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -49,6 +51,21 @@ const FULLSCREEN_ROUTES = ["/", "/map"];
 const NO_RAIL_ROUTES = ["/login"];
 const NO_MARKET_PANEL_ROUTES = ["/", "/map", "/login"];
 const NO_MOBILE_NAV_ROUTES = ["/login"];
+const RTL_LANGS = new Set(["ar", "ur", "fa", "he"]);
+
+function I18nRuntime() {
+  const { i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage || i18n.language || "en";
+  const baseLang = lang.split("-")[0];
+
+  useEffect(() => {
+    document.documentElement.lang = baseLang;
+    document.documentElement.dir = RTL_LANGS.has(baseLang) ? "rtl" : "ltr";
+    localStorage.setItem("agriconnect-lang", baseLang);
+  }, [baseLang]);
+
+  return null;
+}
 
 function AppShell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -156,6 +173,7 @@ function App() {
     <ThemeProvider defaultTheme="light" storageKey="agriconnect-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
+          <I18nRuntime />
           <Toaster />
           <AuthAwareContent />
         </TooltipProvider>

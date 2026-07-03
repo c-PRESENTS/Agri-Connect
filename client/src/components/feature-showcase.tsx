@@ -1,28 +1,30 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   Camera, Mic, MapPin, Shield, Truck, Building2, Globe, TrendingUp,
   Zap, Heart, Clock
 } from "lucide-react";
 
 const features = [
-  { icon: Camera,    title: "Photo-Sell AI",       description: "Snap & list instantly with AI detection",         color: "from-violet-500 to-purple-600" },
-  { icon: Mic,       title: "Voice Commands",       description: "Hands-free navigation for busy farmers",          color: "from-blue-500 to-cyan-600"    },
-  { icon: MapPin,    title: "Local Discovery",      description: "Interactive maps with radius farmer search",       color: "from-green-500 to-emerald-600" },
-  { icon: Building2, title: "Government Schemes",   description: "Subsidies, insurance & financial aid",            color: "from-orange-500 to-red-500"   },
-  { icon: Truck,     title: "Fast Delivery",        description: "Same-day & next-day delivery across UK",          color: "from-teal-500 to-green-600"   },
-  { icon: Shield,    title: "Secure Payments",      description: "Cards, bank transfer, COD & more",                color: "from-indigo-500 to-blue-600"  },
-  { icon: Globe,     title: "Multi-Currency",        description: "75+ countries, 15+ currencies supported",        color: "from-pink-500 to-rose-600"    },
-  { icon: TrendingUp,title: "Demand Alerts",        description: "Real-time buyer demand in your area",             color: "from-amber-500 to-orange-600" },
+  { icon: Camera,    title: "features.photo_sell",       description: "features.photo_sell_desc",         color: "from-violet-500 to-purple-600" },
+  { icon: Mic,       title: "features.voice_commands",   description: "features.voice_commands_desc",     color: "from-blue-500 to-cyan-600"    },
+  { icon: MapPin,    title: "features.local_discovery",  description: "features.local_discovery_desc",    color: "from-green-500 to-emerald-600" },
+  { icon: Building2, title: "features.govt_schemes",     description: "features.govt_schemes_desc",       color: "from-orange-500 to-red-500"   },
+  { icon: Truck,     title: "features.fast_delivery",    description: "features.fast_delivery_desc",      color: "from-teal-500 to-green-600"   },
+  { icon: Shield,    title: "features.secure_payments",  description: "features.secure_payments_desc",    color: "from-indigo-500 to-blue-600"  },
+  { icon: Globe,     title: "features.multi_currency",   description: "features.multi_currency_desc",     color: "from-pink-500 to-rose-600"    },
+  { icon: TrendingUp,title: "features.demand_alerts",    description: "features.demand_alerts_desc",      color: "from-amber-500 to-orange-600" },
 ];
 
 const stats = [
-  { value: "500+",   label: "Products",  icon: Zap        },
-  { value: "2,500+", label: "Farmers",   icon: Heart      },
-  { value: "50K+",   label: "Customers", icon: TrendingUp },
-  { value: "24/7",   label: "Support",   icon: Clock      },
+  { value: "500+",   label: "features.products_label",  icon: Zap        },
+  { value: "2,500+", label: "features.farmers_label",   icon: Heart      },
+  { value: "50K+",   label: "features.customers_label", icon: TrendingUp },
+  { value: "24/7",   label: "features.support_label",   icon: Clock      },
 ];
 
 export function FeatureShowcase() {
+  const { t } = useTranslation();
   return (
     <section className="py-8 px-4 bg-gradient-to-b from-background via-muted/20 to-background">
       <div className="container mx-auto max-w-5xl">
@@ -35,16 +37,16 @@ export function FeatureShowcase() {
           viewport={{ once: true }}
         >
           <span className="text-primary font-semibold text-xs uppercase tracking-widest">
-            Why Choose AgriConnect
+            {t("features.section_title")}
           </span>
           <h2 className="text-xl md:text-2xl font-bold mt-1 mb-1">
-            Powerful Features for{" "}
+            {t("features.powerful_features")}{" "}
             <span className="bg-gradient-to-r from-primary via-green-500 to-emerald-500 bg-clip-text text-transparent">
-              Modern Agriculture
+              {t("features.modern_agriculture")}
             </span>
           </h2>
           <p className="text-muted-foreground text-xs max-w-lg mx-auto">
-            Everything you need to buy, sell, and manage agricultural products in one platform
+            {t("features.section_subtitle")}
           </p>
         </motion.div>
 
@@ -64,10 +66,10 @@ export function FeatureShowcase() {
               </div>
               <div className="min-w-0">
                 <div className="text-[11px] font-bold leading-tight text-foreground group-hover:text-primary transition-colors truncate">
-                  {f.title}
+                  {t(f.title)}
                 </div>
                 <div className="text-[10px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
-                  {f.description}
+                  {t(f.description)}
                 </div>
               </div>
             </motion.div>
@@ -97,7 +99,7 @@ export function FeatureShowcase() {
                 <div className="text-sm font-bold bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent leading-tight">
                   {s.value}
                 </div>
-                <div className="text-[10px] text-muted-foreground leading-tight">{s.label}</div>
+                <div className="text-[10px] text-muted-foreground leading-tight">{t(s.label)}</div>
               </div>
             </motion.div>
           ))}

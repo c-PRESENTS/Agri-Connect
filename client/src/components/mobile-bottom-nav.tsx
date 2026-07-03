@@ -3,12 +3,14 @@ import { motion } from "framer-motion";
 import { Home, LayoutGrid, Map, ShoppingCart, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Cart } from "@shared/schema";
+import { useTranslation } from "react-i18next";
 
 interface MobileBottomNavProps {
   onCategories?: () => void;
 }
 
 export function MobileBottomNav({ onCategories }: MobileBottomNavProps) {
+  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
 
   const { data: cart } = useQuery<Cart>({ queryKey: ["/api/cart"] });
@@ -21,11 +23,11 @@ export function MobileBottomNav({ onCategories }: MobileBottomNavProps) {
     path: string;
     badge?: number;
   }> = [
-    { id: "home",       label: "Home",       icon: Home,        path: "/" },
-    { id: "categories", label: "Browse",     icon: LayoutGrid,  path: "/?category=daily-needs" },
-    { id: "map",        label: "Map",        icon: Map,         path: "/map" },
-    { id: "cart",       label: "Cart",       icon: ShoppingCart, path: "/cart", badge: cartCount },
-    { id: "profile",    label: "Profile",    icon: User,        path: "/login" },
+    { id: "home",       label: t("nav.home"),       icon: Home,        path: "/" },
+    { id: "categories", label: t("nav.browse"),     icon: LayoutGrid,  path: "/?category=daily-needs" },
+    { id: "map",        label: t("nav.map"),        icon: Map,         path: "/map" },
+    { id: "cart",       label: t("nav.cart"),       icon: ShoppingCart, path: "/cart", badge: cartCount },
+    { id: "profile",    label: t("nav.profile"),    icon: User,        path: "/login" },
   ];
 
   const handleTap = (item: typeof items[number]) => {

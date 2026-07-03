@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -68,10 +69,10 @@ interface HeroSectionProps {
 }
 
 const TRUST_BADGES = [
-  { icon: ShieldCheck, label: "Verified Farms", color: "text-green-300" },
-  { icon: Truck, label: "Farm-to-Door", color: "text-blue-300" },
-  { icon: Leaf, label: "100% Natural", color: "text-emerald-300" },
-  { icon: Globe, label: "75+ Regions", color: "text-purple-300" },
+  { icon: ShieldCheck, label: "home.verified_farms", color: "text-green-300" },
+  { icon: Truck, label: "home.farm_to_door", color: "text-blue-300" },
+  { icon: Leaf, label: "home.natural", color: "text-emerald-300" },
+  { icon: Globe, label: "home.regions", color: "text-purple-300" },
 ];
 
 type HeroMapMode = "products" | "live-needs" | "farms-nearby" | "land-lots";
@@ -95,6 +96,7 @@ function saveCatPrefs(p: { order: string[]; hidden: string[] }) {
 }
 
 export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: HeroSectionProps) {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [liveOrders, setLiveOrders] = useState(1427);
   const [activeFarmers, setActiveFarmers] = useState(89);
@@ -221,23 +223,23 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <div className="inline-flex items-center gap-1 bg-green-500/15 border border-green-400/40 rounded-full px-1.5 py-0.5 shrink-0">
                 <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[9px] font-bold text-green-300">{activeFarmers} live</span>
+                <span className="text-[9px] font-bold text-green-300">{activeFarmers} {t("common.live")}</span>
               </div>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{farmerCount}+</span> farms</span>
+              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{farmerCount}+</span> {t("home.farmers")}</span>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{products.length}+</span> products</span>
+              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{products.length}+</span> {t("home.products")}</span>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{liveOrders.toLocaleString()}</span> orders</span>
+              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{liveOrders.toLocaleString()}</span> {t("home.orders")}</span>
             </div>
 
             {/* Compact headline — one tight block */}
             <div>
               <h1 className="text-[20px] font-black text-white leading-[1.1] tracking-tight">
-                Fresh produce, <span className="gradient-text">direct to you.</span>
+                {t("home.hero_title")}, <span className="gradient-text">{t("home.hero_subtitle")}</span>
               </h1>
               <p className="text-[11px] text-white/60 leading-snug mt-0.5">
-                Verified UK farms · fair prices · same-day delivery
+                {t("home.hero_description")}
               </p>
             </div>
 
@@ -248,7 +250,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                 data-testid="button-mobile-shop-now"
                 className="flex-1 h-9 bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] font-bold rounded-lg shadow-sm gap-1 px-3"
               >
-                Shop now<ArrowRight className="h-3.5 w-3.5" />
+                {t("home.shop_now")}<ArrowRight className="h-3.5 w-3.5" />
               </Button>
               <Button
                 variant="outline"
@@ -256,7 +258,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                 data-testid="button-mobile-live-map"
                 className="flex-1 h-9 border-white/25 text-white hover:bg-white/10 bg-white/5 text-[12px] font-bold rounded-lg gap-1 px-3"
               >
-                <Satellite className="h-3.5 w-3.5 text-green-400" />Live map
+                <Satellite className="h-3.5 w-3.5 text-green-400" />{t("home.live_map")}
               </Button>
             </div>
           </div>
@@ -266,28 +268,28 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
 
             <div className="flex items-center gap-2 flex-wrap mb-3">
               <Badge className="bg-primary/20 text-primary border-primary/30 px-2 py-0.5 text-[9px] font-bold tracking-[0.1em] uppercase rounded-full">
-                <Leaf className="h-2.5 w-2.5 mr-0.5" />Farm to Table
+                <Leaf className="h-2.5 w-2.5 mr-0.5" />{t("home.farm_to_table")}
               </Badge>
               <div className="flex items-center gap-1 bg-white/10 border border-white/20 rounded-full px-1.5 py-0.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[9px] font-bold text-green-300">{activeFarmers} live</span>
+                <span className="text-[9px] font-bold text-green-300">{activeFarmers} {t("common.live")}</span>
               </div>
             </div>
 
             <h1 className="text-4xl xl:text-5xl font-black text-white mb-3 leading-[1] tracking-tighter">
-              FRESH PRODUCE,{" "}
-              <span className="gradient-text">DIRECT TO YOU</span>
+              {t("home.fresh_produce")}{" "}
+              <span className="gradient-text">{t("home.direct_to_you")}</span>
             </h1>
 
             <p className="text-sm text-white/70 mb-4 leading-snug max-w-md">
-              Connecting you directly with local growers. Fair prices, verified quality.
+              {t("home.hero_description")}
             </p>
 
             <div className="grid grid-cols-3 gap-2 mb-4">
               {[
-                { value: `${farmerCount}+`, label: "Farmers", icon: Users, color: "text-primary bg-primary/20" },
-                { value: `${products.length}+`, label: "Products", icon: Sprout, color: "text-emerald-400 bg-emerald-900/40" },
-                { value: `${liveOrders.toLocaleString()}`, label: "Orders", icon: Activity, color: "text-amber-400 bg-amber-900/40" },
+                { value: `${farmerCount}+`, label: t("home.farmers"), icon: Users, color: "text-primary bg-primary/20" },
+                { value: `${products.length}+`, label: t("home.products"), icon: Sprout, color: "text-emerald-400 bg-emerald-900/40" },
+                { value: `${liveOrders.toLocaleString()}`, label: t("home.orders"), icon: Activity, color: "text-amber-400 bg-amber-900/40" },
               ].map(({ value, label, icon: Icon, color }) => (
                 <div key={label} className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-lg p-2.5 flex flex-col items-center text-center">
                   <div className={`w-7 h-7 rounded-md flex items-center justify-center mx-auto mb-1 ${color}`}>
@@ -301,10 +303,10 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
 
             <div className="flex items-center gap-2 mb-4 flex-wrap">
               <Button onClick={onBrowse} className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 h-10 text-sm font-bold rounded-lg shadow-lg shadow-primary/20 gap-1">
-                Shop Now<ArrowRight className="h-4 w-4" />
+                {t("home.shop_now")}<ArrowRight className="h-4 w-4" />
               </Button>
               <Button variant="outline" className="border-green-400/60 text-white hover:bg-green-500/30 px-6 h-10 text-sm font-bold rounded-lg gap-1 bg-green-500/20" onClick={() => navigate("/map")}>
-                <Satellite className="h-4 w-4" />Live Map
+                <Satellite className="h-4 w-4" />{t("home.live_map")}
               </Button>
             </div>
 
@@ -312,7 +314,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
               {TRUST_BADGES.map(({ icon: Icon, label, color }) => (
                 <div key={label} className="flex items-center gap-1 text-[11px] text-white/60 font-medium">
                   <Icon className={`h-3 w-3 ${color}`} />
-                  {label}
+                  {t(label)}
                 </div>
               ))}
             </div>
@@ -356,7 +358,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
             onMouseDown={(e) => { e.preventDefault(); startMobileMapDrag(e.clientY); }}
             onTouchStart={(e) => { startMobileMapDrag(e.touches[0].clientY); }}
             data-testid="mobile-map-resize-handle"
-            title="Drag to resize map"
+            title={t("map.drag_to_resize")}
             className="block lg:hidden mx-3 mt-1.5 mb-2 h-7 rounded-full cursor-row-resize touch-none select-none relative overflow-hidden bg-gradient-to-r from-green-500/20 via-green-400/40 to-green-500/20 border border-green-400/50 shadow-[0_0_18px_rgba(34,197,94,0.5)] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
             {/* Shining sweep animation */}
@@ -368,7 +370,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
               <span className="w-1 h-1 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.9)]" />
             </div>
             <span className="relative z-10 text-[10px] font-black uppercase tracking-wider text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
-              Drag to resize map
+              {t("map.drag_to_resize")}
             </span>
             <div className="flex items-center gap-1 relative z-10">
               <span className="w-1 h-1 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.9)]" />
@@ -380,7 +382,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
           {/* DRAG HANDLE — horizontal resize between text and map */}
           <div
             onMouseDown={startHeroDrag}
-            title="Drag to resize"
+            title={t("map.drag_to_resize")}
             data-testid="hero-resize-handle"
             className="hidden lg:flex flex-col items-center justify-center w-3 cursor-col-resize group flex-shrink-0 z-20 hover:bg-white/5 transition-colors"
           >
@@ -451,10 +453,10 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
           <div className="px-3 sm:container sm:mx-auto sm:px-4 py-2 sm:py-3">
             <div className="flex sm:grid sm:grid-cols-4 gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar">
               {[
-                { icon: Users, label: "Farmers", value: "2,500+", border: "border-green-200/60 dark:border-green-800/40", bg: "bg-green-50/80 dark:bg-green-950/30", iconColor: "text-green-600 dark:text-green-400", textColor: "text-green-700 dark:text-green-300" },
-                { icon: Star, label: "Rating", value: "4.9", border: "border-amber-200/60 dark:border-amber-800/40", bg: "bg-amber-50/80 dark:bg-amber-950/30", iconColor: "text-amber-600 dark:text-amber-400", textColor: "text-amber-700 dark:text-amber-300" },
-                { icon: TrendingUp, label: "Products", value: `${products.length}+`, border: "border-blue-200/60 dark:border-blue-800/40", bg: "bg-blue-50/80 dark:bg-blue-950/30", iconColor: "text-blue-600 dark:text-blue-400", textColor: "text-blue-700 dark:text-blue-300" },
-                { icon: Zap, label: "Orders", value: liveOrders.toLocaleString(), border: "border-purple-200/60 dark:border-purple-800/40", bg: "bg-purple-50/80 dark:bg-purple-950/30", iconColor: "text-purple-600 dark:text-purple-400", textColor: "text-purple-700 dark:text-purple-300" },
+                { icon: Users, label: t("home.farmers"), value: "2,500+", border: "border-green-200/60 dark:border-green-800/40", bg: "bg-green-50/80 dark:bg-green-950/30", iconColor: "text-green-600 dark:text-green-400", textColor: "text-green-700 dark:text-green-300" },
+                { icon: Star, label: t("home.ratings"), value: "4.9", border: "border-amber-200/60 dark:border-amber-800/40", bg: "bg-amber-50/80 dark:bg-amber-950/30", iconColor: "text-amber-600 dark:text-amber-400", textColor: "text-amber-700 dark:text-amber-300" },
+                { icon: TrendingUp, label: t("home.products"), value: `${products.length}+`, border: "border-blue-200/60 dark:border-blue-800/40", bg: "bg-blue-50/80 dark:bg-blue-950/30", iconColor: "text-blue-600 dark:text-blue-400", textColor: "text-blue-700 dark:text-blue-300" },
+                { icon: Zap, label: t("home.orders"), value: liveOrders.toLocaleString(), border: "border-purple-200/60 dark:border-purple-800/40", bg: "bg-purple-50/80 dark:bg-purple-950/30", iconColor: "text-purple-600 dark:text-purple-400", textColor: "text-purple-700 dark:text-purple-300" },
               ].map(({ icon: Icon, label, value, border, bg, iconColor, textColor }) => (
                 <div key={label} className={`flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl border shrink-0 ${border} ${bg}`}>
                   <div className={`h-6 w-6 sm:h-8 sm:w-8 rounded-md sm:rounded-lg bg-background/80 border ${border} flex items-center justify-center flex-shrink-0`}>
@@ -475,11 +477,11 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
           <div className="flex items-center justify-between mb-1.5 sm:mb-2.5">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-foreground/60">Fresh Picks</span>
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-foreground/60">{t("home.fresh_picks")}</span>
               <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 h-4">{paidProducts.slice(0, 14).length}</Badge>
             </div>
             <Button variant="ghost" size="sm" onClick={onBrowse} className="h-6 px-2 text-[10px] font-bold text-primary hover:text-primary gap-1">
-              All <ArrowRight className="h-3 w-3" />
+              {t("common.all")} <ArrowRight className="h-3 w-3" />
             </Button>
           </div>
           <div className="flex gap-1.5 sm:gap-2.5 overflow-x-auto pb-1 sm:pb-1.5 no-scrollbar">
@@ -523,7 +525,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                   data-testid={`button-hero-add-${product.id}`}
                 >
                   <ShoppingCart className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                  Add
+                  {t("product.add_short")}
                 </Button>
               </motion.div>
             ))}
@@ -536,11 +538,11 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
             <div className="flex items-center justify-between mb-1.5 sm:mb-2.5">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Featured</span>
-                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 text-[8px] sm:text-[9px] px-1 sm:px-1.5 h-4">Top Picks</Badge>
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">{t("home.featured")}</span>
+                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 text-[8px] sm:text-[9px] px-1 sm:px-1.5 h-4">{t("home.top_picks")}</Badge>
               </div>
               <Button variant="ghost" size="sm" onClick={onBrowse} className="h-6 px-2 text-[10px] font-bold text-amber-600 hover:text-amber-700 gap-1">
-                All <ArrowRight className="h-3 w-3" />
+                {t("common.all")} <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
             <div className="flex gap-1.5 sm:gap-3 overflow-x-auto pb-1 sm:pb-1.5 no-scrollbar">
@@ -581,13 +583,13 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                     onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
                     data-testid={`button-hero-featured-add-${product.id}`}
                   >
-                    <ShoppingCart className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                    Add
-                  </Button>
-                </motion.div>
-              ))}
-            </div>
+                  <ShoppingCart className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                  {t("product.add_short")}
+                </Button>
+              </motion.div>
+            ))}
           </div>
+        </div>
         )}
 
         {/* ─── COMMUNITY FREE ITEMS — 2 rows, live Share & Care data ─── */}
@@ -596,17 +598,17 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-orange-500 animate-pulse" />
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-orange-600 dark:text-orange-400">Free Items</span>
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-orange-600 dark:text-orange-400">{t("home.free_items")}</span>
                 <Badge variant="outline" className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 h-4 border-orange-200 dark:border-orange-700 text-orange-600 dark:text-orange-400 flex items-center gap-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-orange-500 inline-block animate-pulse" />
-                  Live
+                  {t("common.live")}
                 </Badge>
               </div>
               <Button variant="ghost" size="sm" onClick={() => navigate("/share-care")}
                 className="h-6 px-2 text-[10px] font-bold text-orange-600 hover:text-orange-700 gap-1"
                 data-testid="btn-share-care-all">
-                <span className="hidden sm:inline">Share &amp; Care</span>
-                <span className="sm:hidden">More</span>
+                <span className="hidden sm:inline">{t("share.title")}</span>
+                <span className="sm:hidden">{t("nav.more")}</span>
                 <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
@@ -622,7 +624,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                   <div className="flex-1 min-w-0">
                     <div className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-orange-600 transition-colors leading-tight">{item.name}</div>
                     <div className="flex items-center gap-0.5 sm:gap-1">
-                      <span className="text-[9px] sm:text-[11px] text-orange-500 font-bold uppercase">Free</span>
+                      <span className="text-[9px] sm:text-[11px] text-orange-500 font-bold uppercase">{t("product.free")}</span>
                       <span className="text-[8px] sm:text-[10px] text-muted-foreground">· {item.postedAgo}</span>
                     </div>
                   </div>
@@ -638,7 +640,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
 
             <div className="flex items-center gap-1.5 sm:gap-3 mb-1.5 sm:mb-4 flex-wrap">
               <div className="h-1.5 w-1.5 sm:h-2.5 sm:w-2.5 rounded-full bg-primary flex-shrink-0" />
-              <h2 className="text-[11px] sm:text-base font-black uppercase tracking-[0.12em] text-foreground">All Categories</h2>
+              <h2 className="text-[11px] sm:text-base font-black uppercase tracking-[0.12em] text-foreground">{t("home.all_categories")}</h2>
               <span className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold">
                 ({orderedCats.filter(c => !catPrefs.hidden.includes(c.key)).length})
               </span>
@@ -648,7 +650,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                     onClick={() => persistCatPrefs({ ...catPrefs, hidden: [] })}
                     className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border border-primary/40 text-primary hover:bg-primary/10 transition-all"
                   >
-                    <PlusCircle className="h-3 w-3" /> Restore all
+                    <PlusCircle className="h-3 w-3" /> {t("home.restore_all")}
                   </button>
                 )}
                 <button
@@ -659,14 +661,14 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                       : "border-border/60 text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5"
                   }`}
                 >
-                  {catEditMode ? <><Check className="h-3 w-3" /> Done</> : <><Pencil className="h-3 w-3" /> Customise</>}
+                  {catEditMode ? <><Check className="h-3 w-3" /> {t("nav.done")}</> : <><Pencil className="h-3 w-3" /> {t("home.customise")}</>}
                 </button>
               </div>
             </div>
 
             {catEditMode && (
               <p className="text-[10px] text-muted-foreground mb-3 bg-muted/50 rounded-lg px-3 py-2">
-                Drag to reorder · click <EyeOff className="h-3 w-3 inline" /> to hide a category · restore hidden ones with "Restore all"
+                {t("home.customise_hint")}
               </p>
             )}
 
@@ -734,7 +736,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                             persistCatPrefs({ ...catPrefs, hidden });
                           }}
                           className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive border-2 border-background flex items-center justify-center shadow-md z-10 hover:bg-destructive/80 transition-colors"
-                          title={isHidden ? "Show" : "Hide"}
+                          title={isHidden ? t("home.show") : t("home.hide")}
                         >
                           {isHidden ? <PlusCircle className="h-2.5 w-2.5 text-white" /> : <XIcon className="h-2.5 w-2.5 text-white" />}
                         </button>
