@@ -24,6 +24,8 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import OpenAI from "openai";
 import { createAIService, normalizeLang } from "./ai";
+import { generateGeminiContent, isGeminiAvailable } from "./ai/gemini";
+import { translateLocally } from "./ai/local-translate";
 import { getStripe, getWebhookSecret } from "./stripe";
 import type Stripe from "stripe";
 
@@ -281,6 +283,76 @@ const openai = new OpenAI({
 });
 
 const ai = createAIService(openai);
+
+const SEARCH_SYNONYMS: Record<string, string[]> = {
+  veggie: ["vegetable", "vegetables"],
+  veggies: ["vegetable", "vegetables"],
+  veg: ["vegetable", "vegetables"],
+  taters: ["potato", "potatoes"],
+  aloo: ["potato", "potatoes"],
+  doodh: ["milk", "dairy"],
+  atta: ["flour", "wheat"],
+  pyaz: ["onion", "onions"],
+  tamatar: ["tomato", "tomatoes"],
+  organic: ["organic", "natural"],
+  fruit: ["fruit", "fruits"],
+};
+
+function parseJsonObject(raw: string): Record<string, any> {
+  const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "");
+  return JSON.parse(cleaned || "{}") as Record<string, any>;
+}
+
+function inferSearchExpansion(query: string): { expandedQuery: string; category: string | null; intent: "search" | "browse" } {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const expanded = new Set(words);
+  for (const word of words) {
+    SEARCH_SYNONYMS[word]?.forEach((term) => expanded.add(term));
+  }
+
+  const joined = Array.from(expanded).join(" ");
+  let category: string | null = null;
+  if (/\b(seed|fertili[sz]er|tool|tractor|glove|pesticide|feed)\b/.test(joined)) category = "inputs-tools";
+  else if (/\b(milk|dairy|egg|vegetable|fruit|grain|rice|wheat|tomato|potato|onion|apple|carrot)\b/.test(joined)) category = "daily-needs";
+  else if (/\b(jam|pickle|oil|flour|snack|bread|processed)\b/.test(joined)) category = "processed";
+  else if (/\b(hydroponic|greenhouse|sensor|drone|smart|agritech)\b/.test(joined)) category = "modern-farming";
+  else if (/\b(transport|service|irrigation|advisory|logistics)\b/.test(joined)) category = "services";
+
+  const intent: "search" | "browse" = /\b(show|browse|list|all|available|category|categories)\b/.test(joined) ? "browse" : "search";
+  return { expandedQuery: joined || query, category, intent };
+}
+
+function inferVoiceCommand(transcript: string): Record<string, unknown> {
+  const text = transcript.trim();
+  const lower = text.toLowerCase();
+  const nav: Array<[RegExp, string, string]> = [
+    [/\b(dashboard|seller panel)\b/, "/dashboard", "Opening your dashboard"],
+    [/\b(home|marketplace)\b/, "/", "Opening the marketplace"],
+    [/\b(cart|basket)\b/, "/cart", "Opening your cart"],
+    [/\b(sell|list product|photo sell|photo-sell)\b/, "/dashboard/photo-sell", "Opening product listing"],
+    [/\b(setting|settings|account)\b/, "/settings", "Opening settings"],
+    [/\b(land|lease|leasing)\b/, "/land-leasing", "Opening land leasing"],
+    [/\b(help|knowledge|support)\b/, "/farmers-help", "Opening help"],
+    [/\b(share|care|food rescue)\b/, "/share-care", "Opening Share and Care"],
+    [/\b(ship|shipping|logistics|delivery)\b/, "/logistics", "Opening logistics"],
+  ];
+  for (const [pattern, path, response] of nav) {
+    if (pattern.test(lower) && /\b(open|go|show|take|navigate)\b/.test(lower)) {
+      return { response, action: "navigate", path };
+    }
+  }
+
+  const query = lower
+    .replace(/\b(search for|find|show me|show|available|near me|please|products|produce)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return {
+    response: query ? `Searching for ${query}` : "Searching for that",
+    action: "search",
+    query: query || text,
+  };
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -1116,7 +1188,7 @@ GUIDELINES:
   });
 
   // D.3 / D.7 Real-time translation endpoint
-  app.post("/api/ai/translate", isAuthenticated, aiRateLimit(40, 60_000), async (req, res) => {
+  app.post("/api/ai/translate", aiRateLimit(120, 60_000), async (req, res) => {
     try {
       const { text, targetLanguage = "en", context = "agricultural marketplace" } = req.body;
 
@@ -1130,12 +1202,14 @@ GUIDELINES:
       res.json({ translated, targetLanguage: lang, original: text });
     } catch (error) {
       console.error("Translation error:", error);
-      res.status(500).json({ error: "Translation failed" });
+      const text = typeof req.body?.text === "string" ? req.body.text : "";
+      const lang = normalizeLang(req.body?.targetLanguage || "en");
+      res.json({ translated: translateLocally(text, lang), targetLanguage: lang, original: text, fallback: true });
     }
   });
 
   // AI Voice Command — interprets voice transcript, supports multi-turn conversation
-  app.post("/api/ai/voice", isAuthenticated, aiRateLimit(15, 60_000), async (req, res) => {
+  app.post("/api/ai/voice", aiRateLimit(15, 60_000), async (req, res) => {
     try {
       const { transcript, language = "en", context = "", conversationHistory = [] } = req.body;
 
@@ -1179,38 +1253,21 @@ Respond only with valid JSON.`;
       let parsed: Record<string, unknown>;
 
       try {
-        // Use OpenAI with conversation context
-        const messages: Array<{ role: "user" | "system"; content: string }> = [
-          { role: "user", content: systemPrompt }
-        ];
-
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages,
-          max_tokens: 180,
-          temperature: 0.3,
-          response_format: { type: "json_object" },
-        });
-
-        const content = completion.choices[0]?.message?.content || "{}";
-        parsed = JSON.parse(content) as Record<string, unknown>;
+        parsed = await ai.interpretVoice(transcript, lang, `${context}${historySnippet}`);
       } catch {
-        // Fallback to the basic AI service
-        parsed = await ai.interpretVoice(transcript, language, context);
+        parsed = inferVoiceCommand(transcript);
       }
 
       res.json(parsed);
     } catch (error) {
       console.error("Voice AI error:", error);
-      res.status(500).json({ 
-        response: "I'll search for that",
-        action: "search_text"
-      });
+      const transcript = typeof req.body?.transcript === "string" ? req.body.transcript : "";
+      res.json(inferVoiceCommand(transcript || "search"));
     }
   });
 
   // AI-Powered Search — expands query with synonyms, handles typos, returns enhanced results
-  app.post("/api/ai/search", isAuthenticated, aiRateLimit(30, 60_000), async (req, res) => {
+  app.post("/api/ai/search", aiRateLimit(30, 60_000), async (req, res) => {
     try {
       const { query, language = "en" } = req.body;
 
@@ -1246,26 +1303,38 @@ Your job is to:
 
 Respond only with valid JSON, no markdown.`;
 
-      let expandedQuery = query;
-      let categoryHint = null;
-      let intent = "search";
+      const inferred = inferSearchExpansion(query);
+      let expandedQuery = inferred.expandedQuery;
+      let categoryHint: string | null = inferred.category;
+      let intent: "search" | "browse" = inferred.intent;
 
       try {
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [{ role: "user", content: systemPrompt }],
-          max_tokens: 150,
-          temperature: 0.2,
-          response_format: { type: "json_object" },
-        });
+        let raw = "";
+        if (isGeminiAvailable()) {
+          raw = await generateGeminiContent({
+            systemInstruction: "Return only valid JSON. Do not wrap it in markdown.",
+            prompt: systemPrompt,
+            temperature: 0.2,
+            maxOutputTokens: 150,
+            responseMimeType: "application/json",
+          });
+        } else if (process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+          const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [{ role: "user", content: systemPrompt }],
+            max_tokens: 150,
+            temperature: 0.2,
+            response_format: { type: "json_object" },
+          });
+          raw = completion.choices[0]?.message?.content || "{}";
+        }
 
-        const aiResult = JSON.parse(completion.choices[0]?.message?.content || "{}");
+        const aiResult = raw ? parseJsonObject(raw) : {};
         expandedQuery = aiResult.expandedQuery || query;
-        categoryHint = aiResult.category || null;
-        intent = aiResult.intent || "search";
+        categoryHint = aiResult.category || categoryHint;
+        intent = aiResult.intent === "browse" ? "browse" : "search";
       } catch {
-        // AI failed — fall back to raw query
-        expandedQuery = query;
+        expandedQuery = inferred.expandedQuery;
       }
 
       // Step 3: Search with expanded query using multiple strategies

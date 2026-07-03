@@ -45,6 +45,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   const [aiCategoryHint, setAiCategoryHint] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const aiDebounceRef = useRef<number | undefined>();
   const { t } = useTranslation();
 
   const { data: products = [] } = useQuery<Product[]>({
@@ -53,6 +54,10 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   });
 
   const suggestions = aiResults ?? products.slice(0, 6);
+
+  useEffect(() => {
+    setInputVal(value);
+  }, [value]);
 
   const toggleAiSearch = useCallback((val: boolean) => {
     setAiSearchEnabled(val);
@@ -80,8 +85,17 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
       setAiExpandedQuery(data.expandedQuery || "");
       setAiCategoryHint(data.categoryHint || null);
     } catch {
-      setAiResults(null);
-      setAiExpandedQuery("");
+      try {
+        const fallback = await fetch(`/api/products?search=${encodeURIComponent(query)}`, {
+          credentials: "include",
+        });
+        const data = await fallback.json();
+        setAiResults(Array.isArray(data) ? data.slice(0, 20) : []);
+        setAiExpandedQuery(query);
+      } catch {
+        setAiResults([]);
+        setAiExpandedQuery("");
+      }
       setAiCategoryHint(null);
     } finally {
       setAiLoading(false);
@@ -98,15 +112,21 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (aiDebounceRef.current) window.clearTimeout(aiDebounceRef.current);
+    };
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInputVal(val);
     onChange(val);
     setOpen(true);
+    if (aiDebounceRef.current) window.clearTimeout(aiDebounceRef.current);
     // Trigger AI search with debounce
     if (aiSearchEnabled && val.length >= 2) {
-      const timeout = setTimeout(() => performAiSearch(val), 300);
-      return () => clearTimeout(timeout);
+      aiDebounceRef.current = window.setTimeout(() => performAiSearch(val), 300);
     } else {
       setAiResults(null);
       setAiExpandedQuery("");

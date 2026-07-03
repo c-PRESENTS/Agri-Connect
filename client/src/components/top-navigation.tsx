@@ -237,7 +237,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
 
         <div className="flex items-center gap-0 ml-auto shrink-0">
           <div className="hidden sm:flex items-center gap-0">
-            <VoiceCommand onSearch={onSearch} />
+            <VoiceCommand onSearch={handleSearch} />
             <LanguageSwitcher />
             <ThemeToggle />
             <RegionSwitcher />
@@ -339,7 +339,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
             <div className="grid grid-cols-2 gap-3 pt-3">
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t("nav.voice_label")}</span>
-                <VoiceCommand onSearch={onSearch} />
+                <VoiceCommand onSearch={handleSearch} />
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t("nav.language_label")}</span>

@@ -1,17 +1,22 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, type MutableRefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 
 const A_TR = "data-agri-tr";
 const A_OR = "data-agri-or";
 const A_ATTR_TR = "data-agri-attr-tr";
+const A_OPT_TR = "data-agri-option-tr";
+const A_OPT_OR = "data-agri-option-or";
 const ATTRS = ["placeholder", "title", "aria-label", "alt"] as const;
-const SKIP = `[${A_TR}],script,style,noscript,svg,code,pre,input,textarea,select,option,.lucide,[hidden],[aria-hidden="true"],[data-no-tr]`;
+const SKIP_BASE = `script,style,noscript,svg,code,pre,.lucide,[hidden],[aria-hidden="true"],[data-no-tr]`;
+const SKIP_TEXT = `[${A_TR}],${SKIP_BASE},input,textarea,select,option`;
+const SKIP_ATTR = `[${A_TR}],${SKIP_BASE}`;
 const MIN_LEN = 2;
 const CONCURRENCY = 3;
 
 type TextEntry = { text: string; node: Text };
 type AttrEntry = { text: string; el: HTMLElement; attr: typeof ATTRS[number] };
+type OptionEntry = { text: string; el: HTMLOptionElement };
 
 function isTranslatableText(text: string) {
   const t = text.trim();
@@ -24,7 +29,7 @@ function scanTextNodes(): TextEntry[] {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
     acceptNode(n) {
       const p = (n as Text).parentElement;
-      if (!p || p.closest(SKIP)) return NodeFilter.FILTER_REJECT;
+      if (!p || p.closest(SKIP_TEXT)) return NodeFilter.FILTER_REJECT;
       const t = (n as Text).textContent?.trim() || "";
       if (!isTranslatableText(t)) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
@@ -40,13 +45,23 @@ function scanTextNodes(): TextEntry[] {
 function scanAttributeNodes(): AttrEntry[] {
   const out: AttrEntry[] = [];
   document.querySelectorAll<HTMLElement>("body *").forEach((el) => {
-    if (el.closest(SKIP) || el.hasAttribute("data-no-tr")) return;
+    if (el.closest(SKIP_ATTR) || el.hasAttribute("data-no-tr")) return;
     for (const attr of ATTRS) {
       const text = el.getAttribute(attr);
       if (text && isTranslatableText(text)) {
         out.push({ text: text.trim(), el, attr });
       }
     }
+  });
+  return out;
+}
+
+function scanOptionNodes(): OptionEntry[] {
+  const out: OptionEntry[] = [];
+  document.querySelectorAll<HTMLOptionElement>("option").forEach((el) => {
+    if (el.closest("[data-no-tr]")) return;
+    const text = el.textContent?.trim() || "";
+    if (isTranslatableText(text)) out.push({ text, el });
   });
   return out;
 }
@@ -69,6 +84,14 @@ function setTranslatedAttribute(el: HTMLElement, attr: typeof ATTRS[number], ori
   el.setAttribute(A_ATTR_TR, "true");
 }
 
+function setTranslatedOption(el: HTMLOptionElement, original: string, translated: string) {
+  if (!el.hasAttribute(A_OPT_OR)) {
+    el.setAttribute(A_OPT_OR, original);
+  }
+  el.textContent = translated;
+  el.setAttribute(A_OPT_TR, "true");
+}
+
 function restoreAll() {
   document.querySelectorAll<HTMLElement>(`[${A_TR}]`).forEach((el) => {
     const orig = el.getAttribute(A_OR);
@@ -87,10 +110,21 @@ function restoreAll() {
     }
     el.removeAttribute(A_ATTR_TR);
   });
+  document.querySelectorAll<HTMLOptionElement>(`option[${A_OPT_TR}]`).forEach((el) => {
+    const orig = el.getAttribute(A_OPT_OR);
+    if (orig !== null) el.textContent = orig;
+    el.removeAttribute(A_OPT_TR);
+    el.removeAttribute(A_OPT_OR);
+  });
 }
 
 function cacheKey(text: string, lang: string) {
   return `${lang}:${text}`;
+}
+
+function clearObserver(observerRef: MutableRefObject<MutationObserver | null>) {
+  observerRef.current?.disconnect();
+  observerRef.current = null;
 }
 
 export function usePageTranslation() {
@@ -105,9 +139,10 @@ export function usePageTranslation() {
 
     const entries = scanTextNodes();
     const attrEntries = scanAttributeNodes();
-    if (entries.length === 0 && attrEntries.length === 0) return;
+    const optionEntries = scanOptionNodes();
+    if (entries.length === 0 && attrEntries.length === 0 && optionEntries.length === 0) return;
 
-    const uniqueTexts = Array.from(new Set([...entries.map((e) => e.text), ...attrEntries.map((e) => e.text)]));
+    const uniqueTexts = Array.from(new Set([...entries.map((e) => e.text), ...attrEntries.map((e) => e.text), ...optionEntries.map((e) => e.text)]));
     const toFetch = uniqueTexts.filter(
       (t) => !cacheRef.current.has(cacheKey(t, lang)),
     );
@@ -148,13 +183,23 @@ export function usePageTranslation() {
         setTranslatedAttribute(entry.el, entry.attr, entry.text, cached);
       }
     }
+    for (const entry of optionEntries) {
+      const cached = cacheRef.current.get(cacheKey(entry.text, lang));
+      if (cached) {
+        setTranslatedOption(entry.el, entry.text, cached);
+      }
+    }
   }, [i18n.language]);
 
   const handleEnable = useCallback(() => {
+    clearObserver(observerRef);
     translate();
     observerRef.current = new MutationObserver((mutations) => {
       for (const m of mutations) {
-        if (m.type === "childList" && m.addedNodes.length > 0) {
+        if (
+          (m.type === "childList" && m.addedNodes.length > 0) ||
+          (m.type === "attributes" && ATTRS.includes(m.attributeName as typeof ATTRS[number]))
+        ) {
           translate();
           break;
         }
@@ -169,32 +214,22 @@ export function usePageTranslation() {
   }, [translate]);
 
   const handleDisable = useCallback(() => {
-    observerRef.current?.disconnect();
-    observerRef.current = null;
+    clearObserver(observerRef);
     restoreAll();
   }, []);
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      enabledRef.current = detail;
-      if (detail) {
-        handleEnable();
-      } else {
-        handleDisable();
-      }
-    };
-    window.addEventListener("auto-translate-changed", handler);
-
-    const stored = localStorage.getItem("agriconnect-auto-translate") === "true";
-    if (stored && i18n.language !== "en") {
+    const lang = i18n.language.split("-")[0];
+    handleDisable();
+    if (lang !== "en") {
       enabledRef.current = true;
-      handleEnable();
+      window.setTimeout(handleEnable, 0);
+    } else {
+      enabledRef.current = false;
     }
 
     return () => {
-      window.removeEventListener("auto-translate-changed", handler);
-      observerRef.current?.disconnect();
+      clearObserver(observerRef);
       if (enabledRef.current) {
         restoreAll();
       }

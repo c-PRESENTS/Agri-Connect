@@ -1,5 +1,6 @@
 import type OpenAI from "openai";
 import { generateGeminiContent, isGeminiAvailable } from "./gemini";
+import { translateLocally } from "./local-translate";
 
 // Language helpers shared across AI tasks
 const SUPPORTED_LANGS = ["en", "hi", "pa", "ta", "cy", "pl"];
@@ -49,18 +50,27 @@ export function createAIService(openai: OpenAI) {
         }
       }
 
-      // OpenAI fallback
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{
-          role: "user",
-          content: `Translate the following text to ${langName}. Return only the translated text, no explanations.\nContext: ${context}\nText: ${text}`,
-        }],
-        max_tokens: 300,
-        temperature: 0.2,
-      });
+      if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+        return translateLocally(text, lang);
+      }
 
-      return completion.choices[0]?.message?.content?.trim() || text;
+      // OpenAI fallback
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [{
+            role: "user",
+            content: `Translate the following text to ${langName}. Return only the translated text, no explanations.\nContext: ${context}\nText: ${text}`,
+          }],
+          max_tokens: 300,
+          temperature: 0.2,
+        });
+
+        return completion.choices[0]?.message?.content?.trim() || translateLocally(text, lang);
+      } catch (error) {
+        console.warn("[ai] OpenAI translation failed; using local fallback", error);
+        return translateLocally(text, lang);
+      }
     },
 
     /**
