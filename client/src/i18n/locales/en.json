@@ -743,6 +743,7 @@
     "ios_tip": "iOS: Settings → General → Keyboard → Keyboards → Add New Keyboard",
     "android_tip": "Android: Settings → System → Languages & Input → Virtual Keyboard",
     "windows_tip": "Windows: Settings → Time & Language → Language → Add a language",
+    "space": "Space",
     "dismiss": "Got it"
   },
   "auto_translate": {

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Keyboard, X, Delete } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 type Script = "devanagari" | "gurmukhi" | "tamil" | "latin";
 
@@ -57,9 +58,11 @@ function dispatchNativeInput(element: HTMLInputElement | HTMLTextAreaElement, ne
   element.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
+const TEXT_INPUT_TYPES = new Set(["", "email", "number", "password", "search", "tel", "text", "url"]);
+
 function getFocusedTextField() {
   const active = document.activeElement;
-  if (active instanceof HTMLInputElement && !["button", "checkbox", "radio", "submit"].includes(active.type)) return active;
+  if (active instanceof HTMLInputElement && TEXT_INPUT_TYPES.has(active.type)) return active;
   if (active instanceof HTMLTextAreaElement) return active;
   return null;
 }
@@ -67,11 +70,35 @@ function getFocusedTextField() {
 export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari", compact = false }: VirtualKeyboardProps) {
   const [open, setOpen] = useState(false);
   const [script, setScript] = useState<Script>(defaultScript);
+  const lastTextFieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const { t } = useTranslation();
 
   const { keys } = SCRIPTS[script];
 
-  const insertIntoFocusedField = (char: string) => {
+  useEffect(() => {
+    const rememberFocusedField = (event: FocusEvent) => {
+      const target = event.target;
+      if (
+        (target instanceof HTMLInputElement && TEXT_INPUT_TYPES.has(target.type)) ||
+        target instanceof HTMLTextAreaElement
+      ) {
+        lastTextFieldRef.current = target;
+      }
+    };
+
+    document.addEventListener("focusin", rememberFocusedField);
+    return () => document.removeEventListener("focusin", rememberFocusedField);
+  }, []);
+
+  const rememberActiveField = () => {
     const field = getFocusedTextField();
+    if (field) lastTextFieldRef.current = field;
+  };
+
+  const getTargetField = () => getFocusedTextField() || lastTextFieldRef.current;
+
+  const insertIntoFocusedField = (char: string) => {
+    const field = getTargetField();
     if (!field) return;
     const start = field.selectionStart ?? field.value.length;
     const end = field.selectionEnd ?? field.value.length;
@@ -82,7 +109,7 @@ export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari
   };
 
   const deleteFromFocusedField = () => {
-    const field = getFocusedTextField();
+    const field = getTargetField();
     if (!field) return;
     const start = field.selectionStart ?? field.value.length;
     const end = field.selectionEnd ?? field.value.length;
@@ -109,9 +136,14 @@ export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari
       <Button
         variant="ghost"
         size="icon"
+        onMouseDown={(event) => {
+          rememberActiveField();
+          event.preventDefault();
+        }}
         onClick={() => setOpen(!open)}
         className={`${compact ? "h-8 w-8" : "h-7 w-7"} text-muted-foreground hover:text-primary transition-colors`}
-        title="Regional keyboard"
+        title={t("accessibility.regional_keyboard")}
+        aria-label={t("accessibility.regional_keyboard")}
         data-testid="button-virtual-keyboard"
       >
         <Keyboard className="h-4 w-4" />
@@ -131,6 +163,7 @@ export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari
                 {(Object.keys(SCRIPTS) as Script[]).map((s) => (
                   <button
                     key={s}
+                    onMouseDown={(event) => event.preventDefault()}
                     onClick={() => setScript(s)}
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-md transition-all ${
                       script === s
@@ -143,7 +176,14 @@ export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari
                   </button>
                 ))}
               </div>
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => setOpen(false)}
+                aria-label={t("common.close")}
+              >
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -154,6 +194,7 @@ export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari
                   {row.map((char) => (
                     <button
                       key={char}
+                      onMouseDown={(event) => event.preventDefault()}
                       onClick={() => handleInput(char)}
                       className="h-8 min-w-[28px] px-1.5 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary border border-border/30 hover:border-primary/30 text-[13px] font-medium transition-all active:scale-95"
                       data-testid={`vk-key-${char}`}
@@ -166,14 +207,17 @@ export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari
 
               <div className="flex gap-1 mt-1.5">
                 <button
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => handleInput(" ")}
                   className="flex-1 h-8 rounded-lg bg-muted/60 hover:bg-muted border border-border/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider transition-all"
                 >
-                  Space
+                  {t("keyboard.space")}
                 </button>
                 <button
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={handleDelete}
                   className="h-8 px-3 rounded-lg bg-muted/60 hover:bg-destructive/10 hover:text-destructive border border-border/30 transition-all flex items-center justify-center"
+                  aria-label={t("common.delete")}
                   data-testid="vk-delete"
                 >
                   <Delete className="h-4 w-4" />
