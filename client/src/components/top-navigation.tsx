@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useLocation } from "wouter";
 import { 
   ShoppingCart, 
@@ -49,8 +49,6 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
-  const lastScrollRef = useRef(0);
   const sidebarContext = useContext(SidebarContext);
   // Track the AppNavRail's expanded state so this button can mirror it.
   const [railExpanded, setRailExpanded] = useState<boolean>(() => {
@@ -75,22 +73,11 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
 
   useEffect(() => {
     const THRESHOLD = 8;
-    const SCROLL_UP_HIDE = 80;
     let tick: number | undefined;
 
     const handleScroll = () => {
-      const currentY = window.scrollY;
-      const delta = currentY - lastScrollRef.current;
-
-      setScrolled(currentY > THRESHOLD);
-
-      if (currentY > SCROLL_UP_HIDE && delta > 5) {
-        setHidden(true);
-      } else if (delta < -5 || currentY <= SCROLL_UP_HIDE) {
-        setHidden(false);
-      }
-
-      lastScrollRef.current = currentY;
+      const mainArea = document.querySelector(".overflow-y-auto") as HTMLElement | null;
+      setScrolled(Math.max(window.scrollY, mainArea?.scrollTop ?? 0) > THRESHOLD);
     };
 
     const throttled = () => {
@@ -98,24 +85,14 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
       tick = requestAnimationFrame(handleScroll);
     };
 
-    const mainArea = document.querySelector(".overflow-auto");
-    const onMainScroll = () => {
-      const scrollTop = mainArea ? (mainArea as HTMLElement).scrollTop : 0;
-      const delta = scrollTop - lastScrollRef.current;
-      setScrolled(scrollTop > THRESHOLD);
-      if (scrollTop > SCROLL_UP_HIDE && delta > 5) {
-        setHidden(true);
-      } else if (delta < -5 || scrollTop <= SCROLL_UP_HIDE) {
-        setHidden(false);
-      }
-      lastScrollRef.current = scrollTop;
-    };
+    const mainArea = document.querySelector(".overflow-y-auto");
 
     window.addEventListener("scroll", throttled, { passive: true });
-    mainArea?.addEventListener("scroll", onMainScroll, { passive: true });
+    mainArea?.addEventListener("scroll", throttled, { passive: true });
+    handleScroll();
     return () => {
       window.removeEventListener("scroll", throttled);
-      mainArea?.removeEventListener("scroll", onMainScroll);
+      mainArea?.removeEventListener("scroll", throttled);
       if (tick) cancelAnimationFrame(tick);
     };
   }, []);
@@ -134,19 +111,18 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
   };
 
   const navLinks = [
-    { path: "/farmers-help", icon: Sprout, label: t("nav.knowledge", "Knowledge Hub") },
-    { path: "/agritech", icon: Cpu, label: t("nav.agritech", "AgriTech") },
+    { path: "/farmers-help", icon: Sprout, label: t("nav.help") },
+    { path: "/agritech", icon: Cpu, label: t("home.agritech") },
     { path: "/map", icon: MapPin, label: t("nav.map", "Smart Map") },
     { path: "/land-leasing", icon: MapPin, label: t("nav.land", "Land") },
     { path: "/share-care", icon: HeartHandshake, label: t("nav.share", "Share") },
     { path: "/ship", icon: Truck, label: t("nav.ship", "Ship") },
+    { path: "/dashboard", icon: User, label: t("nav.user", "User") },
   ];
 
   return (
     <header
       className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
-        hidden ? "-translate-y-full -mb-12" : "translate-y-0"
-      } ${
         scrolled
           ? "border-border/60 bg-background/90 backdrop-blur-2xl shadow-sm shadow-black/5 dark:bg-background/80 dark:border-white/[0.06] dark:shadow-[0_1px_0_rgba(255,255,255,0.03)]"
           : "border-border/40 bg-background/70 backdrop-blur-xl dark:bg-background/60 dark:border-white/[0.04]"

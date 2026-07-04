@@ -15,7 +15,8 @@ export type VoiceAction =
   | { kind: "scroll"; direction: "up" | "down" | "top" | "bottom" }
   | { kind: "readPage" }
   | { kind: "stopSpeech" }
-  | { kind: "openCategories" };
+  | { kind: "openCategories" }
+  | { kind: "voiceHelp" };
 
 const ROUTES = [
   { label: "home", path: "/", aliases: ["home", "marketplace", "shop", "browse products", "घर", "होम", "முகப்பு", "ਘਰ"] },
@@ -55,6 +56,7 @@ export function parseVoiceAction(text: string): VoiceAction | null {
   if (/(go forward|forward|next page|आगे|ਅੱਗੇ|முன்|dalej)/i.test(command)) return { kind: "forward" };
   if (/(stop speaking|stop reading|stop|quiet|cancel|रुको|ਬੰਦ|நிறுத்த)/i.test(command)) return { kind: "stopSpeech" };
   if (/(read page|read this|listen page|speak page|पढ़ो|ਸੁਣਾਓ|படி)/i.test(command)) return { kind: "readPage" };
+  if (/(voice help|what can i say|help me use voice|voice commands)/i.test(command)) return { kind: "voiceHelp" };
   if (/(open categories|show categories|browse categories)/i.test(command)) return { kind: "openCategories" };
   if (/(scroll down|page down|नीचे|ਥੱਲੇ|கீழே)/i.test(command)) return { kind: "scroll", direction: "down" };
   if (/(scroll up|page up|ऊपर|ਉੱਪਰ|மேலே)/i.test(command)) return { kind: "scroll", direction: "up" };
@@ -74,7 +76,11 @@ export function parseVoiceAction(text: string): VoiceAction | null {
 }
 
 export function getReadablePageText(root: ParentNode = document) {
-  const main = root.querySelector("main") || root.querySelector("[role='main']") || document.body;
+  const main =
+    root.querySelector("main") ||
+    root.querySelector("[role='main']") ||
+    getAppScrollContainer() ||
+    document.body;
   const clone = main.cloneNode(true) as HTMLElement;
   clone
     .querySelectorAll("script, style, svg, nav, button, input, textarea, select, [aria-hidden='true']")
@@ -84,6 +90,29 @@ export function getReadablePageText(root: ParentNode = document) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 4500);
+}
+
+export function getAppScrollContainer(): HTMLElement | null {
+  if (typeof document === "undefined") return null;
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>(".overflow-y-auto, main, [role='main']"));
+  return candidates.find((el) => el.scrollHeight > el.clientHeight + 4) || null;
+}
+
+export function scrollReadablePage(direction: "up" | "down" | "top" | "bottom") {
+  const container = getAppScrollContainer();
+  const maxScroll = container ? container.scrollHeight : document.documentElement.scrollHeight;
+  const currentTop = container ? container.scrollTop : window.scrollY;
+  const delta = direction === "down" ? 520 : -520;
+  const top =
+    direction === "top" ? 0 :
+    direction === "bottom" ? maxScroll :
+    currentTop + delta;
+
+  if (container) {
+    container.scrollTo({ top, behavior: "smooth" });
+  } else {
+    window.scrollTo({ top, behavior: "smooth" });
+  }
 }
 
 export function speakText(text: string, lang: string, onDone?: () => void) {

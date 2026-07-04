@@ -25,7 +25,8 @@ export function AccessibilityToolbar() {
     const text = getReadablePageText();
     if (!text) return;
     setSpeaking(true);
-    speakText(text, baseLang, () => setSpeaking(false));
+    const started = speakText(text, baseLang, () => setSpeaking(false));
+    if (!started) setSpeaking(false);
   }, [baseLang, speaking]);
 
   const handleSearch = useCallback((query: string) => {
@@ -45,6 +46,7 @@ export function AccessibilityToolbar() {
         onClick={readPage}
         className="h-8 w-8"
         title={speaking ? t("accessibility.stop_page", "Stop reading") : t("accessibility.read_page", "Read page")}
+        aria-label={speaking ? t("accessibility.stop_page", "Stop reading") : t("accessibility.read_page", "Read page")}
         data-testid="button-read-page"
       >
         {speaking ? <VolumeX className="h-4 w-4 text-primary" /> : <Volume2 className="h-4 w-4" />}

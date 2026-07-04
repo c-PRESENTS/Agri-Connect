@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, type MutableRefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const A_TR = "data-agri-tr";
 const A_OR = "data-agri-or";
@@ -128,10 +129,12 @@ function clearObserver(observerRef: MutableRefObject<MutationObserver | null>) {
 }
 
 export function usePageTranslation() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const { toast } = useToast();
   const cacheRef = useRef<Map<string, string>>(new Map());
   const observerRef = useRef<MutationObserver | null>(null);
   const autoTranslateRef = useRef(localStorage.getItem("agriconnect-auto-translate") === "true");
+  const failureNotifiedRef = useRef(false);
 
   const translate = useCallback(async () => {
     const lang = i18n.language.split("-")[0];
@@ -160,6 +163,15 @@ export function usePageTranslation() {
             }).then((r) => r.json() as Promise<{ translated: string }>),
           ),
         );
+        const hasFailure = res.some((r) => r.status === "rejected");
+        if (hasFailure && !failureNotifiedRef.current) {
+          failureNotifiedRef.current = true;
+          toast({
+            title: t("common.error"),
+            description: t("auto_translate.unavailable"),
+            variant: "destructive",
+          });
+        }
         res.forEach((r, idx) => {
           if (r.status === "fulfilled") {
             results.set(batch[idx], r.value.translated);
@@ -169,6 +181,9 @@ export function usePageTranslation() {
       results.forEach((translated, original) => {
         cacheRef.current.set(cacheKey(original, lang), translated);
       });
+      if (results.size > 0) {
+        failureNotifiedRef.current = false;
+      }
     }
 
     for (const entry of entries) {
@@ -189,7 +204,7 @@ export function usePageTranslation() {
         setTranslatedOption(entry.el, entry.text, cached);
       }
     }
-  }, [i18n.language]);
+  }, [i18n.language, t, toast]);
 
   const handleEnable = useCallback(() => {
     clearObserver(observerRef);
@@ -221,6 +236,7 @@ export function usePageTranslation() {
   useEffect(() => {
     const syncAutoTranslate = (enabled: boolean) => {
       autoTranslateRef.current = enabled;
+      failureNotifiedRef.current = false;
       handleDisable();
 
       const lang = i18n.language.split("-")[0];

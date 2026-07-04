@@ -14,7 +14,7 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "react-i18next";
-import { getReadablePageText, LANG_BCP, parseVoiceAction, speakText } from "@/lib/accessibility";
+import { getReadablePageText, LANG_BCP, parseVoiceAction, scrollReadablePage, speakText } from "@/lib/accessibility";
 
 interface VoiceCommandProps {
   onSearch?: (query: string) => void;
@@ -202,6 +202,9 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
     const action = parseVoiceAction(text);
     if (action) {
       let msg = "";
+      let shouldSpeakMessage = true;
+      let shouldAutoComplete = true;
+      let autoCompleteDelay = action.kind === "navigate" ? 900 : 1700;
       if (action.kind === "navigate") {
         msg = t("voice.navigating", { destination: action.label });
         setLocation(action.path);
@@ -218,27 +221,34 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
         window.history.forward();
       } else if (action.kind === "scroll") {
         msg = t("voice.scrolling", "Scrolling");
-        if (action.direction === "top") window.scrollTo({ top: 0, behavior: "smooth" });
-        else if (action.direction === "bottom") window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-        else window.scrollBy({ top: action.direction === "down" ? 520 : -520, behavior: "smooth" });
+        scrollReadablePage(action.direction);
       } else if (action.kind === "readPage") {
         msg = t("voice.reading_page", "Reading this page");
         const pageText = getReadablePageText();
-        if (pageText) speakText(pageText, baseLang, completeCommand);
+        if (pageText) {
+          speakText(pageText, baseLang, completeCommand);
+          shouldSpeakMessage = false;
+          shouldAutoComplete = false;
+        } else {
+          msg = t("voice.no_readable_content", "I could not find readable page content.");
+        }
       } else if (action.kind === "stopSpeech") {
         msg = t("voice.stopped", "Stopped");
         window.speechSynthesis?.cancel();
       } else if (action.kind === "openCategories") {
         msg = t("voice.opening_categories", "Opening categories");
         window.dispatchEvent(new Event("agri-mobile-nav-open"));
+      } else if (action.kind === "voiceHelp") {
+        msg = t("voice.help_prompt", "You can say: open cart, search tomatoes, read page, scroll down, or go home.");
+        autoCompleteDelay = 4500;
       }
 
       setResponseText(msg);
       setAiResponse(msg);
       setVoiceState("speaking");
       setConversation(prev => [...prev, { role: "assistant", text: msg, timestamp: Date.now() }]);
-      if (action.kind !== "readPage") speak(msg);
-      setTimeout(completeCommand, action.kind === "navigate" ? 900 : 1700);
+      if (shouldSpeakMessage) speak(msg);
+      if (shouldAutoComplete) setTimeout(completeCommand, autoCompleteDelay);
       return;
     }
 
@@ -382,7 +392,7 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
     // Don't clear conversation on close — keep history for next open
   };
 
-  const suggestions = [t("voice.find_organic"), t("voice.go_dashboard"), t("voice.open_cart"), t("voice.sell_produce"), t("voice.show_land")];
+  const suggestions = [t("voice.voice_help"), t("voice.find_organic"), t("voice.go_dashboard"), t("voice.open_cart"), t("voice.sell_produce"), t("voice.show_land")];
 
   return (
     <>

@@ -80,12 +80,15 @@ export function MobileNavSheet() {
     "cat-commerc": "category.commercial",
     "cat-bio": "category.bio",
     "help": "nav.help",
+    "agritech": "home.agritech",
     "map": "nav.map",
     "land": "nav.land",
     "share": "nav.share",
     "ship": "nav.ship",
+    "schemes": "home.govt_schemes",
     "cart": "nav.cart",
     "dash": "nav.dashboard",
+    "sell": "home.sell_list",
     "settings": "nav.more",
   };
   const getItemLabel = (item: RailItem) => {

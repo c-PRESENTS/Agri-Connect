@@ -278,7 +278,7 @@ Build the operating system for modern agriculture — from seed to sale, from so
 │                   EXPRESS SERVER                           │
 │  Passport.js (Replit OIDC) + express-session              │
 │  REST API (40+ endpoints) + Stripe webhooks               │
-│  AI Service (Gemini → OpenAI → local fallback)            │
+│  AI Service (Gemini → OpenAI, provider key required)      │
 │  Shipping Engine (9 carriers, adapter pattern)            │
 │  Notifications (SendGrid + WhatsApp + console)            │
 ├──────────────────────────────────────────────────────────┤

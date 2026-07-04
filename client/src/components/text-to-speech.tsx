@@ -24,7 +24,8 @@ export function TextToSpeech({ text, className = "", size = "sm" }: TextToSpeech
     }
 
     setSpeaking(true);
-    speakText(text, i18n.language.split("-")[0], () => setSpeaking(false));
+    const started = speakText(text, i18n.language.split("-")[0], () => setSpeaking(false));
+    if (!started) setSpeaking(false);
   }, [text, speaking, i18n.language]);
 
   if (!("speechSynthesis" in window)) return null;
@@ -36,6 +37,7 @@ export function TextToSpeech({ text, className = "", size = "sm" }: TextToSpeech
       onClick={speak}
       className={`gap-1 text-[10px] font-bold uppercase tracking-tight text-muted-foreground hover:text-primary transition-colors ${className}`}
       title={speaking ? t("product.stop") : t("product.listen")}
+      aria-label={speaking ? t("product.stop") : t("product.listen")}
       data-testid="button-tts"
     >
       {speaking ? (

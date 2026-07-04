@@ -11,27 +11,27 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 
 const ALL_ITEMS = [
-  { id: "seller",     path: "/seller",                    icon: BadgeDollarSign, label: "home.seller_hub",    color: "text-yellow-400",  public: true  },
-  { id: "sell",       path: "/dashboard/photo-sell",      icon: Camera,          label: "home.sell_list",     color: "text-emerald-400", public: false },
-  { id: "daily",      path: "/?category=daily-needs",      icon: ShoppingBasket,  label: "category.daily",     color: "text-green-400",   public: true  },
-  { id: "map",        path: "/map",                        icon: Map,             label: "home.smart_map",     color: "text-sky-400",     public: true  },
-  { id: "help",       path: "/farmers-help",               icon: Sprout,          label: "nav.help",           color: "text-lime-400",    public: true  },
-  { id: "dash",       path: "/dashboard",                  icon: LayoutDashboard, label: "nav.dashboard",      color: "text-violet-400",  public: false },
-  { id: "settings",   path: "/settings",                   icon: Settings,        label: "nav.settings",       color: "text-slate-300",   public: false },
-  { id: "inputs",     path: "/?category=inputs-tools",     icon: Wrench,          label: "category.inputs",    color: "text-blue-400",    public: true  },
-  { id: "processed",  path: "/?category=processed",        icon: Package,         label: "category.processed", color: "text-amber-400",   public: true  },
-  { id: "specialty",  path: "/?category=specialty",        icon: Star,            label: "category.specialty", color: "text-yellow-400",  public: true  },
-  { id: "other",      path: "/?category=other-agri",       icon: Wheat,           label: "category.other_agri",color: "text-yellow-300",  public: true  },
-  { id: "super",      path: "/?category=supermarket",      icon: Store,           label: "home.supermarket",   color: "text-purple-400",  public: true  },
-  { id: "services",   path: "/?category=services",         icon: Cog,             label: "category.services",  color: "text-gray-300",    public: true  },
-  { id: "schemes",    path: "/government-schemes",         icon: Building2,       label: "home.govt_schemes",  color: "text-indigo-400",  public: true  },
-  { id: "agritech",   path: "/agritech",                   icon: Cpu,             label: "home.agritech",      color: "text-cyan-400",    public: true  },
-  { id: "dietary",    path: "/?category=dietary",          icon: Heart,           label: "category.dietary",   color: "text-pink-400",    public: true  },
-  { id: "land",       path: "/land-leasing",               icon: Landmark,        label: "nav.land",           color: "text-emerald-300", public: true  },
-  { id: "logistics",  path: "/logistics",                  icon: Truck,           label: "home.logistics",     color: "text-blue-300",    public: true  },
-  { id: "share",      path: "/share-care",                 icon: HeartHandshake,  label: "nav.share",          color: "text-rose-400",    public: true  },
-  { id: "commercial", path: "/?category=commercial-crops", icon: Factory,         label: "category.commercial",color: "text-slate-400",   public: true  },
-  { id: "bio",        path: "/?category=bio-products",     icon: Leaf,            label: "category.bio",       color: "text-teal-400",    public: true  },
+  { id: "seller",     path: "/seller",                    icon: BadgeDollarSign, label: "home.seller_hub",    fallbackLabel: "Seller Hub",   color: "text-yellow-400",  public: true  },
+  { id: "sell",       path: "/dashboard/photo-sell",      icon: Camera,          label: "home.sell_list",     fallbackLabel: "Sell / List",  color: "text-emerald-400", public: false },
+  { id: "daily",      path: "/?category=daily-needs",      icon: ShoppingBasket,  label: "category.daily",     fallbackLabel: "Daily",        color: "text-green-400",   public: true  },
+  { id: "map",        path: "/map",                        icon: Map,             label: "home.smart_map",     fallbackLabel: "Smart Map",    color: "text-sky-400",     public: true  },
+  { id: "help",       path: "/farmers-help",               icon: Sprout,          label: "nav.help",           fallbackLabel: "Help",         color: "text-lime-400",    public: true  },
+  { id: "dash",       path: "/dashboard",                  icon: LayoutDashboard, label: "nav.dashboard",      fallbackLabel: "Dashboard",    color: "text-violet-400",  public: false },
+  { id: "settings",   path: "/settings",                   icon: Settings,        label: "nav.settings",       fallbackLabel: "Settings",     color: "text-slate-300",   public: false },
+  { id: "inputs",     path: "/?category=inputs-tools",     icon: Wrench,          label: "category.inputs",    fallbackLabel: "Inputs",       color: "text-blue-400",    public: true  },
+  { id: "processed",  path: "/?category=processed",        icon: Package,         label: "category.processed", fallbackLabel: "Processed",    color: "text-amber-400",   public: true  },
+  { id: "specialty",  path: "/?category=specialty",        icon: Star,            label: "category.specialty", fallbackLabel: "Specialty",    color: "text-yellow-400",  public: true  },
+  { id: "other",      path: "/?category=other-agri",       icon: Wheat,           label: "category.other_agri",fallbackLabel: "Other Agri",   color: "text-yellow-300",  public: true  },
+  { id: "super",      path: "/?category=supermarket",      icon: Store,           label: "home.supermarket",   fallbackLabel: "Supermarket",  color: "text-purple-400",  public: true  },
+  { id: "services",   path: "/?category=services",         icon: Cog,             label: "category.services",  fallbackLabel: "Services",     color: "text-gray-300",    public: true  },
+  { id: "schemes",    path: "/government-schemes",         icon: Building2,       label: "home.govt_schemes",  fallbackLabel: "Govt Schemes", color: "text-indigo-400",  public: true  },
+  { id: "agritech",   path: "/agritech",                   icon: Cpu,             label: "home.agritech",      fallbackLabel: "AgriTech",     color: "text-cyan-400",    public: true  },
+  { id: "dietary",    path: "/?category=dietary",          icon: Heart,           label: "category.dietary",   fallbackLabel: "Dietary",      color: "text-pink-400",    public: true  },
+  { id: "land",       path: "/land-leasing",               icon: Landmark,        label: "nav.land",           fallbackLabel: "Land",         color: "text-emerald-300", public: true  },
+  { id: "logistics",  path: "/logistics",                  icon: Truck,           label: "home.logistics",     fallbackLabel: "Logistics",    color: "text-blue-300",    public: true  },
+  { id: "share",      path: "/share-care",                 icon: HeartHandshake,  label: "nav.share",          fallbackLabel: "Share",        color: "text-rose-400",    public: true  },
+  { id: "commercial", path: "/?category=commercial-crops", icon: Factory,         label: "category.commercial",fallbackLabel: "Commercial",   color: "text-slate-400",   public: true  },
+  { id: "bio",        path: "/?category=bio-products",     icon: Leaf,            label: "category.bio",       fallbackLabel: "Bio",          color: "text-teal-400",    public: true  },
 ];
 
 const LS_ORDER  = "agri-nav-order";
@@ -155,7 +155,7 @@ export function HeroServiceGrid() {
                   : <Icon className={`h-[18px] w-[18px] sm:h-[17px] sm:w-[17px] drop-shadow flex-shrink-0 ${item.color}`} />
                 }
                 <span className="text-[9px] sm:text-[8px] font-bold text-white/85 text-center leading-[1.1] w-full truncate drop-shadow px-0.5">
-                  {t(item.label)}
+                  {t(item.label, { defaultValue: item.fallbackLabel })}
                 </span>
               </button>
 
@@ -210,7 +210,7 @@ export function HeroServiceGrid() {
               return (
                 <button key={item.id} onClick={() => restore(item.id)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-dashed border-white/15 text-white/35 hover:text-white/70 hover:bg-white/10 transition-all text-[8px] font-bold">
-                  <Plus className="h-2 w-2" /><Icon className="h-2 w-2" />{item.label}
+                  <Plus className="h-2 w-2" /><Icon className="h-2 w-2" />{t(item.label, { defaultValue: item.fallbackLabel })}
                 </button>
               );
             })}

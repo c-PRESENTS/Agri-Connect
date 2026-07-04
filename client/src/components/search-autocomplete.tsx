@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import { Search, X, TrendingUp, Package, Leaf, History, RotateCcw, Sparkles, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   const containerRef = useRef<HTMLDivElement>(null);
   const aiDebounceRef = useRef<number | undefined>();
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
 
   const { data: products = [] } = useQuery<Product[]>({
     queryKey: [inputVal ? `/api/products?search=${encodeURIComponent(inputVal)}` : "/api/products"],
@@ -135,6 +137,16 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   };
 
   const handleSelect = (query: string) => {
+    if (query.startsWith("?category=")) {
+      setInputVal("");
+      onChange("");
+      onSearch("");
+      setLocation(`/${query}`);
+      setOpen(false);
+      inputRef.current?.blur();
+      return;
+    }
+
     setInputVal(query);
     onChange(query);
     addRecentSearch(query);

@@ -100,10 +100,8 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
         const found = regions.find(r => r.code === saved);
         if (found) return found;
       }
-      // No saved choice → auto-detect from browser locale + timezone so the
-      // currency/symbol matches where the user actually is.
-      const auto = detectRegionFromBrowser();
-      if (auto) return auto;
+      // No saved choice: default to GB/£ for the global marketplace baseline.
+      // Auto-detected regions are still offered as a one-click suggestion below.
     }
     return regions.find(r => r.code === "GB") || regions[0];
   });

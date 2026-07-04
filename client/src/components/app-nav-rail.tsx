@@ -151,17 +151,20 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
     "cat-commerc": "category.commercial",
     "cat-bio": "category.bio",
     "help": "nav.help",
+    "agritech": "home.agritech",
     "map": "nav.map",
     "land": "nav.land",
     "share": "nav.share",
     "ship": "nav.ship",
+    "schemes": "home.govt_schemes",
     "cart": "nav.cart",
     "dash": "nav.dashboard",
+    "sell": "home.sell_list",
     "settings": "nav.settings",
   };
   const getItemLabel = (item: ServiceItem) => {
     const key = LABEL_KEYS[item.id];
-    return key ? t(key) : item.label;
+    return key ? t(key, { defaultValue: item.label }) : item.label;
   };
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),

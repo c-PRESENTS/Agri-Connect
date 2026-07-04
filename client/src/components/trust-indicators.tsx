@@ -20,21 +20,29 @@ const trustBadges = [
     icon: Shield,
     title: "trust.secure_payments",
     description: "trust.secure_desc",
+    titleFallback: "Secure Payments",
+    descriptionFallback: "256-bit SSL encryption",
   },
   {
     icon: Truck,
     title: "trust.fast_delivery",
     description: "trust.fast_desc",
+    titleFallback: "Fast Delivery",
+    descriptionFallback: "Same-day available",
   },
   {
     icon: RefreshCw,
     title: "trust.easy_returns",
     description: "trust.returns_desc",
+    titleFallback: "Easy Returns",
+    descriptionFallback: "30-day guarantee",
   },
   {
     icon: CreditCard,
     title: "trust.multiple_payments",
     description: "trust.payments_desc",
+    titleFallback: "Multiple Payments",
+    descriptionFallback: "Cards, UPI, COD",
   },
 ];
 
@@ -66,8 +74,8 @@ export function TrustIndicators() {
                 >
                   <badge.icon className="h-8 w-8 text-primary" />
                 </motion.div>
-                <h3 className="font-semibold mb-1">{t(badge.title)}</h3>
-                <p className="text-sm text-muted-foreground">{t(badge.description)}</p>
+                <h3 className="font-semibold mb-1">{t(badge.title, { defaultValue: badge.titleFallback })}</h3>
+                <p className="text-sm text-muted-foreground">{t(badge.description, { defaultValue: badge.descriptionFallback })}</p>
               </motion.div>
             ))}
           </div>
