@@ -303,14 +303,13 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
 
       setTimeout(completeCommand, 3000);
     } catch {
-      onSearch?.(text);
-      const fallbackMsg = t("voice.searching", { query: text });
-      setResponseText(fallbackMsg);
-      setAiResponse(fallbackMsg);
+      const unavailableMsg = t("voice.ai_unavailable");
+      setResponseText(unavailableMsg);
+      setAiResponse(unavailableMsg);
       setVoiceState("speaking");
-      const assistantTurn: ConversationTurn = { role: "assistant", text: fallbackMsg, timestamp: Date.now() };
+      const assistantTurn: ConversationTurn = { role: "assistant", text: unavailableMsg, timestamp: Date.now() };
       setConversation(prev => [...prev, assistantTurn]);
-      speak(fallbackMsg);
+      speak(unavailableMsg);
       setTimeout(completeCommand, 2000);
     }
   }, [onSearch, setLocation, speak, baseLang, t, playBeep, completeCommand, conversation]);

@@ -130,8 +130,8 @@ function clearObserver(observerRef: MutableRefObject<MutationObserver | null>) {
 export function usePageTranslation() {
   const { i18n } = useTranslation();
   const cacheRef = useRef<Map<string, string>>(new Map());
-  const enabledRef = useRef(false);
   const observerRef = useRef<MutationObserver | null>(null);
+  const autoTranslateRef = useRef(localStorage.getItem("agriconnect-auto-translate") === "true");
 
   const translate = useCallback(async () => {
     const lang = i18n.language.split("-")[0];
@@ -219,18 +219,28 @@ export function usePageTranslation() {
   }, []);
 
   useEffect(() => {
-    const lang = i18n.language.split("-")[0];
-    handleDisable();
-    if (lang !== "en") {
-      enabledRef.current = true;
-      window.setTimeout(handleEnable, 0);
-    } else {
-      enabledRef.current = false;
-    }
+    const syncAutoTranslate = (enabled: boolean) => {
+      autoTranslateRef.current = enabled;
+      handleDisable();
+
+      const lang = i18n.language.split("-")[0];
+      if (enabled && lang !== "en") {
+        window.setTimeout(handleEnable, 0);
+      }
+    };
+
+    syncAutoTranslate(localStorage.getItem("agriconnect-auto-translate") === "true");
+
+    const onAutoTranslateChanged = (event: Event) => {
+      syncAutoTranslate(!!(event as CustomEvent<boolean>).detail);
+    };
+
+    window.addEventListener("auto-translate-changed", onAutoTranslateChanged);
 
     return () => {
+      window.removeEventListener("auto-translate-changed", onAutoTranslateChanged);
       clearObserver(observerRef);
-      if (enabledRef.current) {
+      if (autoTranslateRef.current) {
         restoreAll();
       }
     };

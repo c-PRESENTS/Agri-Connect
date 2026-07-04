@@ -162,16 +162,16 @@ This document provides a complete reference for all environment variables requir
 
 ---
 
-## AI INTEGRATION - OPENAI (OPTIONAL)
+## AI INTEGRATION - OPENAI / GEMINI
 
 ### 15. OpenAI API Key
 **Variable:** `AI_INTEGRATIONS_OPENAI_API_KEY`
 - **Type:** String
-- **Required:** NO (leave empty to disable chat features)
-- **Description:** OpenAI API key for ChatGPT/GPT-4 integration
+- **Required:** YES for production AI chat, AI voice fallback, and AI translation fallback
+- **Description:** OpenAI API key for ChatGPT/GPT-4 integration when Gemini is unavailable or not configured
 - **Where to get it:** https://platform.openai.com/api-keys
 - **Prefix:** `sk-`
-- **Used for:** AI chat assistant in the platform
+- **Used for:** AI chat assistant, secondary AI voice interpretation, and secondary real-time translation
 - **Rate limiting:** Requests are rate-limited per user to control costs
 - **Cost:** Pay-as-you-go based on token usage
 
@@ -189,13 +189,13 @@ This document provides a complete reference for all environment variables requir
 
 ---
 
-### 16b. Gemini API Key (Optional, Preferred for Voice AI)
+### 16b. Gemini API Key (Preferred for Voice AI and Translation)
 **Variable:** `GEMINI_API_KEY`
 - **Type:** String
-- **Required:** NO
-- **Description:** Google Gemini API key used by `/api/ai/voice` and AI translation when present
+- **Required:** YES for production Gemini AI voice assistant, real-time translation, and auto-translation
+- **Description:** Google Gemini API key used by `/api/ai/voice` and `/api/ai/translate`
 - **Where to get it:** Google AI Studio / Google Cloud Gemini API credentials
-- **Fallback:** If missing or if Gemini fails, the app falls back to OpenAI when `AI_INTEGRATIONS_OPENAI_API_KEY` is configured
+- **Provider behavior:** Gemini is preferred. If Gemini is missing or unavailable, the backend uses OpenAI only when `AI_INTEGRATIONS_OPENAI_API_KEY` is configured. If neither provider is configured, AI voice and AI translation return a service-unavailable response instead of local fallback text.
 
 ### 16c. Gemini Model (Optional)
 **Variable:** `GEMINI_MODEL`
@@ -237,7 +237,8 @@ This document provides a complete reference for all environment variables requir
 | DPD_API_USERNAME | NO | (empty) | - |
 | DPD_API_PASSWORD | NO | (empty) | - |
 | ROYAL_MAIL_API_KEY | NO | (empty) | - |
-| AI_INTEGRATIONS_OPENAI_API_KEY | NO | (empty) | - |
+| AI_INTEGRATIONS_OPENAI_API_KEY | YES for production AI | (empty) | - |
+| GEMINI_API_KEY | YES for production AI voice/translation | (empty) | - |
 | REPLIT_DOMAINS | NO | (empty) | - |
 
 ---
@@ -354,9 +355,10 @@ npm run start
 - Verify sender email is authorized in SendGrid
 
 ### AI Features Disabled
-- AI_INTEGRATIONS_OPENAI_API_KEY is optional
-- If not set, chat features will not be available
-- Set API key and restart server to enable
+- `GEMINI_API_KEY` and `AI_INTEGRATIONS_OPENAI_API_KEY` control production AI features.
+- If neither key is set, `/api/ai/voice` and `/api/ai/translate` return service-unavailable responses.
+- Browser-only features such as regional input, text-to-speech, and predefined voice navigation do not require AI keys.
+- Set the provider key(s) and restart the server to enable production AI voice and translation.
 
 ---
 

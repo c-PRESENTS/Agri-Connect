@@ -40,7 +40,7 @@ export function TranslateButton({ text, onTranslated, className = "" }: Translat
     } catch {
       toast({
         title: t("common.error"),
-        description: t("common.loading"),
+        description: t("auto_translate.unavailable"),
         variant: "destructive",
       });
     } finally {

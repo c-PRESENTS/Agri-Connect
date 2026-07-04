@@ -735,6 +735,7 @@
     "show_land": "Pokaż oferty ziemi",
     "navigating": "Nawiguję do {{destination}}",
     "searching": "Szukam \"{{query}}\"",
+    "ai_unavailable": "Asystent głosowy AI wymaga skonfigurowanego klucza Gemini lub OpenAI.",
     "continuous": "Ciągłe",
     "audio_cues": "Sygnały dźwiękowe",
     "new_conversation": "Nowa rozmowa",
@@ -803,7 +804,8 @@
   },
   "auto_translate": {
     "toggle_label": "Auto-tłumaczenie",
-    "translating": "Tłumaczenie..."
+    "translating": "Tłumaczenie...",
+    "unavailable": "Tłumaczenie AI wymaga skonfigurowanego klucza Gemini lub OpenAI."
   },
   "lang": {
     "name": "Polski"

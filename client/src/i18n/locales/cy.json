@@ -735,6 +735,7 @@
     "show_land": "Dangoswch restrau tir",
     "navigating": "Yn llywio i {{destination}}",
     "searching": "Yn chwilio am \"{{query}}\"",
+    "ai_unavailable": "Mae angen allwedd Gemini neu OpenAI wedi'i ffurfweddu ar y cynorthwyydd llais AI.",
     "continuous": "Parhaus",
     "audio_cues": "Awgrymiadau sain",
     "new_conversation": "Sgwrs newydd",
@@ -803,7 +804,8 @@
   },
   "auto_translate": {
     "toggle_label": "Awto-gyfieithu",
-    "translating": "Yn cyfieithu..."
+    "translating": "Yn cyfieithu...",
+    "unavailable": "Mae angen allwedd Gemini neu OpenAI wedi'i ffurfweddu ar gyfieithu AI."
   },
   "lang": {
     "name": "Cymraeg"

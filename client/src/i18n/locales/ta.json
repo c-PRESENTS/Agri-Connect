@@ -634,6 +634,7 @@
     "show_land": "நில பட்டியல்களைக் காட்டு",
     "navigating": "{{destination}} க்கு செல்கிறது",
     "searching": "{{query}} க்காக தேடுகிறது",
+    "ai_unavailable": "AI குரல் உதவியாளருக்கு Gemini அல்லது OpenAI key அமைக்க வேண்டும்.",
     "continuous": "தொடர்",
     "audio_cues": "ஆடியோ குறிப்புகள்",
     "new_conversation": "புதிய உரையாடல்",
@@ -702,7 +703,8 @@
   },
   "auto_translate": {
     "toggle_label": "தானியங்கி மொழிபெயர்ப்பு",
-    "translating": "மொழிபெயர்க்கிறது..."
+    "translating": "மொழிபெயர்க்கிறது...",
+    "unavailable": "AI மொழிபெயர்ப்புக்கு Gemini அல்லது OpenAI key அமைக்க வேண்டும்."
   },
   "lang": {
     "name": "தமிழ்"

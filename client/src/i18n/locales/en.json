@@ -673,6 +673,7 @@
     "show_land": "Show land listings",
     "navigating": "Navigating to {{destination}}",
     "searching": "Searching for \"{{query}}\"",
+    "ai_unavailable": "AI voice assistant needs a configured Gemini or OpenAI key.",
     "continuous": "Continuous",
     "audio_cues": "Audio cues",
     "new_conversation": "New conversation",
@@ -748,7 +749,8 @@
   },
   "auto_translate": {
     "toggle_label": "Auto-translate",
-    "translating": "Translating..."
+    "translating": "Translating...",
+    "unavailable": "AI translation needs a configured Gemini or OpenAI key."
   },
   "lang": {
     "name": "English"

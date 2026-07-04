@@ -25,7 +25,6 @@ import { fromZodError } from "zod-validation-error";
 import OpenAI from "openai";
 import { createAIService, normalizeLang } from "./ai";
 import { generateGeminiContent, isGeminiAvailable } from "./ai/gemini";
-import { translateLocally } from "./ai/local-translate";
 import { getStripe, getWebhookSecret } from "./stripe";
 import type Stripe from "stripe";
 
@@ -320,38 +319,6 @@ function inferSearchExpansion(query: string): { expandedQuery: string; category:
 
   const intent: "search" | "browse" = /\b(show|browse|list|all|available|category|categories)\b/.test(joined) ? "browse" : "search";
   return { expandedQuery: joined || query, category, intent };
-}
-
-function inferVoiceCommand(transcript: string): Record<string, unknown> {
-  const text = transcript.trim();
-  const lower = text.toLowerCase();
-  const nav: Array<[RegExp, string, string]> = [
-    [/\b(dashboard|seller panel)\b/, "/dashboard", "Opening your dashboard"],
-    [/\b(home|marketplace)\b/, "/", "Opening the marketplace"],
-    [/\b(cart|basket)\b/, "/cart", "Opening your cart"],
-    [/\b(sell|list product|photo sell|photo-sell)\b/, "/dashboard/photo-sell", "Opening product listing"],
-    [/\b(setting|settings|account)\b/, "/settings", "Opening settings"],
-    [/\b(land|lease|leasing)\b/, "/land-leasing", "Opening land leasing"],
-    [/\b(help|knowledge|support)\b/, "/farmers-help", "Opening help"],
-    [/\b(share|care|food rescue)\b/, "/share-care", "Opening Share and Care"],
-    [/\b(ship|shipping|logistics|delivery)\b/, "/logistics", "Opening logistics"],
-  ];
-  for (const [pattern, path, response] of nav) {
-    if (pattern.test(lower) && /\b(open|go|show|take|navigate)\b/.test(lower)) {
-      return { response, action: "navigate", path };
-    }
-  }
-
-  const query = lower
-    .replace(/\b(search for|find|show me|show|available|near me|please|products|produce)\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  return {
-    response: query ? `Searching for ${query}` : "Searching for that",
-    action: "search",
-    query: query || text,
-  };
 }
 
 export async function registerRoutes(
@@ -1204,7 +1171,12 @@ GUIDELINES:
       console.error("Translation error:", error);
       const text = typeof req.body?.text === "string" ? req.body.text : "";
       const lang = normalizeLang(req.body?.targetLanguage || "en");
-      res.json({ translated: translateLocally(text, lang), targetLanguage: lang, original: text, fallback: true });
+      res.status(503).json({
+        error: "AI translation provider is not configured or unavailable",
+        code: "AI_TRANSLATION_UNAVAILABLE",
+        targetLanguage: lang,
+        original: text,
+      });
     }
   });
 
@@ -1221,7 +1193,6 @@ GUIDELINES:
       }
 
       const lang = normalizeLang(language);
-      const langName = lang === "en" ? "English" : lang === "hi" ? "Hindi" : lang === "pa" ? "Punjabi" : lang === "ta" ? "Tamil" : lang === "cy" ? "Welsh" : "Polish";
 
       // Build conversation context for multi-turn
       const historySnippet = conversationHistory.length > 0
@@ -1230,39 +1201,14 @@ GUIDELINES:
           ).join("\n")
         : "";
 
-      const systemPrompt = `You are the AgriConnect voice assistant for an agricultural marketplace. You speak ${langName}.
-
-The user spoke: "${transcript}" (language: ${langName})
-Context: ${context}${historySnippet}
-
-Interpret the command and return a JSON response with:
-- "response": a short, friendly spoken reply in the same language as the user (max 20 words). If the user asked a follow-up question that depends on previous context, use the conversation history to give a relevant answer.
-- "action": one of "search", "navigate", "info", or "search_text"
-- "query": if action is "search", the search term to use
-- "path": if action is "navigate", the URL path (e.g. "/dashboard", "/cart", "/land-leasing", "/share-care", "/logistics", "/farmers-help")
-
-Examples:
-- "show me organic potatoes" -> {"response": "Searching for organic potatoes now", "action": "search", "query": "organic potatoes"}
-- "go to my dashboard" -> {"response": "Opening your dashboard", "action": "navigate", "path": "/dashboard"}
-- "what vegetables are available" -> {"response": "Searching vegetables for you", "action": "search", "query": "vegetables"}
-- "open the cart" -> {"response": "Opening your cart", "action": "navigate", "path": "/cart"}
-- Follow-up: "show me more" after a search -> {"response": "Here are more results", "action": "search", "query": <reuse previous search context>}
-
-Respond only with valid JSON.`;
-
-      let parsed: Record<string, unknown>;
-
-      try {
-        parsed = await ai.interpretVoice(transcript, lang, `${context}${historySnippet}`);
-      } catch {
-        parsed = inferVoiceCommand(transcript);
-      }
-
+      const parsed = await ai.interpretVoice(transcript, lang, `${context}${historySnippet}`);
       res.json(parsed);
     } catch (error) {
       console.error("Voice AI error:", error);
-      const transcript = typeof req.body?.transcript === "string" ? req.body.transcript : "";
-      res.json(inferVoiceCommand(transcript || "search"));
+      res.status(503).json({
+        error: "AI voice provider is not configured or unavailable",
+        code: "AI_VOICE_UNAVAILABLE",
+      });
     }
   });
 

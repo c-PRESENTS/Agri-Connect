@@ -1,6 +1,5 @@
 import type OpenAI from "openai";
 import { generateGeminiContent, isGeminiAvailable } from "./gemini";
-import { translateLocally } from "./local-translate";
 
 // Language helpers shared across AI tasks
 const SUPPORTED_LANGS = ["en", "hi", "pa", "ta", "cy", "pl"];
@@ -16,6 +15,10 @@ export function normalizeLang(lang: string): string {
 
 export function langDisplay(lang: string): string {
   return LANG_NAMES[lang] || lang;
+}
+
+function isOpenAIAvailable(): boolean {
+  return !!process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
 }
 
 export function createAIService(openai: OpenAI) {
@@ -50,11 +53,11 @@ export function createAIService(openai: OpenAI) {
         }
       }
 
-      if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
-        return translateLocally(text, lang);
+      if (!isOpenAIAvailable()) {
+        throw new Error("AI translation provider is not configured");
       }
 
-      // OpenAI fallback
+      // OpenAI secondary provider
       try {
         const completion = await openai.chat.completions.create({
           model: "gpt-4o-mini",
@@ -66,10 +69,12 @@ export function createAIService(openai: OpenAI) {
           temperature: 0.2,
         });
 
-        return completion.choices[0]?.message?.content?.trim() || translateLocally(text, lang);
+        const translated = completion.choices[0]?.message?.content?.trim();
+        if (!translated) throw new Error("OpenAI returned an empty translation");
+        return translated;
       } catch (error) {
-        console.warn("[ai] OpenAI translation failed; using local fallback", error);
-        return translateLocally(text, lang);
+        console.warn("[ai] OpenAI translation failed", error);
+        throw error;
       }
     },
 
@@ -97,7 +102,10 @@ export function createAIService(openai: OpenAI) {
         }
       }
 
-      // OpenAI fallback
+      if (!isOpenAIAvailable()) {
+        throw new Error("AI voice provider is not configured");
+      }
+
       const systemPrompt = buildVoicePrompt(transcript, language, context);
 
       const completion = await openai.chat.completions.create({

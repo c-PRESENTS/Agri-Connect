@@ -241,8 +241,8 @@ Build the operating system for modern agriculture — from seed to sale, from so
 | Express.js | HTTP server & routing |
 | Node.js | Runtime |
 | Passport.js | Authentication (OIDC) |
-| OpenAI SDK | AI chat, search, voice |
-| Google Gemini (REST) | AI translation, search fallback |
+| OpenAI SDK | AI chat and secondary AI provider for voice/translation |
+| Google Gemini (REST) | Preferred provider for AI voice and production translation |
 | Stripe SDK | Payment processing |
 | ws | WebSocket (prepared for future) |
 | Zod | Request validation |
@@ -369,7 +369,6 @@ Agri-Connect/
 │   ├── ai/                          # AI service layer
 │   │   ├── index.ts                 # AI service factory
 │   │   ├── gemini.ts                # Gemini REST client
-│   │   └── local-translate.ts       # Fallback translator
 │   ├── shipping/                    # Logistics engine
 │   │   ├── quote-engine.ts          # Pricing calculator
 │   │   └── adapters/                # Carrier integrations
@@ -523,8 +522,8 @@ Agri-Connect/
 | `STRIPE_SECRET_KEY` | Yes | Stripe API secret key |
 | `STRIPE_WEBHOOK_SECRET` | Yes | Stripe webhook signing secret |
 | `REPL_ID` | Yes | Replit application identifier |
-| `GEMINI_API_KEY` | No | Google Gemini API key (preferred for AI) |
-| `AI_INTEGRATIONS_OPENAI_API_KEY` | No | OpenAI API key (fallback for AI) |
+| `GEMINI_API_KEY` | Required for production AI voice/translation | Google Gemini API key |
+| `AI_INTEGRATIONS_OPENAI_API_KEY` | Required for OpenAI-backed AI features | OpenAI API key |
 | `SENDGRID_API_KEY` | No | SendGrid email API key |
 | `SENDGRID_FROM_EMAIL` | No | Sender email address |
 | `WHATSAPP_TOKEN` | No | Meta WhatsApp Cloud API token |

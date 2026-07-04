@@ -705,6 +705,7 @@
     "show_land": "ਜ਼ਮੀਨ ਬਾਜ਼ਾਰ ਦਿਖਾਓ",
     "navigating": "{{destination}} ‘ਤੇ ਲਿਜਾਇਆ ਜਾ ਰਿਹਾ ਹੈ",
     "searching": "\"{{query}}\" ਦੀ ਖੋਜ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ",
+    "ai_unavailable": "AI ਵੌਇਸ ਅਸਿਸਟੈਂਟ ਲਈ Gemini ਜਾਂ OpenAI key ਕੌਂਫਿਗਰ ਕਰਨੀ ਲੋੜੀਂਦੀ ਹੈ।",
     "continuous": "ਨਿਰੰਤਰ",
     "audio_cues": "ਆਡੀਓ ਸੰਕੇਤ",
     "new_conversation": "ਨਵੀਂ ਗੱਲਬਾਤ",
@@ -773,7 +774,8 @@
   },
   "auto_translate": {
     "toggle_label": "ਆਟੋ-ਅਨੁਵਾਦ",
-    "translating": "ਅਨੁਵਾਦ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ..."
+    "translating": "ਅਨੁਵਾਦ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+    "unavailable": "AI ਅਨੁਵਾਦ ਲਈ Gemini ਜਾਂ OpenAI key ਕੌਂਫਿਗਰ ਕਰਨੀ ਲੋੜੀਂਦੀ ਹੈ।"
   },
   "lang": {
     "name": "ਪੰਜਾਬੀ"
