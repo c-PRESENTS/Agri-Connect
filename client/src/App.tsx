@@ -16,6 +16,7 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { CompareBar } from "@/components/compare-bar";
 import { GlobalSubcategoryPanel } from "@/components/global-subcategory-panel";
 import { MobileNavSheet } from "@/components/mobile-nav-sheet";
+import { AccessibilityToolbar } from "@/components/accessibility-toolbar";
 import { useAuth } from "@/hooks/use-auth";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -163,6 +164,7 @@ function AuthAwareContent() {
         </Switch>
       </AppShell>
       <CompareBar />
+      <AccessibilityToolbar />
       <AIChatAssistant />
     </>
   );

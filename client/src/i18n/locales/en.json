@@ -715,6 +715,12 @@
   "language": {
     "change": "Change language"
   },
+  "accessibility": {
+    "toolbar": "Accessibility tools",
+    "read_page": "Read page",
+    "stop_page": "Stop reading",
+    "regional_keyboard": "Regional keyboard"
+  },
   "dietary": {
     "keto": "Keto",
     "vegan": "Vegan",

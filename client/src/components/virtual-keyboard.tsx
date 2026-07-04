@@ -3,7 +3,7 @@ import { Keyboard, X, Delete } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
-type Script = "devanagari" | "gurmukhi" | "latin";
+type Script = "devanagari" | "gurmukhi" | "tamil" | "latin";
 
 const SCRIPTS: Record<Script, { label: string; keys: string[][] }> = {
   devanagari: {
@@ -24,6 +24,15 @@ const SCRIPTS: Record<Script, { label: string; keys: string[][] }> = {
       ["ਭ", "ਮ", "ਯ", "ਰ", "ਲ", "ਵ", "ਸ", "ਹ", "ਙ", "ਞ"],
     ],
   },
+  tamil: {
+    label: "தமிழ்",
+    keys: [
+      ["அ", "ஆ", "இ", "ஈ", "உ", "ஊ", "எ", "ஏ", "ஐ", "ஒ", "ஓ", "ஔ"],
+      ["க", "ங", "ச", "ஞ", "ட", "ண", "த", "ந", "ப", "ம"],
+      ["ய", "ர", "ல", "வ", "ழ", "ள", "ற", "ன"],
+      ["ா", "ி", "ீ", "ு", "ூ", "ெ", "ே", "ை", "்"],
+    ],
+  },
   latin: {
     label: "Latin",
     keys: [
@@ -35,16 +44,65 @@ const SCRIPTS: Record<Script, { label: string; keys: string[][] }> = {
 };
 
 interface VirtualKeyboardProps {
-  onInput: (char: string) => void;
-  onDelete: () => void;
+  onInput?: (char: string) => void;
+  onDelete?: () => void;
   defaultScript?: Script;
+  compact?: boolean;
 }
 
-export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari" }: VirtualKeyboardProps) {
+function dispatchNativeInput(element: HTMLInputElement | HTMLTextAreaElement, nextValue: string) {
+  const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(element), "value")?.set;
+  setter?.call(element, nextValue);
+  element.dispatchEvent(new Event("input", { bubbles: true }));
+  element.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function getFocusedTextField() {
+  const active = document.activeElement;
+  if (active instanceof HTMLInputElement && !["button", "checkbox", "radio", "submit"].includes(active.type)) return active;
+  if (active instanceof HTMLTextAreaElement) return active;
+  return null;
+}
+
+export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari", compact = false }: VirtualKeyboardProps) {
   const [open, setOpen] = useState(false);
   const [script, setScript] = useState<Script>(defaultScript);
 
   const { keys } = SCRIPTS[script];
+
+  const insertIntoFocusedField = (char: string) => {
+    const field = getFocusedTextField();
+    if (!field) return;
+    const start = field.selectionStart ?? field.value.length;
+    const end = field.selectionEnd ?? field.value.length;
+    const next = `${field.value.slice(0, start)}${char}${field.value.slice(end)}`;
+    dispatchNativeInput(field, next);
+    field.focus();
+    field.setSelectionRange(start + char.length, start + char.length);
+  };
+
+  const deleteFromFocusedField = () => {
+    const field = getFocusedTextField();
+    if (!field) return;
+    const start = field.selectionStart ?? field.value.length;
+    const end = field.selectionEnd ?? field.value.length;
+    if (start === 0 && end === 0) return;
+    const deleteStart = start === end ? Math.max(0, start - 1) : start;
+    const next = `${field.value.slice(0, deleteStart)}${field.value.slice(end)}`;
+    dispatchNativeInput(field, next);
+    field.focus();
+    field.setSelectionRange(deleteStart, deleteStart);
+  };
+
+  const handleInput = (char: string) => {
+    if (onInput) onInput(char);
+    else insertIntoFocusedField(char);
+  };
+
+  const handleDelete = () => {
+    if (onDelete) onDelete();
+    else deleteFromFocusedField();
+  };
 
   return (
     <>
@@ -52,7 +110,7 @@ export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari
         variant="ghost"
         size="icon"
         onClick={() => setOpen(!open)}
-        className="h-7 w-7 text-muted-foreground hover:text-primary transition-colors"
+        className={`${compact ? "h-8 w-8" : "h-7 w-7"} text-muted-foreground hover:text-primary transition-colors`}
         title="Regional keyboard"
         data-testid="button-virtual-keyboard"
       >
@@ -65,7 +123,7 @@ export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[340px] rounded-2xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-2xl p-3"
+            className="fixed bottom-[76px] md:bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[min(94vw,390px)] rounded-xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-2xl p-3"
             data-testid="virtual-keyboard-panel"
           >
             <div className="flex items-center justify-between mb-2">
@@ -96,7 +154,7 @@ export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari
                   {row.map((char) => (
                     <button
                       key={char}
-                      onClick={() => onInput(char)}
+                      onClick={() => handleInput(char)}
                       className="h-8 min-w-[28px] px-1.5 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary border border-border/30 hover:border-primary/30 text-[13px] font-medium transition-all active:scale-95"
                       data-testid={`vk-key-${char}`}
                     >
@@ -108,13 +166,13 @@ export function VirtualKeyboard({ onInput, onDelete, defaultScript = "devanagari
 
               <div className="flex gap-1 mt-1.5">
                 <button
-                  onClick={() => onInput(" ")}
+                  onClick={() => handleInput(" ")}
                   className="flex-1 h-8 rounded-lg bg-muted/60 hover:bg-muted border border-border/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider transition-all"
                 >
                   Space
                 </button>
                 <button
-                  onClick={onDelete}
+                  onClick={handleDelete}
                   className="h-8 px-3 rounded-lg bg-muted/60 hover:bg-destructive/10 hover:text-destructive border border-border/30 transition-all flex items-center justify-center"
                   data-testid="vk-delete"
                 >

@@ -1,22 +1,14 @@
 import { useState, useCallback } from "react";
-import { Volume2, VolumeX, Loader2 } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { speakText } from "@/lib/accessibility";
 
 interface TextToSpeechProps {
   text: string;
   className?: string;
   size?: "sm" | "default";
 }
-
-const LANG_CODES: Record<string, string> = {
-  en: "en-GB",
-  hi: "hi-IN",
-  pa: "pa-IN",
-  cy: "cy-GB",
-  pl: "pl-PL",
-  ta: "ta-IN",
-};
 
 export function TextToSpeech({ text, className = "", size = "sm" }: TextToSpeechProps) {
   const [speaking, setSpeaking] = useState(false);
@@ -31,21 +23,8 @@ export function TextToSpeech({ text, className = "", size = "sm" }: TextToSpeech
       return;
     }
 
-    const baseLang = i18n.language.split("-")[0];
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = LANG_CODES[baseLang] || "en-GB";
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-
-    const voices = window.speechSynthesis.getVoices();
-    const match = voices.find((v) => v.lang.startsWith(utterance.lang.split("-")[0]));
-    if (match) utterance.voice = match;
-
-    utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
-
-    window.speechSynthesis.speak(utterance);
+    setSpeaking(true);
+    speakText(text, i18n.language.split("-")[0], () => setSpeaking(false));
   }, [text, speaking, i18n.language]);
 
   if (!("speechSynthesis" in window)) return null;

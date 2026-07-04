@@ -14,6 +14,7 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "react-i18next";
+import { getReadablePageText, LANG_BCP, parseVoiceAction, speakText } from "@/lib/accessibility";
 
 interface VoiceCommandProps {
   onSearch?: (query: string) => void;
@@ -25,15 +26,6 @@ type ConversationTurn = {
   role: "user" | "assistant";
   text: string;
   timestamp: number;
-};
-
-const LANG_BCP: Record<string, string> = {
-  en: "en-GB",
-  hi: "hi-IN",
-  pa: "pa-IN",
-  cy: "cy-GB",
-  pl: "pl-PL",
-  ta: "ta-IN",
 };
 
 const NAV_PATTERNS: Record<string, Array<{ pattern: RegExp; action: string }>> = {
@@ -195,10 +187,7 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
 
   const speak = useCallback((text: string) => {
     if (!("speechSynthesis" in window)) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = LANG_BCP[baseLang] || "en-GB";
-    utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
+    speakText(text, baseLang);
   }, [baseLang]);
 
   const processWithAI = useCallback(async (text: string, silent = false) => {
@@ -209,6 +198,49 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
     // Add user turn to conversation
     const userTurn: ConversationTurn = { role: "user", text, timestamp: Date.now() };
     setConversation(prev => [...prev, userTurn]);
+
+    const action = parseVoiceAction(text);
+    if (action) {
+      let msg = "";
+      if (action.kind === "navigate") {
+        msg = t("voice.navigating", { destination: action.label });
+        setLocation(action.path);
+        window.dispatchEvent(new Event("agri-subcategory-close"));
+        setTimeout(() => setIsOpen(false), 350);
+      } else if (action.kind === "search") {
+        msg = t("voice.searching", { query: action.query });
+        onSearch?.(action.query);
+      } else if (action.kind === "back") {
+        msg = t("voice.going_back", "Going back");
+        window.history.back();
+      } else if (action.kind === "forward") {
+        msg = t("voice.going_forward", "Going forward");
+        window.history.forward();
+      } else if (action.kind === "scroll") {
+        msg = t("voice.scrolling", "Scrolling");
+        if (action.direction === "top") window.scrollTo({ top: 0, behavior: "smooth" });
+        else if (action.direction === "bottom") window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        else window.scrollBy({ top: action.direction === "down" ? 520 : -520, behavior: "smooth" });
+      } else if (action.kind === "readPage") {
+        msg = t("voice.reading_page", "Reading this page");
+        const pageText = getReadablePageText();
+        if (pageText) speakText(pageText, baseLang, completeCommand);
+      } else if (action.kind === "stopSpeech") {
+        msg = t("voice.stopped", "Stopped");
+        window.speechSynthesis?.cancel();
+      } else if (action.kind === "openCategories") {
+        msg = t("voice.opening_categories", "Opening categories");
+        window.dispatchEvent(new Event("agri-mobile-nav-open"));
+      }
+
+      setResponseText(msg);
+      setAiResponse(msg);
+      setVoiceState("speaking");
+      setConversation(prev => [...prev, { role: "assistant", text: msg, timestamp: Date.now() }]);
+      if (action.kind !== "readPage") speak(msg);
+      setTimeout(completeCommand, action.kind === "navigate" ? 900 : 1700);
+      return;
+    }
 
     const patterns = NAV_PATTERNS[baseLang] || NAV_PATTERNS.en;
     const allPatterns = [...patterns, ...(baseLang !== "en" ? NAV_PATTERNS.en : [])];
