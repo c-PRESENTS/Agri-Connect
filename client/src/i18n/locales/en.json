@@ -588,7 +588,7 @@
     "live_logistics": "Live logistics",
     "live_logistics_desc": "Real-time order tracking, cold chain monitoring, and milk run route optimization.",
     "secure": "Secure by design",
-    "secure_desc": "Replit Auth, Stripe payments, and 256-bit SSL encryption.",
+    "secure_desc": "AgriConnect Auth, Stripe payments, and 256-bit SSL encryption.",
     "community": "Community-driven",
     "community_desc": "Share-and-care lets growers reduce waste and feed communities.",
     "knowledge_hub": "Knowledge Hub",

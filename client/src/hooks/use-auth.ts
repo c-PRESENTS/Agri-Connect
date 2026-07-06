@@ -2,11 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import type { User, UpdateProfileInput } from "@shared/schema";
 
-/**
- * Replit Auth client hook. Authentication is performed by navigating to
- * /api/login (and /api/logout). This hook only exposes the current session
- * state and a profile-update mutation.
- */
+type LoginInput = {
+  email: string;
+  password: string;
+};
+
+type RegisterInput = LoginInput & {
+  name?: string;
+};
+
 export function useAuth() {
   const queryClient = useQueryClient();
 
@@ -37,12 +41,30 @@ export function useAuth() {
     },
   });
 
-  const login = () => {
-    window.location.href = "/api/login";
-  };
+  const login = useMutation({
+    mutationFn: async (credentials: LoginInput) => {
+      const res = await apiRequest("POST", "/api/auth/login", credentials);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/auth/user"], data);
+    },
+  });
 
-  const logout = () => {
-    window.location.href = "/api/logout";
+  const register = useMutation({
+    mutationFn: async (credentials: RegisterInput) => {
+      const res = await apiRequest("POST", "/api/auth/register", credentials);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/auth/user"], data);
+    },
+  });
+
+  const logout = async () => {
+    await apiRequest("POST", "/api/auth/logout", {});
+    queryClient.setQueryData(["/api/auth/user"], null);
+    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
   };
 
   return {
@@ -50,6 +72,7 @@ export function useAuth() {
     isLoading,
     isAuthenticated: !!user,
     login,
+    register,
     logout,
     updateProfile,
     completeProfile,

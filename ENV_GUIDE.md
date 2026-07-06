@@ -51,20 +51,19 @@ This document provides a complete reference for all environment variables requir
 - **Generate:** `openssl rand -base64 32`
 - **Impact:** Changing this will invalidate all existing sessions
 
-### 5. Replit Application ID
-**Variable:** `REPL_ID`
-- **Type:** String
-- **Required:** YES (for Replit-based deployments)
-- **Description:** Your Replit project's unique identifier
-- **Where to get it:** Replit project settings → Project settings → ID
-- **Used for:** OpenID Connect (OIDC) authentication integration
-
-### 6. OIDC Issuer URL (Optional)
-**Variable:** `ISSUER_URL`
+### 5. Public App URL
+**Variable:** `PUBLIC_APP_URL`
 - **Type:** String (URL)
-- **Required:** NO
-- **Default:** `https://replit.com/oidc`
-- **Description:** Custom OIDC issuer URL (advanced)
+- **Required:** YES in production
+- **Description:** Canonical public URL for redirects, payment callbacks, and generated links
+- **Example:** `https://agriconnect.example.com`
+
+### 6. Allowed App Origins
+**Variable:** `APP_ORIGINS`
+- **Type:** Comma-separated URLs
+- **Required:** YES in production when multiple domains are used
+- **Description:** Allowed frontend origins for payment redirects and origin validation
+- **Example:** `https://agriconnect.example.com,https://www.agriconnect.example.com`
 - **Use case:** When using different identity providers or proxies
 
 ---
@@ -206,16 +205,15 @@ This document provides a complete reference for all environment variables requir
 
 ---
 
-## REPLIT SPECIFIC (OPTIONAL)
+## HOSTING SPECIFIC (OPTIONAL)
 
-### 17. Replit Domains
-**Variable:** `REPLIT_DOMAINS`
-- **Type:** Comma-separated string
-- **Required:** NO
-- **Description:** List of Replit domains for CORS and webhook validation
-- **Format:** `domain1.replit.dev,domain2.replit.dev`
-- **Used for:** Stripe webhook origin validation, CORS allowlist
-- **Example:** `my-app.replit.dev,staging-app.replit.dev`
+### 17. Alternate App Origins
+**Variable:** `APP_ORIGINS`
+- **Type:** Comma-separated URLs
+- **Required:** NO when `PUBLIC_APP_URL` is enough
+- **Description:** Additional deployment domains for preview or multi-domain hosting
+- **Format:** `https://domain1.example.com,https://domain2.example.com`
+- **Used for:** Stripe redirect origin validation
 
 ---
 
@@ -227,7 +225,7 @@ This document provides a complete reference for all environment variables requir
 | NODE_ENV | YES | development | Inferred from script |
 | PORT | NO | 5000 | - |
 | SESSION_SECRET | YES | - | - |
-| REPL_ID | YES | - | Replit env |
+| PUBLIC_APP_URL | YES in production | - | Hosting provider |
 | STRIPE_SECRET_KEY | YES | - | - |
 | STRIPE_WEBHOOK_SECRET | YES | - | - |
 | SENDGRID_API_KEY | NO | (empty) | - |
@@ -239,7 +237,7 @@ This document provides a complete reference for all environment variables requir
 | ROYAL_MAIL_API_KEY | NO | (empty) | - |
 | AI_INTEGRATIONS_OPENAI_API_KEY | YES for production AI | (empty) | - |
 | GEMINI_API_KEY | YES for production AI voice/translation | (empty) | - |
-| REPLIT_DOMAINS | NO | (empty) | - |
+| APP_ORIGINS | NO | (empty) | Hosting provider |
 
 ---
 
@@ -256,7 +254,7 @@ createdb agriconnect
 # 3. Fill in required variables in .env
 DATABASE_URL=postgresql://postgres:@localhost:5432/agriconnect
 SESSION_SECRET=dev-secret-change-in-prod
-REPL_ID=local-dev
+PUBLIC_APP_URL=http://localhost:5000
 STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
 
@@ -267,17 +265,17 @@ npm run db:push
 npm run dev
 ```
 
-### Production on Replit
+### Production
 ```bash
-# 1. Set secrets in Replit Secrets panel
-#    - DATABASE_URL (from Replit Postgres)
+# 1. Set environment variables in your hosting provider
+#    - DATABASE_URL
 #    - SESSION_SECRET
-#    - REPL_ID
+#    - PUBLIC_APP_URL
 #    - STRIPE_SECRET_KEY
 #    - STRIPE_WEBHOOK_SECRET
 #    - (and any optional ones you want to use)
 
-# 2. Replit will load secrets as environment variables
+# 2. Your host will load secrets as environment variables
 
 # 3. Deploy
 npm run build

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Re-export auth-related tables and types so the rest of the app can keep
 // importing from "@shared/schema". The canonical users + sessions tables live
-// in shared/models/auth.ts (required by Replit Auth).
+// in shared/models/auth.ts.
 export * from "./models/auth";
 
 // Categories

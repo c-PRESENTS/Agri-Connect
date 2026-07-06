@@ -45,7 +45,7 @@ Build the operating system for modern agriculture — from seed to sale, from so
 
 ### Authentication
 
-- **Replit OIDC** — OpenID Connect via Passport.js with automatic token refresh.
+- **AgriConnect Auth** — Email/password authentication with secure password hashing.
 - **Session management** — PostgreSQL-backed sessions with 1-week TTL.
 - **Guest cart** — Anonymous session-based cart that merges on first login.
 - **Profile wizard** — Onboarding flow for role selection (buyer/farmer) and profile setup.
@@ -276,7 +276,7 @@ Build the operating system for modern agriculture — from seed to sale, from so
 │  TanStack React Query + react-hook-form + Zod             │
 ├──────────────────────────────────────────────────────────┤
 │                   EXPRESS SERVER                           │
-│  Passport.js (Replit OIDC) + express-session              │
+│  Email/password auth + express-session                    │
 │  REST API (40+ endpoints) + Stripe webhooks               │
 │  AI Service (Gemini → OpenAI, provider key required)      │
 │  Shipping Engine (9 carriers, adapter pattern)            │
@@ -372,10 +372,9 @@ Agri-Connect/
 │   ├── shipping/                    # Logistics engine
 │   │   ├── quote-engine.ts          # Pricing calculator
 │   │   └── adapters/                # Carrier integrations
-│   ├── replit_integrations/         # Auth system
-│   │   ├── auth/
-│   │   │   ├── index.ts             # Passport strategy
-│   │   │   ├── routes.ts            # Auth endpoints
+│   ├── auth/                        # Auth system
+│   │   ├── index.ts                 # Session/auth routes
+│   │   └── storage.ts               # User persistence
 │   │   │   └── middleware.ts        # isAuthenticated
 │   │   └── auth/storage.ts
 │   ├── notifications/               # Email + WhatsApp
@@ -398,7 +397,7 @@ Agri-Connect/
 
 | Column | Type | Notes |
 |--------|------|-------|
-| `id` | varchar PK | Replit OIDC subject |
+| `id` | varchar PK | Internal user identifier |
 | `email` | varchar UNIQUE | |
 | `first_name` | varchar | |
 | `last_name` | varchar | |
@@ -521,7 +520,7 @@ Agri-Connect/
 | `SESSION_SECRET` | Yes | Express session secret key |
 | `STRIPE_SECRET_KEY` | Yes | Stripe API secret key |
 | `STRIPE_WEBHOOK_SECRET` | Yes | Stripe webhook signing secret |
-| `REPL_ID` | Yes | Replit application identifier |
+| `PUBLIC_APP_URL` | Yes in production | Canonical public app URL |
 | `GEMINI_API_KEY` | Required for production AI voice/translation | Google Gemini API key |
 | `AI_INTEGRATIONS_OPENAI_API_KEY` | Required for OpenAI-backed AI features | OpenAI API key |
 | `SENDGRID_API_KEY` | No | SendGrid email API key |
@@ -531,7 +530,7 @@ Agri-Connect/
 | `DPD_API_USERNAME` | No | DPD carrier API username |
 | `DPD_API_PASSWORD` | No | DPD carrier API password |
 | `ROYAL_MAIL_API_KEY` | No | Royal Mail API key |
-| `REPLIT_DOMAINS` | No | Comma-separated allowed origins |
+| `APP_ORIGINS` | No | Comma-separated allowed app origins |
 | `NODE_ENV` | No | `development` or `production` |
 | `PORT` | No | Server port (default: 5000) |
 
@@ -600,7 +599,7 @@ docker-compose up -d
 
 ### Completed
 
-- [x] Authentication (Replit OIDC)
+- [x] Authentication (email/password sessions)
 - [x] Product marketplace (CRUD, filtering, search)
 - [x] Shopping cart + checkout
 - [x] Stripe payment integration

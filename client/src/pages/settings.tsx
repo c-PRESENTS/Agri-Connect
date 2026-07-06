@@ -148,21 +148,16 @@ export default function SettingsPage() {
             </CardTitle>
             <CardDescription>
               {t(
-                "settings.security_replit_desc",
-                "AgriConnect uses Replit Auth. Manage your password, two-factor authentication, and connected accounts in your Replit account settings.",
+                "settings.security_desc",
+                "AgriConnect uses secure email and password authentication for your account.",
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <a
-              href="https://replit.com/account"
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm text-primary underline"
-              data-testid="link-manage-replit-account"
-            >
-              {t("settings.manage_replit", "Manage Replit account")}
-            </a>
+          <CardContent className="text-sm text-muted-foreground">
+            {t(
+              "settings.password_note",
+              "Password change and multi-factor authentication settings can be added from this account area as the platform grows.",
+            )}
           </CardContent>
         </Card>
 

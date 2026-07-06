@@ -18,8 +18,8 @@ import type { Order, Shipment, ShipServiceType } from "@shared/schema";
 import { calculateQuotes, calculateQuotesFromCoords, rateCardById, geocodePostcode } from "./shipping/quote-engine";
 import { getAdapter } from "./shipping/adapters";
 import { notify, buildShipmentBookedEmail } from "./notifications";
-import { isAuthenticated } from "./replit_integrations/auth";
-import { authStorage } from "./replit_integrations/auth/storage";
+import { isAuthenticated } from "./auth";
+import { authStorage } from "./auth/storage";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import OpenAI from "openai";
@@ -29,7 +29,7 @@ import { getStripe, getWebhookSecret } from "./stripe";
 import type Stripe from "stripe";
 
 function getUserId(req: Request): string | undefined {
-  return (req.user as any)?.claims?.sub;
+  return (req.user as any)?.id ?? req.session?.userId;
 }
 
 function getUserIdOrSession(req: Request): string {
@@ -94,20 +94,19 @@ function aiRateLimit(limit: number, windowMs: number) {
 }
 
 function resolveStripeOrigin(req: Request): string {
-  const allowList = (process.env.REPLIT_DOMAINS || "")
+  const allowList = (process.env.APP_ORIGINS || process.env.PUBLIC_APP_URL || "")
     .split(",")
     .map((d) => d.trim())
     .filter(Boolean)
-    .map((d) => `https://${d}`);
+    .map((origin) => (origin.startsWith("http://") || origin.startsWith("https://") ? origin : `https://${origin}`));
   const requested = (req.headers.origin as string) || "";
   if (allowList.length > 0) {
     if (requested && allowList.includes(requested)) return requested;
     return allowList[0];
   }
   // No allow-list configured (local dev only): fall back to the request host.
-  // In production, REPLIT_DOMAINS is always set, so we never reach this.
   if (process.env.NODE_ENV === "production") {
-    throw new Error("REPLIT_DOMAINS is not configured");
+    throw new Error("APP_ORIGINS or PUBLIC_APP_URL is not configured");
   }
   return `${req.protocol}://${req.get("host")}`;
 }
@@ -741,7 +740,7 @@ export async function registerRoutes(
           if (session.payment_status === "paid") {
             const updated = await storage.markOrderPaid(
               order.id,
-              typeof session.payment_intent === "string" ? session.payment_intent : undefined,
+              typeof session.payment_intent === "string"  ? session.payment_intent : undefined,
             );
             if (updated) {
               const origin = `${req.protocol}://${req.get("host")}`;
@@ -758,7 +757,6 @@ export async function registerRoutes(
           // fall through and return current order
         }
       }
-
       res.json(order);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch session" });
@@ -780,7 +778,6 @@ export async function registerRoutes(
       console.error("Stripe webhook signature verification failed:", err?.message);
       return res.status(400).send(`Webhook Error: ${err?.message}`);
     }
-
     try {
       switch (event.type) {
         case "checkout.session.completed": {

@@ -13,7 +13,8 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Session storage table — required by Replit Auth. Do not drop.
+// Session storage table used by express-session. Do not drop while sessions are
+// stored in Postgres.
 export const sessions = pgTable(
   "sessions",
   {
@@ -24,13 +25,11 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)]
 );
 
-// Unified users table — required by Replit Auth (id, email, firstName,
-// lastName, profileImageUrl, createdAt, updatedAt) plus AgriConnect business
-// fields (role, phone, location, etc.). The `id` column receives the Replit
-// `sub` claim via upsertUser; default keeps non-auth inserts safe.
+// Unified users table for AgriConnect identity and business profile fields.
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
+  passwordHash: text("password_hash"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -58,6 +57,8 @@ export type User = typeof users.$inferSelect;
 
 export const updateProfileSchema = z.object({
   role: z.enum(["buyer", "farmer"]).optional(),
+  firstName: z.string().min(1).max(80).optional(),
+  lastName: z.string().max(80).optional().nullable(),
   name: z.string().min(1).max(120).optional(),
   phone: z.string().max(40).optional().nullable(),
   avatar: z.string().url().optional().nullable(),

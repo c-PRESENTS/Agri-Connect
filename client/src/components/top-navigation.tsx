@@ -284,7 +284,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
               <Button
                 variant="default"
                 size="sm"
-                onClick={() => (window.location.href = "/api/login")}
+                onClick={() => (window.location.href = "/login")}
                 className="h-8 px-2.5 text-[10px] font-bold uppercase tracking-tight ml-1 bg-primary hover:bg-primary/90 shadow-sm btn-glow transition-all"
                 data-testid="button-login-nav"
               >

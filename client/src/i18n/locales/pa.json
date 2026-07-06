@@ -620,7 +620,7 @@
     "live_logistics": "ਲਾਈਵ ਲੌਜਿਸਟਿਕਸ",
     "live_logistics_desc": "ਰੀਅਲ-ਟਾਈਮ ਸ਼ਿਪਮੈਂਟ ਟ੍ਰੈਕਿੰਗ, ਦੁੱਧ ਦੌੜ, ਅਤੇ ਕੋਲਡ ਚੇਨ ਡਿਲੀਵਰੀ",
     "secure": "ਸੁਰੱਖਿਅਤ ਲੈਣ-ਦੇਣ",
-    "secure_desc": "Replit Auth, Stripe ਭੁਗਤਾਨ, ਅਤੇ 256-bit SSL ਏਨਕ੍ਰਿਪਸ਼ਨ",
+    "secure_desc": "AgriConnect Auth, Stripe ਭੁਗਤਾਨ, ਅਤੇ 256-bit SSL ਏਨਕ੍ਰਿਪਸ਼ਨ",
     "community": "ਕਮਿਊਨਿਟੀ-ਅਧਾਰਤ",
     "community_desc": "ਫਾਰਮ-ਟੂ-ਟੇਬਲ ਕਨੈਕਸ਼ਨ ਅਤੇ ਵਾਧੂ-ਭੋਜਨ ਸਾਂਝਾ ਕਰਨਾ ਕਮਿਊਨਿਟੀ ਦੇ ਵਿਕਾਸ ਨੂੰ ਸ਼ਕਤੀ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ",
     "knowledge_hub": "ਗਿਆਨ ਹੱਬ",

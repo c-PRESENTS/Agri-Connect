@@ -650,7 +650,7 @@
     "live_logistics": "Logisteg byw",
     "live_logistics_desc": "Tracio archebion amser real, monitro cadwyn oer, a optimeiddio llwybr rhedeg llaeth.",
     "secure": "Diogel trwy ddylunio",
-    "secure_desc": "Replit Auth, taliadau Stripe, ac amgryptiad SSL 256-bit.",
+    "secure_desc": "AgriConnect Auth, taliadau Stripe, ac amgryptiad SSL 256-bit.",
     "community": "Arwain gan gymuned",
     "community_desc": "Mae Rhannu a Gofalu yn caniatáu i dyfwyr leihau gwastraff a bwydo cymunedau.",
     "knowledge_hub": "Canolfan Gwybodaeth",

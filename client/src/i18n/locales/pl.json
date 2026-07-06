@@ -650,7 +650,7 @@
     "live_logistics": "Logistyka na żywo",
     "live_logistics_desc": "Śledzenie zamówień w czasie rzeczywistym, monitoring łańcucha chłodniczego i optymalizacja tras mlecznych.",
     "secure": "Bezpieczny z założenia",
-    "secure_desc": "Replit Auth, płatności Stripe i szyfrowanie SSL 256-bit.",
+    "secure_desc": "AgriConnect Auth, płatności Stripe i szyfrowanie SSL 256-bit.",
     "community": "Napędzany przez społeczność",
     "community_desc": "Funkcja dzielenia się pozwala producentom zmniejszać odpady i karmić społeczności.",
     "knowledge_hub": "Centrum Wiedzy",
