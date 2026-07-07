@@ -1,8 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { setupAuth, registerAuthRoutes } from "./auth";
+import { registerOtpRoutes } from "./otp/routes";
 
 const app = express();
 const httpServer = createServer(app);
@@ -12,6 +15,40 @@ declare module "http" {
     rawBody: unknown;
   }
 }
+
+const isProd = process.env.NODE_ENV === "production";
+
+app.use(helmet({
+  // In development Vite injects inline scripts for HMR and React Fast Refresh.
+  // Those are blocked by a strict CSP, which breaks the dev experience.
+  // The built production output has no inline scripts, so the policy is safe
+  // to enforce only in production.
+  contentSecurityPolicy: isProd
+    ? {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "https://accounts.google.com", "https://apis.google.com"],
+          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+          fontSrc: ["'self'", "https://fonts.gstatic.com"],
+          imgSrc: ["'self'", "data:", "https:", "blob:"],
+          connectSrc: ["'self'", "https://api.sendgrid.com", "https://rest.nexmo.com"],
+          frameSrc: ["https://accounts.google.com"],
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      }
+    : false,
+}));
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many requests. Try again later." },
+});
+
+app.use("/api/", apiLimiter);
 
 app.use(
   express.json({
@@ -64,6 +101,17 @@ app.use((req, res, next) => {
   // Auth must be set up before routes are registered.
   await setupAuth(app);
   registerAuthRoutes(app);
+  registerOtpRoutes(app);
+
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
+  app.get("/api/config", (_req, res) => {
+    res.json({
+      googleClientId: process.env.GOOGLE_CLIENT_ID || "",
+    });
+  });
 
   await registerRoutes(httpServer, app);
 

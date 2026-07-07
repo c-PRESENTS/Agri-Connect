@@ -11,6 +11,19 @@ type RegisterInput = LoginInput & {
   name?: string;
 };
 
+type SendOtpInput = {
+  phone: string;
+};
+
+type VerifyOtpInput = {
+  phone: string;
+  code: string;
+};
+
+type GoogleLoginInput = {
+  credential: string;
+};
+
 export function useAuth() {
   const queryClient = useQueryClient();
 
@@ -61,6 +74,33 @@ export function useAuth() {
     },
   });
 
+  const sendOtp = useMutation({
+    mutationFn: async (input: SendOtpInput) => {
+      const res = await apiRequest("POST", "/api/auth/otp/send", input);
+      return res.json();
+    },
+  });
+
+  const verifyOtp = useMutation({
+    mutationFn: async (input: VerifyOtpInput) => {
+      const res = await apiRequest("POST", "/api/auth/otp/verify", input);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/auth/user"], data.user);
+    },
+  });
+
+  const googleLogin = useMutation({
+    mutationFn: async (input: GoogleLoginInput) => {
+      const res = await apiRequest("POST", "/api/auth/google", input);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/auth/user"], data.user);
+    },
+  });
+
   const logout = async () => {
     await apiRequest("POST", "/api/auth/logout", {});
     queryClient.setQueryData(["/api/auth/user"], null);
@@ -73,6 +113,9 @@ export function useAuth() {
     isAuthenticated: !!user,
     login,
     register,
+    sendOtp,
+    verifyOtp,
+    googleLogin,
     logout,
     updateProfile,
     completeProfile,

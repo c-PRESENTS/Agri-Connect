@@ -161,6 +161,30 @@ This document provides a complete reference for all environment variables requir
 
 ---
 
+## OTP & SMS AUTHENTICATION
+
+### 15. Vonage SMS (OTP Delivery)
+**Variable:** `VONAGE_API_KEY`, `VONAGE_API_SECRET`, `VONAGE_FROM`
+- **Type:** String
+- **Required:** YES for production OTP delivery via SMS
+- **Description:** Vonage credentials for sending OTP codes via SMS
+- **Where to get it:** https://dashboard.vonage.com/
+- **Impact:** Without these, OTP codes are logged to console in development. In production, OTP send fails unless another delivery channel is configured.
+- **Used for:** Phone-based login via one-time passcode
+- **Aliases supported:** `NEXMO_API_KEY`, `NEXMO_API_SECRET`, `VONAGE_FROM_NUMBER`, `VONAGE_SMS_FROM`, `VONAGE_BRAND_NAME`, `NEXMO_FROM`
+- **Test helper:** Set `SMS_TEST_TO` and run `node --env-file=.env send-sms.js` to send a direct Vonage smoke-test SMS.
+
+### 16. Google OAuth
+**Variable:** `GOOGLE_CLIENT_ID`
+- **Type:** String
+- **Required:** YES for "Sign in with Google" button
+- **Description:** Google OAuth client ID for identity verification
+- **Where to get it:** https://console.cloud.google.com/apis/credentials
+- **Format:** `123456789-xxxxx.apps.googleusercontent.com`
+- **Used for:** Verifying Google ID tokens on the server
+
+---
+
 ## AI INTEGRATION - OPENAI / GEMINI
 
 ### 15. OpenAI API Key
@@ -230,6 +254,9 @@ This document provides a complete reference for all environment variables requir
 | STRIPE_WEBHOOK_SECRET | YES | - | - |
 | SENDGRID_API_KEY | NO | (empty) | - |
 | SENDGRID_FROM_EMAIL | NO | noreply@agriconnect.app | - |
+| VONAGE_API_KEY | YES for production OTP SMS | (empty) | - |
+| VONAGE_API_SECRET | YES for production OTP SMS | (empty) | - |
+| VONAGE_FROM | YES for production OTP SMS | (empty) | - |
 | WHATSAPP_TOKEN | NO | (empty) | - |
 | WHATSAPP_PHONE_NUMBER_ID | NO | (empty) | - |
 | DPD_API_USERNAME | NO | (empty) | - |

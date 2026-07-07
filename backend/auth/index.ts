@@ -1,11 +1,29 @@
 import bcrypt from "bcryptjs";
 import connectPg from "connect-pg-simple";
+import rateLimit from "express-rate-limit";
 import type { Express, Request, RequestHandler, Response } from "express";
 import session from "express-session";
 import { z, ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { updateProfileSchema, type User } from "@shared/models/auth";
 import { authStorage } from "./storage";
+import { verifyGoogleToken } from "./google";
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many login attempts. Try again in 15 minutes." },
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many registration attempts. Try again in an hour." },
+});
 
 declare module "express-session" {
   interface SessionData {
@@ -80,6 +98,12 @@ function getSessionUserId(req: Request): string | undefined {
   return req.session.userId;
 }
 
+function regenerateSession(req: Request): Promise<void> {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => (err ? reject(err) : resolve()));
+  });
+}
+
 function handleAuthError(error: unknown, res: Response): boolean {
   if (error instanceof ZodError) {
     res.status(400).json({ message: fromZodError(error).message });
@@ -89,7 +113,7 @@ function handleAuthError(error: unknown, res: Response): boolean {
 }
 
 export function registerAuthRoutes(app: Express): void {
-  app.post("/api/auth/register", async (req, res) => {
+  app.post("/api/auth/register", registerLimiter, async (req, res) => {
     try {
       const credentials = credentialsSchema.parse(req.body);
       const existing = await authStorage.getUserByEmail(credentials.email);
@@ -105,6 +129,7 @@ export function registerAuthRoutes(app: Express): void {
         firstName: credentials.name?.split(" ")[0],
         lastName: credentials.name?.split(" ").slice(1).join(" ") || null,
       });
+      await regenerateSession(req);
       req.session.userId = user.id;
       res.status(201).json(serializeUser(user));
     } catch (error) {
@@ -114,7 +139,7 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/auth/login", async (req, res) => {
+  app.post("/api/auth/login", loginLimiter, async (req, res) => {
     try {
       const credentials = loginSchema.parse(req.body);
       const user = await authStorage.getUserByEmail(credentials.email);
@@ -127,12 +152,58 @@ export function registerAuthRoutes(app: Express): void {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
+      await regenerateSession(req);
       req.session.userId = user.id;
       res.json(serializeUser(user));
     } catch (error) {
       if (handleAuthError(error, res)) return;
       console.error("Error logging in:", error);
       res.status(500).json({ message: "Failed to sign in" });
+    }
+  });
+
+  app.post("/api/auth/google", async (req, res) => {
+    try {
+      const { credential } = req.body;
+      if (!credential || typeof credential !== "string") {
+        return res.status(400).json({ message: "Missing Google credential" });
+      }
+
+      const googleUser = await verifyGoogleToken(credential);
+      let user = await authStorage.getUserByGoogleId(googleUser.googleId);
+
+      if (!user && googleUser.email) {
+        user = await authStorage.getUserByEmail(googleUser.email);
+        if (user) {
+          user = await authStorage.updateProfile(user.id, {
+            googleId: googleUser.googleId,
+            firstName: googleUser.name.split(" ")[0],
+            lastName: googleUser.name.split(" ").slice(1).join(" ") || null,
+            profileImageUrl: googleUser.picture,
+          });
+        }
+      }
+
+      if (!user) {
+        user = await authStorage.createUser({
+          googleId: googleUser.googleId,
+          email: googleUser.email || null,
+          name: googleUser.name,
+          firstName: googleUser.name.split(" ")[0],
+          lastName: googleUser.name.split(" ").slice(1).join(" ") || null,
+          profileImageUrl: googleUser.picture,
+          authMethod: "google",
+          profileComplete: false,
+        });
+      }
+
+      // Regenerate session to prevent session fixation.
+      await regenerateSession(req);
+      req.session.userId = user.id;
+      res.json({ user: serializeUser(user), isNewUser: !user.profileComplete });
+    } catch (error) {
+      console.error("Error with Google auth:", error);
+      res.status(401).json({ message: "Google authentication failed" });
     }
   });
 
@@ -166,7 +237,9 @@ export function registerAuthRoutes(app: Express): void {
       const updates = updateProfileSchema.parse(req.body);
       if (updates.role) {
         const current = await authStorage.getUser(userId);
-        if (current?.role && current.role !== updates.role) {
+        // Only lock role once the profile has been completed — new users must
+        // be free to choose farmer / buyer during onboarding.
+        if (current?.role && current.role !== updates.role && current.profileComplete) {
           delete (updates as { role?: string }).role;
         }
       }
@@ -206,11 +279,5 @@ export function registerAuthRoutes(app: Express): void {
   app.get("/api/login", (_req, res) => {
     res.redirect("/login");
   });
-
-  app.get("/api/logout", (req, res) => {
-    req.session.destroy(() => {
-      res.clearCookie("connect.sid");
-      res.redirect("/");
-    });
-  });
 }
+
