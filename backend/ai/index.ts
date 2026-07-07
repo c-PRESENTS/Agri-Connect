@@ -18,10 +18,10 @@ export function langDisplay(lang: string): string {
 }
 
 function isOpenAIAvailable(): boolean {
-  return !!process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  return !!(process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY);
 }
 
-export function createAIService(openai: OpenAI) {
+export function createAIService(openai?: OpenAI) {
   const geminiAvailable = isGeminiAvailable();
   if (geminiAvailable) {
     console.log("[ai] Gemini API key found — Gemini routing enabled");
@@ -55,6 +55,9 @@ export function createAIService(openai: OpenAI) {
 
       if (!isOpenAIAvailable()) {
         throw new Error("AI translation provider is not configured");
+      }
+      if (!openai) {
+        throw new Error("OpenAI client is not configured");
       }
 
       // OpenAI secondary provider
@@ -104,6 +107,9 @@ export function createAIService(openai: OpenAI) {
 
       if (!isOpenAIAvailable()) {
         throw new Error("AI voice provider is not configured");
+      }
+      if (!openai) {
+        throw new Error("OpenAI client is not configured");
       }
 
       const systemPrompt = buildVoicePrompt(transcript, language, context);

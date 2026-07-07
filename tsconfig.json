@@ -1,5 +1,14 @@
 {
-  "include": ["frontend/src/**/*", "shared/**/*", "backend/**/*"],
+  "include": [
+    "frontend/src/**/*",
+    "shared/**/*",
+    "backend/**/*",
+    "scripts/**/*",
+    "drizzle.config.ts",
+    "vite.config.ts",
+    "tailwind.config.ts",
+    "postcss.config.js"
+  ],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
     "incremental": true,
@@ -13,7 +22,6 @@
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "moduleResolution": "bundler",
-    "baseUrl": ".",
     "types": ["node", "vite/client"],
     "paths": {
       "@/*": ["./frontend/src/*"],

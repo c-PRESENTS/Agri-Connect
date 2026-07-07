@@ -275,10 +275,14 @@ async function ensureShipmentsForOrderInner(order: Order, origin: string): Promi
   return created;
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+const openAiApiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+
+const openai = openAiApiKey
+  ? new OpenAI({
+      apiKey: openAiApiKey,
+      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+    })
+  : undefined;
 
 const ai = createAIService(openai);
 
@@ -1086,6 +1090,12 @@ export async function registerRoutes(
       if (message.length > 1000) {
         return res.status(400).json({ error: "Message too long (max 1000 characters)" });
       }
+      if (!openai) {
+        return res.status(503).json({
+          error: "AI chat provider is not configured or unavailable",
+          code: "AI_CHAT_UNAVAILABLE",
+        });
+      }
 
       const products = await storage.getProducts({});
       const categories = await storage.getCategories();
@@ -1261,7 +1271,7 @@ Respond only with valid JSON, no markdown.`;
             maxOutputTokens: 150,
             responseMimeType: "application/json",
           });
-        } else if (process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+        } else if (openai) {
           const completion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [{ role: "user", content: systemPrompt }],
