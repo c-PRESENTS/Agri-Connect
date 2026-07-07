@@ -7,29 +7,38 @@ interface PhoneInputProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   error?: string;
+  label?: string;
+  placeholder?: string;
 }
 
-export function PhoneInput({ value, onChange, disabled, error }: PhoneInputProps) {
+export function PhoneInput({
+  value,
+  onChange,
+  disabled,
+  error,
+  label = "Mobile Number",
+  placeholder = "+91 84336 79895",
+}: PhoneInputProps) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor="phone">Mobile Number</Label>
+    <div className="space-y-2">
+      <Label htmlFor="phone" className="text-sm font-black text-slate-800">{label}</Label>
       <div className="relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-          <Phone className="h-4 w-4 text-muted-foreground" />
+        <div className="pointer-events-none absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+          <Phone className="h-4 w-4" />
         </div>
         <Input
           id="phone"
           type="tel"
-          placeholder="+44 7700 900000"
+          placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           autoComplete="tel"
           required
-          className="pl-10"
+          className="h-14 rounded-2xl border-emerald-100 bg-emerald-50/50 pl-16 pr-4 text-base font-semibold shadow-inner shadow-emerald-900/5 transition placeholder:text-slate-400 focus-visible:ring-4 focus-visible:ring-lime-200"
         />
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
     </div>
   );
 }

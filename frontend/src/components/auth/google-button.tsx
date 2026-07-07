@@ -4,15 +4,16 @@ interface GoogleButtonProps {
   onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
+  label?: string;
 }
 
-export function GoogleButton({ onClick, disabled, loading }: GoogleButtonProps) {
+export function GoogleButton({ onClick, disabled, loading, label = "Sign in with Google" }: GoogleButtonProps) {
   return (
     <Button
       type="button"
       variant="outline"
       size="lg"
-      className="w-full text-base gap-3"
+      className="h-14 w-full gap-3 rounded-2xl border-slate-200 bg-white text-base font-black text-slate-700 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50/40 hover:text-emerald-900 focus-visible:ring-4 focus-visible:ring-lime-200"
       onClick={onClick}
       disabled={disabled || loading}
     >
@@ -38,7 +39,7 @@ export function GoogleButton({ onClick, disabled, loading }: GoogleButtonProps) 
           />
         </svg>
       )}
-      Sign in with Google
+      {label}
     </Button>
   );
 }

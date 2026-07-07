@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import type { User, UpdateProfileInput } from "@shared/schema";
 
@@ -26,6 +27,7 @@ type GoogleLoginInput = {
 
 export function useAuth() {
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
@@ -105,6 +107,7 @@ export function useAuth() {
     await apiRequest("POST", "/api/auth/logout", {});
     queryClient.setQueryData(["/api/auth/user"], null);
     queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    setLocation("/login");
   };
 
   return {

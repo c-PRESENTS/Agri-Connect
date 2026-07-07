@@ -10,7 +10,7 @@ interface OtpInputProps {
 
 export function OtpInput({ value, onChange, disabled, error }: OtpInputProps) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <OTPInput
         value={value}
         onChange={onChange}
@@ -19,13 +19,13 @@ export function OtpInput({ value, onChange, disabled, error }: OtpInputProps) {
         containerClassName="flex items-center gap-2 justify-center"
         render={({ slots }) => (
           <>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {slots.slice(0, 3).map((slot, idx) => (
                 <Slot key={idx} {...slot} />
               ))}
             </div>
-            <div className="flex items-center gap-1 text-muted-foreground text-lg font-bold">-</div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-lg font-black text-emerald-700">-</div>
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {slots.slice(3, 6).map((slot, idx) => (
                 <Slot key={idx + 3} {...slot} />
               ))}
@@ -33,7 +33,7 @@ export function OtpInput({ value, onChange, disabled, error }: OtpInputProps) {
           </>
         )}
       />
-      {error && <p className="text-sm text-destructive text-center">{error}</p>}
+      {error && <p className="text-center text-sm font-semibold text-destructive">{error}</p>}
     </div>
   );
 }
@@ -42,9 +42,8 @@ function Slot(props: { char?: string | null; hasFakeCaret: boolean; isActive: bo
   return (
     <div
       className={cn(
-        "relative flex h-14 w-12 items-center justify-center border-y border-r border-input text-lg font-semibold transition-all",
-        "first:rounded-l-md first:border-l last:rounded-r-md",
-        props.isActive && "z-10 ring-2 ring-ring ring-offset-2 ring-offset-background",
+        "relative flex h-14 w-11 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50/60 text-lg font-black text-emerald-950 shadow-inner shadow-emerald-900/5 transition-all sm:w-12",
+        props.isActive && "z-10 border-emerald-400 bg-white ring-4 ring-lime-200",
       )}
     >
       {props.char || ""}
