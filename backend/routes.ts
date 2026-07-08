@@ -449,7 +449,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/cart", async (req, res) => {
+  app.post("/api/cart", isAuthenticated, async (req, res) => {
     try {
       touchGuestSession(req);
       await mergeGuestCartIfNeeded(req);
@@ -463,7 +463,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/cart/:itemId", async (req, res) => {
+  app.patch("/api/cart/:itemId", isAuthenticated, async (req, res) => {
     try {
       touchGuestSession(req);
       const userId = getUserIdOrSession(req);
@@ -479,7 +479,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/cart/:itemId", async (req, res) => {
+  app.delete("/api/cart/:itemId", isAuthenticated, async (req, res) => {
     try {
       touchGuestSession(req);
       const userId = getUserIdOrSession(req);
@@ -493,7 +493,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/cart", async (req, res) => {
+  app.delete("/api/cart", isAuthenticated, async (req, res) => {
     try {
       touchGuestSession(req);
       const userId = getUserIdOrSession(req);
@@ -505,7 +505,7 @@ export async function registerRoutes(
   });
 
   // Validate the current cart against live stock (used before checkout).
-  app.post("/api/cart/validate", async (req, res) => {
+  app.post("/api/cart/validate", isAuthenticated, async (req, res) => {
     try {
       touchGuestSession(req);
       const userId = getUserIdOrSession(req);

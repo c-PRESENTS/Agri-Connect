@@ -139,7 +139,9 @@ function AuthAwareContent() {
           <Route path="/government-schemes" component={GovernmentSchemes} />
           <Route path="/products/:id" component={ProductDetailPage} />
           <Route path="/compare" component={ComparePage} />
-          <Route path="/seller" component={SellerPage} />
+          <Route path="/seller">
+            <ProtectedRoute><SellerPage /></ProtectedRoute>
+          </Route>
           <Route path="/sellers/:id" component={SellerProfilePage} />
           <Route path="/map" component={SmartMapPage} />
           <Route path="/checkout">

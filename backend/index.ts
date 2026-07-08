@@ -19,6 +19,7 @@ declare module "http" {
 const isProd = process.env.NODE_ENV === "production";
 
 app.use(helmet({
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   // In development Vite injects inline scripts for HMR and React Fast Refresh.
   // Those are blocked by a strict CSP, which breaks the dev experience.
   // The built production output has no inline scripts, so the policy is safe
@@ -31,7 +32,7 @@ app.use(helmet({
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "https://fonts.gstatic.com"],
           imgSrc: ["'self'", "data:", "https:", "blob:"],
-          connectSrc: ["'self'", "https://api.sendgrid.com", "https://rest.nexmo.com"],
+          connectSrc: ["'self'", "https://api.sendgrid.com", "https://rest.nexmo.com", "https://accounts.google.com"],
           frameSrc: ["https://accounts.google.com"],
           objectSrc: ["'none'"],
           upgradeInsecureRequests: [],

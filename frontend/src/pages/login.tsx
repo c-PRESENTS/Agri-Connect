@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, type RefObject } from "react";
 import type { TFunction } from "i18next";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/auth/phone-input";
 import { OtpInput } from "@/components/auth/otp-input";
-import { GoogleButton } from "@/components/auth/google-button";
 import farmerImage from "@/assets/stock_images/Farmer Image.png";
 import {
   ArrowLeft,
@@ -40,6 +39,9 @@ const fieldMetrics = [
   { value: "15", labelKey: "login.metric_workspace", fallback: "Crops traded" },
 ];
 
+let initializedGoogleClientId = "";
+let activeGoogleCredentialHandler: (response: { credential?: string }) => void = () => undefined;
+
 export default function LoginPage() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
@@ -54,7 +56,10 @@ export default function LoginPage() {
   const [role, setRole] = useState<"farmer" | "buyer">("farmer");
   const [phoneError, setPhoneError] = useState("");
   const [otpError, setOtpError] = useState("");
-  const googleClientIdRef = useRef<string>("");
+  const googleButtonContainerRef = useRef<HTMLDivElement>(null);
+  const googleButtonRenderedRef = useRef(false);
+  const [googleClientId, setGoogleClientId] = useState("");
+  const [googleStatusMessage, setGoogleStatusMessage] = useState("");
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -65,9 +70,96 @@ export default function LoginPage() {
   useEffect(() => {
     fetch("/api/config")
       .then((r) => r.json())
-      .then((cfg) => { googleClientIdRef.current = cfg.googleClientId; })
+      .then((cfg) => {
+        const clientId = cfg.googleClientId || "";
+        setGoogleClientId(clientId);
+      })
       .catch(() => {});
   }, []);
+
+  const handleGoogleCredential = useCallback(async (response: { credential?: string }) => {
+    if (!response.credential) {
+      setOtpError("Google sign-in failed. Try again.");
+      return;
+    }
+
+    try {
+      const data = await googleLogin.mutateAsync({ credential: response.credential });
+      if (data.isNewUser) {
+        setStep("profile");
+      }
+    } catch {
+      setOtpError("Google sign-in failed. Try again.");
+    }
+  }, [googleLogin]);
+
+  useEffect(() => {
+    activeGoogleCredentialHandler = handleGoogleCredential;
+  }, [handleGoogleCredential]);
+
+  useEffect(() => {
+    if (step !== "phone" || !googleClientId) {
+      setGoogleStatusMessage(googleClientId ? "" : "Google sign-in is not configured yet.");
+      return;
+    }
+
+    let cancelled = false;
+    let attempts = 0;
+    let timer: ReturnType<typeof setInterval> | undefined;
+
+    const renderGoogleButton = () => {
+      const { google } = window as any;
+      const container = googleButtonContainerRef.current;
+      if (!google?.accounts?.id || !container) return false;
+
+      try {
+        if (initializedGoogleClientId !== googleClientId) {
+          google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: (response: { credential?: string }) => activeGoogleCredentialHandler(response),
+            ux_mode: "popup",
+            cancel_on_tap_outside: false,
+          });
+          initializedGoogleClientId = googleClientId;
+        }
+
+        if (!googleButtonRenderedRef.current) {
+          container.replaceChildren();
+          google.accounts.id.renderButton(container, {
+            type: "standard",
+            theme: "outline",
+            size: "large",
+            shape: "pill",
+            text: "signin_with",
+            logo_alignment: "left",
+            width: Math.max(280, Math.min(420, container.offsetWidth || 360)),
+          });
+          googleButtonRenderedRef.current = true;
+        }
+      } catch {
+        setGoogleStatusMessage("Google sign-in could not load. Check your Google OAuth origin setup.");
+        return false;
+      }
+
+      if (!cancelled) setGoogleStatusMessage("");
+      return true;
+    };
+
+    setGoogleStatusMessage("Loading Google sign-in...");
+    if (renderGoogleButton()) return;
+
+    timer = setInterval(() => {
+      attempts += 1;
+      if (renderGoogleButton() || attempts >= 20) {
+        if (timer) clearInterval(timer);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
+  }, [googleClientId, step]);
 
   const handleSendOtp = async () => {
     if (!phone.trim()) {
@@ -98,37 +190,6 @@ export default function LoginPage() {
       setOtpError("Invalid or expired OTP. Try again.");
     }
   };
-
-  const handleGoogleLogin = useCallback(async () => {
-    try {
-      const { google } = window as any;
-      if (!google?.accounts?.id) {
-        console.warn("Google Identity Services not loaded");
-        return;
-      }
-      const clientId = googleClientIdRef.current;
-      if (!clientId) {
-        setOtpError("Google sign-in is not configured yet.");
-        return;
-      }
-      google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async (response: { credential: string }) => {
-          try {
-            const data = await googleLogin.mutateAsync({ credential: response.credential });
-            if (data.isNewUser) {
-              setStep("profile");
-            }
-          } catch {
-            setOtpError("Google sign-in failed. Try again.");
-          }
-        },
-      });
-      google.accounts.id.prompt();
-    } catch {
-      setOtpError("Google sign-in failed. Try again.");
-    }
-  }, [googleLogin]);
 
   const handleCompleteProfile = async () => {
     try {
@@ -178,10 +239,10 @@ export default function LoginPage() {
                   phoneError={phoneError}
                   isSubmitting={isSubmitting}
                   sendOtpPending={sendOtp.isPending}
-                  googleLoginPending={googleLogin.isPending}
+                  googleButtonContainerRef={googleButtonContainerRef}
+                  googleStatusMessage={googleStatusMessage}
                   onPhoneChange={(value) => { setPhone(value); setPhoneError(""); }}
                   onSendOtp={handleSendOtp}
-                  onGoogleLogin={handleGoogleLogin}
                 />
               ) : (
                 <OtpStep
@@ -339,10 +400,10 @@ type PhoneStepProps = {
   phoneError: string;
   isSubmitting: boolean;
   sendOtpPending: boolean;
-  googleLoginPending: boolean;
+  googleButtonContainerRef: RefObject<HTMLDivElement>;
+  googleStatusMessage: string;
   onPhoneChange: (value: string) => void;
   onSendOtp: () => void;
-  onGoogleLogin: () => void;
 };
 
 function PhoneStep({
@@ -351,10 +412,10 @@ function PhoneStep({
   phoneError,
   isSubmitting,
   sendOtpPending,
-  googleLoginPending,
+  googleButtonContainerRef,
+  googleStatusMessage,
   onPhoneChange,
   onSendOtp,
-  onGoogleLogin,
 }: PhoneStepProps) {
   return (
     <>
@@ -401,12 +462,18 @@ function PhoneStep({
 
         <Divider label={t("login.or_continue_with", "OR continue with")} />
 
-        <GoogleButton
-          onClick={onGoogleLogin}
-          disabled={isSubmitting}
-          loading={googleLoginPending}
-          label={t("login.google_sign_in", "Sign in with Google")}
-        />
+        <div className="relative min-h-14">
+          <div
+            ref={googleButtonContainerRef}
+            className="flex min-h-14 w-full items-center justify-center [&>div]:mx-auto"
+            aria-label={t("login.google_sign_in", "Sign in with Google")}
+          />
+          {googleStatusMessage && (
+            <p className="mt-2 text-center text-xs font-semibold text-slate-500">
+              {googleStatusMessage}
+            </p>
+          )}
+        </div>
 
         <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-lime-50/70 p-5">
           <div className="flex gap-3">

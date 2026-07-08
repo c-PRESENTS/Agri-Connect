@@ -273,6 +273,12 @@ Design for:
 
 * High-concurrency traffic
 
+avoid creating fallback logic anywhere , keep the code working using one logic code be it with google auth , mobile otp login , api key access , multilinugal website and all . use one logic only 
+
+do not create or delete files , just fix the errors/issues the user will give to you.
+u can only edit the files and fix the errors and only create and delete files if user explicitly says to you.
+
+
 ### 12. Database Rules
 
 Always:

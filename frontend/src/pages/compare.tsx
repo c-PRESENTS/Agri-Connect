@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { TopNavigation } from "@/components/top-navigation";
 import { useCompare } from "@/hooks/use-compare";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getProductImage } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
@@ -20,6 +21,7 @@ export default function ComparePage() {
   const [, setLocation] = useLocation();
   const { ids, remove, clear } = useCompare();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const { data: products = [], isLoading } = useQuery<Product[]>({ queryKey: ["/api/products"] });
 
   const items = ids
@@ -27,10 +29,25 @@ export default function ComparePage() {
     .filter((p): p is Product => !!p);
 
   const addToCart = useMutation({
-    mutationFn: (productId: string) => apiRequest("POST", "/api/cart", { productId, quantity: 1 }),
+    mutationFn: (productId: string) => {
+      if (!isAuthenticated) {
+        throw new Error("AUTH_REQUIRED");
+      }
+
+      return apiRequest("POST", "/api/cart", { productId, quantity: 1 });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       toast({ title: t("product.add_to_cart") });
+    },
+    onError: (err: any) => {
+      if (err?.message === "AUTH_REQUIRED") {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in before buying or adding items to your cart.",
+        });
+        setLocation("/login");
+      }
     },
   });
 
@@ -165,7 +182,17 @@ export default function ComparePage() {
                   <Button
                     size="sm"
                     className="w-full h-8 text-xs gap-1.5"
-                    onClick={() => addToCart.mutate(p.id)}
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        toast({
+                          title: "Sign in required",
+                          description: "Please sign in before buying or adding items to your cart.",
+                        });
+                        setLocation("/login");
+                        return;
+                      }
+                      addToCart.mutate(p.id);
+                    }}
                     disabled={p.stock === 0 || addToCart.isPending}
                     data-testid={`button-add-cart-${p.id}`}
                   >

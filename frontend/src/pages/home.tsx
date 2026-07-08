@@ -15,6 +15,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import type { Product, ProductFilters as Filters, Region } from "@shared/schema";
 import { regions } from "@/lib/categories";
@@ -71,6 +72,7 @@ export default function Home() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
   const [filters, setFilters] = useState<Filters>({});
   const { items: cartItems, itemCount: cartCount, addItem, updateItem, removeItem } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -212,6 +214,15 @@ export default function Home() {
   };
 
   const handleAddToCart = (product: Product) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in before buying or adding items to your cart.",
+      });
+      setLocation("/login");
+      return;
+    }
+
     if (product.id.startsWith("agri-")) {
       // Placeholder — can't add to backend cart. Substitute the first real
       // loaded product as a friendly fallback.
