@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/auth/phone-input";
 import { OtpInput } from "@/components/auth/otp-input";
 import { GoogleButton } from "@/components/auth/google-button";
+import farmerImage from "@/assets/stock_images/Farmer Image.png";
 import {
   ArrowLeft,
   Check,
@@ -28,15 +29,15 @@ import type { LucideIcon } from "lucide-react";
 type AuthStep = "phone" | "otp" | "profile";
 
 const trustSignals = [
-  { icon: Sprout, labelKey: "login.feature_marketplace", fallback: "Live marketplace" },
-  { icon: Truck, labelKey: "login.feature_logistics", fallback: "Smart logistics" },
-  { icon: ShieldCheck, labelKey: "login.feature_secure", fallback: "Secure sign-in" },
+  { icon: Sprout, labelKey: "login.feature_marketplace", fallback: "Live Marketplace" },
+  { icon: Truck, labelKey: "login.feature_logistics", fallback: "Smart Logistics" },
+  { icon: ShieldCheck, labelKey: "login.feature_secure", fallback: "Secure & Simple" },
 ];
 
 const fieldMetrics = [
-  { value: "24/7", labelKey: "login.metric_visibility", fallback: "market visibility" },
-  { value: "SMS", labelKey: "login.metric_access", fallback: "simple phone access" },
-  { value: "1", labelKey: "login.metric_workspace", fallback: "connected workspace" },
+  { value: "120+", labelKey: "login.metric_visibility", fallback: "Active buyers" },
+  { value: "2.4K", labelKey: "login.metric_access", fallback: "Orders today" },
+  { value: "15", labelKey: "login.metric_workspace", fallback: "Crops traded" },
 ];
 
 export default function LoginPage() {
@@ -150,51 +151,56 @@ export default function LoginPage() {
       <div className="absolute -left-28 top-24 h-72 w-72 rounded-full bg-lime-200/30 blur-3xl" />
       <div className="absolute -right-24 bottom-16 h-80 w-80 rounded-full bg-emerald-200/30 blur-3xl" />
 
-      <div className="relative mx-auto grid min-h-screen w-full max-w-7xl grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
-        <BrandPanel t={t} />
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[92rem] items-center px-3 py-4 sm:px-6 lg:px-8">
+        <div className="grid min-h-[calc(100vh-2rem)] w-full overflow-hidden rounded-[2rem] border border-white/75 bg-white/45 shadow-[0_32px_110px_rgba(20,83,45,0.18)] backdrop-blur-md sm:rounded-[2.5rem] lg:grid-cols-[1.05fr_0.95fr]">
+          <BrandPanel t={t} />
 
-        <section className="flex min-h-[52rem] items-center justify-center px-4 py-8 sm:px-6 lg:px-10">
-          <Card className="w-full max-w-[31rem] overflow-hidden rounded-[2rem] border-white/80 bg-white/90 shadow-[0_28px_90px_rgba(20,83,45,0.18)] backdrop-blur-xl">
-            <div className="h-1.5 bg-gradient-to-r from-lime-400 via-emerald-500 to-teal-500" />
-            {step === "profile" ? (
-              <ProfileStep
-                t={t}
-                name={name}
-                role={role}
-                isSubmitting={isSubmitting}
-                onNameChange={setName}
-                onRoleChange={setRole}
-                onCompleteProfile={handleCompleteProfile}
-              />
-            ) : step === "phone" ? (
-              <PhoneStep
-                t={t}
-                phone={phone}
-                phoneError={phoneError}
-                isSubmitting={isSubmitting}
-                sendOtpPending={sendOtp.isPending}
-                googleLoginPending={googleLogin.isPending}
-                onPhoneChange={(value) => { setPhone(value); setPhoneError(""); }}
-                onSendOtp={handleSendOtp}
-                onGoogleLogin={handleGoogleLogin}
-              />
-            ) : (
-              <OtpStep
-                t={t}
-                phone={phone}
-                otp={otp}
-                otpError={otpError}
-                isSubmitting={isSubmitting}
-                sendOtpPending={sendOtp.isPending}
-                verifyOtpPending={verifyOtp.isPending}
-                onOtpChange={(value) => { setOtp(value); setOtpError(""); }}
-                onVerifyOtp={handleVerifyOtp}
-                onResendOtp={handleSendOtp}
-                onBack={() => { setStep("phone"); setOtp(""); setOtpError(""); }}
-              />
-            )}
-          </Card>
-        </section>
+          <section className="flex min-h-[42rem] items-center justify-center bg-white/70 px-4 py-8 sm:px-6 lg:px-10">
+            <Card className="relative w-full max-w-[32rem] overflow-hidden rounded-[2rem] border border-white/[0.85] bg-white/95 shadow-[0_28px_80px_rgba(8,47,32,0.16)] backdrop-blur-xl sm:rounded-[2.25rem]">
+              <div className="pointer-events-none absolute -right-8 top-6 h-28 w-28 rotate-12 text-lime-500/25">
+                <Leaf className="h-full w-full" />
+              </div>
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-emerald-50/70 to-transparent" />
+              {step === "profile" ? (
+                <ProfileStep
+                  t={t}
+                  name={name}
+                  role={role}
+                  isSubmitting={isSubmitting}
+                  onNameChange={setName}
+                  onRoleChange={setRole}
+                  onCompleteProfile={handleCompleteProfile}
+                />
+              ) : step === "phone" ? (
+                <PhoneStep
+                  t={t}
+                  phone={phone}
+                  phoneError={phoneError}
+                  isSubmitting={isSubmitting}
+                  sendOtpPending={sendOtp.isPending}
+                  googleLoginPending={googleLogin.isPending}
+                  onPhoneChange={(value) => { setPhone(value); setPhoneError(""); }}
+                  onSendOtp={handleSendOtp}
+                  onGoogleLogin={handleGoogleLogin}
+                />
+              ) : (
+                <OtpStep
+                  t={t}
+                  phone={phone}
+                  otp={otp}
+                  otpError={otpError}
+                  isSubmitting={isSubmitting}
+                  sendOtpPending={sendOtp.isPending}
+                  verifyOtpPending={verifyOtp.isPending}
+                  onOtpChange={(value) => { setOtp(value); setOtpError(""); }}
+                  onVerifyOtp={handleVerifyOtp}
+                  onResendOtp={handleSendOtp}
+                  onBack={() => { setStep("phone"); setOtp(""); setOtpError(""); }}
+                />
+              )}
+            </Card>
+          </section>
+        </div>
       </div>
     </main>
   );
@@ -202,74 +208,80 @@ export default function LoginPage() {
 
 function BrandPanel({ t }: { t: TFunction }) {
   return (
-    <section className="relative flex min-h-[34rem] flex-col justify-between px-5 py-6 sm:px-8 lg:min-h-screen lg:px-12 lg:py-10">
-      <div className="pointer-events-none absolute inset-x-5 top-6 h-[calc(100%-3rem)] rounded-[2rem] border border-white/50 bg-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] backdrop-blur-[2px] lg:inset-x-8" />
+    <section className="relative flex min-h-[38rem] flex-col justify-between overflow-hidden px-5 py-6 sm:px-8 lg:min-h-[calc(100vh-2rem)] lg:px-12 lg:py-10 xl:px-16">
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-80"
+        style={{ backgroundImage: `url(${farmerImage})` }}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#f8f3df]/[0.94] via-[#f6efd8]/[0.78] to-emerald-950/[0.28]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/[0.58] via-transparent to-white/[0.16]" />
+      <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-emerald-950/20 to-transparent" />
 
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-950 text-lime-200 shadow-xl shadow-emerald-900/20">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-950 text-lime-200 shadow-2xl shadow-emerald-950/30">
             <Leaf className="h-6 w-6" />
           </div>
           <div>
             <p className="text-xl font-black tracking-tight text-emerald-950">AgriConnect</p>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-800/70">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-700">
               {t("login.brand_kicker", "Farm trade OS")}
             </p>
           </div>
         </div>
-        <div className="hidden rounded-full border border-emerald-900/10 bg-white/60 px-4 py-2 text-sm font-semibold text-emerald-900 shadow-sm sm:block">
+        <div className="hidden rounded-full border border-white/[0.65] bg-white/[0.55] px-4 py-2 text-sm font-black text-emerald-950 shadow-sm backdrop-blur-md sm:block">
           {t("login.secure_badge", "Secure access")}
         </div>
       </div>
 
       <div className="relative z-10 my-12 max-w-2xl lg:my-0">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-900/10 bg-white/60 px-3.5 py-2 text-sm font-semibold text-emerald-900 shadow-sm backdrop-blur">
+        <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/[0.65] bg-white/[0.55] px-4 py-2.5 text-sm font-black text-emerald-950 shadow-sm backdrop-blur-md">
           <CloudSun className="h-4 w-4 text-lime-700" />
-          {t("login.onboarding_cue", "Built for daily farm operations")}
+          {t("login.onboarding_cue", "Built for every farmer, every day")}
         </div>
 
-        <h1 className="max-w-xl text-4xl font-black leading-[1.02] tracking-tight text-emerald-950 sm:text-5xl lg:text-6xl">
+        <h1 className="max-w-xl text-4xl font-black leading-[1.04] tracking-tight text-emerald-950 drop-shadow-sm sm:text-5xl lg:text-6xl">
           {t("login.hero_title", "Trade smarter from field to market.")}
         </h1>
-        <p className="mt-5 max-w-lg text-base leading-8 text-emerald-950/75 sm:text-lg">
+        <p className="mt-5 max-w-lg text-base font-medium leading-8 text-slate-700 sm:text-lg">
           {t(
             "login.hero_subtitle",
-            "Sign in to list produce, manage orders, coordinate logistics, and keep your farm network moving with confidence.",
+            "Connect with buyers, manage orders, access real-time prices, and grow your farm business with confidence.",
           )}
         </p>
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-3">
+        <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-2">
           {trustSignals.map(({ icon: Icon, labelKey, fallback }) => (
             <div
               key={labelKey}
-              className="group flex items-center gap-3 rounded-2xl border border-white/60 bg-white/60 p-3.5 shadow-sm backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-white/75"
+              className="group flex items-center gap-3 rounded-2xl border border-white/[0.5] bg-white/[0.48] p-3.5 shadow-sm backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:bg-white/[0.62]"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-900 text-lime-200 shadow-sm">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-950 text-lime-200 shadow-lg shadow-emerald-950/20">
                 <Icon className="h-5 w-5" />
               </div>
-              <span className="text-sm font-bold leading-snug text-emerald-950">
-                {t(labelKey, fallback)}
-              </span>
+              <div>
+                <span className="block text-sm font-black leading-snug text-emerald-950">
+                  {t(labelKey, fallback)}
+                </span>
+                <span className="mt-1 block text-xs font-semibold text-slate-700">
+                  {labelKey === "login.feature_marketplace"
+                    ? t("login.feature_marketplace_hint", "Reach trusted buyers")
+                    : labelKey === "login.feature_logistics"
+                      ? t("login.feature_logistics_hint", "Fast & reliable delivery")
+                      : t("login.feature_secure_hint", "Your data, always protected")}
+                </span>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="relative z-10 grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+      <div className="relative z-10 max-w-[34rem]">
         <FieldIllustration t={t} />
-        <div className="grid grid-cols-3 gap-2 rounded-3xl border border-white/60 bg-white/50 p-3 shadow-sm backdrop-blur lg:grid-cols-1">
-          {fieldMetrics.map((metric) => (
-            <div key={metric.labelKey} className="rounded-2xl bg-emerald-950 px-3 py-3 text-lime-50">
-              <p className="text-xl font-black">{metric.value}</p>
-              <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-lime-100/70">
-                {t(metric.labelKey, metric.fallback)}
-              </p>
-            </div>
-          ))}
-        </div>
       </div>
 
-      <p className="relative z-10 mt-8 text-xs font-semibold text-emerald-950/60">
+      <p className="relative z-10 mt-6 text-xs font-bold text-white/70 drop-shadow">
         &copy; {new Date().getFullYear()} AgriConnect.
       </p>
     </section>
@@ -278,36 +290,44 @@ function BrandPanel({ t }: { t: TFunction }) {
 
 function FieldIllustration({ t }: { t: TFunction }) {
   return (
-    <div className="relative min-h-56 overflow-hidden rounded-3xl border border-white/60 bg-gradient-to-br from-emerald-900 via-emerald-800 to-lime-700 p-5 text-white shadow-2xl shadow-emerald-950/20">
-      <div className="absolute inset-x-0 bottom-0 h-28 bg-[repeating-linear-gradient(150deg,rgba(217,249,157,0.42)_0_2px,transparent_2px_18px)] opacity-70" />
-      <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-lime-300/30 blur-2xl" />
-      <div className="absolute bottom-8 left-5 right-5 h-20 rounded-[100%] border-t border-lime-100/30" />
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-emerald-950/70 to-transparent" />
+    <div className="relative overflow-hidden rounded-[1.75rem] border border-lime-300/[0.18] bg-emerald-950/[0.9] p-4 text-white shadow-2xl shadow-emerald-950/[0.28] backdrop-blur-md sm:p-5">
+      <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-lime-300/[0.14] blur-3xl" />
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-lime-500/12 to-transparent" />
 
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-lime-100/75">
+          <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.24em] text-lime-200/75">
+            <Leaf className="h-3.5 w-3.5" />
             {t("login.field_card_label", "Today on the network")}
           </p>
-          <p className="mt-3 max-w-[15rem] text-2xl font-black leading-tight">
-            {t("login.field_card_title", "Fresh produce. Clear orders. Trusted delivery.")}
+          <p className="mt-3 text-2xl font-black leading-tight">
+            {t("login.field_card_title", "Good morning, farmer!")}
           </p>
-        </div>
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
-          <Wheat className="h-6 w-6 text-lime-100" />
+          <div className="mt-4 flex items-center gap-3 text-sm font-semibold text-lime-50/[0.85]">
+            <span className="h-2.5 w-2.5 rounded-full bg-lime-400 shadow-[0_0_18px_rgba(163,230,53,0.7)]" />
+            {t("login.field_card_activity", "Market is active in 12 districts")}
+          </div>
         </div>
       </div>
 
-      <div className="relative z-10 mt-8 grid grid-cols-3 gap-2 text-xs font-semibold">
-        <div className="rounded-2xl bg-white/15 px-3 py-2 backdrop-blur">
-          {t("login.field_card_crop", "Crop lots")}
-        </div>
-        <div className="rounded-2xl bg-white/15 px-3 py-2 backdrop-blur">
-          {t("login.field_card_bids", "Buyer bids")}
-        </div>
-        <div className="rounded-2xl bg-white/15 px-3 py-2 backdrop-blur">
-          {t("login.field_card_routes", "Routes")}
-        </div>
+      <div className="relative z-10 mt-5 grid grid-cols-3 gap-2.5">
+        {fieldMetrics.map((metric, index) => {
+          const icons = [ShieldCheck, Globe2, Sprout];
+          const MetricIcon = icons[index] ?? Wheat;
+
+          return (
+            <div
+              key={metric.labelKey}
+              className="rounded-2xl border border-white/10 bg-white/[0.07] p-3 shadow-sm backdrop-blur"
+            >
+              <MetricIcon className="h-5 w-5 text-lime-300" />
+              <p className="mt-3 text-lg font-black text-white">{metric.value}</p>
+              <p className="mt-1 text-[0.7rem] font-semibold leading-snug text-lime-50/75">
+                {t(metric.labelKey, metric.fallback)}
+              </p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -338,13 +358,13 @@ function PhoneStep({
 }: PhoneStepProps) {
   return (
     <>
-      <CardHeader className="space-y-5 px-6 pt-8 text-left sm:px-8 sm:pt-9">
+      <CardHeader className="relative z-10 space-y-7 px-6 pt-9 text-left sm:px-10 sm:pt-11">
         <StepBadge icon={Smartphone} label={t("login.phone_step_badge", "Phone first, password never")} />
         <div>
-          <CardTitle className="text-3xl font-black tracking-tight text-slate-950">
+          <CardTitle className="text-3xl font-black tracking-tight text-emerald-950 sm:text-4xl">
             {t("login.welcome", "Welcome back")}
           </CardTitle>
-          <CardDescription className="mt-3 text-base leading-7 text-slate-600">
+          <CardDescription className="mt-4 max-w-sm text-base font-medium leading-8 text-slate-600">
             {t(
               "login.phone_description",
               "Enter your mobile number and we will send a one-time code by SMS.",
@@ -353,7 +373,7 @@ function PhoneStep({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-5 px-6 pb-8 sm:px-8 sm:pb-9">
+      <CardContent className="relative z-10 space-y-6 px-6 pb-9 sm:px-10 sm:pb-11">
         <PhoneInput
           value={phone}
           onChange={onPhoneChange}
@@ -365,7 +385,7 @@ function PhoneStep({
 
         <Button
           size="lg"
-          className="h-14 w-full rounded-2xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-lime-600 text-base font-black text-white shadow-lg shadow-emerald-700/20 transition duration-300 hover:-translate-y-0.5 hover:from-emerald-800 hover:to-lime-700 focus-visible:ring-4 focus-visible:ring-lime-300"
+          className="h-16 w-full rounded-2xl bg-[#2f9136] text-base font-black text-white shadow-[0_18px_34px_rgba(47,145,54,0.24)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#267c2e] focus-visible:ring-4 focus-visible:ring-lime-300"
           onClick={onSendOtp}
           disabled={!phone.trim() || isSubmitting}
         >
@@ -388,10 +408,10 @@ function PhoneStep({
           label={t("login.google_sign_in", "Sign in with Google")}
         />
 
-        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
+        <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-lime-50/70 p-5">
           <div className="flex gap-3">
             <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
-            <p className="text-sm leading-6 text-emerald-950/75">
+            <p className="text-sm font-medium leading-6 text-emerald-950/75">
               {t(
                 "login.security_note",
                 "Your code is single-use and expires quickly, keeping farm and buyer accounts protected.",
@@ -400,7 +420,7 @@ function PhoneStep({
           </div>
         </div>
 
-        <p className="text-center text-xs leading-6 text-slate-500">
+        <p className="px-4 text-center text-xs leading-6 text-slate-500">
           {t(
             "login.terms",
             "By continuing you agree to our Terms of Service and Privacy Policy.",
@@ -440,7 +460,7 @@ function OtpStep({
 }: OtpStepProps) {
   return (
     <>
-      <CardHeader className="space-y-5 px-6 pt-8 text-left sm:px-8 sm:pt-9">
+      <CardHeader className="relative z-10 space-y-6 px-6 pt-9 text-left sm:px-10 sm:pt-11">
         <button
           type="button"
           onClick={onBack}
@@ -451,17 +471,17 @@ function OtpStep({
           {t("login.back", "Back")}
         </button>
         <div>
-          <CardTitle className="text-3xl font-black tracking-tight text-slate-950">
+          <CardTitle className="text-3xl font-black tracking-tight text-emerald-950 sm:text-4xl">
             {t("login.verify_otp", "Verify OTP")}
           </CardTitle>
-          <CardDescription className="mt-3 text-base leading-7 text-slate-600">
+          <CardDescription className="mt-4 text-base font-medium leading-8 text-slate-600">
             {t("login.otp_description", "Enter the 6-digit code sent to")}{" "}
             <span className="font-bold text-emerald-800">{phone}</span>
           </CardDescription>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-5 px-6 pb-8 sm:px-8 sm:pb-9">
+      <CardContent className="relative z-10 space-y-6 px-6 pb-9 sm:px-10 sm:pb-11">
         <OtpInput
           value={otp}
           onChange={onOtpChange}
@@ -471,7 +491,7 @@ function OtpStep({
 
         <Button
           size="lg"
-          className="h-14 w-full rounded-2xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-lime-600 text-base font-black text-white shadow-lg shadow-emerald-700/20 transition duration-300 hover:-translate-y-0.5 hover:from-emerald-800 hover:to-lime-700 focus-visible:ring-4 focus-visible:ring-lime-300"
+          className="h-16 w-full rounded-2xl bg-[#2f9136] text-base font-black text-white shadow-[0_18px_34px_rgba(47,145,54,0.24)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#267c2e] focus-visible:ring-4 focus-visible:ring-lime-300"
           onClick={onVerifyOtp}
           disabled={otp.length !== 6 || isSubmitting}
         >
@@ -485,7 +505,7 @@ function OtpStep({
           )}
         </Button>
 
-        <div className="rounded-2xl border border-lime-100 bg-lime-50/70 p-4 text-center">
+        <div className="rounded-2xl border border-lime-100 bg-lime-50/80 p-5 text-center">
           <p className="text-sm text-slate-600">
             {t("login.did_not_receive", "Did not receive the code?")}
           </p>
@@ -524,19 +544,19 @@ function ProfileStep({
 }: ProfileStepProps) {
   return (
     <>
-      <CardHeader className="space-y-5 px-6 pt-8 text-left sm:px-8 sm:pt-9">
+      <CardHeader className="relative z-10 space-y-7 px-6 pt-9 text-left sm:px-10 sm:pt-11">
         <StepBadge icon={Globe2} label={t("login.profile_step_badge", "Personalize your workspace")} />
         <div>
-          <CardTitle className="text-3xl font-black tracking-tight text-slate-950">
+          <CardTitle className="text-3xl font-black tracking-tight text-emerald-950 sm:text-4xl">
             {t("login.complete_profile", "Complete Your Profile")}
           </CardTitle>
-          <CardDescription className="mt-3 text-base leading-7 text-slate-600">
+          <CardDescription className="mt-4 text-base font-medium leading-8 text-slate-600">
             {t("login.profile_description", "Set your name and choose how you will use AgriConnect.")}
           </CardDescription>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-5 px-6 pb-8 sm:px-8 sm:pb-9">
+      <CardContent className="relative z-10 space-y-6 px-6 pb-9 sm:px-10 sm:pb-11">
         <div className="space-y-2">
           <Label htmlFor="profile-name" className="text-sm font-black text-slate-800">
             {t("login.profile_name", "Your Name")}
@@ -573,7 +593,7 @@ function ProfileStep({
 
         <Button
           size="lg"
-          className="h-14 w-full rounded-2xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-lime-600 text-base font-black text-white shadow-lg shadow-emerald-700/20 transition duration-300 hover:-translate-y-0.5 hover:from-emerald-800 hover:to-lime-700 focus-visible:ring-4 focus-visible:ring-lime-300"
+          className="h-16 w-full rounded-2xl bg-[#2f9136] text-base font-black text-white shadow-[0_18px_34px_rgba(47,145,54,0.24)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#267c2e] focus-visible:ring-4 focus-visible:ring-lime-300"
           onClick={onCompleteProfile}
           disabled={!name.trim() || isSubmitting}
         >
