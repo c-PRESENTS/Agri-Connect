@@ -25,7 +25,7 @@ import { fromZodError } from "zod-validation-error";
 import OpenAI from "openai";
 import { createAIService, normalizeLang } from "./ai";
 import { generateGeminiContent, isGeminiAvailable } from "./ai/gemini";
-import { getStripe, getWebhookSecret } from "./stripe";
+import { getStripe, getWebhookSecret } from "./payments/stripe";
 import type Stripe from "stripe";
 
 function getUserId(req: Request): string | undefined {

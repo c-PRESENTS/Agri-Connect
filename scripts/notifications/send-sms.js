@@ -3,7 +3,7 @@ const missing = required.filter((name) => !process.env[name]);
 
 if (missing.length > 0) {
   console.error(`Missing required env vars: ${missing.join(", ")}`);
-  console.error("Run with: node --env-file=.env send-sms.js");
+  console.error("Run with: npm run sms:test");
   process.exit(1);
 }
 

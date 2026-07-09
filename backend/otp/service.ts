@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { and, count, eq, gte, lt } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "../config/db";
 import { otpCodes } from "@shared/models/auth";
 
 const OTP_TTL_MS = 5 * 60 * 1000;    // 5 minutes

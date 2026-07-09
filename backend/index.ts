@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
-import { serveStatic } from "./static";
+import { serveStatic } from "./runtime/static";
 import { createServer } from "http";
 import { setupAuth, registerAuthRoutes } from "./auth";
 import { registerOtpRoutes } from "./otp/routes";
@@ -127,7 +127,7 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
-    const { setupVite } = await import("./vite");
+    const { setupVite } = await import("./runtime/vite");
     await setupVite(httpServer, app);
   }
 

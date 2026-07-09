@@ -1,5 +1,5 @@
 import { users, type User, type UpsertUser, type UpdateProfileInput } from "@shared/models/auth";
-import { db } from "../db";
+import { db } from "../config/db";
 import { eq } from "drizzle-orm";
 
 export interface IAuthStorage {

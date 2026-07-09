@@ -2,10 +2,10 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { X, ChevronDown, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
-import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { categories, categoryImages } from "@/lib/categories";
+import { getCategoryIconComponent } from "@/lib/category-icons";
 import { getSubSubcategories } from "@/lib/sub-subcategories";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Category, Subcategory } from "@shared/schema";
@@ -19,11 +19,6 @@ interface SubcategoryPanelProps {
   onSubcategorySelect?: (categoryId: string, subcategoryId: string) => void;
   onSubcategoryClick?: (subId: string | null) => void;
   onSectionClick?: (sectionTitle: string) => void;
-}
-
-function getIcon(iconName: string) {
-  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
-  return icons[iconName] || LucideIcons.Package;
 }
 
 function getCategoryImage(categoryId: string, subcategoryId?: string): string | undefined {
@@ -105,7 +100,7 @@ export function SubcategoryPanel({
 
   if (!category) return null;
 
-  const IconComponent = getIcon(category.icon);
+  const IconComponent = getCategoryIconComponent(category.icon);
 
   return (
     <AnimatePresence mode="wait">

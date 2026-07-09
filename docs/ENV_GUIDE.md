@@ -172,7 +172,7 @@ This document provides a complete reference for all environment variables requir
 - **Impact:** Without these, OTP codes are logged to console in development. In production, OTP send fails unless another delivery channel is configured.
 - **Used for:** Phone-based login via one-time passcode
 - **Aliases supported:** `NEXMO_API_KEY`, `NEXMO_API_SECRET`, `VONAGE_FROM_NUMBER`, `VONAGE_SMS_FROM`, `VONAGE_BRAND_NAME`, `NEXMO_FROM`
-- **Test helper:** Set `SMS_TEST_TO` and run `node --env-file=.env send-sms.js` to send a direct Vonage smoke-test SMS.
+- **Test helper:** Set `SMS_TEST_TO` and run `npm run sms:test` to send a direct Vonage smoke-test SMS.
 
 ### 16. Google OAuth
 **Variable:** `GOOGLE_CLIENT_ID`

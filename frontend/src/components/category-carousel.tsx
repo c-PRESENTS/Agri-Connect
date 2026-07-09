@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useState, useRef } from "react";
 import { categories } from "@/lib/categories";
-import * as LucideIcons from "lucide-react";
+import { getCategoryIconComponent } from "@/lib/category-icons";
 import type { Product } from "@shared/schema";
 
 import vegetablesImg from "@assets/stock_images/fresh_vegetables_col_2df74665.jpg";
@@ -17,12 +17,6 @@ interface CategoryCarouselProps {
   products: Product[];
   currencySymbol: string;
   onAddToCart: (product: Product) => void;
-}
-
-function getIcon(iconName: string) {
-  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
-  const Icon = icons[iconName];
-  return Icon || LucideIcons.Package;
 }
 
 const categoryImages: Record<string, string> = {
@@ -99,7 +93,7 @@ export function CategoryCarousel({
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {categories.slice(0, 8).map((category, index) => {
-            const IconComponent = getIcon(category.icon);
+            const IconComponent = getCategoryIconComponent(category.icon);
             const bgImage = categoryImages[category.id];
             
             return (

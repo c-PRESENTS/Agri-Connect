@@ -2,7 +2,6 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Search, Home, PanelLeftClose, PanelLeft, Sprout, ArrowUp, ArrowDown, GripVertical, ShoppingCart, HelpCircle, TrendingUp } from "lucide-react";
-import * as LucideIcons from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { categories as defaultCategories, categoryImages } from "@/lib/categories";
+import { getCategoryIconComponent } from "@/lib/category-icons";
 import type { Category } from "@shared/schema";
 import { motion } from "framer-motion";
 
@@ -45,11 +45,6 @@ interface CategorySidebarProps {
 }
 
 const STORAGE_KEY = "agriconnect-category-order";
-
-function getIcon(iconName: string) {
-  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
-  return icons[iconName] || LucideIcons.Package;
-}
 
 function getCategoryImage(categoryId: string): string | undefined {
   if (categoryImages[categoryId]) return categoryImages[categoryId];
@@ -87,7 +82,7 @@ function SortableCategory({ category, isSelected, isExpanded, isCollapsed, onTap
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   const image = getCategoryImage(category.id);
-  const IconComponent = getIcon(category.icon);
+  const IconComponent = getCategoryIconComponent(category.icon);
 
   if (isCollapsed) {
     return (

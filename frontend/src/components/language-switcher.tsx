@@ -11,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
+import { loadLanguageResources } from "@/i18n/index";
 
 const LANGUAGES = [
   { code: "en", label: "English", flag: "🇬🇧", native: "English", script: null },
@@ -38,12 +39,13 @@ export function LanguageSwitcher() {
   const baseLang = i18n.language.split("-")[0];
   const current = LANGUAGES.find((l) => l.code === baseLang) || LANGUAGES[0];
 
-  const changeLanguage = (code: string) => {
-    i18n.changeLanguage(code);
+  const changeLanguage = async (code: string) => {
+    const langCode = await loadLanguageResources(code);
+    i18n.changeLanguage(langCode);
     localStorage.setItem("agriconnect-lang", code);
-    const lang = LANGUAGES.find((l) => l.code === code);
+    const lang = LANGUAGES.find((l) => l.code === langCode);
     if (lang?.script) {
-      const dismissed = localStorage.getItem(`keyboard-hint-${code}`);
+      const dismissed = localStorage.getItem(`keyboard-hint-${langCode}`);
       if (!dismissed) {
         setShowKeyboardHint(true);
       }

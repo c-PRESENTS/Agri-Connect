@@ -9,7 +9,8 @@
     "build": "tsx scripts/build.ts",
     "start": "node --env-file=.env -e \"process.env.NODE_ENV='production';require('./dist/index.cjs')\"",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "sms:test": "node --env-file=.env scripts/notifications/send-sms.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
