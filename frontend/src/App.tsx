@@ -49,6 +49,9 @@ const PaymentSuccessPage = lazy(() => import("@/pages/payment-success"));
 const PaymentCancelledPage = lazy(() => import("@/pages/payment-cancelled"));
 const SupportPage = lazy(() => import("@/pages/support"));
 const AboutPage = lazy(() => import("@/pages/about"));
+const PrivacyPolicyPage = lazy(() => import("@/pages/privacy-policy"));
+const TermsOfServicePage = lazy(() => import("@/pages/terms-of-service"));
+const RefundPolicyPage = lazy(() => import("@/pages/refund-policy"));
 
 const FULLSCREEN_ROUTES = ["/", "/map"];
 const NO_RAIL_ROUTES = ["/login"];
@@ -185,6 +188,9 @@ function AuthAwareContent() {
             <Route path="/payment/cancelled" component={PaymentCancelledPage} />
             <Route path="/support" component={SupportPage} />
             <Route path="/about" component={AboutPage} />
+            <Route path="/privacy-policy" component={PrivacyPolicyPage} />
+            <Route path="/terms-of-service" component={TermsOfServicePage} />
+            <Route path="/refund-policy" component={RefundPolicyPage} />
             <Route component={NotFound} />
           </Switch>
         </Suspense>

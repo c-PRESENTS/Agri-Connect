@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { FaLinkedinIn } from "react-icons/fa";
 import { SiFacebook, SiInstagram, SiX } from "react-icons/si";
+import { Link } from "wouter";
 
 const trustBadges = [
   {
@@ -206,11 +207,12 @@ export function TrustIndicators() {
               © {new Date().getFullYear()} AgriConnect. All rights reserved. Made with love in the UK.
             </p>
             <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-              <a href="/about" className="hover:text-primary transition-colors" data-testid="link-footer-about">About</a>
-              <a href="/support" className="hover:text-primary transition-colors" data-testid="link-footer-support">Support</a>
-              <a href="/farmers-help" className="hover:text-primary transition-colors" data-testid="link-footer-knowledge">Knowledge Hub</a>
-              <a href="/about" className="hover:text-primary transition-colors" data-testid="link-footer-privacy">Privacy</a>
-              <a href="/about" className="hover:text-primary transition-colors" data-testid="link-footer-terms">Terms</a>
+              <Link href="/about" className="hover:text-primary transition-colors" data-testid="link-footer-about">{t("trust.footer_about")}</Link>
+              <Link href="/support" className="hover:text-primary transition-colors" data-testid="link-footer-support">{t("trust.footer_support")}</Link>
+              <Link href="/farmers-help" className="hover:text-primary transition-colors" data-testid="link-footer-knowledge">{t("trust.footer_knowledge")}</Link>
+              <Link href="/privacy-policy" className="hover:text-primary transition-colors" data-testid="link-footer-privacy">{t("trust.footer_privacy")}</Link>
+              <Link href="/terms-of-service" className="hover:text-primary transition-colors" data-testid="link-footer-terms">{t("trust.footer_terms")}</Link>
+              <Link href="/refund-policy" className="hover:text-primary transition-colors" data-testid="link-footer-refund">{t("trust.footer_refund")}</Link>
             </div>
           </div>
         </div>

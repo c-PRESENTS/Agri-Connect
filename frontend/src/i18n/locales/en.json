@@ -271,6 +271,8 @@
     "passkey": "Passkey",
     "google": "Google",
     "sign_up_google": "Sign up with Google",
+    "apple_sign_in": "Continue with Apple",
+    "apple_sign_in_coming_soon": "Apple sign-in will be configured later",
     "create_account": "Create Account",
     "welcome_back": "Welcome back!",
     "signed_in": "You have been signed in successfully.",
@@ -636,6 +638,200 @@
     "topic_seller": "Seller onboarding",
     "topic_feedback": "Feedback or feature request",
     "topic_other": "Something else"
+  },
+  "legal": {
+    "shared": {
+      "last_updated": "Last updated: {{date}}",
+      "draft_notice": "Launch draft - legal review recommended",
+      "need_help_title": "Need help with this policy?",
+      "need_help_body": "AgriConnect is built around transparent support for farmers, buyers, logistics partners, and community members. Contact us if you need help understanding how these terms apply to your account, listing, delivery, or order."
+    },
+    "pages": {
+      "privacy": {
+        "badge": "Privacy Policy",
+        "title": "Privacy Policy",
+        "description": "How AgriConnect handles personal information while connecting farmers, buyers, logistics partners, support teams, and public agriculture services.",
+        "updated": "July 2026",
+        "notice": "This policy is written for the current AgriConnect launch draft. It should be reviewed by legal counsel before public launch, especially for GDPR, CCPA, DPDPA, payment, government-integration, and international-market requirements.",
+        "sections": [
+          {
+            "title": "Our privacy commitment",
+            "body": "AgriConnect exists to make farming fair, simple, and strong. We use personal information to provide direct marketplace access, support safer transactions, coordinate logistics, improve farm-to-table transparency, and help users access relevant agricultural services.",
+            "items": [
+              "We aim to collect only information needed to run the platform, support users, prevent misuse, and improve service quality.",
+              "We do not sell personal contact details as a standalone product.",
+              "We design privacy decisions around farmer trust, buyer confidence, and transparent marketplace operations."
+            ]
+          },
+          {
+            "title": "Information we may collect",
+            "body": "Depending on how a user interacts with the platform, AgriConnect may process account details, contact information, profile information, marketplace activity, support requests, logistics details, approximate location, device/browser data, and communications sent through support channels.",
+            "items": [
+              "Seller and farmer data can include farm profile details, listing information, produce categories, availability, region, and verification or trust-signal information.",
+              "Buyer data can include account profile, cart/order activity, delivery preferences, support messages, and marketplace interactions.",
+              "Operational data can include fraud-prevention signals, audit events, notification preferences, and service diagnostics."
+            ]
+          },
+          {
+            "title": "How we use information",
+            "body": "We use information to operate the produce and input marketplace, connect buyers and sellers, provide support, manage logistics workflows, personalize multilingual experiences, improve accessibility, and maintain trust and safety.",
+            "items": [
+              "To create and manage accounts, profiles, listings, orders, support tickets, and communications.",
+              "To show relevant products, farmers, categories, logistics options, schemes, and knowledge resources.",
+              "To detect abuse, prevent fraud, troubleshoot issues, and protect the integrity of the marketplace."
+            ]
+          },
+          {
+            "title": "Sharing and service providers",
+            "body": "We may share limited information with service providers only where needed to deliver platform functions such as hosting, analytics, notifications, shipping, support, payments, security, and compliance.",
+            "items": [
+              "Delivery partners may receive information needed to quote, book, track, or complete a shipment.",
+              "Payment providers process payment information under their own regulated systems; AgriConnect should not store card numbers.",
+              "Government, NGO, university, or research integrations should use consent, aggregation, or anonymization where appropriate."
+            ]
+          },
+          {
+            "title": "User choices and rights",
+            "body": "Users should be able to request access, correction, deletion, export, or restriction of their personal information where applicable law provides those rights.",
+            "items": [
+              "Contact support for privacy requests or account-data questions.",
+              "Some records may need to be retained for security, dispute, legal, tax, payment, or audit reasons.",
+              "Marketing or non-essential communications should be optional where required by law."
+            ]
+          }
+        ],
+        "actions": [
+          { "href": "/support", "label": "Contact support" },
+          { "href": "/terms-of-service", "label": "Read Terms of Service" },
+          { "href": "/refund-policy", "label": "Refund policy" }
+        ]
+      },
+      "terms": {
+        "badge": "Terms of Service",
+        "title": "Terms of Service",
+        "description": "The basic rules for using AgriConnect as a buyer, seller, farmer, service partner, or community member.",
+        "updated": "July 2026",
+        "notice": "These terms are launch-draft platform terms. They explain intended behavior and responsibilities, but they are not a substitute for legal review before public launch or payment enforcement.",
+        "sections": [
+          {
+            "title": "Platform purpose",
+            "body": "AgriConnect is a multi-sided agricultural platform for direct farmer-to-consumer, farmer-to-retail, farmer-to-restaurant, logistics, government-scheme, and knowledge-support workflows.",
+            "items": [
+              "The platform is intended to improve transparency, reduce avoidable middlemen, support fairer farmer margins, reduce food waste, and make agricultural commerce easier to access.",
+              "Users should provide accurate information and use the service in a lawful, respectful, and good-faith manner.",
+              "AgriConnect may update, improve, limit, or discontinue features as the platform evolves."
+            ]
+          },
+          {
+            "title": "Accounts and user responsibilities",
+            "body": "Users are responsible for their account activity, profile accuracy, listings, communications, and compliance with applicable laws.",
+            "items": [
+              "Sellers must describe products honestly, including quality, quantity, availability, origin, and handling needs.",
+              "Buyers must provide accurate order, contact, and delivery information.",
+              "Users must not misuse ratings, verification badges, support forms, logistics workflows, or marketplace communications."
+            ]
+          },
+          {
+            "title": "Listings, orders, and marketplace trust",
+            "body": "AgriConnect may provide tools for listings, discovery, support, logistics, payment status, trust indicators, and dispute handling. Actual fulfillment depends on the seller, buyer, logistics provider, and any configured payment provider.",
+            "items": [
+              "Listings should not include illegal, unsafe, misleading, or unavailable products.",
+              "Orders may be cancelled or reviewed when fraud, safety, supply, payment, delivery, or policy issues are detected.",
+              "Verification badges and trust indicators should be treated as platform signals, not guarantees."
+            ]
+          },
+          {
+            "title": "Payments, fees, and provider-backed services",
+            "body": "Payment, escrow, transaction-fee, international gateway, and provider-backed services must be configured and tested before they are treated as live production services.",
+            "items": [
+              "AgriConnect should not store card numbers or sensitive payment credentials.",
+              "Fees, subscriptions, verified badges, advertising, logistics fees, or other revenue streams must be disclosed before enforcement.",
+              "Provider failures, chargebacks, refunds, and payment disputes may be handled through the relevant provider process."
+            ]
+          },
+          {
+            "title": "Limitations and changes",
+            "body": "Agricultural commerce can be affected by weather, quality variation, supply changes, logistics disruption, local regulation, and provider availability.",
+            "items": [
+              "AgriConnect may moderate content, suspend unsafe activity, or restrict access to protect users and the marketplace.",
+              "Platform content, pricing signals, AI suggestions, government-scheme references, and knowledge resources are informational unless explicitly stated otherwise.",
+              "Users should verify legal, financial, farming, tax, and compliance decisions with qualified professionals where needed."
+            ]
+          }
+        ],
+        "actions": [
+          { "href": "/support", "label": "Contact support" },
+          { "href": "/privacy-policy", "label": "Privacy Policy" },
+          { "href": "/refund-policy", "label": "Refund policy" }
+        ]
+      },
+      "refund": {
+        "badge": "Refund and Cancellation Policy",
+        "title": "Refund and Cancellation Policy",
+        "description": "How AgriConnect intends to handle cancellations, refunds, delivery issues, quality disputes, and support escalation.",
+        "updated": "July 2026",
+        "notice": "This policy is a launch draft. Refund timing, payment reversal rules, escrow behavior, and chargeback handling depend on the payment provider and must be reviewed before live payment launch.",
+        "sections": [
+          {
+            "title": "Policy principles",
+            "body": "AgriConnect is designed around fair farming, easy selling, and better outcomes for farmers and buyers. Refund and cancellation decisions should be transparent, evidence-based, and respectful of perishable agricultural goods.",
+            "items": [
+              "Fresh produce and time-sensitive goods may have shorter cancellation windows than non-perishable items.",
+              "Refund decisions should consider product condition, delivery status, seller preparation work, buyer communication, and provider rules.",
+              "Support should help both sides resolve issues without unfairly shifting risk onto small farmers."
+            ]
+          },
+          {
+            "title": "Cancellations",
+            "body": "Buyers may request cancellation before an order is confirmed, packed, dispatched, or otherwise committed by the seller or logistics partner.",
+            "items": [
+              "If an order has not been accepted or prepared, cancellation should usually be allowed.",
+              "If preparation, harvesting, packing, or dispatch has started, cancellation may be limited or reviewed by support.",
+              "Sellers may cancel when stock is unavailable, quality is not acceptable, weather disrupts supply, or fulfillment becomes unsafe."
+            ]
+          },
+          {
+            "title": "Refund eligibility",
+            "body": "Refunds may be considered for missing items, materially incorrect products, failed delivery caused by platform or provider issues, duplicate charges, or quality issues reported promptly with reasonable evidence.",
+            "items": [
+              "Photos, order numbers, delivery notes, timestamps, and support messages may be requested.",
+              "Perishable goods should be reported as soon as possible after delivery.",
+              "Refunds may be denied for incorrect buyer details, unavailable recipient, misuse, late reporting, or issues outside the seller/platform control."
+            ]
+          },
+          {
+            "title": "Refund timing and method",
+            "body": "Approved refunds should normally return through the original payment method when payment processing is live and provider-backed.",
+            "items": [
+              "Processing times depend on the payment provider, bank, card network, or wallet.",
+              "Manual or pending-payment orders may be resolved through support notes rather than automated payment reversal.",
+              "AgriConnect should not ask users to share card numbers or sensitive payment credentials through support messages."
+            ]
+          },
+          {
+            "title": "Dispute support",
+            "body": "For quality, delivery, or fulfillment disputes, AgriConnect support may review order records, listing details, delivery status, photos, and messages to recommend a fair outcome.",
+            "items": [
+              "Possible outcomes include refund, partial refund, replacement, cancellation, seller correction, logistics follow-up, or no refund.",
+              "Repeated misuse by buyers or sellers may lead to account review or marketplace restrictions.",
+              "Support requests should be submitted through the Contact Us page with the order number whenever available."
+            ]
+          }
+        ],
+        "actions": [
+          { "href": "/support", "label": "Start a support request" },
+          { "href": "/terms-of-service", "label": "Terms of Service" },
+          { "href": "/privacy-policy", "label": "Privacy Policy" }
+        ]
+      }
+    }
+  },
+  "not_found": {
+    "title": "Page not found",
+    "description": "The page may have moved, the link may be old, or the route is not available yet.",
+    "go_back": "Go back",
+    "back_to_home": "Back to home",
+    "tagline": "AgriConnect keeps every path rooted in fair, simple farming."
   },
   "chat": {
     "title": "AgriConnect Assistant",
@@ -1522,7 +1718,12 @@
     "footer_description": "Connecting UK farmers directly with consumers for fresher, traceable food.",
     "footer_products": "Products",
     "footer_farmers": "For Farmers",
-    "footer_support": "Support"
+    "footer_support": "Support",
+    "footer_about": "About",
+    "footer_knowledge": "Knowledge Hub",
+    "footer_privacy": "Privacy",
+    "footer_terms": "Terms",
+    "footer_refund": "Refunds"
   },
   "user_bookmarks": {
     "title": "Your Bookmarks",

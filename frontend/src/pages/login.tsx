@@ -24,6 +24,7 @@ import {
   Wheat,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { SiApple } from "react-icons/si";
 
 type AuthStep = "phone" | "otp" | "profile";
 
@@ -474,6 +475,19 @@ function PhoneStep({
             </p>
           )}
         </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="h-14 w-full rounded-full border-slate-300 bg-white text-base font-bold text-slate-950 shadow-sm opacity-90"
+          disabled
+          aria-label={t("login.apple_sign_in_coming_soon")}
+          title={t("login.apple_sign_in_coming_soon")}
+        >
+          <SiApple className="mr-3 h-5 w-5" />
+          {t("login.apple_sign_in")}
+        </Button>
 
         <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-lime-50/70 p-5">
           <div className="flex gap-3">
