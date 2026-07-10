@@ -1,5 +1,10 @@
 export const PUBLIC_ROUTE_LINKS = [
   { path: "/", seoKey: "home" },
+  { path: "/login", seoKey: "login" },
+  { path: "/dashboard", seoKey: "dashboard" },
+  { path: "/dashboard/photo-sell", seoKey: "photoSell" },
+  { path: "/dashboard/schemes", seoKey: "governmentSchemes" },
+  { path: "/settings", seoKey: "settings" },
   { path: "/about", seoKey: "about" },
   { path: "/support", seoKey: "support" },
   { path: "/farmers-help", seoKey: "farmersHelp" },
@@ -8,19 +13,41 @@ export const PUBLIC_ROUTE_LINKS = [
   { path: "/logistics", seoKey: "logistics" },
   { path: "/ship", seoKey: "ship" },
   { path: "/share-care", seoKey: "shareCare" },
+  { path: "/cart", seoKey: "cart" },
   { path: "/agritech", seoKey: "agritech" },
+  { path: "/compare", seoKey: "compare" },
+  { path: "/seller", seoKey: "seller" },
   { path: "/map", seoKey: "map" },
+  { path: "/checkout", seoKey: "checkout" },
+  { path: "/orders", seoKey: "orders" },
+  { path: "/payment/success", seoKey: "paymentSuccess" },
+  { path: "/payment/cancelled", seoKey: "paymentCancelled" },
   { path: "/privacy-policy", seoKey: "privacy" },
   { path: "/terms-of-service", seoKey: "terms" },
   { path: "/refund-policy", seoKey: "refund" },
 ] as const;
 
-export type SeoRouteKey = (typeof PUBLIC_ROUTE_LINKS)[number]["seoKey"] | "default" | "notFound";
+export const DYNAMIC_ROUTE_LINKS = [
+  { pattern: /^\/products\/[^/]+$/, seoKey: "productDetail" },
+  { pattern: /^\/sellers\/[^/]+$/, seoKey: "sellerProfile" },
+  { pattern: /^\/ship\/track\/[^/]+$/, seoKey: "shipTrack" },
+  { pattern: /^\/order-confirmation\/[^/]+$/, seoKey: "orderConfirmation" },
+  { pattern: /^\/orders\/[^/]+$/, seoKey: "orderDetail" },
+] as const;
+
+export type SeoRouteKey =
+  | (typeof PUBLIC_ROUTE_LINKS)[number]["seoKey"]
+  | (typeof DYNAMIC_ROUTE_LINKS)[number]["seoKey"]
+  | "default"
+  | "notFound";
 
 export function getSeoRouteKey(pathname: string): SeoRouteKey {
   const cleanPath = pathname.split("?")[0].replace(/\/+$/, "") || "/";
   const route = PUBLIC_ROUTE_LINKS.find(({ path }) => path === cleanPath);
-  return route?.seoKey ?? "notFound";
+  if (route) return route.seoKey;
+
+  const dynamicRoute = DYNAMIC_ROUTE_LINKS.find(({ pattern }) => pattern.test(cleanPath));
+  return dynamicRoute?.seoKey ?? "notFound";
 }
 
 // Foundation for a future automated public-link check without runtime requests.

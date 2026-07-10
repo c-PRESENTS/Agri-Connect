@@ -17,6 +17,9 @@ declare module "http" {
 }
 
 const isProd = process.env.NODE_ENV === "production";
+const enableApiRateLimit = isProd || process.env.ENABLE_API_RATE_LIMIT === "true";
+const apiRateLimitWindowMs = Number(process.env.API_RATE_LIMIT_WINDOW_MS ?? (isProd ? 15 * 60 * 1000 : 60 * 1000));
+const apiRateLimitMax = Number(process.env.API_RATE_LIMIT_MAX ?? (isProd ? 100 : 5000));
 
 app.use(helmet({
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
@@ -42,14 +45,16 @@ app.use(helmet({
 }));
 
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: apiRateLimitWindowMs,
+  max: apiRateLimitMax,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many requests. Try again later." },
 });
 
-app.use("/api/", apiLimiter);
+if (enableApiRateLimit) {
+  app.use("/api/", apiLimiter);
+}
 
 app.use(
   express.json({

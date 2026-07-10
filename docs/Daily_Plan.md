@@ -130,7 +130,8 @@ Rules:
 * Do not break mobile layout
 
 ---
-
+Get-Process ChatGPT,codex,node_repl -ErrorAction SilentlyContinue | Stop-Process -Force
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5000/api/health
 ## Day 5: About, Brand, and Homepage Credibility
 
 Tasks:

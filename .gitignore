@@ -8,3 +8,6 @@ vite.config.ts.*
 log-query.db
 .local/state/
 .config/
+logs/
+test-results/
+playwright-report/
