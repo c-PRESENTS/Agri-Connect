@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/lib/theme-provider";
 import { usePageTranslation } from "@/hooks/use-page-translation";
 import { ProtectedRoute } from "@/components/protected-route";
 import { useAuth } from "@/hooks/use-auth";
+import { SeoManager } from "@/components/seo-manager";
 import "@/i18n/index";
 
 const AIChatAssistant = lazy(() => import("@/components/ai-chat-assistant").then((module) => ({ default: module.AIChatAssistant })));
@@ -20,6 +21,8 @@ const CompareBar = lazy(() => import("@/components/compare-bar").then((module) =
 const GlobalSubcategoryPanel = lazy(() => import("@/components/global-subcategory-panel").then((module) => ({ default: module.GlobalSubcategoryPanel })));
 const MobileNavSheet = lazy(() => import("@/components/mobile-nav-sheet").then((module) => ({ default: module.MobileNavSheet })));
 const AccessibilityToolbar = lazy(() => import("@/components/accessibility-toolbar").then((module) => ({ default: module.AccessibilityToolbar })));
+const CookieConsentBanner = lazy(() => import("@/components/cookie-consent-banner").then((module) => ({ default: module.CookieConsentBanner })));
+const InstallPrompt = lazy(() => import("@/components/install-prompt").then((module) => ({ default: module.InstallPrompt })));
 
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Home = lazy(() => import("@/pages/home"));
@@ -132,6 +135,7 @@ function AuthAwareContent() {
 
   return (
     <>
+      <SeoManager />
       {isAuthenticated && user && !user.profileComplete && (
         <Suspense fallback={<ShellFallback />}>
           <ProfileWizard />
@@ -199,6 +203,8 @@ function AuthAwareContent() {
         <CompareBar />
         <AccessibilityToolbar />
         <AIChatAssistant />
+        <CookieConsentBanner />
+        <InstallPrompt />
       </Suspense>
     </>
   );

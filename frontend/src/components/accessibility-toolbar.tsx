@@ -36,7 +36,7 @@ export function AccessibilityToolbar() {
 
   return (
     <div
-      className="fixed bottom-[72px] right-3 z-[9998] flex items-center gap-1 rounded-xl border border-border/60 bg-background/95 p-1 shadow-lg shadow-black/10 backdrop-blur-xl md:bottom-4"
+      className="fixed bottom-[72px] left-3 z-[9998] flex items-center gap-1 rounded-xl border border-border/60 bg-background/95 p-1 shadow-lg shadow-black/10 backdrop-blur-xl md:bottom-4 md:left-20"
       data-testid="accessibility-toolbar"
       aria-label={t("accessibility.toolbar", "Accessibility tools")}
     >

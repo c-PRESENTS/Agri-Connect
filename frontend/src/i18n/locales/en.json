@@ -639,6 +639,66 @@
     "topic_feedback": "Feedback or feature request",
     "topic_other": "Something else"
   },
+  "seo": {
+    "default": {
+      "title": "AgriConnect | Farmer-first marketplace",
+      "description": "Discover farm produce, agricultural services, and practical support through AgriConnect."
+    },
+    "home": { "title": "AgriConnect | Farmer-first marketplace", "description": "Connect with farm produce, agricultural services, and trusted support in one place." },
+    "about": { "title": "About AgriConnect", "description": "Learn about AgriConnect's mission to build a fairer, more connected agricultural marketplace." },
+    "support": { "title": "Contact Support | AgriConnect", "description": "Contact AgriConnect support or explore practical help for farmers and buyers." },
+    "farmersHelp": { "title": "Farmer Help | AgriConnect", "description": "Find practical guidance and support resources for farming with AgriConnect." },
+    "governmentSchemes": { "title": "Government Schemes | AgriConnect", "description": "Explore government scheme information and support for the agricultural community." },
+    "landLeasing": { "title": "Land Leasing | AgriConnect", "description": "Explore land leasing opportunities and agricultural collaboration options." },
+    "logistics": { "title": "Logistics | AgriConnect", "description": "Explore agricultural delivery and logistics information on AgriConnect." },
+    "ship": { "title": "Shipping | AgriConnect", "description": "Find shipping information for AgriConnect marketplace deliveries." },
+    "shareCare": { "title": "Share & Care | AgriConnect", "description": "Discover AgriConnect community support and collaboration resources." },
+    "agritech": { "title": "AgriTech | AgriConnect", "description": "Explore agricultural technology and innovation resources on AgriConnect." },
+    "map": { "title": "Farm Map | AgriConnect", "description": "Discover agricultural activity and farmer locations through the AgriConnect map." },
+    "privacy": { "title": "Privacy Policy | AgriConnect", "description": "Read how AgriConnect handles personal information and privacy choices." },
+    "terms": { "title": "Terms of Service | AgriConnect", "description": "Read the AgriConnect terms of service and user agreement." },
+    "refund": { "title": "Refund & Cancellation Policy | AgriConnect", "description": "Read AgriConnect's draft refund and cancellation policy." },
+    "notFound": { "title": "Page Not Found | AgriConnect", "description": "The page you requested could not be found on AgriConnect." }
+  },
+  "cookie_consent": {
+    "aria_label": "Cookie preferences",
+    "preferences_aria_label": "Cookie settings",
+    "title": "Your privacy choices",
+    "description": "We use essential browser storage and offer optional categories you can control.",
+    "learn_more": "Learn more",
+    "manage_preferences": "Manage preferences",
+    "reject_non_essential": "Reject non-essential",
+    "accept_all": "Accept all",
+    "back": "Back",
+    "preferences_title": "Cookie preferences",
+    "preferences_description": "Essential storage is always on. You can choose the optional categories below.",
+    "save_preferences": "Save preferences",
+    "categories": {
+      "essential": {
+        "title": "Essential",
+        "description": "Required for core site functions and cannot be switched off here."
+      },
+      "preferences": {
+        "title": "Preferences",
+        "description": "Remember choices that make the site more convenient to use."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "Help us understand aggregate use of the site when analytics are added."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "Allow future marketing-related tools only when you opt in."
+      }
+    }
+  },
+  "install_prompt": {
+    "aria_label": "Install AgriConnect",
+    "title": "Install AgriConnect",
+    "description": "Add AgriConnect to your device for quicker access.",
+    "dismiss": "Not now",
+    "install": "Install"
+  },
   "legal": {
     "shared": {
       "last_updated": "Last updated: {{date}}",
@@ -1723,7 +1783,8 @@
     "footer_knowledge": "Knowledge Hub",
     "footer_privacy": "Privacy",
     "footer_terms": "Terms",
-    "footer_refund": "Refunds"
+    "footer_refund": "Refunds",
+    "footer_cookie_settings": "Cookie settings"
   },
   "user_bookmarks": {
     "title": "Your Bookmarks",

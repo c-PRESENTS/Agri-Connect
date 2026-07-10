@@ -15,6 +15,7 @@ import {
 import { FaLinkedinIn } from "react-icons/fa";
 import { SiFacebook, SiInstagram, SiX } from "react-icons/si";
 import { Link } from "wouter";
+import { COOKIE_SETTINGS_HASH } from "@/lib/cookie-consent";
 
 const trustBadges = [
   {
@@ -213,6 +214,7 @@ export function TrustIndicators() {
               <Link href="/privacy-policy" className="hover:text-primary transition-colors" data-testid="link-footer-privacy">{t("trust.footer_privacy")}</Link>
               <Link href="/terms-of-service" className="hover:text-primary transition-colors" data-testid="link-footer-terms">{t("trust.footer_terms")}</Link>
               <Link href="/refund-policy" className="hover:text-primary transition-colors" data-testid="link-footer-refund">{t("trust.footer_refund")}</Link>
+              <a href={COOKIE_SETTINGS_HASH} className="hover:text-primary transition-colors" data-testid="button-footer-cookie-settings">{t("trust.footer_cookie_settings")}</a>
             </div>
           </div>
         </div>

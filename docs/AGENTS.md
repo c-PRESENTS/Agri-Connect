@@ -3,6 +3,22 @@ It is designed for Codex Desktop / AI-assisted development and optimized for lar
 
 ### AGENTS.md (Production-Grade v2.0)
 
+
+
+## Windows shell requirements
+
+- Run all terminal commands using Windows PowerShell 5.1 only.
+- Use this executable:
+  `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`
+- Do not use `pwsh.exe`, Command Prompt, Git Bash, WSL, Bash, or Linux commands.
+- When invoking a shell explicitly, use:
+  `powershell.exe -NoProfile -Command "<command>"`
+- Use Windows-style paths and PowerShell-compatible syntax.
+- Before beginning development work, verify:
+  `powershell.exe -NoProfile -Command "$PSVersionTable.PSVersion; (Get-Process -Id $PID).Path; node -v; npm -v"`
+- If PowerShell, Node.js, npm, permissions, sandbox access, or the working directory fails, stop development work and report the exact error first.
+
+
 ### Universal AI Engineering Guidelines
 
 Production Ready

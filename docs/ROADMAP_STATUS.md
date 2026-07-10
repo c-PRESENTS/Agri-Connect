@@ -36,13 +36,13 @@ The remaining 20-day roadmap below focuses only on non-auth features. Any featur
 |---:|---|---|---|---|---|---|---|
 | 1 | Privacy Policy page | Easy | Done | None | Medium | Needs Manual Review | Public draft page added; legal content should be reviewed before public launch. |
 | 2 | Terms of Service / User Agreement | Easy | Done | None | Medium | Needs Manual Review | Public draft page added; legal content should be reviewed before public launch. |
-| 3 | Cookie consent banner (basic) | Easy | Not Started | Privacy Policy page | Medium | Not Tested | Needed for UK/EU-style consent expectations. |
+| 3 | Cookie consent banner (basic) | Easy | Done | Privacy Policy page | Medium | Needs Manual Review | Frontend consent foundation supports saved category choices, a settings panel, and future script gating; this is not full GDPR/compliance implementation. |
 | 4 | Refund / Cancellation Policy page | Easy | Done | Terms of Service / User Agreement | Medium | Needs Manual Review | Public draft page added; payment-provider behavior still requires legal/provider review before live payment flow. |
 | 5 | Contact Us / Support page | Easy | Done | None | Low | Needs Manual Review | Existing public support page verified by code inspection and linked from legal pages. |
 | 6 | 404 / error page handling | Easy | Done | None | Low | Needs Manual Review | Existing catch-all route retained last; missing translation copy added. |
 | 7 | Email verification on signup | Medium | Frozen | Auth completed and stable | Medium | Not Reopened | Auth sprint is closed; do not add or modify email-verification behavior unless mentor explicitly reopens auth scope. |
 | 8 | Password reset flow | Medium | Frozen | Auth completed and stable | Medium | Not Reopened | Auth sprint is closed; do not add or modify reset-password behavior unless mentor explicitly reopens auth scope. |
-| 9 | Basic SEO meta tags (title/description per page) | Easy | Not Started | None | Low | Not Tested | Add per route without route rewrites. |
+| 9 | Basic SEO meta tags (title/description per page) | Easy | Done | None | Low | Needs Manual Review | Public route-aware document title and description support added without route rewrites. |
 | 10 | Vertical sidebar navigation implemented | Easy | Done | None | Low | Not Tested | Retain current navigation. |
 | 11 | Add text labels under sidebar icons | Easy | Partial | Vertical sidebar navigation implemented | Low | Not Tested | Improve clarity without changing nav behavior. |
 | 12 | Increase icon sizes platform-wide | Easy | Partial | Vertical sidebar navigation implemented | Low | Not Tested | Visual improvement only. |
@@ -119,8 +119,8 @@ The remaining 20-day roadmap below focuses only on non-auth features. Any featur
 | 386 | Company story and values | Easy | Not Started | About page (benefits/vision/mission/impact) | Low | Not Tested | Bundle with About page. |
 | 393 | Multi-vendor support (various collaboration types) | Hard | Planned | Auth completed and stable; Profile completion wizard | High | Not Tested | Use safe foundation/shell only in sprint; do not alter auth. |
 | 397 | Transaction fees (1.5-3%) | Hard | Not Started | Integrated payment gateway with escrow | High | Not Tested | Must be configured in payment logic. |
-| 421 | Manifest file configuration | Easy | Not Started | None | Low | Not Tested | PWA foundation. |
-| 422 | Add to home screen prompt | Medium | Not Started | Manifest file configuration | Low | Not Tested | Browser support varies. |
+| 421 | Manifest file configuration | Easy | Done | None | Low | Needs Manual Review | Production manifest references normal and maskable public logo exports, with Apple touch and favicon exports linked from the app shell. |
+| 422 | Add to home screen prompt | Medium | Partial | Manifest file configuration | Low | Needs Manual Review | Browser-safe prompt foundation displays only after a supported browser emits `beforeinstallprompt`. |
 | 424 | SSL certificate (verify configuration) | Easy | Planned | Domain agriconnect.group (live) | High | Not Tested | Production hosting configuration. |
 | 425 | GDPR compliance (data protection) | Hard | Planned | Privacy Policy page; Cookie consent banner (basic) | High | Not Tested | Legal/compliance review needed. |
 | 426 | Data encryption (end-to-end communications) | Medium | Planned | SSL certificate (verify configuration) | High | Not Tested | HTTPS/provider configuration plus secure handling. |
@@ -141,7 +141,7 @@ The remaining 20-day roadmap below focuses only on non-auth features. Any featur
 | 478 | Cross-browser testing (Chrome/Firefox/Safari/Edge) | Hard | Not Started | Test every clickable element | Medium | Not Tested | Safari requires Apple/browser access. |
 | 479 | Mobile responsiveness testing (all devices) | Hard | Not Started | Test every clickable element | Medium | Not Tested | Focus high-traffic screens first. |
 | 480 | Performance optimization (page load speed) | Hard | Not Started | Practical working status of all features | Medium | Not Tested | Avoid premature broad rewrites. |
-| 482 | Link checker (broken links) | Easy | Not Started | None | Low | Not Tested | Can be scripted/manual. |
+| 482 | Link checker (broken links) | Easy | Partial | None | Low | Needs Manual Review | Public-route registry and configuration validation foundation added; no automated crawler or runtime link requests. |
 | 483 | Form validation testing | Medium | Not Started | Product listing (basic); checkout; support forms | Medium | Not Tested | Exclude stable auth forms unless only smoke-testing; do not modify auth handlers. |
 | 484 | Payment gateway testing | Hard | Not Started | Secure payment gateway (PCI DSS); Integrated payment gateway with escrow | High | Not Tested | Requires sandbox provider keys. |
 | 485 | Security vulnerability scan | Hard | Not Started | Rate limiting on APIs; Data encryption (end-to-end communications) | High | Not Tested | Do not run destructive tests on production. |

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import {
@@ -23,6 +23,12 @@ interface Bookmark {
 }
 
 const LS_KEY = "agri-user-bookmarks";
+const LOCAL_BOOKMARK_FALLBACK_ICON = "/favicon-32x32.png";
+const LOCAL_BOOKMARK_ICONS: Record<string, string> = {
+  "agrimarket.gov.in": LOCAL_BOOKMARK_FALLBACK_ICON,
+  "www.agrimarket.gov.in": LOCAL_BOOKMARK_FALLBACK_ICON,
+};
+
 const COLORS = [
   "bg-sky-500","bg-violet-500","bg-emerald-500","bg-amber-500",
   "bg-rose-500","bg-blue-500","bg-green-500","bg-orange-500",
@@ -47,17 +53,37 @@ function saveBookmarks(b: Bookmark[]) { localStorage.setItem(LS_KEY, JSON.string
 
 function getFavicon(url: string) {
   try {
-    const u = new URL(url.startsWith("http") ? url : "https://" + url);
-    return `https://www.google.com/s2/favicons?sz=64&domain=${u.hostname}`;
+    const u = new URL(normalizeUrl(url));
+    return LOCAL_BOOKMARK_ICONS[u.hostname] ?? `${u.origin}/favicon.ico`;
   } catch { return ""; }
 }
 function getInitial(name: string) { return (name || "?").charAt(0).toUpperCase(); }
 function normalizeUrl(url: string) {
-  if (!url) return "";
-  return url.startsWith("http://") || url.startsWith("https://") ? url : "https://" + url;
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (isInternalPath(trimmed)) return trimmed;
+
+  const withProtocol = trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : "https://" + trimmed;
+  try {
+    const parsed = new URL(withProtocol);
+    if (LOCAL_BOOKMARK_ICONS[parsed.hostname]) parsed.protocol = "https:";
+    return parsed.toString();
+  } catch {
+    return withProtocol;
+  }
 }
 function isInternalPath(url: string) {
   return url.startsWith("/") && !url.startsWith("//");
+}
+function handleFaviconError(event: SyntheticEvent<HTMLImageElement>) {
+  const image = event.currentTarget;
+  if (image.dataset.fallbackApplied === "true" || image.src.endsWith(LOCAL_BOOKMARK_FALLBACK_ICON)) {
+    image.style.display = "none";
+    return;
+  }
+
+  image.dataset.fallbackApplied = "true";
+  image.src = LOCAL_BOOKMARK_FALLBACK_ICON;
 }
 
 export function UserBookmarks() {
@@ -175,7 +201,7 @@ export function UserBookmarks() {
                   <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center overflow-hidden ${b.color} shadow-sm`}>
                     {favicon
                       ? <img src={favicon} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
-                          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                          loading="lazy" onError={handleFaviconError} />
                       : <span className="text-xs sm:text-sm font-black text-white">{getInitial(b.name)}</span>
                     }
                   </div>
@@ -290,7 +316,7 @@ export function UserBookmarks() {
               <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-t-md bg-zinc-700/60 border border-white/10 border-b-0 text-[10px] text-white/70 max-w-[180px]">
                 {panel.favicon
                   ? <img src={panel.favicon} alt="" className="w-3 h-3 object-contain"
-                      onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      loading="lazy" onError={handleFaviconError} />
                   : <Globe className="h-2.5 w-2.5 text-white/40 shrink-0" />
                 }
                 <span className="truncate">{panel.title}</span>
