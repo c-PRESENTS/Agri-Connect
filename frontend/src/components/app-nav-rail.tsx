@@ -63,6 +63,7 @@ const ALL_SERVICES = [
   { id: "land",     path: "/land-leasing",         icon: Landmark,        label: "Land",      public: true  },
   { id: "share",    path: "/share-care",           icon: HeartHandshake,  label: "Share",     public: true  },
   { id: "ship",     path: "/ship",                 icon: Truck,           label: "Ship",      public: true  },
+  { id: "logistics",path: "/logistics",            icon: Package,         label: "Delivery",  public: true  },
   { id: "schemes",  path: "/government-schemes",   icon: FileText,        label: "Schemes",   public: true  },
   { id: "cart",     path: "/cart",                 icon: ShoppingCart,    label: "Cart",      public: true  },
   { id: "dash",     path: "/dashboard",            icon: LayoutDashboard, label: "Dashboard", public: false },
@@ -156,6 +157,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
     "land": "nav.land",
     "share": "nav.share",
     "ship": "nav.ship",
+    "logistics": "home.logistics",
     "schemes": "home.govt_schemes",
     "cart": "nav.cart",
     "dash": "nav.dashboard",
@@ -357,7 +359,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                       } ${isActive && !editMode ? "ring-2 ring-white/40" : ""}`}
                     />
                   ) : (
-                    <Icon className="h-[26px] w-[26px]" strokeWidth={2} />
+                    <Icon className="h-[30px] w-[30px]" strokeWidth={2} />
                   )}
                   {(item.id as string) === "cart" && cartCount > 0 && !editMode && (
                     <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-primary text-[9px] font-bold text-primary-foreground flex items-center justify-center leading-none">

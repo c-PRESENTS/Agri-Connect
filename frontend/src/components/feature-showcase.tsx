@@ -17,10 +17,10 @@ const features = [
 ];
 
 const stats = [
-  { value: "500+",   label: "features.products_label",  icon: Zap        },
-  { value: "2,500+", label: "features.farmers_label",   icon: Heart      },
-  { value: "50K+",   label: "features.customers_label", icon: TrendingUp },
-  { value: "24/7",   label: "features.support_label",   icon: Clock      },
+  { value: "Direct", label: "features.products_label",  icon: Zap        },
+  { value: "Fair",   label: "features.farmers_label",   icon: Heart      },
+  { value: "Local",  label: "features.customers_label", icon: TrendingUp },
+  { value: "Help",   label: "features.support_label",   icon: Clock      },
 ];
 
 export function FeatureShowcase() {
@@ -75,6 +75,30 @@ export function FeatureShowcase() {
             </motion.div>
           ))}
         </div>
+
+        <motion.div
+          className="grid md:grid-cols-3 gap-3 mb-6"
+          initial={{ opacity: 0, y: 8 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          data-testid="section-farmer-access-messaging"
+        >
+          {[
+            { title: "features.free_start_title", text: "features.free_start_desc", icon: Heart },
+            { title: "features.zero_barrier_title", text: "features.zero_barrier_desc", icon: Zap },
+            { title: "features.transparent_policy_title", text: "features.transparent_policy_desc", icon: Clock },
+          ].map(({ title, text, icon: Icon }) => (
+            <div key={title} className="rounded-xl border border-primary/15 bg-primary/5 p-3 flex items-start gap-3">
+              <div className="h-8 w-8 rounded-lg bg-background border border-primary/15 flex items-center justify-center shrink-0">
+                <Icon className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-[12px] font-bold text-foreground leading-tight mb-1">{t(title)}</h3>
+                <p className="text-[11px] text-muted-foreground leading-snug">{t(text)}</p>
+              </div>
+            </div>
+          ))}
+        </motion.div>
 
         {/* Stats strip */}
         <motion.div

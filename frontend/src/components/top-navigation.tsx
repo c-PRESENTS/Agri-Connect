@@ -139,9 +139,9 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
             data-testid="button-toggle-sidebar"
           >
             {state === "expanded" ? (
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-[18px] w-[18px]" />
             ) : (
-              <Menu className="h-4 w-4" />
+              <Menu className="h-[18px] w-[18px]" />
             )}
           </Button>
         )}
@@ -152,21 +152,21 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
             variant="ghost"
             size="icon"
             onClick={() => window.history.back()}
-            className="h-7 w-7 hover:bg-primary/10 transition-colors"
+            className="h-8 w-8 hover:bg-primary/10 transition-colors"
             data-testid="button-nav-back"
             title={t("nav.go_back")}
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => window.history.forward()}
-            className="h-7 w-7 hover:bg-primary/10 transition-colors"
+            className="h-8 w-8 hover:bg-primary/10 transition-colors"
             data-testid="button-nav-forward"
             title={t("nav.go_forward")}
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
@@ -189,14 +189,15 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
                 variant="ghost"
                 size="sm"
                 onClick={() => setLocation(item.path)}
-                className={`gap-1.5 h-7 px-2 text-[10px] font-bold uppercase tracking-tight transition-all ${
+                className={`gap-1.5 h-8 px-2.5 text-[11px] font-bold uppercase tracking-tight transition-all ${
                   location === item.path
                     ? "text-primary bg-primary/8"
                     : "hover:text-primary hover:bg-primary/5"
                 }`}
+                aria-label={item.label}
                 data-testid={`nav-link-${item.label.toLowerCase()}`}
               >
-                <item.icon className="h-3.5 w-3.5" />
+                <item.icon className="h-[18px] w-[18px]" />
                 <span className="hidden lg:inline">{item.label}</span>
               </Button>
             </motion.div>
@@ -226,7 +227,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
             onClick={() => setLocation("/cart")}
             data-testid="button-cart-nav"
           >
-            <ShoppingCart className="h-5 w-5" />
+            <ShoppingCart className="h-[22px] w-[22px]" />
             {cartCount > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
@@ -288,7 +289,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
                 className="h-8 px-2.5 text-[10px] font-bold uppercase tracking-tight ml-1 bg-primary hover:bg-primary/90 shadow-sm btn-glow transition-all"
                 data-testid="button-login-nav"
               >
-                <User className="h-5 w-5 mr-1" />
+                <User className="h-[22px] w-[22px] mr-1" />
                 <span className="hidden sm:inline">{t("nav.login", "Login")}</span>
               </Button>
             </motion.div>
@@ -304,7 +305,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
               data-testid="button-mobile-more-tools"
               className="h-6 px-1.5 rounded text-[9px] font-bold uppercase tracking-tight text-muted-foreground hover:text-primary hover:bg-primary/5 shrink-0 flex items-center gap-1"
             >
-              <MoreHorizontal className="h-3 w-3" />
+              <MoreHorizontal className="h-4 w-4" />
               {t("nav.more")}
             </button>
           </SheetTrigger>
@@ -345,7 +346,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
                 : "text-muted-foreground hover:text-primary hover:bg-primary/5"
             }`}
           >
-            <item.icon className="h-3 w-3" />
+            <item.icon className="h-4 w-4" />
             {item.label}
           </Button>
         ))}

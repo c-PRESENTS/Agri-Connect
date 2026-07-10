@@ -98,8 +98,6 @@ function saveCatPrefs(p: { order: string[]; hidden: string[] }) {
 export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: HeroSectionProps) {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
-  const [liveOrders, setLiveOrders] = useState(1427);
-  const [activeFarmers, setActiveFarmers] = useState(89);
   const [heroMapMode, setHeroMapMode] = useState<HeroMapMode>("products");
   const [heroLeftPct, setHeroLeftPct] = useState(42);
   const heroGridRef = useRef<HTMLDivElement | null>(null);
@@ -190,17 +188,10 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
     return () => window.removeEventListener("resize", applyWidth);
   }, [heroLeftPct]);
 
-  useEffect(() => {
-    const t = setInterval(() => {
-      setLiveOrders(n => n + Math.floor(Math.random() * 3));
-      setActiveFarmers(n => Math.max(70, Math.min(120, n + (Math.random() > 0.5 ? 1 : -1))));
-    }, 3000);
-    return () => clearInterval(t);
-  }, []);
-
   const paidProducts = products.filter(p => p.price > 0);
   const featuredProducts = products.filter(p => p.isFeatured);
   const farmerCount = new Set(products.map(p => p.farmerId)).size;
+  const visibleListings = products.length + shareCareItems.length;
 
   return (
     <section className="relative overflow-hidden">
@@ -223,14 +214,14 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <div className="inline-flex items-center gap-1 bg-green-500/15 border border-green-400/40 rounded-full px-1.5 py-0.5 shrink-0">
                 <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[9px] font-bold text-green-300">{activeFarmers} {t("common.live")}</span>
+                <span className="text-[9px] font-bold text-green-300">{farmerCount} {t("home.farmers")}</span>
               </div>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{farmerCount}+</span> {t("home.farmers")}</span>
+              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{farmerCount}</span> {t("home.farmers")}</span>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{products.length}+</span> {t("home.products")}</span>
+              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{products.length}</span> {t("home.products")}</span>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{liveOrders.toLocaleString()}</span> {t("home.orders")}</span>
+              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{shareCareItems.length}</span> {t("home.free_items")}</span>
             </div>
 
             {/* Compact headline — one tight block */}
@@ -272,7 +263,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
               </Badge>
               <div className="flex items-center gap-1 bg-white/10 border border-white/20 rounded-full px-1.5 py-0.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[9px] font-bold text-green-300">{activeFarmers} {t("common.live")}</span>
+                <span className="text-[9px] font-bold text-green-300">{farmerCount} {t("home.farmers")}</span>
               </div>
             </div>
 
@@ -287,9 +278,9 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
 
             <div className="grid grid-cols-3 gap-2 mb-4">
               {[
-                { value: `${farmerCount}+`, label: t("home.farmers"), icon: Users, color: "text-primary bg-primary/20" },
-                { value: `${products.length}+`, label: t("home.products"), icon: Sprout, color: "text-emerald-400 bg-emerald-900/40" },
-                { value: `${liveOrders.toLocaleString()}`, label: t("home.orders"), icon: Activity, color: "text-amber-400 bg-amber-900/40" },
+                { value: `${farmerCount}`, label: t("home.farmers"), icon: Users, color: "text-primary bg-primary/20" },
+                { value: `${products.length}`, label: t("home.products"), icon: Sprout, color: "text-emerald-400 bg-emerald-900/40" },
+                { value: `${shareCareItems.length}`, label: t("home.free_items"), icon: Activity, color: "text-amber-400 bg-amber-900/40" },
               ].map(({ value, label, icon: Icon, color }) => (
                 <div key={label} className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-lg p-2.5 flex flex-col items-center text-center">
                   <div className={`w-7 h-7 rounded-md flex items-center justify-center mx-auto mb-1 ${color}`}>
@@ -453,10 +444,10 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
           <div className="px-3 sm:container sm:mx-auto sm:px-4 py-2 sm:py-3">
             <div className="flex sm:grid sm:grid-cols-4 gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar">
               {[
-                { icon: Users, label: t("home.farmers"), value: "2,500+", border: "border-green-200/60 dark:border-green-800/40", bg: "bg-green-50/80 dark:bg-green-950/30", iconColor: "text-green-600 dark:text-green-400", textColor: "text-green-700 dark:text-green-300" },
-                { icon: Star, label: t("home.ratings"), value: "4.9", border: "border-amber-200/60 dark:border-amber-800/40", bg: "bg-amber-50/80 dark:bg-amber-950/30", iconColor: "text-amber-600 dark:text-amber-400", textColor: "text-amber-700 dark:text-amber-300" },
-                { icon: TrendingUp, label: t("home.products"), value: `${products.length}+`, border: "border-blue-200/60 dark:border-blue-800/40", bg: "bg-blue-50/80 dark:bg-blue-950/30", iconColor: "text-blue-600 dark:text-blue-400", textColor: "text-blue-700 dark:text-blue-300" },
-                { icon: Zap, label: t("home.orders"), value: liveOrders.toLocaleString(), border: "border-purple-200/60 dark:border-purple-800/40", bg: "bg-purple-50/80 dark:bg-purple-950/30", iconColor: "text-purple-600 dark:text-purple-400", textColor: "text-purple-700 dark:text-purple-300" },
+                { icon: Users, label: t("home.farmers"), value: `${farmerCount}`, border: "border-green-200/60 dark:border-green-800/40", bg: "bg-green-50/80 dark:bg-green-950/30", iconColor: "text-green-600 dark:text-green-400", textColor: "text-green-700 dark:text-green-300" },
+                { icon: Star, label: t("home.free_items"), value: `${shareCareItems.length}`, border: "border-amber-200/60 dark:border-amber-800/40", bg: "bg-amber-50/80 dark:bg-amber-950/30", iconColor: "text-amber-600 dark:text-amber-400", textColor: "text-amber-700 dark:text-amber-300" },
+                { icon: TrendingUp, label: t("home.products"), value: `${products.length}`, border: "border-blue-200/60 dark:border-blue-800/40", bg: "bg-blue-50/80 dark:bg-blue-950/30", iconColor: "text-blue-600 dark:text-blue-400", textColor: "text-blue-700 dark:text-blue-300" },
+                { icon: Zap, label: t("home.listings", { defaultValue: "Listings" }), value: visibleListings.toLocaleString(), border: "border-purple-200/60 dark:border-purple-800/40", bg: "bg-purple-50/80 dark:bg-purple-950/30", iconColor: "text-purple-600 dark:text-purple-400", textColor: "text-purple-700 dark:text-purple-300" },
               ].map(({ icon: Icon, label, value, border, bg, iconColor, textColor }) => (
                 <div key={label} className={`flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl border shrink-0 ${border} ${bg}`}>
                   <div className={`h-6 w-6 sm:h-8 sm:w-8 rounded-md sm:rounded-lg bg-background/80 border ${border} flex items-center justify-center flex-shrink-0`}>

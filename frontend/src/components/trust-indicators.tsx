@@ -22,39 +22,39 @@ const trustBadges = [
     icon: Shield,
     title: "trust.secure_payments",
     description: "trust.secure_desc",
-    titleFallback: "Secure Payments",
-    descriptionFallback: "256-bit SSL encryption",
+    titleFallback: "Clear Marketplace",
+    descriptionFallback: "Transparent routes and support",
   },
   {
     icon: Truck,
     title: "trust.fast_delivery",
     description: "trust.fast_desc",
-    titleFallback: "Fast Delivery",
-    descriptionFallback: "Same-day available",
+    titleFallback: "Delivery Access",
+    descriptionFallback: "Logistics page and shipping tools",
   },
   {
     icon: RefreshCw,
     title: "trust.easy_returns",
     description: "trust.returns_desc",
-    titleFallback: "Easy Returns",
-    descriptionFallback: "30-day guarantee",
+    titleFallback: "Support Path",
+    descriptionFallback: "Help and policy pages stay visible",
   },
   {
     icon: CreditCard,
     title: "trust.multiple_payments",
     description: "trust.payments_desc",
-    titleFallback: "Multiple Payments",
-    descriptionFallback: "Cards, UPI, COD",
+    titleFallback: "Fair Access",
+    descriptionFallback: "Free-to-start selling direction",
   },
 ];
 
 export function TrustIndicators() {
   const { t } = useTranslation();
   const certifications = [
-    t("trust.soil_association"),
-    t("trust.defra_approved"),
-    "Red Tractor Assured",
-    "LEAF Marque",
+    "Farmer help point",
+    "Government schemes",
+    "Logistics visibility",
+    "Share & Care",
   ];
   return (
     <>
@@ -105,21 +105,25 @@ export function TrustIndicators() {
                 AgriConnect is your trusted marketplace.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button 
-                  size="lg" 
+                <Button
+                  asChild
+                  size="lg"
                   className="bg-white text-primary hover:bg-white/90 shadow-xl"
-                  data-testid="button-become-seller"
                 >
-                  Become a Seller
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <Link href="/farmers-help" data-testid="button-become-seller">
+                    Become a Seller
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
                 </Button>
-                <Button 
-                  size="lg" 
+                <Button
+                  asChild
+                  size="lg"
                   variant="outline"
                   className="border-white/30 text-white hover:bg-white/10"
-                  data-testid="button-download-app"
                 >
-                  Download App
+                  <Link href="/about" data-testid="button-learn-about">
+                    Learn About AgriConnect
+                  </Link>
                 </Button>
               </div>
             </motion.div>
@@ -174,28 +178,43 @@ export function TrustIndicators() {
             {[
               {
                 title: t("trust.footer_products"),
-                links: ["Fresh Vegetables", "Fruits", "Dairy & Eggs", "Meat & Poultry", "Organic Range"],
+                links: [
+                  { label: "Fresh Vegetables", href: "/?category=daily-needs&subcategory=vegetables" },
+                  { label: "Fruits", href: "/?category=daily-needs&subcategory=fruits" },
+                  { label: "Dairy & Eggs", href: "/?category=daily-needs&subcategory=dairy-eggs" },
+                  { label: "Organic Range", href: "/?category=daily-needs&section=Organic" },
+                ],
               },
               {
                 title: t("trust.footer_farmers"),
-                links: ["Sell Your Produce", "Photo-Sell AI", "Demand Alerts", "Government Schemes", "Training"],
+                links: [
+                  { label: "Sell Your Produce", href: "/farmers-help" },
+                  { label: "AgriTech", href: "/agritech" },
+                  { label: "Government Schemes", href: "/government-schemes" },
+                  { label: "Logistics", href: "/logistics" },
+                ],
               },
               {
                 title: t("trust.footer_support"),
-                links: ["Help Centre", "Contact Us", "FAQs", "Delivery Info", "Returns Policy"],
+                links: [
+                  { label: "Help Centre", href: "/support" },
+                  { label: "About AgriConnect", href: "/about" },
+                  { label: "Delivery Info", href: "/logistics" },
+                  { label: "Returns Policy", href: "/refund-policy" },
+                ],
               },
             ].map((section) => (
               <div key={section.title}>
                 <h4 className="font-semibold mb-4">{section.title}</h4>
                 <ul className="space-y-2">
                   {section.links.map((link) => (
-                    <li key={link}>
-                      <a 
-                        href="#" 
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
                         className="text-sm text-muted-foreground hover:text-primary transition-colors"
                       >
-                        {link}
-                      </a>
+                        {link.label}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -205,7 +224,7 @@ export function TrustIndicators() {
           
           <div className="pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} AgriConnect. All rights reserved. Made with love in the UK.
+              (c) {new Date().getFullYear()} AgriConnect. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
               <Link href="/about" className="hover:text-primary transition-colors" data-testid="link-footer-about">{t("trust.footer_about")}</Link>

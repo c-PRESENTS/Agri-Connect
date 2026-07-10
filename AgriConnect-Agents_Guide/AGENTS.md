@@ -87,6 +87,8 @@ Create, delete, rename, or move a file only when the user explicitly requests or
 
 If a requested implementation genuinely requires a new file, then only create it.
 
+do not updated any the roadmap_status file , its for my understanding alone , we will update at the end , once we implement all the 113 features end-to-end
+
 ## 7. Planning Before Coding
 
 Before editing:
@@ -379,7 +381,7 @@ For focused verification:
 - avoid one large browser evaluation containing many checks
 - avoid repeatedly navigating through unrelated pages
 
-The in-app browser or Chrome integration may be used for focused manual-style verification. Neither is an authoritative full release gate unless the user explicitly requests broader testing.
+Browser plugin / in-app browser for  browser-based End-to-End Testing and verification of the implemented features.
 
 ## 28. Browser Timeout and Failure Handling
 
