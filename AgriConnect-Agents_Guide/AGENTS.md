@@ -383,6 +383,16 @@ For focused verification:
 
 Browser plugin / in-app browser for  browser-based End-to-End Testing and verification of the implemented features.
 
+Default: Built-in browser for focused localhost feature verification.
+
+Use external Chrome only when the feature requires:
+- an existing signed-in session
+- Google authentication
+- third-party services
+- real browser cookies/profile state
+- file uploads
+- reproduction of a Chrome-specific issue
+
 ## 28. Browser Timeout and Failure Handling
 
 If browser verification times out or cannot access the page:
