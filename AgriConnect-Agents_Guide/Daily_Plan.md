@@ -55,9 +55,6 @@ Do not mark payments, escrow, PCI DSS, GDPR, penetration testing, DDoS, or inter
 ## Day 1: Roadmap Tracker + Build Safety Check
 
 Tasks:
-
-* Update ROADMAP_STATUS.md with authentication marked as Done/Frozen
-* Remove auth implementation from remaining sprint scope
 * Confirm all remaining features are tracked
 * Confirm current app builds successfully
 * Add clear status meanings: Done, Partial, Planned, UI Shell, Blocked, Needs External Setup, Frozen

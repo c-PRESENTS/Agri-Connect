@@ -236,7 +236,7 @@ export default function LogisticsPage() {
       <SplitMapLayout mapProps={{ title: "Sellers along your routes", subtitle: "Tap a pin to view seller listings" }}>
       <div className="p-4 max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">{t("logistics.title", "Logistics & Delivery")}</h1>
+          <h1 className="text-2xl font-bold" data-testid="text-logistics-heading">{t("logistics.title", "Logistics & Delivery")}</h1>
           <p className="text-muted-foreground">
             {t("logistics.subtitle", "Choose from trusted logistics partners or join efficient milk run routes")}
           </p>

@@ -3,7 +3,7 @@
 **Version:** 2.1  
 **Scope:** Global rules for Codex Desktop and AI-assisted development  
 **Target:** Production-grade, scalable SaaS applications
-
+always apply and implement features in smaller patches and edits and verify also in the same way in order to not get stucked in long big code file or hit the sandbox timeout error issue.
 ## 1. Mission
 
 - Implement or fix only what the user explicitly requests.
@@ -20,7 +20,7 @@ Follow instructions in this order:
 2. This `AGENTS.md` file.
 3. Existing repository conventions and documentation.
 4. General engineering best practices.
-
+Before coding, check whether this feature is frontend-only or requires backend alignment. If backend seed data, APIs, validation, enums, permissions, or database values are involved, update them safely within this feature scope. Do not make frontend-only changes that will conflict with backend behavior. Do not touch unrelated backend/auth/payment/order logic.
 Do not expand the task beyond the requested scope.
 
 ## 3. Windows Shell Requirements
@@ -88,6 +88,46 @@ Create, delete, rename, or move a file only when the user explicitly requests or
 If a requested implementation genuinely requires a new file, then only create it.
 
 do not updated any the roadmap_status file , its for my understanding alone , we will update at the end , once we implement all the 113 features end-to-end
+
+Global frontend-backend alignment rule for the full 20-day AgriConnect sprint:
+
+For every feature in the 20-day roadmap, do not update frontend UI/data/config alone if that feature also depends on backend data, API validation, seed data, enums, database values, server-side permissions, or business rules.
+
+Before implementing each feature batch:
+1. Inspect the frontend files involved.
+2. Inspect whether matching backend logic/data exists.
+3. Check APIs, validation schemas, seed files, enums/constants, DTOs/types, database references, and shared config.
+4. Decide whether the feature is frontend-only or requires backend alignment.
+
+If backend alignment is required:
+- Update only the related backend data/config/API validation needed for that feature.
+- Keep the change within the current feature scope.
+- Preserve existing IDs, slugs, routes, API contracts, database values, and user data.
+- Do not rename/delete existing values unless backward-compatible aliases or mappings are added.
+- Keep seed scripts idempotent and avoid duplicate records.
+- Do not change database schema unless absolutely necessary and explicitly explained first.
+- Do not change auth, payment, cart, checkout, order, or unrelated backend logic unless the current feature specifically requires it.
+- If the backend change is risky or could break existing data, stop and explain before implementing.
+
+If the feature is frontend-only:
+- Do not touch backend files.
+- Do not create unnecessary backend changes.
+
+
+This rule applies to all 20-day roadmap features, including:
+- legal/static pages
+- SEO/cookie/manifest
+- navigation/UI
+- taxonomy/categories
+- product listing/display
+- search/filter/map
+- favorites/profile
+- verification badges/profile completion
+- orders/cart/checkout
+- dashboards/logistics/email
+- security/compliance/testing
+
+Do not implement frontend and backend inconsistently.
 
 ## 7. Planning Before Coding
 
@@ -393,6 +433,12 @@ Use external Chrome only when the feature requires:
 - file uploads
 - reproduction of a Chrome-specific issue
 
+Do not depend on the Codex Chrome plugin for your release gate. Use:
+
+Codex in-app Browser for quick visual inspection.
+Playwright through the terminal for reliable frontend/backend E2E testing.
+Route-by-route Playwright tests instead of one large combined browser run.
+
 ## 28. Browser Timeout and Failure Handling
 
 If browser verification times out or cannot access the page:
@@ -408,6 +454,23 @@ If browser verification times out or cannot access the page:
 9. Provide the smallest manual check the user can perform.
 
 Never claim that a feature works in the browser when browser verification did not complete successfully.
+
+
+For browser verification, always test the application in small route-by-route and flow-by-flow checks.
+
+Do not run one large combined browser pass. Verify each route independently, record the result immediately, and continue to the next route so a single browser-tool failure does not erase the full verification progress.
+
+For every route:
+
+* Open the route separately.
+* Verify page load, UI, console, network requests, and key interactions.
+* Save the result before moving forward.
+* Retry only the failed route.
+* Keep successful route results.
+* At the end, provide a complete pass/fail/partial report for all routes.
+
+Never restart the entire verification because one route or browser action fails.
+
 
 ## 29. Playwright and E2E Policy
 

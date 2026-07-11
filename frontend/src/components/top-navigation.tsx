@@ -111,13 +111,13 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
   };
 
   const navLinks = [
-    { path: "/farmers-help", icon: Sprout, label: t("nav.help") },
-    { path: "/agritech", icon: Cpu, label: t("home.agritech") },
-    { path: "/map", icon: MapPin, label: t("nav.map", "Smart Map") },
-    { path: "/land-leasing", icon: MapPin, label: t("nav.land", "Land") },
-    { path: "/share-care", icon: HeartHandshake, label: t("nav.share", "Share") },
-    { path: "/ship", icon: Truck, label: t("nav.ship", "Ship") },
-    { path: "/dashboard", icon: User, label: t("nav.user", "User") },
+    { id: "help", path: "/farmers-help", icon: Sprout, label: t("nav.help") },
+    { id: "agritech", path: "/agritech", icon: Cpu, label: t("home.agritech") },
+    { id: "map", path: "/map", icon: MapPin, label: t("nav.map", "Smart Map") },
+    { id: "land", path: "/land-leasing", icon: MapPin, label: t("nav.land", "Land") },
+    { id: "share", path: "/share-care", icon: HeartHandshake, label: t("nav.share", "Share") },
+    { id: "ship", path: "/ship", icon: Truck, label: t("nav.ship", "Ship") },
+    { id: "user", path: isAuthenticated ? "/dashboard" : "/login", icon: User, label: t("nav.user", "User") },
   ];
 
   return (
@@ -182,29 +182,29 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
           <span className="font-bold text-[13px] leading-tight tracking-tight hidden sm:inline">AgriConnect</span>
         </motion.div>
 
-        <nav className="hidden md:flex items-center gap-0.5 ml-1">
+        <nav className="hidden md:flex items-center gap-0.5 ml-1 shrink-0 relative z-20">
           {navLinks.map((item) => (
             <motion.div key={item.path} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setLocation(item.path)}
-                className={`gap-1.5 h-8 px-2.5 text-[11px] font-bold uppercase tracking-tight transition-all ${
+                className={`gap-1.5 h-8 w-8 2xl:w-auto 2xl:px-2.5 p-0 text-[11px] font-bold uppercase tracking-tight transition-all ${
                   location === item.path
                     ? "text-primary bg-primary/8"
                     : "hover:text-primary hover:bg-primary/5"
                 }`}
                 aria-label={item.label}
-                data-testid={`nav-link-${item.label.toLowerCase()}`}
+                data-testid={`nav-link-${item.id}`}
               >
                 <item.icon className="h-[18px] w-[18px]" />
-                <span className="hidden lg:inline">{item.label}</span>
+                <span className="hidden 2xl:inline">{item.label}</span>
               </Button>
             </motion.div>
           ))}
         </nav>
 
-        <div className="flex-1 flex items-center justify-center px-1 sm:px-2">
+        <div className="flex-1 min-w-0 max-w-[min(42vw,34rem)] flex items-center justify-center px-1 sm:px-2 relative z-0">
           <SearchAutocomplete
             value={searchQuery}
             onChange={setSearchQuery}
@@ -212,7 +212,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
           />
         </div>
 
-        <div className="flex items-center gap-0 ml-auto shrink-0">
+        <div className="flex items-center gap-0 ml-auto shrink-0 relative z-10">
           <div className="hidden sm:flex items-center gap-0">
             <VoiceCommand onSearch={handleSearch} />
             <LanguageSwitcher />

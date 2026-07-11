@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { categories, categoryImages } from "@/lib/categories";
+import { categories, categoryImages, getCategoryExamples } from "@/lib/categories";
 import { getSubSubcategories, SubSubItem } from "@/lib/sub-subcategories";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "@shared/schema";
@@ -22,6 +22,23 @@ interface ProductShowcaseProps {
   onProductClick?: (product: Product) => void;
   onSectionVisible?: (sectionTitle: string) => void;
   onFarmerClick?: (farmerId: string) => void;
+}
+
+function displayNameForSubcategory(subcategoryId: string): string {
+  for (const cat of categories) {
+    const sub = cat.subcategories.find((item) => item.id === subcategoryId);
+    if (sub) return sub.name;
+  }
+  return subcategoryId
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function getCategoryExamplesForSubcategory(subcategoryId: string): string[] {
+  const examples = getCategoryExamples(subcategoryId);
+  if (examples.length > 0) return examples.slice(0, 8);
+  return [displayNameForSubcategory(subcategoryId)];
 }
 
 export function ProductShowcase({
@@ -51,7 +68,12 @@ export function ProductShowcase({
   // Get content based on subcategoryId or fall back to category-based sections
   const content = useMemo(() => {
     if (subcategoryId) {
-      return getSubSubcategories(subcategoryId);
+      const deepContent = getSubSubcategories(subcategoryId);
+      if (deepContent.length > 0) return deepContent;
+      return [{
+        title: displayNameForSubcategory(subcategoryId),
+        items: products.length > 0 ? products.map((p) => p.name) : [displayNameForSubcategory(subcategoryId)]
+      }];
     }
     // If only categoryId, create sections from subcategories
     if (categoryId) {
@@ -63,7 +85,8 @@ export function ProductShowcase({
             .filter(p => p.subcategoryId === sub.id)
             .slice(0, 6)
             .map(p => p.name)
-        })).filter(s => s.items.length > 0);
+            .concat(products.some(p => p.subcategoryId === sub.id) ? [] : getCategoryExamplesForSubcategory(sub.id))
+        }));
       }
     }
     return [];

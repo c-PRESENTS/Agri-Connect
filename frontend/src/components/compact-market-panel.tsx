@@ -10,6 +10,7 @@ import { getProductImage } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
 
 const QUICK_CATS = [
+  { catKey: "categoryId",    id: "fresh-produce", label: "Fresh",   emoji: "Fresh" },
   { catKey: "subcategoryId", id: "vegetables",    label: "Veg",      emoji: "🥦" },
   { catKey: "subcategoryId", id: "fruits",        label: "Fruits",   emoji: "🍎" },
   { catKey: "subcategoryId", id: "dairy",         label: "Dairy",    emoji: "🥛" },
@@ -42,6 +43,11 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
     },
     enabled: open,
   });
+
+  const browseHref =
+    activeCat.catKey === "subcategoryId"
+      ? `/?category=daily-needs&subcategory=${activeCat.id}`
+      : `/?category=${activeCat.id}`;
 
   const panelW = open ? "w-[180px]" : "w-8";
 
@@ -137,7 +143,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                 size="sm"
                 variant="outline"
                 className="w-full h-7 text-[10px]"
-                onClick={() => navigate(`/?${activeCat.catKey}=${activeCat.id}`)}
+                onClick={() => navigate(browseHref)}
               >
                 <ShoppingCart className="h-3 w-3 mr-1" />
                 {t("market.browse_all")}

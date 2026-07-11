@@ -29,6 +29,7 @@ declare module "express-session" {
   interface SessionData {
     userId?: string;
     guest?: boolean;
+    guestCartKey?: string;
   }
 }
 
@@ -98,10 +99,12 @@ function getSessionUserId(req: Request): string | undefined {
   return req.session.userId;
 }
 
-function regenerateSession(req: Request): Promise<void> {
-  return new Promise((resolve, reject) => {
+export async function regenerateSessionPreservingGuestCart(req: Request): Promise<void> {
+  const guestCartKey = req.session.guest ? `session_${req.sessionID}` : undefined;
+  await new Promise<void>((resolve, reject) => {
     req.session.regenerate((err) => (err ? reject(err) : resolve()));
   });
+  if (guestCartKey) req.session.guestCartKey = guestCartKey;
 }
 
 function handleAuthError(error: unknown, res: Response): boolean {
@@ -129,7 +132,7 @@ export function registerAuthRoutes(app: Express): void {
         firstName: credentials.name?.split(" ")[0],
         lastName: credentials.name?.split(" ").slice(1).join(" ") || null,
       });
-      await regenerateSession(req);
+      await regenerateSessionPreservingGuestCart(req);
       req.session.userId = user.id;
       res.status(201).json(serializeUser(user));
     } catch (error) {
@@ -152,7 +155,7 @@ export function registerAuthRoutes(app: Express): void {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      await regenerateSession(req);
+      await regenerateSessionPreservingGuestCart(req);
       req.session.userId = user.id;
       res.json(serializeUser(user));
     } catch (error) {
@@ -198,7 +201,7 @@ export function registerAuthRoutes(app: Express): void {
       }
 
       // Regenerate session to prevent session fixation.
-      await regenerateSession(req);
+      await regenerateSessionPreservingGuestCart(req);
       req.session.userId = user.id;
       res.json({ user: serializeUser(user), isNewUser: !user.profileComplete });
     } catch (error) {
@@ -280,4 +283,3 @@ export function registerAuthRoutes(app: Express): void {
     res.redirect("/login");
   });
 }
-

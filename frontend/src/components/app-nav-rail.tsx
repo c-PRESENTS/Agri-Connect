@@ -46,6 +46,7 @@ const ALL_SERVICES = [
   { id: "home",         path: "/",                     icon: Home,            label: "Home",         public: true  },
   // Shopping categories (merged from the old front sidebar) — link to home with ?category=
   { id: "cat-daily",    path: "/?category=daily-needs",     icon: ShoppingBasket, label: "Daily",      public: true, category: "daily-needs"     },
+  { id: "cat-fresh",    path: "/?category=fresh-produce",    icon: Salad,          label: "Fresh",      public: true, category: "fresh-produce"    },
   { id: "cat-inputs",   path: "/?category=inputs-tools",    icon: Wrench,         label: "Inputs",     public: true, category: "inputs-tools"    },
   { id: "cat-processed",path: "/?category=processed",       icon: Package,        label: "Processed",  public: true, category: "processed"       },
   { id: "cat-specialty",path: "/?category=specialty",       icon: Award,          label: "Specialty",  public: true, category: "specialty"       },

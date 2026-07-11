@@ -181,7 +181,7 @@ export function TrustIndicators() {
                 links: [
                   { label: "Fresh Vegetables", href: "/?category=daily-needs&subcategory=vegetables" },
                   { label: "Fruits", href: "/?category=daily-needs&subcategory=fruits" },
-                  { label: "Dairy & Eggs", href: "/?category=daily-needs&subcategory=dairy-eggs" },
+                  { label: "Dairy & Eggs", href: "/?category=daily-needs&subcategory=dairy" },
                   { label: "Organic Range", href: "/?category=daily-needs&section=Organic" },
                 ],
               },

@@ -1,0 +1,3 @@
+[0711/164121.610:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0711/173101.030:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[0711/173609.776:INFO:content\child\child_thread_impl.cc:908] Terminating current process after 15 seconds with no connection.

@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback, useRef, type RefObject } from "react";
 import type { TFunction } from "i18next";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
+import { getSafeReturnPath } from "@/lib/auth-utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ let activeGoogleCredentialHandler: (response: { credential?: string }) => void =
 export default function LoginPage() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
+  const search = useSearch();
   const {
     isAuthenticated, isLoading, sendOtp, verifyOtp, googleLogin, updateProfile, completeProfile,
   } = useAuth();
@@ -61,12 +63,13 @@ export default function LoginPage() {
   const googleButtonRenderedRef = useRef(false);
   const [googleClientId, setGoogleClientId] = useState("");
   const [googleStatusMessage, setGoogleStatusMessage] = useState("");
+  const returnPath = getSafeReturnPath(new URLSearchParams(search).get("returnTo"));
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      setLocation("/dashboard");
+    if (!isLoading && isAuthenticated && step !== "profile") {
+      setLocation(returnPath);
     }
-  }, [isAuthenticated, isLoading, setLocation]);
+  }, [isAuthenticated, isLoading, returnPath, setLocation, step]);
 
   useEffect(() => {
     fetch("/api/config")
@@ -196,7 +199,7 @@ export default function LoginPage() {
     try {
       await updateProfile.mutateAsync({ name: name.trim(), role });
       await completeProfile.mutateAsync();
-      setLocation("/dashboard");
+      setLocation(returnPath);
     } catch {
       // error handled by react query
     }

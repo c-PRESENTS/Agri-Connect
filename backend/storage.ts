@@ -48,8 +48,8 @@ const categoriesData: Category[] = [
       { id: "grains", name: "Food Grains & Cereals", parentId: "daily-needs", buyerVisible: true },
       { id: "pulses", name: "Pulses & Lentils", parentId: "daily-needs", buyerVisible: true },
       { id: "oils", name: "Cooking Oils", parentId: "daily-needs", buyerVisible: true },
-      { id: "vegetables", name: "Vegetables", parentId: "daily-needs", buyerVisible: true },
-      { id: "fruits", name: "Fruits", parentId: "daily-needs", buyerVisible: true },
+      { id: "vegetables", name: "Vegetables (47+ Varieties)", parentId: "daily-needs", buyerVisible: true },
+      { id: "fruits", name: "Fruits (50+ Varieties)", parentId: "daily-needs", buyerVisible: true },
       { id: "dairy", name: "Dairy & Eggs", parentId: "daily-needs", buyerVisible: true },
       { id: "meat", name: "Meat & Poultry", parentId: "daily-needs", buyerVisible: true },
       { id: "fish", name: "Fish & Seafood", parentId: "daily-needs", buyerVisible: true },
@@ -347,6 +347,15 @@ const productSeedData = [
   { name: "Asparagus", category: "daily-needs", subcategory: "vegetables", unit: "bunch", basePrice: 180, isOrganic: true, images: ["https://images.unsplash.com/photo-1515471209610-dae1c92d8777?w=400&h=300&fit=crop"] },
   { name: "Celery", category: "daily-needs", subcategory: "vegetables", unit: "bunch", basePrice: 60, isOrganic: false, images: ["https://images.unsplash.com/photo-1597814072367-b585863d93ee?w=400&h=300&fit=crop"] },
   { name: "Leek", category: "daily-needs", subcategory: "vegetables", unit: "kg", basePrice: 120, isOrganic: false, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
+  { name: "Turnip", category: "daily-needs", subcategory: "vegetables", unit: "kg", basePrice: 35, isOrganic: false, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
+  { name: "Spring Onion", category: "daily-needs", subcategory: "vegetables", unit: "bunch", basePrice: 40, isOrganic: false, images: ["https://images.unsplash.com/photo-1508747703725-719777637510?w=400&h=300&fit=crop"] },
+  { name: "Shallots", category: "daily-needs", subcategory: "vegetables", unit: "kg", basePrice: 80, isOrganic: false, images: ["https://images.unsplash.com/photo-1508747703725-719777637510?w=400&h=300&fit=crop"] },
+  { name: "Ash Gourd", category: "daily-needs", subcategory: "vegetables", unit: "kg", basePrice: 35, isOrganic: false, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
+  { name: "Pointed Gourd", category: "daily-needs", subcategory: "vegetables", unit: "kg", basePrice: 60, isOrganic: false, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
+  { name: "Ivy Gourd", category: "daily-needs", subcategory: "vegetables", unit: "kg", basePrice: 55, isOrganic: false, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
+  { name: "Moringa Leaves", category: "daily-needs", subcategory: "vegetables", unit: "bunch", basePrice: 35, isOrganic: true, images: ["https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop"] },
+  { name: "Artichoke", category: "daily-needs", subcategory: "vegetables", unit: "kg", basePrice: 220, isOrganic: true, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
+  { name: "Kohlrabi", category: "daily-needs", subcategory: "vegetables", unit: "kg", basePrice: 50, isOrganic: false, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
   
   // Fruits
   { name: "Alphonso Mangoes", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 350, isOrganic: true, images: ["https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&h=300&fit=crop"] },
@@ -382,6 +391,24 @@ const productSeedData = [
   { name: "Passion Fruit", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 220, isOrganic: true, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
   { name: "Litchi", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 100, isOrganic: false, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
   { name: "Tender Coconut", category: "daily-needs", subcategory: "fruits", unit: "piece", basePrice: 35, isOrganic: false, images: ["https://images.unsplash.com/photo-1523672556977-3a0e3fad3044?w=400&h=300&fit=crop"] },
+  { name: "Blackberries", category: "daily-needs", subcategory: "fruits", unit: "pack", basePrice: 280, isOrganic: true, images: ["https://images.unsplash.com/photo-1497534446932-c946e7316ba1?w=400&h=300&fit=crop"] },
+  { name: "Cranberries", category: "daily-needs", subcategory: "fruits", unit: "pack", basePrice: 260, isOrganic: true, images: ["https://images.unsplash.com/photo-1497534446932-c946e7316ba1?w=400&h=300&fit=crop"] },
+  { name: "Plums", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 120, isOrganic: false, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
+  { name: "Peaches", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 160, isOrganic: false, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
+  { name: "Cherries", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 400, isOrganic: false, images: ["https://images.unsplash.com/photo-1544070078-a212eda27b49?w=400&h=300&fit=crop"] },
+  { name: "Apricots", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 220, isOrganic: false, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
+  { name: "Nectarines", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 190, isOrganic: false, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
+  { name: "Pomelo", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 90, isOrganic: false, images: ["https://images.unsplash.com/photo-1520013817300-1f4c1ad245fe?w=400&h=300&fit=crop"] },
+  { name: "Kinnow", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 75, isOrganic: false, images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=300&fit=crop"] },
+  { name: "Mandarin", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 85, isOrganic: false, images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=300&fit=crop"] },
+  { name: "Jamun", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 180, isOrganic: false, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
+  { name: "Rambutan", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 300, isOrganic: true, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
+  { name: "Longan", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 280, isOrganic: true, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
+  { name: "Persimmon", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 240, isOrganic: true, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
+  { name: "Star Fruit", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 160, isOrganic: false, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
+  { name: "Mulberries", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 220, isOrganic: true, images: ["https://images.unsplash.com/photo-1497534446932-c946e7316ba1?w=400&h=300&fit=crop"] },
+  { name: "Amla", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 70, isOrganic: true, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
+  { name: "Dates", category: "daily-needs", subcategory: "fruits", unit: "kg", basePrice: 260, isOrganic: false, images: ["https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd0?w=400&h=300&fit=crop"] },
   
   // Dairy & Eggs
   { name: "Farm Fresh Eggs", category: "daily-needs", subcategory: "dairy", unit: "dozen", basePrice: 80, isOrganic: true, images: ["https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=400&h=300&fit=crop"] },
@@ -509,6 +536,20 @@ const productSeedData = [
   { name: "Brahmi Leaves", category: "specialty", subcategory: "medicinal", unit: "kg", basePrice: 300, isOrganic: true },
   { name: "Moringa Leaves", category: "specialty", subcategory: "medicinal", unit: "kg", basePrice: 250, isOrganic: true },
   { name: "Neem Leaves", category: "specialty", subcategory: "medicinal", unit: "kg", basePrice: 100, isOrganic: true },
+  
+  // Fresh Farm Produce - Wholesale Vegetables & Fruits
+  { name: "Bulk Mixed Vegetables Crate", category: "fresh-produce", subcategory: "wholesale-veg", unit: "crate", basePrice: 1200, isOrganic: false, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
+  { name: "Bulk Leafy Greens Box", category: "fresh-produce", subcategory: "wholesale-veg", unit: "box", basePrice: 650, isOrganic: true, images: ["https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop"] },
+  { name: "Wholesale Root Vegetables Sack", category: "fresh-produce", subcategory: "wholesale-veg", unit: "sack", basePrice: 900, isOrganic: false, images: ["https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop"] },
+  { name: "Wholesale Gourd Selection", category: "fresh-produce", subcategory: "wholesale-veg", unit: "crate", basePrice: 850, isOrganic: false, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
+  { name: "Bulk Tomato Capsicum Crate", category: "fresh-produce", subcategory: "wholesale-veg", unit: "crate", basePrice: 1100, isOrganic: false, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
+  { name: "Organic Seasonal Vegetable Box", category: "fresh-produce", subcategory: "wholesale-veg", unit: "box", basePrice: 1500, isOrganic: true, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
+  { name: "Bulk Tropical Fruits Crate", category: "fresh-produce", subcategory: "wholesale-fruits", unit: "crate", basePrice: 1800, isOrganic: false, images: ["https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&h=300&fit=crop"] },
+  { name: "Wholesale Citrus Fruit Box", category: "fresh-produce", subcategory: "wholesale-fruits", unit: "box", basePrice: 1400, isOrganic: false, images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=300&fit=crop"] },
+  { name: "Bulk Berry Pack", category: "fresh-produce", subcategory: "wholesale-fruits", unit: "pack", basePrice: 2400, isOrganic: true, images: ["https://images.unsplash.com/photo-1497534446932-c946e7316ba1?w=400&h=300&fit=crop"] },
+  { name: "Wholesale Apple Pear Crate", category: "fresh-produce", subcategory: "wholesale-fruits", unit: "crate", basePrice: 1700, isOrganic: false, images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=300&fit=crop"] },
+  { name: "Bulk Exotic Fruit Box", category: "fresh-produce", subcategory: "wholesale-fruits", unit: "box", basePrice: 2600, isOrganic: true, images: ["https://images.unsplash.com/photo-1527325241048-218156277ca7?w=400&h=300&fit=crop"] },
+  { name: "Seasonal Mixed Fruit Crate", category: "fresh-produce", subcategory: "wholesale-fruits", unit: "crate", basePrice: 2100, isOrganic: false, images: ["https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=300&fit=crop"] },
   
   // Flowers
   { name: "Jasmine Flowers", category: "fresh-produce", subcategory: "flowers", unit: "kg", basePrice: 400, isOrganic: false },
@@ -1258,7 +1299,19 @@ export class MemStorage implements IStorage {
 
   // Cart
   async getCart(userId: string): Promise<CartItem[]> {
-    return this.carts.get(userId) || [];
+    const cart = this.carts.get(userId) || [];
+    const hydrated = cart
+      .map((item) => {
+        const product = item.product ?? this.products.get(item.productId);
+        return product ? { ...item, product } : undefined;
+      })
+      .filter((item): item is CartItem => Boolean(item));
+
+    if (hydrated.length !== cart.length || hydrated.some((item, index) => item !== cart[index])) {
+      this.carts.set(userId, hydrated);
+    }
+
+    return hydrated;
   }
 
   async addToCart(userId: string, productId: string, quantity: number, options?: { unitPrice?: number; purchaseMode?: "one-time" | "subscribe"; subFrequency?: "weekly" | "biweekly" | "monthly" }): Promise<CartItem> {
@@ -1273,6 +1326,7 @@ export class MemStorage implements IStorage {
     
     if (existingItem) {
       existingItem.quantity += quantity;
+      existingItem.product = product;
       // Update pricing context if a new one was supplied (last-add wins).
       if (options?.unitPrice !== undefined) existingItem.unitPrice = options.unitPrice;
       if (options?.purchaseMode) existingItem.purchaseMode = options.purchaseMode;

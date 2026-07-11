@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
@@ -10,9 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TopNavigation } from "@/components/top-navigation";
 import { useCompare } from "@/hooks/use-compare";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useCart } from "@/hooks/use-cart";
 import { getProductImage } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
 
@@ -20,36 +18,12 @@ export default function ComparePage() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { ids, remove, clear } = useCompare();
-  const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { addItem } = useCart();
   const { data: products = [], isLoading } = useQuery<Product[]>({ queryKey: ["/api/products"] });
 
   const items = ids
     .map(id => products.find(p => p.id === id))
     .filter((p): p is Product => !!p);
-
-  const addToCart = useMutation({
-    mutationFn: (productId: string) => {
-      if (!isAuthenticated) {
-        throw new Error("AUTH_REQUIRED");
-      }
-
-      return apiRequest("POST", "/api/cart", { productId, quantity: 1 });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-      toast({ title: t("product.add_to_cart") });
-    },
-    onError: (err: any) => {
-      if (err?.message === "AUTH_REQUIRED") {
-        toast({
-          title: "Sign in required",
-          description: "Please sign in before buying or adding items to your cart.",
-        });
-        setLocation("/login");
-      }
-    },
-  });
 
   if (isLoading) {
     return (
@@ -182,18 +156,8 @@ export default function ComparePage() {
                   <Button
                     size="sm"
                     className="w-full h-8 text-xs gap-1.5"
-                    onClick={() => {
-                      if (!isAuthenticated) {
-                        toast({
-                          title: "Sign in required",
-                          description: "Please sign in before buying or adding items to your cart.",
-                        });
-                        setLocation("/login");
-                        return;
-                      }
-                      addToCart.mutate(p.id);
-                    }}
-                    disabled={p.stock === 0 || addToCart.isPending}
+                    onClick={() => addItem.mutate({ product: p, quantity: 1 })}
+                    disabled={p.stock === 0 || addItem.isPending}
                     data-testid={`button-add-cart-${p.id}`}
                   >
                     <ShoppingCart className="h-3 w-3" />{t("product.add_short")}

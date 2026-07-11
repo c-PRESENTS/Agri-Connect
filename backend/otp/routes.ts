@@ -4,6 +4,7 @@ import { fromZodError } from "zod-validation-error";
 import { checkSendRateLimit, generateOtp, verifyOtp } from "./service";
 import { isSmsConfigured, sendSms } from "./sms";
 import { authStorage } from "../auth/storage";
+import { regenerateSessionPreservingGuestCart } from "../auth";
 
 const sendOtpSchema = z.object({
   phone: z.string().min(8).max(20).regex(/^\+?[\d\s\-()]+$/, "Invalid phone number"),
@@ -52,12 +53,6 @@ async function sendOtpViaSendGrid(toEmail: string, code: string, ttlMs: number):
   } catch {
     return false;
   }
-}
-
-function regenerateSession(req: Request): Promise<void> {
-  return new Promise((resolve, reject) => {
-    req.session.regenerate((err) => (err ? reject(err) : resolve()));
-  });
 }
 
 export function registerOtpRoutes(app: Express): void {
@@ -149,7 +144,7 @@ export function registerOtpRoutes(app: Express): void {
       }
 
       // Regenerate session to prevent session fixation.
-      await regenerateSession(req);
+      await regenerateSessionPreservingGuestCart(req);
       req.session.userId = user.id;
 
       const { passwordHash: _, ...safeUser } = user;

@@ -32,26 +32,41 @@ export const subSubcategoryData: Record<string, SubSubItem[]> = {
 
   // VEGETABLES
   "vegetables": [
-    { title: "Leafy Greens", items: ["Spinach", "Coriander", "Mint", "Lettuce", "Amaranth", "Curry Leaves", "Fenugreek"] },
-    { title: "Root Vegetables", items: ["Potato", "Onion", "Garlic", "Carrot", "Radish", "Beetroot", "Sweet Potato", "Ginger"] },
-    { title: "Fruiting Vegetables", items: ["Tomato", "Brinjal", "Capsicum", "Okra", "Chilli"] },
-    { title: "Gourds", items: ["Bottle Gourd", "Bitter Gourd", "Snake Gourd", "Ridge Gourd", "Pumpkin"] },
-    { title: "Pod Vegetables", items: ["Beans", "Peas", "Broad Beans", "French Beans", "Cluster Beans"] },
-    { title: "Flower Vegetables", items: ["Cauliflower", "Broccoli"] },
-    { title: "Bulb Vegetables", items: ["Onion", "Garlic", "Spring Onion", "Shallots"] },
-    { title: "Other", items: ["Cabbage", "Cucumber", "Turnip", "Yam", "Tapioca", "Zucchini"] }
+    { title: "Leafy Greens", items: ["Spinach", "Coriander", "Mint", "Lettuce", "Amaranth", "Curry Leaves", "Fenugreek", "Moringa Leaves"] },
+    { title: "Root Vegetables", items: ["Potato", "Carrot", "Radish", "Beetroot", "Sweet Potato", "Turnip", "Yam", "Tapioca"] },
+    { title: "Fruiting Vegetables", items: ["Tomato", "Brinjal", "Capsicum", "Okra", "Green Chilli", "Raw Banana", "Zucchini", "Cucumber"] },
+    { title: "Gourds", items: ["Bottle Gourd", "Bitter Gourd", "Snake Gourd", "Ridge Gourd", "Pumpkin", "Ash Gourd", "Pointed Gourd", "Ivy Gourd"] },
+    { title: "Pod Vegetables", items: ["Green Beans", "Green Peas", "Broad Beans", "French Beans", "Cluster Beans", "Drumstick"] },
+    { title: "Flower Vegetables", items: ["Cauliflower", "Broccoli", "Artichoke"] },
+    { title: "Bulb Vegetables", items: ["Onion", "Garlic", "Ginger", "Spring Onion", "Shallots", "Leek"] },
+    { title: "Premium & Seasonal", items: ["Cabbage", "Asparagus", "Celery", "Kohlrabi"] }
   ],
 
   // FRUITS
   "fruits": [
-    { title: "Tropical Fruits", items: ["Banana", "Mango", "Papaya", "Pineapple", "Guava", "Jackfruit", "Chikoo"] },
-    { title: "Citrus Fruits", items: ["Orange", "Lemon", "Sweet Lime", "Grapefruit", "Pomelo", "Kinnow"] },
-    { title: "Berries", items: ["Strawberry", "Blueberry", "Raspberry", "Blackberry", "Cranberry"] },
+    { title: "Tropical Fruits", items: ["Alphonso Mango", "Kesar Mango", "Banana", "Red Banana", "Papaya", "Pineapple", "Guava", "Jackfruit", "Sapota", "Tender Coconut"] },
+    { title: "Citrus Fruits", items: ["Orange", "Lemon", "Sweet Lime", "Grapefruit", "Pomelo", "Kinnow", "Mandarin"] },
+    { title: "Berries", items: ["Strawberry", "Blueberry", "Raspberry", "Blackberry", "Cranberry", "Mulberry"] },
     { title: "Melons", items: ["Watermelon", "Muskmelon", "Honeydew Melon"] },
     { title: "Stone Fruits", items: ["Plum", "Peach", "Cherry", "Apricot", "Nectarine"] },
-    { title: "Apples & Pears", items: ["Shimla Apple", "Kashmiri Apple", "Green Apple", "Pear"] },
+    { title: "Apples & Pears", items: ["Shimla Apple", "Kashmiri Apple", "Green Apple", "Pear", "Persimmon"] },
     { title: "Grapes", items: ["Green Grapes", "Black Grapes", "Red Grapes", "Seedless Grapes"] },
-    { title: "Exotic Fruits", items: ["Kiwi", "Dragon Fruit", "Avocado", "Passion Fruit", "Rambutan", "Lychee"] }
+    { title: "Indian Seasonal Fruits", items: ["Pomegranate", "Custard Apple", "Jamun", "Amla", "Dates", "Litchi"] },
+    { title: "Exotic Fruits", items: ["Kiwi", "Dragon Fruit", "Avocado", "Passion Fruit", "Rambutan", "Longan", "Star Fruit", "Fig"] }
+  ],
+
+  // WHOLESALE VEGETABLES
+  "wholesale-veg": [
+    { title: "Bulk Vegetable Crates", items: ["Bulk Mixed Vegetables Crate", "Bulk Tomato Capsicum Crate", "Organic Seasonal Vegetable Box"] },
+    { title: "Wholesale Vegetable Groups", items: ["Bulk Leafy Greens Box", "Wholesale Root Vegetables Sack", "Wholesale Gourd Selection", "Organic Vegetables"] },
+    { title: "47+ Variety Coverage", items: ["Leafy Greens", "Root Vegetables", "Fruiting Vegetables", "Gourds", "Pod Vegetables", "Premium Seasonal Vegetables"] }
+  ],
+
+  // WHOLESALE FRUITS
+  "wholesale-fruits": [
+    { title: "Bulk Fruit Crates", items: ["Bulk Tropical Fruits Crate", "Seasonal Mixed Fruit Crate", "Bulk Exotic Fruit Box"] },
+    { title: "Wholesale Fruit Groups", items: ["Wholesale Citrus Fruit Box", "Bulk Berry Pack", "Wholesale Apple Pear Crate", "Organic Fruits"] },
+    { title: "50+ Variety Coverage", items: ["Tropical Fruits", "Citrus Fruits", "Berries", "Stone Fruits", "Indian Seasonal Fruits", "Exotic Fruits"] }
   ],
 
   // DAIRY & EGGS

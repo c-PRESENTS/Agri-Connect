@@ -25,6 +25,7 @@ type RailItem = {
 const ITEMS: RailItem[] = [
   { id: "home",          path: "/",                          icon: Home,            label: "Home",       public: true },
   { id: "cat-daily",     path: "/?category=daily-needs",     icon: ShoppingBasket,  label: "Daily",      public: true, category: "daily-needs"      },
+  { id: "cat-fresh",     path: "/?category=fresh-produce",   icon: Salad,           label: "Fresh",      public: true, category: "fresh-produce"    },
   { id: "cat-inputs",    path: "/?category=inputs-tools",    icon: Wrench,          label: "Inputs",     public: true, category: "inputs-tools"     },
   { id: "cat-processed", path: "/?category=processed",       icon: Package,         label: "Process",    public: true, category: "processed"        },
   { id: "cat-specialty", path: "/?category=specialty",       icon: Award,           label: "Special",    public: true, category: "specialty"        },

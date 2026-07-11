@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
+import { getLoginPath } from "@/lib/auth-utils";
 import { getProductImage } from "@/lib/product-images";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,7 +26,7 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      window.location.href = "/login";
+      setLocation(getLoginPath("/checkout"));
       return;
     }
     setLocation("/checkout");

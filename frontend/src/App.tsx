@@ -10,6 +10,8 @@ import { usePageTranslation } from "@/hooks/use-page-translation";
 import { ProtectedRoute } from "@/components/protected-route";
 import { useAuth } from "@/hooks/use-auth";
 import { SeoManager } from "@/components/seo-manager";
+import AboutPage from "@/pages/about";
+import LogisticsPage from "@/pages/logistics";
 import "@/i18n/index";
 
 const AIChatAssistant = lazy(() => import("@/components/ai-chat-assistant").then((module) => ({ default: module.AIChatAssistant })));
@@ -32,7 +34,6 @@ const CartPage = lazy(() => import("@/pages/cart"));
 const GovernmentSchemes = lazy(() => import("@/pages/government-schemes"));
 const FarmersHelp = lazy(() => import("@/pages/farmers-help"));
 const LandLeasingPage = lazy(() => import("@/pages/land-leasing"));
-const LogisticsPage = lazy(() => import("@/pages/logistics"));
 const ShipPage = lazy(() => import("@/pages/ship"));
 const ShipTrackPage = lazy(() => import("@/pages/ship-track"));
 const ShareCarePage = lazy(() => import("@/pages/share-care"));
@@ -51,14 +52,13 @@ const OrderDetailPage = lazy(() => import("@/pages/order-detail"));
 const PaymentSuccessPage = lazy(() => import("@/pages/payment-success"));
 const PaymentCancelledPage = lazy(() => import("@/pages/payment-cancelled"));
 const SupportPage = lazy(() => import("@/pages/support"));
-const AboutPage = lazy(() => import("@/pages/about"));
 const PrivacyPolicyPage = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfServicePage = lazy(() => import("@/pages/terms-of-service"));
 const RefundPolicyPage = lazy(() => import("@/pages/refund-policy"));
 
 const FULLSCREEN_ROUTES = ["/", "/map"];
 const NO_RAIL_ROUTES = ["/login"];
-const NO_MARKET_PANEL_ROUTES = ["/", "/map", "/login"];
+const NO_MARKET_PANEL_ROUTES = ["/", "/map", "/login", "/about", "/logistics"];
 const NO_MOBILE_NAV_ROUTES = ["/login"];
 const RTL_LANGS = new Set(["ar", "ur", "fa", "he"]);
 

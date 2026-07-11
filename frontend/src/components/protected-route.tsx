@@ -1,6 +1,8 @@
 import { useEffect } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import { getLoginPath } from "@/lib/auth-utils";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -8,12 +10,13 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      window.location.href = "/login";
+      setLocation(getLoginPath(`${window.location.pathname}${window.location.search}`));
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, setLocation]);
 
   if (isLoading || !isAuthenticated) {
     return (

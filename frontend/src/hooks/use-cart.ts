@@ -1,7 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import type { Cart, CartItem, Product } from "@shared/schema";
 
@@ -9,8 +7,6 @@ const CART_KEY = ["/api/cart"];
 
 export function useCart() {
   const queryClient = useQueryClient();
-  const [, setLocation] = useLocation();
-  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   const cartQuery = useQuery<Cart>({
@@ -26,10 +22,6 @@ export function useCart() {
 
   const addItem = useMutation({
     mutationFn: async (input: { product: Product; quantity?: number }) => {
-      if (!isAuthenticated) {
-        throw new Error("AUTH_REQUIRED");
-      }
-
       const res = await apiRequest("POST", "/api/cart", {
         productId: input.product.id,
         quantity: input.quantity ?? 1,
@@ -44,15 +36,6 @@ export function useCart() {
       });
     },
     onError: (err: any) => {
-      if (err?.message === "AUTH_REQUIRED") {
-        toast({
-          title: "Sign in required",
-          description: "Please sign in before buying or adding items to your cart.",
-        });
-        setLocation("/login");
-        return;
-      }
-
       toast({
         title: "Couldn't add to cart",
         description: err?.message || "Please try again",
@@ -63,10 +46,6 @@ export function useCart() {
 
   const updateItem = useMutation({
     mutationFn: async (input: { itemId: string; quantity: number }) => {
-      if (!isAuthenticated) {
-        throw new Error("AUTH_REQUIRED");
-      }
-
       if (input.quantity <= 0) {
         await apiRequest("DELETE", `/api/cart/${input.itemId}`);
         return { deleted: true };
@@ -78,49 +57,26 @@ export function useCart() {
     },
     onSuccess: invalidate,
     onError: (err: any) => {
-      if (err?.message === "AUTH_REQUIRED") {
-        toast({ title: "Sign in required", description: "Please sign in to manage your cart." });
-        setLocation("/login");
-        return;
-      }
       toast({ title: "Couldn't update cart", variant: "destructive" });
     },
   });
 
   const removeItem = useMutation({
     mutationFn: async (itemId: string) => {
-      if (!isAuthenticated) {
-        throw new Error("AUTH_REQUIRED");
-      }
-
       await apiRequest("DELETE", `/api/cart/${itemId}`);
     },
     onSuccess: invalidate,
     onError: (err: any) => {
-      if (err?.message === "AUTH_REQUIRED") {
-        toast({ title: "Sign in required", description: "Please sign in to manage your cart." });
-        setLocation("/login");
-        return;
-      }
       toast({ title: "Couldn't remove item", variant: "destructive" });
     },
   });
 
   const clearCart = useMutation({
     mutationFn: async () => {
-      if (!isAuthenticated) {
-        throw new Error("AUTH_REQUIRED");
-      }
-
       await apiRequest("DELETE", "/api/cart");
     },
     onSuccess: invalidate,
-    onError: (err: any) => {
-      if (err?.message === "AUTH_REQUIRED") {
-        toast({ title: "Sign in required", description: "Please sign in to manage your cart." });
-        setLocation("/login");
-      }
-    },
+    onError: () => toast({ title: "Couldn't clear cart", variant: "destructive" }),
   });
 
   return {

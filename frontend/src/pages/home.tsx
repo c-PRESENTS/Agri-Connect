@@ -13,12 +13,10 @@ import { TrustIndicators } from "@/components/trust-indicators";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/use-cart";
-import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import type { Product, ProductFilters as Filters, Region } from "@shared/schema";
-import { regions } from "@/lib/categories";
+import { categories, regions } from "@/lib/categories";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home as HomeIcon, LayoutGrid, Map, ShoppingCart as CartIcon, User } from "lucide-react";
 
@@ -68,11 +66,16 @@ function MobileBottomNav({
   );
 }
 
+function findCategoryForSubcategory(subcategoryId: string | null) {
+  if (!subcategoryId) return null;
+  return categories.find((category) =>
+    category.subcategories.some((subcategory) => subcategory.id === subcategoryId)
+  )?.id ?? null;
+}
+
 export default function Home() {
-  const [location, setLocation] = useLocation();
-  const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const { t } = useTranslation();
-  const { isAuthenticated } = useAuth();
   const [filters, setFilters] = useState<Filters>({});
   const { items: cartItems, itemCount: cartCount, addItem, updateItem, removeItem } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -83,9 +86,13 @@ export default function Home() {
   const [activeDietaryFilter, setActiveDietaryFilter] = useState<string | null>(null);
 
   const search = useSearch();
-  const urlParams = useMemo(() => new URLSearchParams(search || ""), [search]);
-  const urlCategory = urlParams.get("category");
-  const urlSubcategory = urlParams.get("subcategory");
+  const rawSearch = search || (typeof window !== "undefined" ? window.location.search : "");
+  const urlParams = useMemo(() => new URLSearchParams(rawSearch), [rawSearch]);
+  const urlSubcategory = urlParams.get("subcategory") || urlParams.get("subcategoryId");
+  const urlCategory =
+    urlParams.get("category") ||
+    urlParams.get("categoryId") ||
+    findCategoryForSubcategory(urlSubcategory);
   const urlSection = urlParams.get("section");
 
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(urlCategory || undefined);
@@ -97,8 +104,11 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
   useEffect(() => {
-    const cat = urlParams.get("category");
-    const subcat = urlParams.get("subcategory");
+    const subcat = urlParams.get("subcategory") || urlParams.get("subcategoryId");
+    const cat =
+      urlParams.get("category") ||
+      urlParams.get("categoryId") ||
+      findCategoryForSubcategory(subcat);
     const section = urlParams.get("section");
     if (cat) {
       setSelectedCategory(cat);
@@ -169,7 +179,12 @@ export default function Home() {
   const handleCategorySelect = useCallback((categoryId: string, subcategoryId?: string) => {
     setSelectedCategory(categoryId);
     setSelectedSubcategory(subcategoryId);
-  }, []);
+    const qs = new URLSearchParams();
+    qs.set("category", categoryId);
+    if (subcategoryId) qs.set("subcategory", subcategoryId);
+    setLocation(`/?${qs.toString()}`);
+    window.dispatchEvent(new CustomEvent("agri-subcategory-open", { detail: categoryId }));
+  }, [setLocation]);
 
   // Subcategory click - opens 3rd nav panel AND shows products on page
   const handleSubcategoryClick = useCallback((subId: string | null) => {
@@ -214,15 +229,6 @@ export default function Home() {
   };
 
   const handleAddToCart = (product: Product) => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in before buying or adding items to your cart.",
-      });
-      setLocation("/login");
-      return;
-    }
-
     if (product.id.startsWith("agri-")) {
       // Placeholder — can't add to backend cart. Substitute the first real
       // loaded product as a friendly fallback.
@@ -277,6 +283,8 @@ export default function Home() {
 
   const handleBrowseAll = () => {
     setSelectedCategory("daily-needs");
+    setLocation("/?category=daily-needs");
+    window.dispatchEvent(new CustomEvent("agri-subcategory-open", { detail: "daily-needs" }));
   };
 
   // Check if any panel is open to control auto-hide

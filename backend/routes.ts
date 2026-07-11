@@ -50,10 +50,11 @@ function touchGuestSession(req: Request): void {
 async function mergeGuestCartIfNeeded(req: Request): Promise<void> {
   const userId = getUserId(req);
   if (!userId) return;
-  const guestKey = `session_${req.sessionID}`;
+  const guestKey = req.session.guestCartKey ?? `session_${req.sessionID}`;
   if (guestKey === userId) return;
   try {
     await storage.mergeGuestCart(guestKey, userId);
+    delete req.session.guestCartKey;
   } catch {
     // non-fatal
   }
@@ -442,14 +443,14 @@ export async function registerRoutes(
       await mergeGuestCartIfNeeded(req);
       const userId = getUserIdOrSession(req);
       const cart = await storage.getCart(userId);
-      const total = cart.reduce((acc, item) => acc + (item.unitPrice ?? item.product.price) * item.quantity, 0);
+      const total = cart.reduce((acc, item) => acc + (item.unitPrice ?? item.product?.price ?? 0) * item.quantity, 0);
       res.json({ items: cart, total });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch cart" });
     }
   });
 
-  app.post("/api/cart", isAuthenticated, async (req, res) => {
+  app.post("/api/cart", async (req, res) => {
     try {
       touchGuestSession(req);
       await mergeGuestCartIfNeeded(req);
@@ -463,7 +464,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/cart/:itemId", isAuthenticated, async (req, res) => {
+  app.patch("/api/cart/:itemId", async (req, res) => {
     try {
       touchGuestSession(req);
       const userId = getUserIdOrSession(req);
@@ -479,7 +480,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/cart/:itemId", isAuthenticated, async (req, res) => {
+  app.delete("/api/cart/:itemId", async (req, res) => {
     try {
       touchGuestSession(req);
       const userId = getUserIdOrSession(req);
@@ -493,7 +494,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/cart", isAuthenticated, async (req, res) => {
+  app.delete("/api/cart", async (req, res) => {
     try {
       touchGuestSession(req);
       const userId = getUserIdOrSession(req);

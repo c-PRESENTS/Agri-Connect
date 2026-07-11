@@ -164,22 +164,8 @@ export default function ProductDetailPage() {
   });
   const recommended = categoryRecs.filter(p => p.id !== product?.id).slice(0, 8);
 
-  const requireAuthForTransaction = () => {
-    if (isAuthenticated) return true;
-    toast({
-      title: "Sign in required",
-      description: "Please sign in before buying or adding items to your cart.",
-    });
-    setLocation("/login");
-    return false;
-  };
-
   const addToCartMutation = useMutation({
     mutationFn: (qty: number) => {
-      if (!isAuthenticated) {
-        throw new Error("AUTH_REQUIRED");
-      }
-
       return apiRequest("POST", "/api/cart", {
         productId: id,
         quantity: qty,
@@ -195,11 +181,6 @@ export default function ProductDetailPage() {
       setTimeout(() => setAddedToCart(false), 2000);
     },
     onError: (err: any) => {
-      if (err?.message === "AUTH_REQUIRED") {
-        requireAuthForTransaction();
-        return;
-      }
-
       toast({
         title: t("product_detail.out_of_stock"),
         description: err?.message || t("product_detail.loading"),
@@ -809,7 +790,6 @@ export default function ProductDetailPage() {
                     <Button
                       className="w-full h-10 rounded-full font-semibold bg-amber-300 hover:bg-amber-400 text-black border border-amber-400 shadow-sm"
                       onClick={() => {
-                        if (!requireAuthForTransaction()) return;
                         addToCartMutation.mutate(quantity);
                         if (purchaseMode === "subscribe") {
                           toast({ title: "Subscription scheduled", description: `${product.name} • ${FREQUENCY_LABELS[subFrequency]}` });
@@ -831,7 +811,6 @@ export default function ProductDetailPage() {
                     <Button
                       className="w-full h-10 rounded-full font-semibold bg-orange-500 hover:bg-orange-600 text-white border border-orange-600 shadow-sm"
                       onClick={() => {
-                        if (!requireAuthForTransaction()) return;
                         addToCartMutation.mutate(quantity, {
                           onSuccess: () => setLocation("/cart"),
                         });
@@ -1412,7 +1391,6 @@ export default function ProductDetailPage() {
           size="sm"
           className="gap-1.5 shrink-0 h-9 px-4 font-bold shadow-md shadow-primary/20"
           onClick={() => {
-            if (!requireAuthForTransaction()) return;
             addToCartMutation.mutate(quantity);
           }}
           disabled={product.stock === 0 || addedToCart || addToCartMutation.isPending}
