@@ -107,7 +107,6 @@ export default function SellerProfilePage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold" data-testid="text-seller-name">{seller.farmerName}</h1>
-                <Badge variant="outline">Seller</Badge>
                 <PublicSellerBadges rating={seller.farmerRating} reviewCount={seller.reviewCount} />
               </div>
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1" data-testid="text-seller-location">

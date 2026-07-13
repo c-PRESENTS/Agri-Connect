@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { Edit3, MapPin, Package, Plus, ShieldCheck, Store } from "lucide-react";
+import { Edit3, GraduationCap, MapPin, Package, Plus, ShieldCheck, Store } from "lucide-react";
 import { TopNavigation } from "@/components/top-navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { VerificationTiers } from "@/components/verification-badges";
 import { ProfileCompletionChecklist } from "@/components/profile-completion";
 import { useAuth } from "@/hooks/use-auth";
 import { getProductImage } from "@/lib/product-images";
+import { LISTING_POLICY } from "@/lib/listing-policy";
 import type { Product } from "@shared/schema";
 
 function safePrice(product: Product) {
@@ -51,6 +52,10 @@ export default function MyProfilePage() {
           <Button onClick={() => setLocation("/dashboard/list-product")} data-testid="button-add-profile-listing">
             <Plus className="mr-2 h-4 w-4" /> Add product
           </Button>
+        </div>
+
+        <div className="mb-6 rounded-lg border bg-muted/30 p-4" data-testid="my-profile-listing-policy">
+          <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">{LISTING_POLICY.title}</h2><p className="mt-1 text-sm text-muted-foreground">{LISTING_POLICY.zeroEntryMessage}</p><p className="mt-1 text-xs text-muted-foreground">{LISTING_POLICY.enforcementMessage}</p></div><Button variant="outline" size="sm" onClick={() => setLocation("/student-help-point")} data-testid="button-profile-student-help"><GraduationCap className="mr-2 h-4 w-4" />Student Help Point</Button></div>
         </div>
 
         <VerificationTiers profile={user} />

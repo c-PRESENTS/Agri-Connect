@@ -21,8 +21,8 @@ function readFavorites(userId: string | null): FavoriteState {
 
     const parsed = JSON.parse(stored) as Partial<FavoriteState>;
     return {
-      productIds: Array.isArray(parsed.productIds) ? [...new Set(parsed.productIds)] : [],
-      sellerIds: Array.isArray(parsed.sellerIds) ? [...new Set(parsed.sellerIds)] : [],
+      productIds: Array.isArray(parsed.productIds) ? Array.from(new Set(parsed.productIds)) : [],
+      sellerIds: Array.isArray(parsed.sellerIds) ? Array.from(new Set(parsed.sellerIds)) : [],
     };
   } catch {
     return EMPTY_FAVORITES;
@@ -48,8 +48,8 @@ export function useFavorites() {
     if (!userId) return false;
 
     const normalized = {
-      productIds: [...new Set(next.productIds)],
-      sellerIds: [...new Set(next.sellerIds)],
+      productIds: Array.from(new Set(next.productIds)),
+      sellerIds: Array.from(new Set(next.sellerIds)),
     };
 
     try {
@@ -68,7 +68,7 @@ export function useFavorites() {
     const added = !productIds.has(productId);
     if (added) productIds.add(productId);
     else productIds.delete(productId);
-    return saveFavorites({ ...favorites, productIds: [...productIds] }) ? added : null;
+    return saveFavorites({ ...favorites, productIds: Array.from(productIds) }) ? added : null;
   }, [favorites, isAuthenticated, saveFavorites]);
 
   const toggleSeller = useCallback((sellerId: string) => {
@@ -77,7 +77,7 @@ export function useFavorites() {
     const added = !sellerIds.has(sellerId);
     if (added) sellerIds.add(sellerId);
     else sellerIds.delete(sellerId);
-    return saveFavorites({ ...favorites, sellerIds: [...sellerIds] }) ? added : null;
+    return saveFavorites({ ...favorites, sellerIds: Array.from(sellerIds) }) ? added : null;
   }, [favorites, isAuthenticated, saveFavorites]);
 
   return {

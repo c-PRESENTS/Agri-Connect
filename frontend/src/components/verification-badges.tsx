@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Circle, ShieldCheck, Star } from "lucide-react";
+import { CheckCircle2, Circle, ShieldCheck, Star, Store } from "lucide-react";
 
 type VerificationProfile = {
   email?: string | null;
@@ -33,9 +33,10 @@ export function getVerificationTiers(profile: VerificationProfile | null | undef
 
 export function PublicSellerBadges({ rating, reviewCount }: { rating?: number | null; reviewCount?: number | null }) {
   const isTrusted = Number(rating ?? 0) >= 4.5 && Number(reviewCount ?? 0) >= 20;
-  if (!isTrusted) return null;
-
-  return <Badge variant="secondary" className="gap-1 text-[10px] text-amber-700 dark:text-amber-300" data-testid="badge-trusted-seller"><Star className="h-3 w-3 fill-current" /> Trusted seller</Badge>;
+  return <>
+    <Badge variant="outline" className="gap-1 text-[10px]" data-testid="badge-seller"><Store className="h-3 w-3" /> Seller</Badge>
+    {isTrusted && <Badge variant="secondary" className="gap-1 text-[10px] text-amber-700 dark:text-amber-300" data-testid="badge-trusted-seller"><Star className="h-3 w-3 fill-current" /> Trusted seller</Badge>}
+  </>;
 }
 
 export function VerificationTiers({ profile }: { profile: VerificationProfile | null | undefined }) {
@@ -49,7 +50,7 @@ export function VerificationTiers({ profile }: { profile: VerificationProfile | 
         <div><h2 id="verification-heading" className="font-semibold">Verification</h2><p className="text-sm text-muted-foreground">Progress based on your profile details.</p></div>
         <Badge variant={verified ? "default" : "secondary"} className="gap-1" data-testid="badge-account-indicator">
           {verified ? <ShieldCheck className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
-          {verified ? `Verified ${isSeller ? "seller" : "buyer"}` : isSeller ? "Seller profile" : "Buyer profile"}
+          {verified ? `Verified ${isSeller ? "seller" : "buyer"}` : isSeller ? "Seller" : "Buyer"}
         </Badge>
       </div>
       <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
