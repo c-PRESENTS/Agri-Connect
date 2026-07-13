@@ -11,3 +11,4 @@ log-query.db
 logs/
 test-results/
 playwright-report/
+.npm-cache

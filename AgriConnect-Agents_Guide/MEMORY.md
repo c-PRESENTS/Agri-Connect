@@ -62,6 +62,8 @@ See `AgriConnect-Agents_Guide/roadmap.md` for feature details and gaps.
 - Do not run build, lint, type-check, Playwright, migrations, deployment, or dependency commands unless explicitly asked.
 - Days 13–15 have no focused automated or browser verification evidence retained. Product fault states need controlled fixtures/network faults; cookie clean-state checks need a disposable profile; PWA prompts need installability/browser support.
 
+- Dependency audit (2026-07-13): Drizzle no longer appears in `npm audit`. The remaining 19 moderate entries are one upstream chain, `@vonage/jwt@1.14.0` -> `uuid@13.0.0`, repeated through the Vonage SDK tree. Do not use `npm audit fix --force`: its only remediation is an out-of-range downgrade to `@vonage/server-sdk@3.25.1`. Keep the current SDK until Vonage supplies a compatible fix; re-audit after any Vonage upgrade and do not change OTP/SMS code for this advisory alone.
+
 ## Working approach
 
 Read `AGENTS.md`, trace the direct frontend, backend, shared model, validation, and test path, then make the smallest aligned change. Preserve unrelated user changes and update this file and `roadmap.md` only when the current state changes.

@@ -75,7 +75,7 @@
 | Penetration testing | **Needs External Setup** | External audit required |
 | International payment gateways | **Needs External Setup** | Provider accounts + KYC |
 | SendGrid email (production) | **Needs External Setup** | SENDGRID_API_KEY, SENDGRID_FROM_EMAIL |
-| Vonage SMS / WhatsApp | **Needs External Setup** | VONAGE_API_KEY, VONAGE_API_SECRET, WHATSAPP_TOKEN |
+| Vonage SMS / WhatsApp | **Needs External Setup** | VONAGE_API_KEY, VONAGE_API_SECRET, WHATSAPP_TOKEN. Current audit constraint: `@vonage/jwt@1.14.0` pulls `uuid@13.0.0`; no compatible automatic fix. Do not force-downgrade the SDK; monitor upstream and re-audit on upgrade. |
 | Google OAuth (production) | **Needs External Setup** | GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET |
 | Royal Mail / DPD live shipping | **Needs External Setup** | ROYAL_MAIL_API_KEY, DPD credentials |
 | Gemini AI (production) | **Needs External Setup** | GEMINI_API_KEY |
