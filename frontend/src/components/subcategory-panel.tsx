@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { X, ChevronDown, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { categories, categoryImages } from "@/lib/categories";
+import { getShoppableCategories, categoryImages } from "@/lib/categories";
 import { getCategoryIconComponent } from "@/lib/category-icons";
 import { getSubSubcategories } from "@/lib/sub-subcategories";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,7 +44,7 @@ export function SubcategoryPanel({
   const [scrollPosition, setScrollPosition] = useState<'top' | 'middle' | 'bottom'>('top');
 
   const category = useMemo(() => 
-    categories.find(c => c.id === categoryId), [categoryId]
+    getShoppableCategories().find(c => c.id === categoryId), [categoryId]
   );
 
   const handleScroll = (e?: React.UIEvent) => {

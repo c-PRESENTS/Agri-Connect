@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCart } from "@/hooks/use-cart";
 import { useTranslation } from "react-i18next";
 import type { Product, ProductFilters as Filters, Region } from "@shared/schema";
-import { categories, regions } from "@/lib/categories";
+import { getShoppableCategories, regions } from "@/lib/categories";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home as HomeIcon, LayoutGrid, Map, ShoppingCart as CartIcon, User } from "lucide-react";
 
@@ -68,7 +68,7 @@ function MobileBottomNav({
 
 function findCategoryForSubcategory(subcategoryId: string | null) {
   if (!subcategoryId) return null;
-  return categories.find((category) =>
+  return getShoppableCategories().find((category) =>
     category.subcategories.some((subcategory) => subcategory.id === subcategoryId)
   )?.id ?? null;
 }

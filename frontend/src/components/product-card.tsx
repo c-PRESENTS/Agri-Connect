@@ -16,6 +16,7 @@ import { getProductImage as resolveProductImage } from "@/lib/product-images";
 import { getCategoryImage } from "@/lib/categories";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { SafeProductImage } from "./safe-product-image";
 
 interface ProductCardProps {
   product: Product;
@@ -34,7 +35,6 @@ export function ProductCard({
 }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const { t, i18n } = useTranslation();
   const { ids: compareIds, toggle: toggleCompare, isFull } = useCompare();
   const { toast: pcToast } = useToast();
@@ -49,7 +49,14 @@ export function ProductCard({
   }, []);
 
   const shouldAutoTranslate = autoTranslateOn && baseLang !== "en";
-  const descText = product.description || product.name;
+  const productName = product.name?.trim() || "Unnamed product";
+  const sellerName = product.farmerName?.trim() || "Seller not specified";
+  const safePrice = Number.isFinite(product.price) ? product.price : null;
+  const safeStock = Number.isFinite(product.stock) ? product.stock : 0;
+  const safeRating = Number.isFinite(product.rating) ? product.rating : 0;
+  const safeReviewCount = Number.isFinite(product.reviewCount) ? product.reviewCount : 0;
+  const safeUnit = product.unit?.trim() || "unit";
+  const descText = product.description || productName;
 
   const { data: translatedDesc } = useQuery({
     queryKey: ["/api/ai/translate", descText, baseLang],
@@ -90,12 +97,11 @@ export function ProductCard({
     const local =
       getCategoryImage((product as any).subcategoryId) ||
       getCategoryImage(product.categoryId);
-    if (local && !imageError) return local;
+    if (local) return local;
     // Fall back to the keyword-resolved remote image if we have no local match
     // (or the local one somehow failed to load).
     const resolved = resolveProductImage(product.name, product.categoryId, "md");
     if (resolved) return resolved;
-    if (product.images?.[0]) return product.images[0];
     return resolved;
   };
 
@@ -113,13 +119,7 @@ export function ProductCard({
         data-testid={`card-product-${product.id}`}
       >
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-          <img
-            src={getProductImage()}
-            alt={product.name}
-            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-108"
-            onError={() => setImageError(true)}
-            loading="lazy"
-          />
+          <SafeProductImage src={product.images?.find((image) => typeof image === "string" && image.trim())} fallbackSrc={getProductImage()} alt={productName} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-108" />
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
@@ -179,39 +179,39 @@ export function ProductCard({
         <CardContent className="p-2 sm:p-3">
           <div className="flex items-start justify-between gap-1 mb-1">
             <h3 className="font-semibold text-[11px] sm:text-sm leading-tight line-clamp-2 flex-1 group-hover:text-primary transition-colors" data-testid={`text-product-name-${product.id}`}>
-              {product.name}
+              {productName}
             </h3>
-            <TextToSpeech text={`${product.name}. Price: ${currencySymbol}${product.price} per ${product.unit}. Sold by ${product.farmerName}.`} />
+            <TextToSpeech text={`${productName}. Price: ${safePrice === null ? "Price on request" : `${currencySymbol}${safePrice}`} per ${safeUnit}. Sold by ${sellerName}.`} />
           </div>
 
           {!shouldAutoTranslate && <TranslateButton text={descText} className="mb-1" />}
 
           <Link
-            href={`/sellers/${product.farmerId}`}
+            href={product.farmerId ? `/sellers/${product.farmerId}` : "#"}
             className="flex items-center gap-1 mb-1 hover:text-primary"
             onClick={(e) => e.stopPropagation()}
             data-testid={`link-seller-${product.farmerId}`}
           >
             <Avatar className="h-4 w-4 shrink-0">
-              <AvatarImage src={product.farmerAvatar} alt={product.farmerName} />
+              <AvatarImage src={product.farmerAvatar || undefined} alt={sellerName} />
               <AvatarFallback className="text-[8px] bg-primary text-primary-foreground">
-                {product.farmerName.split(' ').map(n => n[0]).join('')}
+                {sellerName.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <span className="text-[9px] sm:text-[11px] text-muted-foreground truncate hover:underline">
-              {product.farmerName}
+              {sellerName}
             </span>
           </Link>
 
           <div className="flex items-center gap-1.5 mb-1 text-[9px] sm:text-[11px]">
             <div className="flex items-center gap-0.5">
               <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
-              <span className="font-semibold">{product.rating.toFixed(1)}</span>
-              <span className="text-muted-foreground hidden sm:inline">({product.reviewCount})</span>
+              <span className="font-semibold">{safeRating.toFixed(1)}</span>
+              <span className="text-muted-foreground hidden sm:inline">({safeReviewCount})</span>
             </div>
             <div className="flex items-center gap-0.5 text-muted-foreground">
               <MapPin className="h-2.5 w-2.5" />
-              <span>{product.distance?.toFixed(1)}km</span>
+              <span>{Number.isFinite(product.distance) ? `${product.distance!.toFixed(1)}km` : "Location not specified"}</span>
             </div>
           </div>
           
@@ -237,15 +237,15 @@ export function ProductCard({
           <div className="flex items-center justify-between mb-1.5 sm:mb-2">
             <div>
               <span className="text-sm sm:text-lg font-bold tracking-tight font-mono" data-testid={`text-product-price-${product.id}`}>
-                {currencySymbol}{product.price}
+                {safePrice === null ? "Price on request" : `${currencySymbol}${safePrice}`}
               </span>
-              <span className="text-[9px] sm:text-[11px] text-muted-foreground">/{product.unit}</span>
+              {safePrice !== null && <span className="text-[9px] sm:text-[11px] text-muted-foreground">/{safeUnit}</span>}
             </div>
             <Badge 
-              variant={product.stock > 20 ? "secondary" : "destructive"} 
+              variant={safeStock > 20 ? "secondary" : "destructive"} 
               className="text-[8px] sm:text-[10px] font-mono"
             >
-              {product.stock > 0 ? `${product.stock}` : t("product.out_short")}
+              {safeStock > 0 ? `${safeStock}` : t("product.out_short")}
             </Badge>
           </div>
 
@@ -253,7 +253,7 @@ export function ProductCard({
             <Button 
               className="w-full gap-1 h-7 sm:h-8 text-[10px] sm:text-[11px] font-bold uppercase tracking-tight transition-all btn-glow"
               onClick={handleAddToCart}
-              disabled={product.stock === 0 || addedToCart}
+              disabled={safeStock <= 0 || addedToCart}
               data-testid={`button-add-to-cart-${product.id}`}
             >
               {addedToCart ? (

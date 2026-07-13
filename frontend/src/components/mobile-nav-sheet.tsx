@@ -7,7 +7,7 @@ import {
   Salad, Factory, Leaf, Briefcase, Sparkles, X, ChevronDown, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { categories } from "@/lib/categories";
+import { categories, isShoppableCategory } from "@/lib/categories";
 import { getProductImage } from "@/lib/product-images";
 import { getSubSubcategories } from "@/lib/sub-subcategories";
 import { useTranslation } from "react-i18next";
@@ -123,7 +123,9 @@ export function MobileNavSheet() {
     }
   }, [open]);
 
-  const visible = ITEMS.filter(i => i.public || isAuthenticated);
+  const visible = ITEMS.filter((item) =>
+    (item.public || isAuthenticated) && (!item.category || isShoppableCategory(item.category))
+  );
   const activeCategory = activeCat ? categories.find(c => c.id === activeCat) : null;
 
   const handleItemTap = (item: RailItem) => {

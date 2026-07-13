@@ -258,6 +258,7 @@ export const categories: Category[] = [
     id: "daily-needs",
     name: "Daily Needs from Farmers",
     icon: "ShoppingBasket",
+    buyerVisible: true,
     subcategories: [
       { id: "grains", name: "Food Grains & Cereals", parentId: "daily-needs" },
       { id: "pulses", name: "Pulses & Lentils", parentId: "daily-needs" },
@@ -320,6 +321,7 @@ export const categories: Category[] = [
     id: "processed",
     name: "Processed & Value-Added",
     icon: "Package",
+    buyerVisible: true,
     subcategories: [
       { id: "spice-powders", name: "Spices & Powders", parentId: "processed" },
       { id: "pickles", name: "Pickles & Preserves", parentId: "processed" },
@@ -332,6 +334,7 @@ export const categories: Category[] = [
     id: "specialty",
     name: "Specialty & Premium",
     icon: "Award",
+    buyerVisible: true,
     subcategories: [
       { id: "organic", name: "Organic Products", parentId: "specialty" },
       { id: "medicinal", name: "Medicinal Plants & Herbs", parentId: "specialty" },
@@ -345,18 +348,20 @@ export const categories: Category[] = [
     id: "other-agri",
     name: "Other Agricultural",
     icon: "Wheat",
+    buyerVisible: true,
     subcategories: [
       { id: "plantation", name: "Plantation Crops", parentId: "other-agri" },
       { id: "fibre", name: "Fibre Crops", parentId: "other-agri" },
       { id: "timber", name: "Timber & Bamboo", parentId: "other-agri" },
       { id: "animal-feed", name: "Animal Feed", parentId: "other-agri" },
-      { id: "agri-waste", name: "Agri-Waste & By-Products", parentId: "other-agri" },
+      { id: "agri-waste", name: "Agri-Waste & By-Products", parentId: "other-agri", buyerVisible: false },
     ],
   },
   {
     id: "supermarket",
     name: "Complete Supermarket",
     icon: "Store",
+    buyerVisible: true,
     subcategories: [
       { id: "food-beverages", name: "Food & Beverages", parentId: "supermarket" },
       { id: "personal-care", name: "Personal Care & Hygiene", parentId: "supermarket" },
@@ -382,6 +387,7 @@ export const categories: Category[] = [
     id: "services",
     name: "Services",
     icon: "Truck",
+    buyerVisible: false,
     subcategories: [
       { id: "farming-services", name: "Farming Services", parentId: "services" },
       { id: "irrigation-services", name: "Irrigation Services", parentId: "services" },
@@ -394,6 +400,7 @@ export const categories: Category[] = [
     id: "government",
     name: "Government Schemes",
     icon: "Building2",
+    buyerVisible: false,
     subcategories: [
       { id: "subsidies", name: "Input Subsidies", parentId: "government" },
       { id: "insurance", name: "Insurance Schemes", parentId: "government" },
@@ -405,6 +412,7 @@ export const categories: Category[] = [
     id: "modern-farming",
     name: "Modern Farming",
     icon: "Sprout",
+    buyerVisible: true,
     subcategories: [
       { id: "hydroponics", name: "Hydroponics", parentId: "modern-farming" },
       { id: "aeroponics", name: "Aeroponics", parentId: "modern-farming" },
@@ -417,6 +425,7 @@ export const categories: Category[] = [
     id: "dietary",
     name: "Dietary & Lifestyle",
     icon: "Heart",
+    buyerVisible: true,
     subcategories: [
       { id: "keto", name: "Keto & Low-Carb", parentId: "dietary" },
       { id: "high-protein", name: "Gym & Bodybuilding", parentId: "dietary" },
@@ -438,6 +447,7 @@ export const categories: Category[] = [
     id: "land-leasing",
     name: "Land Leasing",
     icon: "MapPin",
+    buyerVisible: false,
     subcategories: [
       { id: "agricultural-land", name: "Agricultural Land", parentId: "land-leasing" },
       { id: "irrigated-land", name: "Irrigated Land", parentId: "land-leasing" },
@@ -450,6 +460,7 @@ export const categories: Category[] = [
     id: "logistics",
     name: "Logistics & Delivery",
     icon: "Truck",
+    buyerVisible: false,
     subcategories: [
       { id: "international-shipping", name: "International Shipping", parentId: "logistics" },
       { id: "national-logistics", name: "National Logistics", parentId: "logistics" },
@@ -463,6 +474,7 @@ export const categories: Category[] = [
     id: "share-care",
     name: "Share & Care Community",
     icon: "HeartHandshake",
+    buyerVisible: false,
     subcategories: [
       { id: "restaurant-surplus", name: "Restaurant Surplus", parentId: "share-care" },
       { id: "home-surplus", name: "Home Surplus", parentId: "share-care" },
@@ -1297,6 +1309,40 @@ export const regions: Region[] = [
 
 export function getCategoryIcon(iconName: string) {
   return iconName;
+}
+
+/** Full taxonomy for seller listing and catalogue-management flows. */
+export function getSellerTaxonomy(): Category[] {
+  return categories;
+}
+
+/**
+ * Buyer-safe category tree. This preserves every stable ID and slug while
+ * excluding seller-only categories and subcategories from shopping surfaces.
+ */
+export function getBuyerCategories(): Category[] {
+  return categories
+    .filter((category) => category.buyerVisible !== false)
+    .map((category) => ({
+      ...category,
+      subcategories: category.subcategories.filter((subcategory) => subcategory.buyerVisible !== false),
+    }));
+}
+
+export const getShoppableCategories = getBuyerCategories;
+
+/** Missing or unrecognised roles safely receive the buyer browsing taxonomy. */
+export function getTaxonomyForRole(role?: string | null): Category[] {
+  return role === "farmer" ? getSellerTaxonomy() : getBuyerCategories();
+}
+
+/** Seller listing and management tools are reserved for completed farmer roles. */
+export function hasSellerTaxonomyAccess(role?: string | null): boolean {
+  return role === "farmer";
+}
+
+export function isShoppableCategory(categoryId: string): boolean {
+  return getBuyerCategories().some((category) => category.id === categoryId);
 }
 
 export function getCategoryExamples(subcategoryId: string): string[] {

@@ -25,9 +25,11 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TopNavigation } from "@/components/top-navigation";
 import { useTranslation } from "react-i18next";
+import { useSearch } from "wouter";
 
 import { getProductImage } from "@/lib/product-images";
 import { isSellerOnline } from "@/lib/seller-presence";
+import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product, LocalNeed } from "@shared/schema";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -163,6 +165,7 @@ const RIGHT_PANEL_TABS: { id: RightPanelType; icon: any; labelKey: string; short
 
 export default function SmartMapPage() {
   const { t } = useTranslation();
+  const routeSearch = useSearch();
   const { toast } = useToast();
   const [activeLayer, setActiveLayer] = useState<keyof typeof TILE_LAYERS>("standard");
   const [showHeatmap, setShowHeatmap] = useState(false);
@@ -191,6 +194,7 @@ export default function SmartMapPage() {
   const [isLocating, setIsLocating] = useState(false);
   const [expandedFarmer, setExpandedFarmer] = useState<string | null>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const lastFocusedFarmerId = useRef<string | null>(null);
 
   // Toolbar group open state
   const [openGroup, setOpenGroup] = useState<string | null>(null);
@@ -256,6 +260,7 @@ export default function SmartMapPage() {
   });
 
   const farmerMarkers: FarmerMarker[] = products.reduce((acc, product) => {
+    if (!hasValidPublicCoordinates(product.farmerLatitude, product.farmerLongitude)) return acc;
     const existing = acc.find(m => m.id === product.farmerId);
     if (existing) {
       if (!existing.products.includes(product.name)) {
@@ -267,15 +272,15 @@ export default function SmartMapPage() {
     } else {
       acc.push({
         id: product.farmerId,
-        name: product.farmerName,
-        avatar: product.farmerAvatar,
+        name: product.farmerName?.trim() || "Seller not specified",
+        avatar: product.farmerAvatar || "",
         latitude: product.farmerLatitude,
         longitude: product.farmerLongitude,
         isOnline: isSellerOnline(product.farmerId),
         productCount: 1,
-        rating: product.farmerRating,
+        rating: Number.isFinite(product.farmerRating) ? product.farmerRating : 0,
         products: [product.name],
-        location: product.farmerLocation,
+        location: getPublicLocationLabel(product.farmerLocation),
         totalStock: product.stock,
         productItems: [product],
       });
@@ -283,12 +288,20 @@ export default function SmartMapPage() {
     return acc;
   }, [] as FarmerMarker[]);
 
+  const validProducts = products.filter((product) =>
+    hasValidPublicCoordinates(product.farmerLatitude, product.farmerLongitude)
+  );
+  const validLocalNeeds = localNeeds.filter((need) =>
+    hasValidPublicCoordinates(need.latitude, need.longitude)
+  );
+  const unmappedFarmerCount = new Set(products.map((product) => product.farmerId)).size - farmerMarkers.length;
+
   // Reference point used to sort right-panel lists by proximity:
   // 1. user's GPS location if they clicked "My Location"
   // 2. otherwise the current center of the map (updates as the user pans/zooms)
   const refPoint: [number, number] = userLocation ?? mapCenter;
 
-  const filteredNeeds = localNeeds
+  const filteredNeeds = validLocalNeeds
     .filter(n => {
       if (urgencyFilter !== "all" && n.urgency !== urgencyFilter) return false;
       if (searchQuery && !n.productName.toLowerCase().includes(searchQuery.toLowerCase()) && !n.location.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -301,9 +314,24 @@ export default function SmartMapPage() {
     .map(f => ({ ...f, _distanceKm: haversineKm(refPoint, [f.latitude, f.longitude]) }))
     .sort((a, b) => a._distanceKm - b._distanceKm);
 
-  const sortedProducts = [...products]
+  const sortedProducts = [...validProducts]
     .map(p => ({ ...p, _distanceKm: haversineKm(refPoint, [p.farmerLatitude, p.farmerLongitude]) }))
     .sort((a, b) => a._distanceKm - b._distanceKm);
+
+  useEffect(() => {
+    const requestedFarmerId = new URLSearchParams(routeSearch).get("farmer");
+    if (!requestedFarmerId) {
+      lastFocusedFarmerId.current = null;
+      return;
+    }
+    if (lastFocusedFarmerId.current === requestedFarmerId) return;
+    const farmer = farmerMarkers.find((marker) => marker.id === requestedFarmerId);
+    if (!farmer) return;
+    lastFocusedFarmerId.current = farmer.id;
+    setExpandedFarmer(farmer.id);
+    setRightPanel("farmers");
+    setFlyTo([farmer.latitude, farmer.longitude]);
+  }, [routeSearch, farmerMarkers]);
 
   const handleLocate = useCallback(() => {
     setIsLocating(true);
@@ -546,7 +574,11 @@ export default function SmartMapPage() {
                 <Popup minWidth={220}>
                   <div className="p-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <img src={farmer.avatar} alt={farmer.name} className="w-8 h-8 rounded-full" />
+                      {farmer.avatar ? (
+                        <img src={farmer.avatar} alt={farmer.name} className="w-8 h-8 rounded-full" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">{farmer.name.slice(0, 1).toUpperCase()}</div>
+                      )}
                       <div>
                         <div className="font-bold text-sm">{farmer.name}</div>
                         <div className="text-xs text-gray-500 flex items-center gap-1">
@@ -571,7 +603,7 @@ export default function SmartMapPage() {
               return <Circle key={`heat-${farmer.id}`} center={[farmer.latitude, farmer.longitude]} radius={3000 + farmer.totalStock * 5} pathOptions={{ color, fillColor: color, fillOpacity: 0.2, weight: 1 }} />;
             })}
 
-            {showDemand && localNeeds.map(need => (
+            {showDemand && validLocalNeeds.map(need => (
               <Marker key={need.id} position={[need.latitude, need.longitude]} icon={needIcon(need.urgency)}>
                 <Popup minWidth={240}>
                   <div className="p-1">
@@ -631,6 +663,11 @@ export default function SmartMapPage() {
             {showIrrigationLayer && <div className="flex items-center gap-1 lg:gap-2"><div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded bg-blue-400 opacity-50" /><span>Irrigation</span></div>}
             {savedPolygons.length > 0 && <div className="flex items-center gap-1 lg:gap-2"><div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded bg-primary opacity-50" /><span>Parcel</span></div>}
           </div>
+          {unmappedFarmerCount > 0 && (
+            <div className="absolute top-2 left-2 z-[1000] max-w-[240px] rounded-lg border border-border/60 bg-background/95 px-2 py-1.5 text-[10px] text-muted-foreground shadow-md" data-testid="map-location-fallback">
+              {unmappedFarmerCount} seller {unmappedFarmerCount === 1 ? "location is" : "locations are"} not mapped because public coordinates are unavailable. Location not specified.
+            </div>
+          )}
         </div>
 
         {/* ── RIGHT PANEL with vertical tab rail ── */}

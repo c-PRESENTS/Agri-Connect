@@ -27,7 +27,7 @@ import {
   Salad, Factory, Leaf, Briefcase, Sparkles, Grid3X3,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { categories as defaultCategories, categoryImages } from "@/lib/categories";
+import { categories as defaultCategories, categoryImages, isShoppableCategory } from "@/lib/categories";
 import { AppLauncher } from "./app-launcher";
 import { useTranslation } from "react-i18next";
 
@@ -174,7 +174,8 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const defaultIds = ALL_SERVICES.filter(s => s.public || isAuthenticated).map(s => s.id);
+  const isBuyerVisibleItem = (item: ServiceItem) => !("category" in item) || isShoppableCategory(item.category);
+  const defaultIds = ALL_SERVICES.filter(s => (s.public || isAuthenticated) && isBuyerVisibleItem(s)).map(s => s.id);
 
   const [order, setOrder] = useState<string[]>(() => {
     const saved = readOrder();
@@ -217,7 +218,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const authIds = ALL_SERVICES.filter(s => !s.public).map(s => s.id);
+      const authIds = ALL_SERVICES.filter(s => !s.public && isBuyerVisibleItem(s)).map(s => s.id);
       setOrder(prev => {
         const merged = [...prev];
         authIds.forEach(id => { if (!merged.includes(id)) merged.push(id); });
@@ -228,9 +229,9 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
 
   const visibleItems = order
     .map(id => ALL_SERVICES.find(s => s.id === id))
-    .filter((s): s is typeof ALL_SERVICES[0] => !!s && (s.public || isAuthenticated) && !hidden.has(s.id));
+    .filter((s): s is typeof ALL_SERVICES[0] => !!s && (s.public || isAuthenticated) && isBuyerVisibleItem(s) && !hidden.has(s.id));
 
-  const hiddenItems = ALL_SERVICES.filter(s => (s.public || isAuthenticated) && hidden.has(s.id));
+  const hiddenItems = ALL_SERVICES.filter(s => (s.public || isAuthenticated) && isBuyerVisibleItem(s) && hidden.has(s.id));
 
   const remove = (id: string) => setHidden(prev => {
     const next = new Set(Array.from(prev)); next.add(id); persist(order, next); return next;
@@ -239,7 +240,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
     const next = new Set(prev); next.delete(id); persist(order, next); return next;
   });
   const reset = () => {
-    const def = ALL_SERVICES.filter(s => s.public || isAuthenticated).map(s => s.id);
+    const def = ALL_SERVICES.filter(s => (s.public || isAuthenticated) && isBuyerVisibleItem(s)).map(s => s.id);
     const h = new Set<string>();
     setOrder(def); setHidden(h); persist(def, h);
   };

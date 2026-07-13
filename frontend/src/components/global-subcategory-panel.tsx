@@ -1,9 +1,9 @@
 import { useLocation, useSearch } from "wouter";
 import { useCallback, useEffect, useState } from "react";
 import { SubcategoryPanel } from "@/components/subcategory-panel";
-import { categories } from "@/lib/categories";
+import { getShoppableCategories } from "@/lib/categories";
 
-const PAGE_CATEGORIES = new Set(categories.map(c => c.id));
+const PAGE_CATEGORIES = new Set(getShoppableCategories().map(c => c.id));
 
 export function GlobalSubcategoryPanel() {
   const [location, setLocation] = useLocation();

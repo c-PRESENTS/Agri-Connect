@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { getProductImage } from "@/lib/product-images";
 import { isSellerOnline } from "@/lib/seller-presence";
+import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product, LocalNeed } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -92,6 +93,16 @@ const makeUserLocationIcon = (heading?: number | null) => L.divIcon({
   iconAnchor: [10, 10],
 });
 
+const distanceKm = (from: [number, number], to: [number, number]) => {
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const latitudeDelta = toRadians(to[0] - from[0]);
+  const longitudeDelta = toRadians(to[1] - from[1]);
+  const value = Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(toRadians(from[0])) * Math.cos(toRadians(to[0])) * Math.sin(longitudeDelta / 2) ** 2;
+  return 2 * earthRadiusKm * Math.asin(Math.min(1, Math.sqrt(value)));
+};
+
 function MapController({ flyTo }: { flyTo: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
@@ -168,6 +179,7 @@ export function LeafletFarmerMap({
   const [flyTo, setFlyTo] = useState<[number, number] | null>(null);
   const [locating, setLocating] = useState(false);
   const [tracking, setTracking] = useState(false);
+  const [nearbyOnly, setNearbyOnly] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const [postPanel, setPostPanel] = useState(false);
@@ -265,6 +277,7 @@ export function LeafletFarmerMap({
   }, [locateError]);
 
   const farmerMarkers: FarmerMarker[] = products.reduce((acc, product) => {
+    if (!hasValidPublicCoordinates(product.farmerLatitude, product.farmerLongitude)) return acc;
     const existing = acc.find(m => m.id === product.farmerId);
     if (existing) {
       if (!existing.products.includes(product.name)) {
@@ -275,15 +288,15 @@ export function LeafletFarmerMap({
     } else {
       acc.push({
         id: product.farmerId,
-        name: product.farmerName,
-        avatar: product.farmerAvatar,
+        name: product.farmerName?.trim() || "Seller not specified",
+        avatar: product.farmerAvatar || "",
         latitude: product.farmerLatitude,
         longitude: product.farmerLongitude,
         isOnline: isSellerOnline(product.farmerId),
         productCount: 1,
-        rating: product.farmerRating,
+        rating: Number.isFinite(product.farmerRating) ? product.farmerRating : 0,
         products: [product.name],
-        location: product.farmerLocation,
+        location: getPublicLocationLabel(product.farmerLocation),
         totalStock: product.stock,
         topProduct: product,
       });
@@ -291,7 +304,12 @@ export function LeafletFarmerMap({
     return acc;
   }, [] as FarmerMarker[]);
 
-  const onlineFarmers = farmerMarkers.filter(f => f.isOnline).length;
+  const unmappedFarmerCount = new Set(products.map((product) => product.farmerId))
+    .size - farmerMarkers.length;
+  const visibleFarmerMarkers = nearbyOnly && userPos
+    ? farmerMarkers.filter((farmer) => distanceKm(userPos, [farmer.latitude, farmer.longitude]) <= 50)
+    : farmerMarkers;
+  const onlineFarmers = visibleFarmerMarkers.filter(f => f.isOnline).length;
   const currentTile = TILE_LAYERS[activeLayer];
 
   return (
@@ -375,6 +393,17 @@ export function LeafletFarmerMap({
             </span>
           )}
         </button>
+        <button
+          onClick={() => setNearbyOnly((current) => !current)}
+          disabled={!userPos}
+          data-testid="btn-located-filter"
+          className={`w-9 h-9 flex items-center justify-center rounded-xl backdrop-blur-md border shadow-md transition-all ${
+            nearbyOnly ? "bg-blue-500 text-white border-blue-400" : "bg-background/95 border-border/60 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+          } disabled:cursor-not-allowed disabled:opacity-50`}
+          title={userPos ? "Show public farm markers within 50 km" : "Locate yourself to filter nearby public farm markers"}
+        >
+          <MapPin className="h-4 w-4" />
+        </button>
         {/* Post a Need */}
         <button onClick={() => setPostPanel(true)} data-testid="btn-post-need"
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-primary text-primary-foreground border border-primary/50 shadow-md hover:bg-primary/90 transition-all"
@@ -407,13 +436,13 @@ export function LeafletFarmerMap({
         })()}
 
         {/* Heatmap circles */}
-        {showHeatmap && farmerMarkers.map(f => (
+        {showHeatmap && visibleFarmerMarkers.map(f => (
           <Circle key={`heat-${f.id}`} center={[f.latitude, f.longitude]} radius={f.totalStock * 10}
             pathOptions={{ color: f.totalStock > 150 ? "#22c55e" : f.totalStock > 80 ? "#f59e0b" : "#ef4444", fillColor: f.totalStock > 150 ? "#22c55e" : f.totalStock > 80 ? "#f59e0b" : "#ef4444", fillOpacity: 0.12, weight: 1.5, opacity: 0.45 }} />
         ))}
 
         {/* Farmer markers */}
-        {showFarmers && farmerMarkers.map(farmer => (
+        {showFarmers && visibleFarmerMarkers.map(farmer => (
           <Marker
             key={farmer.id}
             position={[farmer.latitude, farmer.longitude]}
@@ -427,7 +456,11 @@ export function LeafletFarmerMap({
               <div className="p-0.5">
                 <div className="flex items-center gap-2.5 mb-2">
                   <div className="relative">
-                    <img src={farmer.avatar} alt={farmer.name} className="w-10 h-10 rounded-full border-2 border-primary/20" />
+                    {farmer.avatar ? (
+                      <img src={farmer.avatar} alt={farmer.name} className="w-10 h-10 rounded-full border-2 border-primary/20" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full border-2 border-primary/20 bg-muted flex items-center justify-center text-xs font-bold">{farmer.name.slice(0, 1).toUpperCase()}</div>
+                    )}
                     <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${farmer.isOnline ? "bg-green-500" : "bg-gray-400"}`} />
                   </div>
                   <div>
@@ -561,6 +594,12 @@ export function LeafletFarmerMap({
             <span className="text-border/80">·</span>
             <div className="flex items-center gap-1"><ShoppingBag className="h-3 w-3 text-amber-500" /><span className="font-bold text-amber-600 dark:text-amber-400">{localNeeds.length}</span><span className="text-muted-foreground">{t("map.needs_label")}</span></div>
           </div>
+        </div>
+      )}
+
+      {unmappedFarmerCount > 0 && (
+        <div className="absolute bottom-2.5 left-2.5 z-[1000] translate-y-10 sm:translate-y-0 sm:left-auto sm:right-2.5 sm:bottom-12 max-w-[230px] rounded-lg border border-border/60 bg-background/95 px-2 py-1.5 text-[10px] text-muted-foreground shadow-md" data-testid="map-location-fallback">
+          {unmappedFarmerCount} seller {unmappedFarmerCount === 1 ? "location is" : "locations are"} not mapped because public coordinates are unavailable. Location not specified.
         </div>
       )}
 

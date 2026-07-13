@@ -15,11 +15,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { AIDetectionResult } from "@shared/schema";
+import { getSellerTaxonomy } from "@/lib/categories";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface PhotoSellFlowProps {
   onComplete?: (data: AIDetectionResult & { image: string }) => void;
   onCancel?: () => void;
+  onManualListing?: () => void;
 }
 
 type Step = "capture" | "analyzing" | "results" | "success";
@@ -52,7 +54,7 @@ const mockDetect = (): AIDetectionResult => {
   };
 };
 
-export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
+export function PhotoSellFlow({ onComplete, onCancel, onManualListing }: PhotoSellFlowProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>("capture");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -60,6 +62,8 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
   const [editedDetection, setEditedDetection] = useState<AIDetectionResult | null>(null);
   const [analyzeProgress, setAnalyzeProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sellerTaxonomy = getSellerTaxonomy();
+  const selectedCategory = sellerTaxonomy.find((category) => category.id === editedDetection?.suggestedCategory);
 
   const handleCapture = () => {
     fileInputRef.current?.click();
@@ -165,6 +169,7 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
               <Upload className="h-4 w-4" />
               {t("photo_sell.upload_from_gallery")}
             </Button>
+            <Button variant="ghost" className="mt-3" onClick={onManualListing} data-testid="button-manual-listing">Create listing manually</Button>
           </motion.div>
         )}
 
@@ -226,6 +231,46 @@ export function PhotoSellFlow({ onComplete, onCancel }: PhotoSellFlowProps) {
 
             <Card className="mb-4">
               <CardContent className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Category</span>
+                  <Select
+                    value={editedDetection.suggestedCategory}
+                    onValueChange={(categoryId) => {
+                      const category = sellerTaxonomy.find((item) => item.id === categoryId);
+                      handleEdit("suggestedCategory", categoryId);
+                      if (category && !category.subcategories.some((item) => item.id === editedDetection.suggestedSubcategory)) {
+                        handleEdit("suggestedSubcategory", category.subcategories[0]?.id || "");
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-48" data-testid="select-seller-category">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sellerTaxonomy.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Subcategory</span>
+                  <Select
+                    value={editedDetection.suggestedSubcategory}
+                    onValueChange={(value) => handleEdit("suggestedSubcategory", value)}
+                  >
+                    <SelectTrigger className="w-48" data-testid="select-seller-subcategory">
+                      <SelectValue placeholder="Select a subcategory" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedCategory?.subcategories.map((subcategory) => (
+                        <SelectItem key={subcategory.id} value={subcategory.id}>{subcategory.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">{t("photo_sell.product_name")}</span>
                   <div className="flex items-center gap-2">

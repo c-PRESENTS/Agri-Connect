@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Search, X, TrendingUp, Package, Leaf, History, RotateCcw, Sparkles, Loader2 } from "lucide-react";
+import { Search, X, TrendingUp, Package, History, RotateCcw, Sparkles, Loader2, MapPin, Store } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -8,13 +8,25 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
 import { useTranslation } from "react-i18next";
-import { categories } from "@/lib/categories";
+import { categories, getShoppableCategories } from "@/lib/categories";
 import { apiRequest } from "@/lib/queryClient";
+import { SafeProductImage } from "@/components/safe-product-image";
 
 interface SearchAutocompleteProps {
   value: string;
   onChange: (val: string) => void;
   onSearch: (query: string) => void;
+}
+
+interface PublicFarmerSearchResult {
+  id: string;
+  name: string;
+  location: string;
+  categories: string[];
+}
+
+interface SearchResponse {
+  farmers: PublicFarmerSearchResult[];
 }
 
 const TRENDING = ["Organic tomatoes", "Fresh milk", "Potatoes", "Apples", "Carrots", "Wheat flour"];
@@ -54,6 +66,11 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
     queryKey: [inputVal ? `/api/products?search=${encodeURIComponent(inputVal)}` : "/api/products"],
     enabled: inputVal.length >= 2 && !aiSearchEnabled,
   });
+  const { data: searchResponse, isLoading: isSearchLoading } = useQuery<SearchResponse>({
+    queryKey: [inputVal ? `/api/discovery?q=${encodeURIComponent(inputVal)}` : "/api/discovery"],
+    enabled: inputVal.length >= 2,
+  });
+  const farmers = searchResponse?.farmers ?? [];
 
   const suggestions = aiResults ?? products.slice(0, 6);
 
@@ -181,8 +198,10 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   const showRecent = open && inputVal.length === 0 && recentSearches.length > 0;
   const showTrending = open && inputVal.length === 0;
   const showSuggestions = open && inputVal.length >= 2 && suggestions.length > 0;
+  const showFarmerResults = open && inputVal.length >= 2 && !isSearchLoading && farmers.length > 0;
   const showCategories = open && inputVal.length === 0;
-  const showNoResults = open && inputVal.length >= 2 && !aiLoading && aiResults !== null && aiResults.length === 0;
+  const showLoading = open && inputVal.length >= 2 && (aiLoading || isSearchLoading);
+  const showNoResults = open && inputVal.length >= 2 && !aiLoading && !isSearchLoading && suggestions.length === 0 && farmers.length === 0;
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -211,7 +230,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
       </form>
 
       <AnimatePresence>
-        {(showRecent || showTrending || showCategories || showSuggestions || showNoResults) && (
+        {(showRecent || showTrending || showCategories || showSuggestions || showFarmerResults || showLoading || showNoResults) && (
           <motion.div
             initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -239,22 +258,22 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             {/* AI Expanded Query Indicator */}
             {aiSearchEnabled && aiExpandedQuery && aiExpandedQuery !== inputVal && inputVal.length >= 2 && (
               <div className="px-3 py-1.5 border-b border-border/30 bg-primary/5">
-                <p className="text-[10px] text-muted-foreground">
+                <div className="text-[10px] text-muted-foreground">
                   <span className="font-semibold">{t("search.expanded")}</span> {aiExpandedQuery}
                   {aiCategoryHint && (
                     <Badge variant="secondary" className="ml-1.5 text-[8px] py-0">
                       {categories.find(c => c.id === aiCategoryHint)?.name || aiCategoryHint}
                     </Badge>
                   )}
-                </p>
+                </div>
               </div>
             )}
 
             {/* Loading indicator */}
-            {aiLoading && (
+            {showLoading && (
               <div className="flex items-center justify-center gap-2 px-3 py-3">
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                <span className="text-[11px] text-muted-foreground">{t("search.ai_searching")}</span>
+                <span className="text-[11px] text-muted-foreground">{aiLoading ? t("search.ai_searching") : "Searching public listings..."}</span>
               </div>
             )}
 
@@ -297,7 +316,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 px-2">
-                  {categories.slice(0, 12).map((cat) => (
+                  {getShoppableCategories().slice(0, 12).map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => handleSelect(`?category=${cat.id}`)}
@@ -356,21 +375,38 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                     data-testid={`search-result-${product.id}`}
                   >
                     <div className="h-8 w-8 rounded-md overflow-hidden bg-muted shrink-0">
-                      {product.images[0] ? (
-                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                          <Leaf className="h-4 w-4 text-primary" />
-                        </div>
-                      )}
+                      <SafeProductImage src={product.images?.[0]} alt={product.name || "Product"} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[12px] font-semibold truncate group-hover:text-primary transition-colors">
-                        {product.name}
+                        {product.name || "Unnamed product"}
                       </div>
-                      <div className="text-[10px] text-muted-foreground truncate">{product.farmerName}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">{product.farmerName || "Seller not specified"}</div>
                     </div>
                     <div className="text-[11px] font-bold text-primary shrink-0">£{product.price}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {showFarmerResults && (
+              <div className="p-1.5 border-t border-border/30">
+                <div className="flex items-center gap-1.5 px-2 py-1 mb-0.5">
+                  <Store className="h-3 w-3 text-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Farmers & sellers</span>
+                </div>
+                {farmers.slice(0, 6).map((farmer) => (
+                  <button
+                    key={farmer.id}
+                    onClick={() => { setLocation(`/map?farmer=${encodeURIComponent(farmer.id)}`); setOpen(false); inputRef.current?.blur(); }}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg hover:bg-muted/60 text-left"
+                    data-testid={`search-farmer-${farmer.id}`}
+                  >
+                    <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center"><Store className="h-4 w-4" /></div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[12px] font-semibold truncate">{farmer.name}</div>
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground truncate"><MapPin className="h-3 w-3" />{farmer.location}</div>
+                    </div>
                   </button>
                 ))}
               </div>

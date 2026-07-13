@@ -244,6 +244,36 @@ const categoriesData: Category[] = [
     ],
   },
   {
+    id: "logistics",
+    name: "Logistics & Delivery",
+    icon: "Truck",
+    buyerVisible: false,
+    sellerOnly: true,
+    subcategories: [
+      { id: "international-shipping", name: "International Shipping", parentId: "logistics", buyerVisible: false },
+      { id: "national-logistics", name: "National Logistics", parentId: "logistics", buyerVisible: false },
+      { id: "hyperlocal-delivery", name: "Hyperlocal Delivery", parentId: "logistics", buyerVisible: false },
+      { id: "cold-chain", name: "Cold Chain Specialists", parentId: "logistics", buyerVisible: false },
+      { id: "freight-forwarding", name: "Freight Forwarding", parentId: "logistics", buyerVisible: false },
+      { id: "milk-run", name: "Milk Run (Smart Batching)", parentId: "logistics", buyerVisible: false },
+    ],
+  },
+  {
+    id: "share-care",
+    name: "Share & Care Community",
+    icon: "HeartHandshake",
+    buyerVisible: false,
+    sellerOnly: true,
+    subcategories: [
+      { id: "restaurant-surplus", name: "Restaurant Surplus", parentId: "share-care", buyerVisible: false },
+      { id: "home-surplus", name: "Home Surplus", parentId: "share-care", buyerVisible: false },
+      { id: "retail-surplus", name: "Retail Surplus", parentId: "share-care", buyerVisible: false },
+      { id: "production-surplus", name: "Production Surplus", parentId: "share-care", buyerVisible: false },
+      { id: "event-surplus", name: "Event Surplus", parentId: "share-care", buyerVisible: false },
+      { id: "free-food", name: "Free Food Listings", parentId: "share-care", buyerVisible: false },
+    ],
+  },
+  {
     id: "commercial-crops",
     name: "Commercial & Industrial Crops",
     icon: "Factory",
@@ -1205,10 +1235,12 @@ export class MemStorage implements IStorage {
       if (filters.search) {
         const query = filters.search.toLowerCase();
         products = products.filter(
-          (p) =>
-            p.name.toLowerCase().includes(query) ||
-            p.farmerName.toLowerCase().includes(query) ||
-            p.description.toLowerCase().includes(query)
+          (p) => {
+            const category = this.categories.find((item) => item.id === p.categoryId);
+            const subcategory = category?.subcategories.find((item) => item.id === p.subcategoryId);
+            return [p.name, p.farmerName, p.description, p.farmerLocation, category?.name, subcategory?.name]
+              .some((value) => value?.toLowerCase().includes(query));
+          }
         );
       }
 

@@ -61,7 +61,7 @@ export default function LoginPage() {
   const [otpError, setOtpError] = useState("");
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);
   const googleButtonRenderedRef = useRef(false);
-  const [googleClientId, setGoogleClientId] = useState("");
+  const [googleClientId, setGoogleClientId] = useState(() => import.meta.env.VITE_GOOGLE_CLIENT_ID || "");
   const [googleStatusMessage, setGoogleStatusMessage] = useState("");
   const returnPath = getSafeReturnPath(new URLSearchParams(search).get("returnTo"));
 
@@ -75,7 +75,7 @@ export default function LoginPage() {
     fetch("/api/config")
       .then((r) => r.json())
       .then((cfg) => {
-        const clientId = cfg.googleClientId || "";
+        const clientId = cfg.googleClientId || import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
         setGoogleClientId(clientId);
       })
       .catch(() => {});
@@ -102,8 +102,13 @@ export default function LoginPage() {
   }, [handleGoogleCredential]);
 
   useEffect(() => {
-    if (step !== "phone" || !googleClientId) {
-      setGoogleStatusMessage(googleClientId ? "" : "Google sign-in is not configured yet.");
+    if (step !== "phone") {
+      setGoogleStatusMessage("");
+      return;
+    }
+
+    if (!googleClientId) {
+      setGoogleStatusMessage("");
       return;
     }
 

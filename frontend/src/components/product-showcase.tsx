@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { categories, categoryImages, getCategoryExamples } from "@/lib/categories";
+import { getShoppableCategories, categoryImages, getCategoryExamples } from "@/lib/categories";
 import { getSubSubcategories, SubSubItem } from "@/lib/sub-subcategories";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "@shared/schema";
+import { SafeProductImage } from "./safe-product-image";
 
 interface ProductShowcaseProps {
   categoryId: string | null;
@@ -25,7 +26,7 @@ interface ProductShowcaseProps {
 }
 
 function displayNameForSubcategory(subcategoryId: string): string {
-  for (const cat of categories) {
+  for (const cat of getShoppableCategories()) {
     const sub = cat.subcategories.find((item) => item.id === subcategoryId);
     if (sub) return sub.name;
   }
@@ -77,7 +78,7 @@ export function ProductShowcase({
     }
     // If only categoryId, create sections from subcategories
     if (categoryId) {
-      const cat = categories.find(c => c.id === categoryId);
+      const cat = getShoppableCategories().find(c => c.id === categoryId);
       if (cat) {
         return cat.subcategories.map(sub => ({
           title: sub.name,
@@ -94,13 +95,13 @@ export function ProductShowcase({
 
   const displayName = useMemo(() => {
     if (subcategoryId) {
-      for (const cat of categories) {
+      for (const cat of getShoppableCategories()) {
         const sub = cat.subcategories.find(s => s.id === subcategoryId);
         if (sub) return sub.name;
       }
     }
     if (categoryId) {
-      const cat = categories.find(c => c.id === categoryId);
+      const cat = getShoppableCategories().find(c => c.id === categoryId);
       if (cat) return cat.name;
     }
     return "Products";
@@ -322,18 +323,7 @@ export function ProductShowcase({
                       <Card data-product-tile data-product-name={item.toLowerCase()} className="overflow-hidden group hover:shadow-sm border-border/40 transition-all duration-200 active:scale-[0.97] cursor-pointer scroll-mt-20" onClick={() => onProductClick?.(product)}>
                         {/* Product Image */}
                         <div className="relative aspect-square bg-muted/20 overflow-hidden">
-                          {image ? (
-                            <img 
-                              src={image} 
-                              alt={item}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-green-500/5">
-                              <Package className="h-6 w-6 text-primary/30" />
-                            </div>
-                          )}
+                          <SafeProductImage src={product.images?.[0] || image} fallbackSrc={image} alt={item} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           
                           {/* Badges */}
                           <div className="absolute top-1 left-1 flex flex-col gap-0.5">

@@ -30,7 +30,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { categories as defaultCategories, categoryImages } from "@/lib/categories";
+import { getShoppableCategories, categoryImages } from "@/lib/categories";
 import { getCategoryIconComponent } from "@/lib/category-icons";
 import type { Category } from "@shared/schema";
 import { motion } from "framer-motion";
@@ -48,7 +48,7 @@ const STORAGE_KEY = "agriconnect-category-order";
 
 function getCategoryImage(categoryId: string): string | undefined {
   if (categoryImages[categoryId]) return categoryImages[categoryId];
-  const category = defaultCategories.find(cat => cat.id === categoryId);
+  const category = getShoppableCategories().find(cat => cat.id === categoryId);
   if (category) {
     for (const sub of category.subcategories) {
       if (categoryImages[sub.id]) return categoryImages[sub.id];
@@ -62,7 +62,7 @@ function loadOrder(): string[] {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
   } catch {}
-  return defaultCategories.map(c => c.id);
+  return getShoppableCategories().map(c => c.id);
 }
 
 function saveOrder(ids: string[]) {
@@ -190,7 +190,7 @@ export function CategorySidebar({
   );
 
   const orderedCategories = useMemo(() => {
-    const map = new Map(defaultCategories.map(c => [c.id, c]));
+    const map = new Map(getShoppableCategories().map(c => [c.id, c]));
     return categoryOrder.map(id => map.get(id)).filter(Boolean) as Category[];
   }, [categoryOrder]);
 
@@ -263,8 +263,9 @@ export function CategorySidebar({
   };
 
   const totalSubcategories = useMemo(() =>
-    defaultCategories.reduce((acc, cat) => acc + cat.subcategories.length, 0), []
+    getShoppableCategories().reduce((acc, cat) => acc + cat.subcategories.length, 0), []
   );
+  const totalCategories = useMemo(() => getShoppableCategories().length, []);
 
   return (
     <Sidebar
@@ -412,7 +413,7 @@ export function CategorySidebar({
 
         {!isCollapsed && (
           <div className="text-[8px] text-muted-foreground text-center bg-muted/40 rounded-md py-1 font-medium tracking-tight border border-border/10">
-            <span className="text-primary font-bold">{defaultCategories.length}</span> CAT
+            <span className="text-primary font-bold">{totalCategories}</span> CAT
             <span className="mx-1.5 text-border">|</span>
             <span className="text-primary font-bold">{totalSubcategories}+</span> ITEMS
             <span className="mx-1.5 text-border">|</span>

@@ -116,6 +116,9 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
   }, [autoLocate, hasAutoLocated]);
 
   const farmerMarkers: FarmerMarker[] = products.reduce((acc, product) => {
+    if (!Number.isFinite(product.farmerLatitude) || !Number.isFinite(product.farmerLongitude)) return acc;
+    const farmerName = product.farmerName?.trim() || "Seller not specified";
+    const farmerLocation = product.farmerLocation?.trim() || "Location not specified";
     const existing = acc.find((m) => m.id === product.farmerId);
     if (existing) {
       if (!existing.products.includes(product.name)) {
@@ -128,7 +131,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
         : undefined;
       acc.push({
         id: product.farmerId,
-        name: product.farmerName,
+        name: farmerName,
         avatar: product.farmerAvatar,
         latitude: product.farmerLatitude,
         longitude: product.farmerLongitude,
@@ -136,7 +139,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
         productCount: 1,
         rating: product.farmerRating,
         products: [product.name],
-        location: product.farmerLocation,
+        location: farmerLocation,
         distance,
       });
     }
@@ -607,6 +610,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                   onClick={handleLocateUser}
                   disabled={isLocating}
                   className="gap-1 h-8"
+                  data-testid="button-locate-public-map"
                 >
                   <Locate className={`h-3.5 w-3.5 ${isLocating ? 'animate-spin' : ''}`} />
                   <span className="hidden sm:inline text-xs">{userLocation ? t("map.located") : t("map.locate")}</span>
@@ -723,6 +727,9 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                   <span className="text-muted-foreground">{t("map.offline_status")}</span>
                 </div>
               </div>
+              {userLocation && filteredMarkers.length === 0 && (
+                <span className="text-muted-foreground" data-testid="located-filter-empty">No public farm locations found within this radius.</span>
+              )}
             </div>
           </Card>
         </div>

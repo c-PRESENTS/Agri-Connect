@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { getProductImage } from "@/lib/product-images";
 import { isSellerOnline } from "@/lib/seller-presence";
+import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product } from "@shared/schema";
 
 interface SellerEntry {
@@ -89,7 +90,7 @@ export function LiveSellersRail({
   const sellers: SellerEntry[] = useMemo(() => {
     const map = new Map<string, SellerEntry>();
     for (const p of products) {
-      if (!p.farmerLatitude || !p.farmerLongitude) continue;
+      if (!hasValidPublicCoordinates(p.farmerLatitude, p.farmerLongitude)) continue;
       const existing = map.get(p.farmerId);
       if (existing) {
         existing.productCount += 1;
@@ -98,10 +99,10 @@ export function LiveSellersRail({
       } else {
         map.set(p.farmerId, {
           id: p.farmerId,
-          name: p.farmerName,
-          avatar: p.farmerAvatar,
-          rating: p.farmerRating,
-          location: p.farmerLocation || "UK",
+          name: p.farmerName?.trim() || "Seller not specified",
+          avatar: p.farmerAvatar || "",
+          rating: Number.isFinite(p.farmerRating) ? p.farmerRating : 0,
+          location: getPublicLocationLabel(p.farmerLocation),
           productCount: 1,
           topProducts: [p],
           isOnline: isSellerOnline(p.farmerId),

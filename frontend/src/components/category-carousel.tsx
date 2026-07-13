@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useState, useRef } from "react";
-import { categories } from "@/lib/categories";
+import { getShoppableCategories } from "@/lib/categories";
 import { getCategoryIconComponent } from "@/lib/category-icons";
 import type { Product } from "@shared/schema";
 
@@ -92,7 +92,7 @@ export function CategoryCarousel({
           className="flex gap-3 sm:gap-5 md:gap-6 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide snap-x snap-mandatory -mx-3 px-3 sm:mx-0 sm:px-0"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {categories.slice(0, 8).map((category, index) => {
+          {getShoppableCategories().slice(0, 8).map((category, index) => {
             const IconComponent = getCategoryIconComponent(category.icon);
             const bgImage = categoryImages[category.id];
             
