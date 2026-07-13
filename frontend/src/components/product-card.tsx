@@ -18,6 +18,7 @@ import { getCategoryImage } from "@/lib/categories";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { SafeProductImage } from "./safe-product-image";
+import { PublicSellerBadges } from "./verification-badges";
 
 interface ProductCardProps {
   product: Product;
@@ -198,22 +199,25 @@ export function ProductCard({
 
           {!shouldAutoTranslate && <TranslateButton text={descText} className="mb-1" />}
 
-          <Link
-            href={product.farmerId ? `/sellers/${product.farmerId}` : "#"}
-            className="flex items-center gap-1 mb-1 hover:text-primary"
-            onClick={(e) => e.stopPropagation()}
-            data-testid={`link-seller-${product.farmerId}`}
-          >
-            <Avatar className="h-4 w-4 shrink-0">
-              <AvatarImage src={product.farmerAvatar || undefined} alt={sellerName} />
-              <AvatarFallback className="text-[8px] bg-primary text-primary-foreground">
-                {sellerName.split(' ').map(n => n[0]).join('').slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-[9px] sm:text-[11px] text-muted-foreground truncate hover:underline">
-              {sellerName}
-            </span>
-          </Link>
+          <div className="mb-1 flex items-center gap-1">
+            <Link
+              href={product.farmerId ? `/sellers/${product.farmerId}` : "#"}
+              className="flex min-w-0 items-center gap-1 hover:text-primary"
+              onClick={(e) => e.stopPropagation()}
+              data-testid={`link-seller-${product.farmerId}`}
+            >
+              <Avatar className="h-4 w-4 shrink-0">
+                <AvatarImage src={product.farmerAvatar || undefined} alt={sellerName} />
+                <AvatarFallback className="text-[8px] bg-primary text-primary-foreground">
+                  {sellerName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-[9px] sm:text-[11px] text-muted-foreground truncate hover:underline">
+                {sellerName}
+              </span>
+            </Link>
+            <PublicSellerBadges rating={product.farmerRating} reviewCount={product.reviewCount} />
+          </div>
 
           <div className="flex items-center gap-1.5 mb-1 text-[9px] sm:text-[11px]">
             <div className="flex items-center gap-0.5">

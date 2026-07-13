@@ -36,6 +36,8 @@ const TermsOfServicePage = lazy(() => import("@/pages/terms-of-service"));
 const RefundPolicyPage = lazy(() => import("@/pages/refund-policy"));
 const FavoritesPage = lazy(() => import("@/pages/favorites"));
 const MyProfilePage = lazy(() => import("@/pages/my-profile"));
+const ProfileCompletionPage = lazy(() => import("@/pages/profile-completion"));
+const StudentHelpPointPage = lazy(() => import("@/pages/student-help-point"));
 
 export function AppRoutes() {
   return (
@@ -62,6 +64,12 @@ export function AppRoutes() {
       </Route>
       <Route path="/my-profile">
         <ProtectedRoute><MyProfilePage /></ProtectedRoute>
+      </Route>
+      <Route path="/profile-completion">
+        <ProtectedRoute><ProfileCompletionPage /></ProtectedRoute>
+      </Route>
+      <Route path="/student-help-point">
+        <ProtectedRoute><StudentHelpPointPage /></ProtectedRoute>
       </Route>
       <Route path="/farmers-help" component={FarmersHelp} />
       <Route path="/land-leasing" component={LandLeasingPage} />

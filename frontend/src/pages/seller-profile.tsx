@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, MapPin, Star, Store, Package, MessageSquare, ShieldCheck, Heart } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Store, Package, MessageSquare, Heart } from "lucide-react";
 import { TopNavigation } from "@/components/top-navigation";
 import { ProductCard } from "@/components/product-card";
 import { MapWithNearby } from "@/components/map-with-nearby";
@@ -15,6 +15,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useToast } from "@/hooks/use-toast";
 import { useGoBack } from "@/hooks/use-go-back";
 import { useFavorites } from "@/hooks/use-favorites";
+import { PublicSellerBadges } from "@/components/verification-badges";
 import type { Product } from "@shared/schema";
 
 export default function SellerProfilePage() {
@@ -106,7 +107,8 @@ export default function SellerProfilePage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold" data-testid="text-seller-name">{seller.farmerName}</h1>
-                <Badge variant="secondary" className="gap-1"><ShieldCheck className="w-3 h-3" /> {t("seller_profile.verified_badge")}</Badge>
+                <Badge variant="outline">Seller</Badge>
+                <PublicSellerBadges rating={seller.farmerRating} reviewCount={seller.reviewCount} />
               </div>
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1" data-testid="text-seller-location">
                 <MapPin className="w-3.5 h-3.5" />

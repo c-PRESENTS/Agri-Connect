@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SafeProductImage } from "@/components/safe-product-image";
+import { VerificationTiers } from "@/components/verification-badges";
+import { ProfileCompletionChecklist } from "@/components/profile-completion";
 import { useAuth } from "@/hooks/use-auth";
 import { getProductImage } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
@@ -50,6 +52,10 @@ export default function MyProfilePage() {
             <Plus className="mr-2 h-4 w-4" /> Add product
           </Button>
         </div>
+
+        <VerificationTiers profile={user} />
+
+        <div className="mb-6 rounded-lg border bg-card p-4"><ProfileCompletionChecklist profile={user} compact /><Button variant="outline" size="sm" className="mt-4" onClick={() => setLocation("/profile-completion")} data-testid="button-open-profile-completion">Open checklist</Button></div>
 
         <section aria-labelledby="my-listings-heading">
           <div className="mb-3 flex items-center justify-between gap-3">

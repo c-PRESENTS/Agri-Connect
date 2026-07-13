@@ -17,6 +17,7 @@ import {
   ShoppingBag,
   MoreHorizontal,
   Heart,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -265,6 +266,10 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
                 <DropdownMenuItem onClick={() => setLocation("/my-profile")} data-testid="menu-item-my-profile">
                   <User className="mr-2 h-4 w-4" />
                   My Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation("/student-help-point")} data-testid="menu-item-student-help-point">
+                  <GraduationCap className="mr-2 h-4 w-4" />
+                  Student Help Point
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLocation("/dashboard")} data-testid="menu-item-dashboard">
                   <User className="mr-2 h-4 w-4" />
