@@ -16,6 +16,7 @@ import {
   Cpu,
   ShoppingBag,
   MoreHorizontal,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -261,6 +262,10 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 backdrop-blur-xl">
+                <DropdownMenuItem onClick={() => setLocation("/my-profile")} data-testid="menu-item-my-profile">
+                  <User className="mr-2 h-4 w-4" />
+                  My Profile
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLocation("/dashboard")} data-testid="menu-item-dashboard">
                   <User className="mr-2 h-4 w-4" />
                   {t("nav.dashboard", "Dashboard")}
@@ -268,6 +273,10 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
                 <DropdownMenuItem onClick={() => setLocation("/orders")} data-testid="menu-item-orders">
                   <ShoppingBag className="mr-2 h-4 w-4" />
                   {t("nav.orders", "My Orders")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation("/favorites")} data-testid="menu-item-favorites">
+                  <Heart className="mr-2 h-4 w-4" />
+                  Favorites
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLocation("/settings")} data-testid="menu-item-settings">
                   <Settings className="mr-2 h-4 w-4" />

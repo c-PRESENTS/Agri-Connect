@@ -10,7 +10,7 @@ import {
   ArrowRight, Star, Users, Leaf, TrendingUp,
   ShieldCheck, Truck, Sprout, Globe, Activity, Zap, Satellite,
   GripVertical, PlusCircle, EyeOff, Pencil, Check, X as XIcon,
-  ShoppingCart,
+  ShoppingCart, Heart,
 } from "lucide-react";
 import { LeafletFarmerMap } from "./leaflet-farmer-map";
 import { HeroServiceGrid } from "./hero-service-grid";
@@ -18,6 +18,7 @@ import { UserBookmarks } from "./user-bookmarks";
 import type { Product } from "@shared/schema";
 import { getProductImage } from "@/lib/product-images";
 import { categoryImages } from "@/lib/categories";
+import { useFavorites } from "@/hooks/use-favorites";
 
 const CAT_LS_KEY = "agri-all-cats-v1";
 type ShareCareItem = { id: string; name: string; unit: string; qty: number; donor: string; location: string; emoji: string; postedAgo: string; category: string };
@@ -98,6 +99,7 @@ function saveCatPrefs(p: { order: string[]; hidden: string[] }) {
 export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: HeroSectionProps) {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
+  const { isAuthenticated, isProductFavorite, toggleProduct } = useFavorites();
   const [heroMapMode, setHeroMapMode] = useState<HeroMapMode>("products");
   const [heroLeftPct, setHeroLeftPct] = useState(42);
   const heroGridRef = useRef<HTMLDivElement | null>(null);
@@ -192,6 +194,10 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
   const featuredProducts = products.filter(p => p.isFeatured);
   const farmerCount = new Set(products.map(p => p.farmerId)).size;
   const visibleListings = products.length + shareCareItems.length;
+  const handleFavoriteProduct = (event: React.MouseEvent, productId: string) => {
+    event.stopPropagation();
+    toggleProduct(productId);
+  };
 
   return (
     <section className="relative overflow-hidden">
@@ -497,6 +503,16 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                   <div className="absolute top-1 right-1">
                     <Badge className="bg-primary/95 border-none h-4 sm:h-5 px-1 sm:px-1.5 text-[8px] sm:text-[10px] font-bold shadow-sm">£{product.price}</Badge>
                   </div>
+                  <button
+                    type="button"
+                    onClick={(event) => handleFavoriteProduct(event, product.id)}
+                    data-testid={`button-hero-favorite-${product.id}`}
+                    aria-label={isProductFavorite(product.id) ? `Remove ${product.name} from favorites` : `Add ${product.name} to favorites`}
+                    title={isAuthenticated ? (isProductFavorite(product.id) ? "Remove from favorites" : "Add to favorites") : "Sign in to save favorites"}
+                    className="absolute bottom-1 right-1 h-6 w-6 rounded-full bg-background/90 text-muted-foreground shadow-sm flex items-center justify-center hover:text-red-500"
+                  >
+                    <Heart className={`h-3.5 w-3.5 ${isProductFavorite(product.id) ? "fill-red-500 text-red-500" : ""}`} />
+                  </button>
                   {product.isOrganic && (
                     <div className="absolute top-1 left-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-green-500 flex items-center justify-center">
                       <Leaf className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-white" />
@@ -561,6 +577,16 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                     <div className="absolute top-1 right-1">
                       <Badge className="bg-background/90 border border-amber-300 text-amber-700 dark:text-amber-300 h-4 sm:h-5 px-1 sm:px-1.5 text-[8px] sm:text-[10px] font-bold">£{product.price}</Badge>
                     </div>
+                    <button
+                      type="button"
+                      onClick={(event) => handleFavoriteProduct(event, product.id)}
+                      data-testid={`button-hero-featured-favorite-${product.id}`}
+                      aria-label={isProductFavorite(product.id) ? `Remove ${product.name} from favorites` : `Add ${product.name} to favorites`}
+                      title={isAuthenticated ? (isProductFavorite(product.id) ? "Remove from favorites" : "Add to favorites") : "Sign in to save favorites"}
+                      className="absolute bottom-1 right-1 h-6 w-6 rounded-full bg-background/90 text-muted-foreground shadow-sm flex items-center justify-center hover:text-red-500"
+                    >
+                      <Heart className={`h-3.5 w-3.5 ${isProductFavorite(product.id) ? "fill-red-500 text-red-500" : ""}`} />
+                    </button>
                   </div>
                   <h3 className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-amber-600 transition-colors">{product.name}</h3>
                   <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-tight">{product.farmerName}</p>

@@ -34,6 +34,8 @@ const SupportPage = lazy(() => import("@/pages/support"));
 const PrivacyPolicyPage = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfServicePage = lazy(() => import("@/pages/terms-of-service"));
 const RefundPolicyPage = lazy(() => import("@/pages/refund-policy"));
+const FavoritesPage = lazy(() => import("@/pages/favorites"));
+const MyProfilePage = lazy(() => import("@/pages/my-profile"));
 
 export function AppRoutes() {
   return (
@@ -54,6 +56,12 @@ export function AppRoutes() {
       </Route>
       <Route path="/settings">
         <ProtectedRoute><SettingsPage /></ProtectedRoute>
+      </Route>
+      <Route path="/favorites">
+        <ProtectedRoute><FavoritesPage /></ProtectedRoute>
+      </Route>
+      <Route path="/my-profile">
+        <ProtectedRoute><MyProfilePage /></ProtectedRoute>
       </Route>
       <Route path="/farmers-help" component={FarmersHelp} />
       <Route path="/land-leasing" component={LandLeasingPage} />

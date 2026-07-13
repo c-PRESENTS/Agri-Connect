@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Star, MapPin, Heart, ShoppingCart, Leaf, Check, GitCompareArrows } from "lucide-react";
 import { useCompare } from "@/hooks/use-compare";
+import { useFavorites } from "@/hooks/use-favorites";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,12 +34,13 @@ export function ProductCard({
   onWishlist,
   onClick 
 }: ProductCardProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const { t, i18n } = useTranslation();
   const { ids: compareIds, toggle: toggleCompare, isFull } = useCompare();
+  const { isAuthenticated, isProductFavorite, toggleProduct } = useFavorites();
   const { toast: pcToast } = useToast();
   const isComparing = compareIds.includes(product.id);
+  const isWishlisted = isProductFavorite(product.id);
   const [autoTranslateOn, setAutoTranslateOn] = useState(() => localStorage.getItem("agriconnect-auto-translate") === "true");
   const baseLang = i18n.language.split("-")[0];
 
@@ -85,8 +87,16 @@ export function ProductCard({
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    const added = toggleProduct(product.id);
+    if (added === null) {
+      pcToast({
+        title: "Sign in to save favorites",
+        description: "Favorites are available for your signed-in account only.",
+      });
+      return;
+    }
     onWishlist?.(product);
+    pcToast({ title: added ? "Added to favorites" : "Removed from favorites" });
   };
 
   const getProductImage = () => {
@@ -148,6 +158,8 @@ export function ProductCard({
               className={`opacity-0 group-hover:opacity-100 transition-all bg-background/80 backdrop-blur-sm hover:bg-background shadow-md h-8 w-8 ${isWishlisted ? 'opacity-100 text-red-500' : ''}`}
               onClick={handleWishlist}
               data-testid={`button-wishlist-${product.id}`}
+              aria-label={isWishlisted ? `Remove ${productName} from favorites` : `Add ${productName} to favorites`}
+              title={isAuthenticated ? (isWishlisted ? "Remove from favorites" : "Add to favorites") : "Sign in to save favorites"}
             >
               <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
             </Button>

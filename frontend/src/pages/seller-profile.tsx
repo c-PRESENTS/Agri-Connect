@@ -7,13 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, MapPin, Star, Store, Package, MessageSquare, ShieldCheck } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Store, Package, MessageSquare, ShieldCheck, Heart } from "lucide-react";
 import { TopNavigation } from "@/components/top-navigation";
 import { ProductCard } from "@/components/product-card";
 import { MapWithNearby } from "@/components/map-with-nearby";
 import { useCart } from "@/hooks/use-cart";
 import { useToast } from "@/hooks/use-toast";
 import { useGoBack } from "@/hooks/use-go-back";
+import { useFavorites } from "@/hooks/use-favorites";
 import type { Product } from "@shared/schema";
 
 export default function SellerProfilePage() {
@@ -29,6 +30,7 @@ export default function SellerProfilePage() {
   const goBack = useGoBack("/");
   const { addItem } = useCart();
   const { toast } = useToast();
+  const { isAuthenticated, isSellerFavorite, toggleSeller } = useFavorites();
 
   const sellerProducts = useMemo(
     () => products.filter((p) => p.farmerId === sellerId),
@@ -40,6 +42,19 @@ export default function SellerProfilePage() {
   };
 
   const seller = sellerProducts[0];
+
+  const handleFavoriteSeller = () => {
+    if (!seller) return;
+    const added = toggleSeller(seller.farmerId);
+    if (added === null) {
+      toast({
+        title: "Sign in to save favorites",
+        description: "Favorites are available for your signed-in account only.",
+      });
+      return;
+    }
+    toast({ title: added ? "Seller added to favorites" : "Seller removed from favorites" });
+  };
 
   if (isLoading) {
     return (
@@ -111,7 +126,29 @@ export default function SellerProfilePage() {
                 <span>{t("seller_profile.rating_suffix")} <span className="font-semibold">£{avgPrice.toFixed(2)}</span></span>
               </div>
             </div>
+            <Button
+              size="icon"
+              variant={isSellerFavorite(seller.farmerId) ? "default" : "outline"}
+              className="md:hidden shrink-0"
+              onClick={handleFavoriteSeller}
+              data-testid="button-favorite-seller-mobile"
+              aria-label={isSellerFavorite(seller.farmerId) ? "Remove seller from favorites" : "Add seller to favorites"}
+              title={isAuthenticated ? (isSellerFavorite(seller.farmerId) ? "Remove from favorites" : "Add to favorites") : "Sign in to save favorites"}
+            >
+              <Heart className={`w-4 h-4 ${isSellerFavorite(seller.farmerId) ? "fill-current" : ""}`} />
+            </Button>
             <div className="hidden md:flex flex-col gap-2">
+              <Button
+                size="sm"
+                variant={isSellerFavorite(seller.farmerId) ? "default" : "outline"}
+                className="gap-2"
+                onClick={handleFavoriteSeller}
+                data-testid="button-favorite-seller"
+                title={isAuthenticated ? (isSellerFavorite(seller.farmerId) ? "Remove from favorites" : "Add to favorites") : "Sign in to save favorites"}
+              >
+                <Heart className={`w-4 h-4 ${isSellerFavorite(seller.farmerId) ? "fill-current" : ""}`} />
+                {isSellerFavorite(seller.farmerId) ? "Favorited" : "Favorite"}
+              </Button>
               <Button size="sm" className="gap-2" data-testid="button-message-seller">
                 <MessageSquare className="w-4 h-4" /> {t("seller_profile.message_button")}
               </Button>

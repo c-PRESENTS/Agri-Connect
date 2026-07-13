@@ -15,7 +15,7 @@ It applies to frontend, backend, shared code, database files, scripts, tests, E2
 - Do not update roadmap, planning, guide, or Markdown files unless the user explicitly asks.
 
 2. Run route-by-route automated tests.
-3. Use the @Chrome extenison(external browser) only for final visual checks.
+3. Use the @Browser in-app Browser only for final visual checks.
 4. Inspect only affected routes, responsive layouts, and difficult UI states.
 5. Avoid asking the browser to verify the entire application in one run.
 
@@ -84,7 +84,7 @@ The user will run build, lint, type-check, Playwright, tests, migrations, and fi
 ## Browser Verification
 
 - Use static inspection first.
-- Use the @Chrome Browser  only for focused verification when a local app is already running.
+- Use the @Browser(in-app Browser) only for focused verification when a local app is already running.
 - Do not start a dev server unless the user explicitly asks.
 - Do not run Playwright unless the user explicitly asks.
 - Verify browser behavior one route at a time.
@@ -93,9 +93,9 @@ The user will run build, lint, type-check, Playwright, tests, migrations, and fi
 - Retry a failed browser route at most once with a narrower check.
 - Avoid broad browser sweeps that can hit browser, sandbox, or timeout limits.
 - If browser verification is unavailable, blocked, or incomplete, say so clearly and give the exact local check the user should run.
-Use the @Chrome Extension (external browser) for verification first. If it fails, times out, becomes blocked, crashes, or returns any browser-tool error, stop retrying immediately and explain what issue u faced. 
+Use the @Browser  in-app browser  for verification first. If it fails, times out, becomes blocked, crashes, or returns any browser-tool error, stop retrying immediately and explain what issue u faced. 
 
-For browser verification, work in small route-by-route steps.
+For browser verification, work in small route-by-route step , http://localhost:5000/ this is the URL    use 60 seconds time out to load features and pages , since it is a big heavay SaaS website , rendering pages takes time
 
 Before interacting:
 1. Open the route and wait for the page to finish its initial render.
@@ -112,7 +112,7 @@ initial page loading. Allow 15–30 seconds for navigation and element visibilit
 Do not execute large combined DOM evaluations or multiple browser actions at
 once. Perform each navigation, wait, inspection, click, and assertion separately
 
-access [@chrome](plugin://chrome@openai-bundled)  and access the http://localhost:5000/ for browser verification and use higher timeout for pages - 60 seconds max  , since it is an big website , loading pages takes time.
+
 
 ## Testing Policy
 
