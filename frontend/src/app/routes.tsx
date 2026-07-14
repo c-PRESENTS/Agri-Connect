@@ -38,6 +38,8 @@ const FavoritesPage = lazy(() => import("@/pages/favorites"));
 const MyProfilePage = lazy(() => import("@/pages/my-profile"));
 const ProfileCompletionPage = lazy(() => import("@/pages/profile-completion"));
 const StudentHelpPointPage = lazy(() => import("@/pages/student-help-point"));
+const FulfillmentPage = lazy(() => import("@/pages/fulfillment"));
+const OperatorDashboardPage = lazy(() => import("@/pages/operator-dashboard"));
 
 export function AppRoutes() {
   return (
@@ -84,6 +86,12 @@ export function AppRoutes() {
       <Route path="/compare" component={ComparePage} />
       <Route path="/seller">
         <ProtectedRoute><SellerPage /></ProtectedRoute>
+      </Route>
+      <Route path="/fulfillment">
+        <ProtectedRoute><FulfillmentPage /></ProtectedRoute>
+      </Route>
+      <Route path="/operator">
+        <ProtectedRoute><OperatorDashboardPage /></ProtectedRoute>
       </Route>
       <Route path="/sellers/:id" component={SellerProfilePage} />
       <Route path="/map" component={SmartMapPage} />

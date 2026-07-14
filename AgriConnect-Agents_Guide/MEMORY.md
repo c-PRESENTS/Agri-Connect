@@ -6,9 +6,9 @@
 
 AgriConnect is a React/Vite frontend with an Express/TypeScript backend, PostgreSQL/Drizzle models, and shared TypeScript contracts. It is an agriculture marketplace and support platform covering products, sellers/farmers, discovery, logistics/help content, maps, and profile UX.
 
-The active roadmap position is **Day 15 implemented in code; focused E2E verification is still pending for Days 13–15**.
+The active roadmap position is **Day 18 implemented in code; focused E2E verification is still pending for Days 13–18**.
 
-## Status through Day 15
+## Status through Day 18
 
 | Day | Area | Status |
 |---|---|---|
@@ -27,8 +27,11 @@ The active roadmap position is **Day 15 implemented in code; focused E2E verific
 | 13 | Favorites and My Profile products | **Implemented; Not Verified** |
 | 14 | Verification tiers, profile completion, Student Help Point | **Implemented; Not Verified** |
 | 15 | $1 minimal listing policy (UI foundation) | **Implemented; Not Verified** |
+| 16 | Basic manual orders, buyer history, seller visibility, and lifecycle status | **Implemented; Not Verified** |
+| 17 | User cart and manual cart checkout | **Implemented; Not Verified** |
+| 18 | Dashboards, logistics foundation, and email foundation | **Implemented; Not Verified** |
 
-See `AgriConnect-Agents_Guide/roadmap.md` for feature details and gaps.
+See `AgriConnect-Agents_Guide/roadmap.md` for feature details and gaps. Day 16's authenticated browser checks require a buyer and seller test session.
 
 ## Architecture and important contracts
 
@@ -52,6 +55,23 @@ See `AgriConnect-Agents_Guide/roadmap.md` for feature details and gaps.
 - Verification tiers derive from profile fields. Trusted seller requires `isVerified`, rating >= 4.5, and at least 20 reviews; UI labels are not external identity proof.
 - `/student-help-point` is a protected **Coming soon/Foundation only** shell and collects no records or requests.
 - **Day 15 — Listing policy:** New `frontend/src/lib/listing-policy.ts` defines `MINIMAL_LISTING_FEE_USD = 1`, status `confirmed_ui_foundation`, and messaging. Policy notice appears on `/dashboard/list-product` and `/my-profile`. `PublicSellerBadges` now always shows "Seller" badge + conditional "Trusted seller". Seller profile uses unified badges.
+
+### Day 16 facts
+
+- Manual orders use `pending -> confirmed -> processing -> shipped -> delivered`, with cancellation and refund transitions. Payment status is `manual`; checkout does not call a payment provider.
+- `POST /api/orders` validates aggregated quantities, uses server-side product price and seller data, rejects self-purchases, and serializes in-memory stock reservation to prevent overselling.
+- Buyers can read only their orders. Seller order responses contain only that seller's items; a seller can update a shared order only when every item belongs to them.
+
+### Day 17 facts
+
+- Cart entries are scoped to the current authenticated user or guest session, deduplicated by product, and validated against current product stock on add, update, and checkout.
+- `POST /api/cart/checkout` builds a manual Day 16 order from the server-side cart and clears that cart only after the order is created successfully.
+
+### Day 18 facts
+
+- Seller summaries are scoped server-side to the authenticated farmer; fulfillment uses the existing seller-authorized Day 16 status endpoint. `/operator` is admin-only and exposes aggregate product/order counts and status totals only.
+- Carrier adapters remain environment-configured with simulated fallbacks. `GET /api/logistics/providers` returns only provider names, handled IDs, and live state to authorized operational roles.
+- Order confirmation and support emails are queued after persistence and failures are safely logged. `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`, and optional `SUPPORT_INBOX_EMAIL` are required for production delivery/routing.
 
 ## Constraints and verification
 

@@ -56,9 +56,9 @@
 
 | Day | Feature Area | Status | Notes |
 |-----|--------------|--------|-------|
-| **Day 16** | Basic orders without payment: confirmation, history (buyer/seller), status model (pending→confirmed→processing→shipped→delivered→cancelled/refunded) | **Planned** | Manual/pending payment state only |
-| **Day 17** | Cart & checkout without payment: add/update/remove, summary, create order, connect to order history | **Planned** | No payment gateway, no escrow |
-| **Day 18** | Logistics foundation, seller dashboard, order fulfillment dashboard, operator dashboard, email automation foundation | **Planned** | Use env vars for provider config |
+| **Day 16** | Basic orders without payment: confirmation, history (buyer/seller), status model | **Implemented; Not Verified** | Manual checkout; server-authoritative stock validation, scoped buyer/seller access, and `pending -> confirmed -> processing -> shipped -> delivered` with cancellation/refund transitions. Browser checks need authenticated buyer and seller sessions. |
+| **Day 17** | Cart & checkout without payment: add/update/remove, summary, create order, connect to order history | **Implemented; Not Verified** | User-scoped cart validation and server-side manual checkout via Day 16 order creation. No payment gateway, escrow, fees, or card data. |
+| **Day 18** | Logistics foundation, seller dashboard, order fulfillment dashboard, operator dashboard, email automation foundation | **Implemented; Not Verified** | Role-scoped seller and admin summaries, fulfillment UI, provider abstraction/status API, and best-effort SendGrid email hooks. No live provider required. |
 | **Day 19** | Security/compliance foundation: rate limiting, SSL docs, DDoS notes, encryption notes, GDPR foundation, audit trail, keyboard nav, alt text, API/form testing foundation | **Planned** | Mark provider-dependent as Needs External Setup |
 | **Day 20** | QA, performance, release notes: cross-browser, mobile, perf pass, link checker, security scan, pentest checklist, UAT, RELEASE_NOTES.md, CLIENT_DEMO_CHECKLIST.md, final ROADMAP_STATUS.md | **Planned** | Stabilization & documentation only |
 
@@ -90,8 +90,8 @@
 | E2E Verified | 2 |
 | Partial E2E | 7 |
 | Not Verified | 0 |
-| Implemented; Not Verified | 9 |
-| Planned | 10 |
+| Implemented; Not Verified | 12 |
+| Planned | 7 |
 | Needs External Setup | 12 |
 | Frozen (Auth) | 1 |
 

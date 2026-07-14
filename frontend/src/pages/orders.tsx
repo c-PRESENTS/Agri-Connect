@@ -17,6 +17,8 @@ import { TopNavigation } from "@/components/top-navigation";
 import { getProductImage } from "@/lib/product-images";
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: typeof Package }> = {
+  pending:            { label: "Pending",            color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",     icon: Clock },
+  confirmed:          { label: "Confirmed",          color: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400", icon: CheckCircle },
   order_placed:       { label: "Order Placed",       color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",     icon: Package },
   payment_confirmed:  { label: "Payment Confirmed",  color: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400", icon: CheckCircle },
   processing:         { label: "Processing",         color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",   icon: RefreshCw },
@@ -24,9 +26,12 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: t
   out_for_delivery:   { label: "Out for Delivery",   color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",      icon: Truck },
   delivered:          { label: "Delivered",          color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",   icon: CheckCircle },
   cancelled:          { label: "Cancelled",          color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",          icon: XCircle },
+  refunded:           { label: "Refunded",           color: "bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400",  icon: RefreshCw },
 };
 
 const statusKeyMap: Record<string, string> = {
+  pending: "orders.status_pending",
+  confirmed: "orders.status_confirmed",
   order_placed: "orders.status_pending",
   payment_confirmed: "orders.status_confirmed",
   processing: "orders.status_confirmed",
@@ -34,6 +39,7 @@ const statusKeyMap: Record<string, string> = {
   out_for_delivery: "orders.status_out_for_delivery",
   delivered: "orders.status_delivered",
   cancelled: "orders.status_cancelled",
+  refunded: "orders.status_refunded",
 };
 
 export default function OrdersPage() {
@@ -42,7 +48,7 @@ export default function OrdersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: orders = [], isLoading, refetch } = useQuery<Order[]>({
+  const { data: orders = [], isLoading, isError, refetch } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
   });
 
@@ -111,6 +117,15 @@ export default function OrdersPage() {
               <div key={i} className="h-28 bg-muted animate-pulse rounded-xl" />
             ))}
           </div>
+        ) : isError ? (
+          <div className="text-center py-10 sm:py-16" data-testid="orders-error-state">
+            <XCircle className="h-14 w-14 text-destructive mx-auto mb-4 opacity-70" />
+            <h2 className="text-xl font-bold mb-2">Unable to load orders</h2>
+            <p className="text-muted-foreground text-sm mb-6">Please check your connection and try again.</p>
+            <Button onClick={() => refetch()} variant="outline" className="gap-2">
+              <RefreshCw className="h-4 w-4" /> Try again
+            </Button>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-10 sm:py-16">
             <ShoppingBag className="h-14 w-14 text-muted-foreground mx-auto mb-4 opacity-40" />
@@ -131,7 +146,7 @@ export default function OrdersPage() {
         ) : (
           <div className="space-y-4">
             {filtered.map((order, idx) => {
-              const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.order_placed;
+              const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
               const StatusIcon = cfg.icon;
               return (
                 <motion.div

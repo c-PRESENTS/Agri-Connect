@@ -21,16 +21,18 @@ import { TopNavigation } from "@/components/top-navigation";
 import { getProductImage } from "@/lib/product-images";
 
 const ORDER_STAGES: { status: OrderStatus; label: string; desc: string; icon: typeof Package }[] = [
+  { status: "pending",           label: "Pending",           desc: "Waiting for the seller to confirm", icon: Clock },
+  { status: "confirmed",         label: "Confirmed",         desc: "Seller has confirmed your order",   icon: CheckCircle },
+  { status: "processing",        label: "Processing",        desc: "Seller is preparing your items",   icon: Package },
+  { status: "shipped",           label: "Shipped",           desc: "Your order is on the way",         icon: Truck },
+  { status: "delivered",         label: "Delivered",         desc: "Order successfully delivered",     icon: CheckCircle },
   { status: "order_placed",      label: "Order Placed",      desc: "We've received your order",        icon: ShoppingBag },
   { status: "payment_confirmed", label: "Payment Confirmed", desc: "Payment has been processed",       icon: CheckCircle },
-  { status: "processing",        label: "Processing",        desc: "Farmer is preparing your items",   icon: Package },
-  { status: "shipped",           label: "Shipped",           desc: "Your order is on the way",         icon: Truck },
   { status: "out_for_delivery",  label: "Out for Delivery",  desc: "Driver is heading to you",         icon: Truck },
-  { status: "delivered",         label: "Delivered",         desc: "Order successfully delivered",     icon: CheckCircle },
 ];
 
 const STATUS_ORDER: OrderStatus[] = [
-  "order_placed", "payment_confirmed", "processing", "shipped", "out_for_delivery", "delivered"
+  "pending", "confirmed", "processing", "shipped", "delivered"
 ];
 
 function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -164,7 +166,7 @@ export default function OrderDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
-            {(order.status === "order_placed" || order.status === "payment_confirmed" || order.status === "processing") && (
+            {(order.status === "pending" || order.status === "confirmed" || order.status === "processing" || order.status === "order_placed" || order.status === "payment_confirmed") && (
               <Button
                 variant="destructive"
                 size="sm"

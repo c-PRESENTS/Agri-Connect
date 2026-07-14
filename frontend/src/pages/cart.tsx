@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Loader2, XCircle } from "lucide-react";
 import { TopNavigation } from "@/components/top-navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,12 +17,13 @@ export default function CartPage() {
   const [, setLocation] = useLocation();
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
-  const { items, total: subtotal, isLoading, updateItem, removeItem } = useCart();
+  const { items, total: subtotal, isLoading, isError, refetch, updateItem, removeItem } = useCart();
 
   const FREE_DELIVERY_THRESHOLD = 30;
   const STANDARD_FEE = 4.99;
   const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD || subtotal === 0 ? 0 : STANDARD_FEE;
-  const total = subtotal + deliveryFee;
+  const tax = parseFloat((subtotal * 0.2).toFixed(2));
+  const total = subtotal + deliveryFee + tax;
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
@@ -38,6 +39,20 @@ export default function CartPage() {
         <TopNavigation />
         <div className="flex items-center justify-center py-32">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNavigation />
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center" data-testid="cart-error-state">
+          <XCircle className="h-12 w-12 text-destructive mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Unable to load your cart</h2>
+          <p className="text-muted-foreground mb-6">Please try again.</p>
+          <Button variant="outline" onClick={() => refetch()}>Try again</Button>
         </div>
       </div>
     );
@@ -144,11 +159,8 @@ export default function CartPage() {
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex flex-col">
                             <span className="font-semibold text-sm" data-testid={`text-cart-unit-price-${item.id}`}>
-                              £{(item.unitPrice ?? item.product.price).toFixed(2)}/{item.product.unit}
+                              £{item.product.price.toFixed(2)}/{item.product.unit}
                             </span>
-                            {item.unitPrice !== undefined && item.unitPrice < item.product.price && (
-                              <span className="text-[10px] line-through text-muted-foreground">£{item.product.price.toFixed(2)}</span>
-                            )}
                           </div>
                           <div className="flex items-center gap-1">
                             <Button
@@ -195,7 +207,7 @@ export default function CartPage() {
                         <p className="text-xs text-muted-foreground mt-1">
                           {t("cart.line_total", "Line total")}:{" "}
                           <span className="font-semibold text-foreground" data-testid={`text-cart-line-total-${item.id}`}>
-                            £{((item.unitPrice ?? item.product.price) * item.quantity).toFixed(2)}
+                            £{(item.product.price * item.quantity).toFixed(2)}
                           </span>
                         </p>
                         {item.purchaseMode === "subscribe" && (
@@ -239,6 +251,10 @@ export default function CartPage() {
                 <span data-testid="text-delivery-fee">
                   {deliveryFee === 0 ? t("cart.free_delivery", "Free") : `£${deliveryFee.toFixed(2)}`}
                 </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t("checkout.vat", "VAT")}</span>
+                <span data-testid="text-cart-tax">£{tax.toFixed(2)}</span>
               </div>
               {deliveryFee > 0 && (
                 <p className="text-xs text-muted-foreground">

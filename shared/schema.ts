@@ -154,7 +154,20 @@ export interface Cart {
 }
 
 // Orders
-export type OrderStatus = "order_placed" | "payment_confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled";
+// Day 16 uses the basic lifecycle below. The legacy values remain accepted so
+// existing Stripe and shipment records continue to render correctly.
+export const basicOrderStatusSchema = z.enum([
+  "pending",
+  "confirmed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "refunded",
+]);
+export type BasicOrderStatus = z.infer<typeof basicOrderStatusSchema>;
+export type LegacyOrderStatus = "order_placed" | "payment_confirmed" | "out_for_delivery";
+export type OrderStatus = BasicOrderStatus | LegacyOrderStatus;
 
 export interface OrderStatusHistory {
   status: OrderStatus;
@@ -180,7 +193,7 @@ export interface Order {
   deliveryAddress: string;
   deliveryMethod: "standard" | "express" | "pickup";
   paymentMethod: string;
-  paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  paymentStatus: "pending" | "manual" | "paid" | "failed" | "refunded";
   stripeSessionId?: string;
   stripePaymentIntentId?: string;
   estimatedDelivery?: string;
@@ -319,7 +332,7 @@ export const createOrderSchema = z.object({
     farmerName: z.string().min(1),
   })).min(1),
   deliveryAddress: z.string().min(1).max(500),
-  paymentMethod: z.enum(["upi", "card", "cod", "stripe"]),
+  paymentMethod: z.enum(["manual", "upi", "card", "cod", "stripe"]),
   deliveryMethod: z.enum(["standard", "express", "pickup"]),
   /** Optional per-farmer shipping selections from cart → shipping handoff. */
   shippingChoices: z.record(z.string(), z.object({
@@ -329,6 +342,19 @@ export const createOrderSchema = z.object({
   /** Optional structured drop address (required when shippingChoices is set). */
   deliveryAddressStruct: deliveryAddressStructSchema.optional(),
 });
+
+export const cartCheckoutSchema = z.object({
+  deliveryAddress: z.string().min(1).max(500),
+  deliveryMethod: z.enum(["standard", "express", "pickup"]).default("standard"),
+  shippingChoices: z.record(z.string(), z.object({
+    partnerId: z.string().min(1),
+    service: shipServiceTypeSchema,
+  })).optional(),
+  deliveryAddressStruct: deliveryAddressStructSchema.optional(),
+}).refine(
+  (data) => !data.shippingChoices || !!data.deliveryAddressStruct,
+  { message: "Delivery details are required when shipping is selected", path: ["deliveryAddressStruct"] },
+);
 
 export const cartShippingQuotesRequestSchema = z.object({
   drop: deliveryAddressStructSchema,

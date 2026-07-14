@@ -93,6 +93,9 @@ export default function OrderConfirmationPage() {
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">{t("order_detail.payment_status")}</p>
                   <p className="text-sm font-semibold">
+                    {order.paymentStatus === "manual" ? "Manual payment pending" : order.paymentStatus}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(order.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                   </p>
                 </div>

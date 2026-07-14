@@ -1,4 +1,4 @@
-import type { Shipment } from "@shared/schema";
+import type { Order, Shipment, SupportTicket } from "@shared/schema";
 
 type NotifyChannel = "email" | "whatsapp" | "console";
 
@@ -101,7 +101,9 @@ export async function notify(params: NotifyParams): Promise<{ channels: NotifyCh
   }
 
   if (used.length === 0) {
-    console.log(`[notify:console] to=${JSON.stringify(to)} subject="${subject}"\n${body}\n`);
+    // Do not log recipients or message bodies: notification content can contain
+    // order addresses or support messages. The event remains observable safely.
+    console.warn("[notify] no delivery channel configured; notification skipped");
     used.push("console");
   }
   return { channels: used };
@@ -137,4 +139,38 @@ export function buildShipmentBookedEmail(s: Shipment, publicTrackUrl: string): {
     ].filter(Boolean).join("\n"),
     shortBody: `📦 ${s.partnerName} booked! Tracking ${s.trackingId}. Follow it live: ${publicTrackUrl}`,
   };
+}
+
+export function buildOrderConfirmationEmail(order: Order, ordersUrl: string): { subject: string; body: string; shortBody: string } {
+  const items = order.items.map((item) => `• ${item.quantity}× ${item.productName}`).join("\n");
+  return {
+    subject: `Order confirmed · ${order.orderNumber}`,
+    body: [`Hi ${order.buyerName || "there"},`, "", `We received your order ${order.orderNumber}.`, "", "Items:", items, "", `Total: £${order.total.toFixed(2)}`, `Payment status: ${order.paymentStatus}`, "", `View your order: ${ordersUrl}`, "", "— AgriConnect"].join("\n"),
+    shortBody: `Order ${order.orderNumber} received. Total £${order.total.toFixed(2)}. View it: ${ordersUrl}`,
+  };
+}
+
+/** Best-effort only: notification failures must never affect order creation. */
+export function queueOrderConfirmation(order: Order, origin: string): void {
+  if (!order.buyerEmail) return;
+  const { subject, body, shortBody } = buildOrderConfirmationEmail(order, `${origin}/orders/${order.id}`);
+  notify({ to: { email: order.buyerEmail }, subject, body, shortBody })
+    .catch((error) => console.warn("[order-confirmation-email] failed", (error as Error).message));
+}
+
+/** Sends a receipt to the requester and forwards a minimal ticket summary when configured. */
+export function queueSupportTicketEmails(ticket: SupportTicket): void {
+  notify({
+    to: { email: ticket.email },
+    subject: `Support request received · ${ticket.id}`,
+    body: `Hi ${ticket.name},\n\nWe received your ${ticket.topic} support request and will reply as soon as possible.\n\n— AgriConnect Support`,
+  }).catch((error) => console.warn("[support-email] acknowledgement failed", (error as Error).message));
+
+  const supportInbox = process.env.SUPPORT_INBOX_EMAIL;
+  if (!supportInbox) return;
+  notify({
+    to: { email: supportInbox },
+    subject: `New support request · ${ticket.topic}`,
+    body: `Ticket: ${ticket.id}\nFrom: ${ticket.name}\nTopic: ${ticket.topic}\n\n${ticket.message}`,
+  }).catch((error) => console.warn("[support-email] forwarding failed", (error as Error).message));
 }

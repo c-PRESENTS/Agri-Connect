@@ -4,13 +4,11 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Truck, CreditCard, CheckCircle, ChevronRight, ChevronLeft,
-  Package, Shield, Clock, Zap, Home, ArrowLeft, Loader2, Lock,
-  Star, AlertCircle, ExternalLink
+  Package, Shield, Clock, ArrowLeft, Loader2, Star, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SiStripe, SiVisa, SiMastercard, SiAmericanexpress } from "react-icons/si";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -71,17 +69,17 @@ export default function CheckoutPage() {
   const [shippingChoices, setShippingChoices] = useState<Record<string, { partnerId: string; service: ShipServiceType }>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { data: cart } = useQuery<Cart>({
+  const { data: cart, isLoading: isCartLoading, isError: isCartError, refetch: refetchCart } = useQuery<Cart>({
     queryKey: ["/api/cart"],
   });
 
   const subtotal = cart?.total || 0;
   // Sum of buyer's per-farmer shipping selections
   const shippingTotal = shippingGroups
-    ? shippingGroups.reduce((s, g) => {
-        const c = shippingChoices[g.farmerId];
-        const q = c ? g.quotes.find((x) => x.partnerId === c.partnerId && x.service === c.service) : g.quotes[0];
-        return s + (q?.price ?? 0);
+    ? shippingGroups.reduce((sum, group) => {
+        const choice = shippingChoices[group.farmerId];
+        const quote = choice ? group.quotes.find((item) => item.partnerId === choice.partnerId && item.service === choice.service) : group.quotes[0];
+        return sum + (quote?.price ?? 0);
       }, 0)
     : 0;
   const tax = parseFloat((subtotal * 0.2).toFixed(2));
@@ -123,7 +121,7 @@ export default function CheckoutPage() {
     },
   });
 
-  const stripeCheckoutMutation = useMutation({
+  const manualOrderMutation = useMutation({
     mutationFn: async () => {
       // Pre-checkout validation: confirm every item is still in stock.
       const validateRes = await apiRequest("POST", "/api/cart/validate", {});
@@ -141,20 +139,9 @@ export default function CheckoutPage() {
         throw new Error(messages.join(" • "));
       }
 
-      const items = cart?.items.map((item) => ({
-        productId: item.productId,
-        productName: item.product.name,
-        productImage: item.product.images?.[0],
-        quantity: item.quantity,
-        price: item.unitPrice ?? item.product.price,
-        farmerId: item.product.farmerId,
-        farmerName: item.product.farmerName,
-      })) ?? [];
-
       const deliveryAddress = `${address.fullName}, ${address.line1}${address.line2 ? ", " + address.line2 : ""}, ${address.city}, ${address.county} ${address.postcode}, ${address.country}`;
 
-      const res = await apiRequest("POST", "/api/stripe/create-checkout-session", {
-        items,
+      const res = await apiRequest("POST", "/api/cart/checkout", {
         deliveryAddress,
         deliveryMethod: "standard",
         shippingChoices,
@@ -170,19 +157,16 @@ export default function CheckoutPage() {
           country: address.country,
         },
       });
-      return (await res.json()) as { url: string; sessionId: string; orderId: string };
+      return (await res.json()) as { id: string };
     },
-    onSuccess: (data) => {
+    onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        toast({ title: t("checkout.title"), variant: "destructive" });
-      }
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      navigate(`/order-confirmation/${order.id}`);
     },
     onError: (err: any) => {
       toast({
-        title: "Could not start checkout",
+        title: "Could not place order",
         description: err?.message || "Please try again",
         variant: "destructive",
       });
@@ -194,7 +178,7 @@ export default function CheckoutPage() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (cart && cart.items.length === 0 && !stripeCheckoutMutation.isSuccess) {
+    if (cart && cart.items.length === 0 && !manualOrderMutation.isSuccess) {
       navigate("/cart");
     }
   }, [cart]);
@@ -234,6 +218,14 @@ export default function CheckoutPage() {
       }
     }
     setStep((s) => Math.min(s + 1, 4));
+  }
+
+  if (isCartLoading) {
+    return <div className="min-h-screen bg-background"><TopNavigation /><div className="flex justify-center py-32"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div></div>;
+  }
+
+  if (isCartError) {
+    return <div className="min-h-screen bg-background"><TopNavigation /><div className="text-center py-20 px-4" data-testid="checkout-cart-error-state"><AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" /><h1 className="text-xl font-bold">Unable to load checkout</h1><Button variant="outline" className="mt-5" onClick={() => refetchCart()}>Try again</Button></div></div>;
   }
 
   return (
@@ -500,43 +492,33 @@ export default function CheckoutPage() {
                   </Card>
                 )}
 
-                {/* Step 3: Payment */}
+                {/* Step 3: Manual payment */}
                 {step === 3 && (
                   <Card>
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center gap-2 mb-2">
                         <CreditCard className="h-5 w-5 text-primary" />
                         <h2 className="text-lg font-bold">{t("checkout.payment_title")}</h2>
-                        <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-                          <Lock className="h-3 w-3" /> {t("checkout.secure_checkout")}
-                        </div>
                       </div>
                       <p className="text-xs text-muted-foreground mb-5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 flex items-center gap-2">
                         <AlertCircle className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
-                        {t("checkout.payment_description")}
+                        Payment is arranged manually with the seller. No card details are collected by AgriConnect.
                       </p>
 
                       <div className="rounded-2xl border border-border bg-muted/30 p-6 text-center">
-                        <SiStripe className="h-10 w-auto mx-auto text-[#635BFF] mb-3" />
-                        <h3 className="font-bold text-base mb-1">{t("checkout.stripe_description")}</h3>
+                        <CreditCard className="h-10 w-10 mx-auto text-primary mb-3" />
+                        <h3 className="font-bold text-base mb-1">Manual payment pending</h3>
                         <p className="text-sm text-muted-foreground mb-5">
-                          {t("checkout.stripe_description")}
+                          Your order is created now. The seller can confirm it and arrange payment separately.
                         </p>
-
-                        <div className="flex items-center justify-center gap-4 text-muted-foreground mb-5">
-                          <SiVisa className="h-7 w-auto" title="Visa" />
-                          <SiMastercard className="h-7 w-auto" title="Mastercard" />
-                          <SiAmericanexpress className="h-7 w-auto" title="Amex" />
-                        </div>
-
                         <ul className="text-xs text-muted-foreground space-y-1 max-w-sm mx-auto text-left">
                           <li className="flex items-start gap-2">
                             <Shield className="h-3.5 w-3.5 mt-0.5 text-green-600 flex-shrink-0" />
-                            {t("cart.card_desc")}
+                            No payment gateway, escrow, or transaction fee is used for this order.
                           </li>
                           <li className="flex items-start gap-2">
-                            <Lock className="h-3.5 w-3.5 mt-0.5 text-green-600 flex-shrink-0" />
-                            {t("checkout.secure_256bit")}
+                            <CheckCircle className="h-3.5 w-3.5 mt-0.5 text-green-600 flex-shrink-0" />
+                            Payment status remains manual until arranged outside the platform.
                           </li>
                         </ul>
                       </div>
@@ -610,7 +592,7 @@ export default function CheckoutPage() {
                                   <p className="text-sm font-medium truncate">{item.product.name}</p>
                                   <p className="text-xs text-muted-foreground">x{item.quantity} · {item.product.farmerName}</p>
                                 </div>
-                                <span className="text-sm font-bold">£{((item.unitPrice ?? item.product.price) * item.quantity).toFixed(2)}</span>
+                                <span className="text-sm font-bold">£{(item.product.price * item.quantity).toFixed(2)}</span>
                               </div>
                             ))}
                           </div>
@@ -623,7 +605,7 @@ export default function CheckoutPage() {
                             <span className="font-semibold text-sm">{t("checkout.payment_title")}</span>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            {t("checkout.stripe_powered")}
+                            Manual payment pending — no online payment is collected.
                           </p>
                         </div>
                       </div>
@@ -646,15 +628,15 @@ export default function CheckoutPage() {
                 </Button>
               ) : (
                 <Button
-                  onClick={() => stripeCheckoutMutation.mutate()}
-                  disabled={stripeCheckoutMutation.isPending}
-                  className="ml-auto gap-2 h-11 px-6 bg-[#635BFF] hover:bg-[#5249e0] text-white"
+                  onClick={() => manualOrderMutation.mutate()}
+                  disabled={manualOrderMutation.isPending}
+                  className="ml-auto gap-2 h-11 px-6"
                   data-testid="btn-place-order"
                 >
-                  {stripeCheckoutMutation.isPending ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> {t("checkout.processing_payment")}</>
+                  {manualOrderMutation.isPending ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Creating order…</>
                   ) : (
-                    <><Lock className="h-4 w-4" /> {t("checkout.stripe_button")}</>
+                    <><CheckCircle className="h-4 w-4" /> Place order</>
                   )}
                 </Button>
               )}

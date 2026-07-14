@@ -1106,6 +1106,7 @@ export class MemStorage implements IStorage {
   private categories: Category[];
   private carts: Map<string, CartItem[]>;
   private orders: Map<string, Order>;
+  private orderCreationQueue: Promise<void> = Promise.resolve();
   private reviews: Map<string, Review>;
   private demandAlerts: DemandAlert[];
   private schemeApplications: Map<string, SchemeApplication>;
@@ -1353,18 +1354,26 @@ export class MemStorage implements IStorage {
     if (!product) {
       throw new Error("Product not found");
     }
+    if (product.stock <= 0) {
+      throw new Error(`${product.name} is out of stock`);
+    }
 
     const existingItem = cart.find((item) => item.productId === productId);
     
     if (existingItem) {
+      if (existingItem.quantity + quantity > product.stock) {
+        throw new Error(`Only ${product.stock} ${product.unit} available for ${product.name}`);
+      }
       existingItem.quantity += quantity;
       existingItem.product = product;
-      // Update pricing context if a new one was supplied (last-add wins).
-      if (options?.unitPrice !== undefined) existingItem.unitPrice = options.unitPrice;
       if (options?.purchaseMode) existingItem.purchaseMode = options.purchaseMode;
       if (options?.subFrequency) existingItem.subFrequency = options.subFrequency;
       this.carts.set(userId, cart);
       return existingItem;
+    }
+
+    if (quantity > product.stock) {
+      throw new Error(`Only ${product.stock} ${product.unit} available for ${product.name}`);
     }
 
     const newItem: CartItem = {
@@ -1372,7 +1381,6 @@ export class MemStorage implements IStorage {
       productId,
       product,
       quantity,
-      ...(options?.unitPrice !== undefined ? { unitPrice: options.unitPrice } : {}),
       ...(options?.purchaseMode ? { purchaseMode: options.purchaseMode } : {}),
       ...(options?.subFrequency ? { subFrequency: options.subFrequency } : {}),
     };
@@ -1393,7 +1401,15 @@ export class MemStorage implements IStorage {
       return undefined;
     }
 
+    const product = await this.getProduct(item.productId);
+    if (!product) throw new Error("Product is no longer available");
+    if (product.stock <= 0) throw new Error(`${product.name} is out of stock`);
+    if (quantity > product.stock) {
+      throw new Error(`Only ${product.stock} ${product.unit} available for ${product.name}`);
+    }
+
     item.quantity = quantity;
+    item.product = product;
     this.carts.set(userId, cart);
     return item;
   }
@@ -1473,15 +1489,39 @@ export class MemStorage implements IStorage {
     deliveryMethod: string = "standard",
     extra?: { shippingChoices?: Order["shippingChoices"]; deliveryAddressStruct?: Order["deliveryAddressStruct"]; shippingTotal?: number },
   ): Promise<Order> {
-    for (const item of items) {
-      const product = await this.getProduct(item.productId);
-      if (!product) {
-        throw new Error(`Product not found: ${item.productName}`);
+    // Keep stock validation and deduction in one in-process critical section.
+    // This prevents two concurrent checkouts from both reserving the last units.
+    let releaseQueue!: () => void;
+    const previousCreation = this.orderCreationQueue;
+    this.orderCreationQueue = new Promise<void>((resolve) => { releaseQueue = resolve; });
+    await previousCreation;
+    try {
+      const requestedByProduct = new Map<string, number>();
+      for (const item of items) {
+        requestedByProduct.set(item.productId, (requestedByProduct.get(item.productId) ?? 0) + item.quantity);
       }
-      if (product.stock < item.quantity) {
-        throw new Error(`Insufficient stock for ${item.productName} (only ${product.stock} available)`);
+
+      const canonicalItems: OrderItem[] = [];
+      for (const [productId, requested] of Array.from(requestedByProduct.entries())) {
+        const product = await this.getProduct(productId);
+        if (!product) throw new Error(`Product not found: ${productId}`);
+        if (product.stock < requested) {
+          throw new Error(`Insufficient stock for ${product.name} (only ${product.stock} available)`);
+        }
       }
-    }
+      for (const item of items) {
+        const product = await this.getProduct(item.productId);
+        if (!product) throw new Error(`Product not found: ${item.productId}`);
+        canonicalItems.push({
+          productId: product.id,
+          productName: product.name,
+          productImage: product.images?.[0],
+          quantity: item.quantity,
+          price: product.price,
+          farmerId: product.farmerId,
+          farmerName: product.farmerName,
+        });
+      }
     const id = randomUUID();
     const user = await authStorage.getUser(userId);
     const buyerName =
@@ -1489,25 +1529,33 @@ export class MemStorage implements IStorage {
       [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
       user?.email ||
       "Buyer";
-    const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const subtotal = canonicalItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const shippingTotal = parseFloat((extra?.shippingTotal ?? 0).toFixed(2));
-    // When per-farmer carrier shipping is used, deliveryFee stays 0 (legacy field).
-    const deliveryFee = shippingTotal > 0 ? 0 : (deliveryMethod === "express" ? 5.99 : 0);
+    // Day 17 uses a simple, server-owned delivery rule. Carrier quotes, when
+    // explicitly supplied by the existing logistics flow, still take precedence.
+    const deliveryFee = shippingTotal > 0
+      ? 0
+      : deliveryMethod === "express"
+        ? 5.99
+        : subtotal > 0 && subtotal < 30
+          ? 4.99
+          : 0;
     const tax = parseFloat((subtotal * 0.2).toFixed(2));
     const total = parseFloat((subtotal + deliveryFee + shippingTotal + tax).toFixed(2));
     const now = new Date().toISOString();
     
+    const isManualOrder = paymentMethod === "manual";
     const order: Order = {
       id,
       orderNumber: generateOrderNumber(),
       buyerId: userId,
       buyerName,
       buyerEmail: user?.email ?? undefined,
-      items,
-      status: "order_placed",
+      items: canonicalItems,
+      status: isManualOrder ? "pending" : "order_placed",
       statusHistory: [
-        { status: "order_placed", timestamp: now, note: "Order received" },
-        ...(paymentMethod === "stripe"
+        { status: isManualOrder ? "pending" : "order_placed", timestamp: now, note: "Order received" },
+        ...(isManualOrder || paymentMethod === "stripe"
           ? []
           : [{ status: "payment_confirmed" as OrderStatus, timestamp: new Date(Date.now() + 30000).toISOString(), note: "Payment confirmed" }]),
       ],
@@ -1519,7 +1567,7 @@ export class MemStorage implements IStorage {
       deliveryAddress,
       deliveryMethod: (deliveryMethod as Order["deliveryMethod"]) || "standard",
       paymentMethod,
-      paymentStatus: paymentMethod === "stripe" ? "pending" : "paid",
+      paymentStatus: isManualOrder ? "manual" : paymentMethod === "stripe" ? "pending" : "paid",
       estimatedDelivery: getEstimatedDelivery(deliveryMethod),
       shippingChoices: extra?.shippingChoices,
       deliveryAddressStruct: extra?.deliveryAddressStruct,
@@ -1528,7 +1576,7 @@ export class MemStorage implements IStorage {
 
     this.orders.set(id, order);
     
-    for (const item of items) {
+    for (const item of canonicalItems) {
       const product = await this.getProduct(item.productId);
       if (product) {
         await this.updateProduct(item.productId, {
@@ -1538,6 +1586,9 @@ export class MemStorage implements IStorage {
     }
 
     return order;
+    } finally {
+      releaseQueue();
+    }
   }
 
   async setOrderStripeSession(id: string, sessionId: string): Promise<void> {
@@ -1654,18 +1705,22 @@ export class MemStorage implements IStorage {
     issues: { productId: string; productName: string; reason: "missing" | "insufficient_stock" | "out_of_stock"; available?: number; requested: number }[];
   }> {
     const issues: { productId: string; productName: string; reason: "missing" | "insufficient_stock" | "out_of_stock"; available?: number; requested: number }[] = [];
+    const requestedByProduct = new Map<string, number>();
     for (const item of items) {
-      const product = await this.getProduct(item.productId);
+      requestedByProduct.set(item.productId, (requestedByProduct.get(item.productId) ?? 0) + item.quantity);
+    }
+    for (const [productId, requested] of Array.from(requestedByProduct.entries())) {
+      const product = await this.getProduct(productId);
       if (!product) {
-        issues.push({ productId: item.productId, productName: item.productId, reason: "missing", requested: item.quantity });
+        issues.push({ productId, productName: productId, reason: "missing", requested });
         continue;
       }
       if (product.stock <= 0) {
-        issues.push({ productId: item.productId, productName: product.name, reason: "out_of_stock", available: 0, requested: item.quantity });
+        issues.push({ productId, productName: product.name, reason: "out_of_stock", available: 0, requested });
         continue;
       }
-      if (product.stock < item.quantity) {
-        issues.push({ productId: item.productId, productName: product.name, reason: "insufficient_stock", available: product.stock, requested: item.quantity });
+      if (product.stock < requested) {
+        issues.push({ productId, productName: product.name, reason: "insufficient_stock", available: product.stock, requested });
       }
     }
     return { ok: issues.length === 0, issues };

@@ -84,6 +84,8 @@ export function useCart() {
     total,
     itemCount,
     isLoading: cartQuery.isLoading,
+    isError: cartQuery.isError,
+    refetch: cartQuery.refetch,
     addItem,
     updateItem,
     removeItem,

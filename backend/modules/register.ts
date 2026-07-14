@@ -11,6 +11,7 @@ import { registerProxyRoutes } from "./proxy/routes";
 import { registerReviewsRoutes } from "./reviews/routes";
 import { registerSearchRoutes } from "./search/routes";
 import { registerSupportRoutes } from "./support/routes";
+import { registerDashboardRoutes } from "./dashboard/routes";
 
 export interface BackendModuleDeps {
   getUserId(req: Request): string | undefined;
@@ -37,6 +38,7 @@ export function registerBackendModules(app: Express, deps: BackendModuleDeps): v
   registerAIRoutes(app, { aiRateLimit: deps.aiRateLimit });
   registerGovernmentRoutes(app, { getUserId: deps.getUserId });
   registerSupportRoutes(app, { getUserId: deps.getUserId, rateLimit: deps.rateLimit });
+  registerDashboardRoutes(app, { getUserId: deps.getUserId });
   registerShareCareRoutes(app);
   registerLandRoutes(app);
   registerProxyRoutes(app);

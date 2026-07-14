@@ -24,7 +24,15 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Product, Order, OrderStatus } from "@shared/schema";
 import { getProductImage } from "@/lib/product-images";
 
+type SellerDashboard = {
+  products: Product[];
+  orders: Order[];
+  summary: { productCount: number; orderCount: number; activeOrderCount: number; salesTotal: number };
+};
+
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: typeof Package }> = {
+  pending:           { label: "Pending",           color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",       icon: Clock },
+  confirmed:         { label: "Confirmed",         color: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400", icon: CheckCircle },
   order_placed:      { label: "Order Placed",      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",       icon: Package },
   payment_confirmed: { label: "Payment Confirmed", color: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400", icon: CheckCircle },
   processing:        { label: "Processing",        color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",     icon: RefreshCw },
@@ -32,14 +40,16 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: t
   out_for_delivery:  { label: "Out for Delivery",  color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",        icon: Truck },
   delivered:         { label: "Delivered",         color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",     icon: CheckCircle },
   cancelled:         { label: "Cancelled",         color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",            icon: XCircle },
+  refunded:          { label: "Refunded",          color: "bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400",    icon: RefreshCw },
 };
 
-const SELLER_STATUSES: OrderStatus[] = ["processing", "shipped", "out_for_delivery", "delivered"];
+const SELLER_STATUSES: OrderStatus[] = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"];
 
 const quickActions = [
   { icon: Camera,        label: "Photo-Sell",    desc: "Snap & list in seconds",        path: "/dashboard/photo-sell", color: "from-violet-500 to-purple-600" },
   { icon: Package,       label: "My Listings",   desc: "Manage active products",         path: "/dashboard",            color: "from-green-500 to-emerald-600" },
   { icon: Truck,         label: "Logistics",     desc: "Delivery & shipping partners",   path: "/logistics",            color: "from-teal-500 to-green-600" },
+  { icon: ClipboardList, label: "Fulfillment",   desc: "Prepare and update orders",       path: "/fulfillment",          color: "from-sky-500 to-blue-600" },
   { icon: MessageSquare, label: "Demand Alerts", desc: "Real-time buyer requests",       path: "/dashboard",            color: "from-rose-500 to-pink-600" },
   { icon: DollarSign,    label: "Govt Schemes",  desc: "Subsidies & financial aid",      path: "/government-schemes",   color: "from-indigo-500 to-blue-600" },
   { icon: Settings,      label: "Settings",      desc: "Profile & payment setup",        path: "/settings",             color: "from-slate-500 to-gray-600" },
@@ -63,13 +73,12 @@ export default function SellerPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
-  const { data: products = [] } = useQuery<Product[]>({ queryKey: ["/api/products"] });
-  const myProducts = products.filter((p) => p.farmerId === `farmer-${user?.id ?? 1}`);
-
-  const { data: sellerOrders = [], isLoading: ordersLoading } = useQuery<Order[]>({
-    queryKey: ["/api/seller/orders"],
-    enabled: activeTab === "orders",
+  const { data: sellerDashboard, isLoading: ordersLoading, isError: ordersError, refetch: refetchOrders } = useQuery<SellerDashboard>({
+    queryKey: ["/api/dashboard/seller"],
+    enabled: isAuthenticated,
   });
+  const myProducts = sellerDashboard?.products ?? [];
+  const sellerOrders = sellerDashboard?.orders ?? [];
 
   const [trackingDialog, setTrackingDialog] = useState<{ orderId: string; status: OrderStatus } | null>(null);
   const [trackingForm, setTrackingForm] = useState({ trackingNumber: "", carrier: "", trackingUrl: "" });
@@ -87,6 +96,7 @@ export default function SellerPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/seller/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/seller"] });
       setUpdatingOrderId(null);
       setTrackingDialog(null);
       setTrackingForm({ trackingNumber: "", carrier: "", trackingUrl: "" });
@@ -113,18 +123,10 @@ export default function SellerPage() {
   );
 
   // Revenue stats
-  const totalRevenue = sellerOrders.reduce((s, o) => {
-    if (o.status !== "cancelled") {
-      const myItemsTotal = o.items
-        .filter((i) => i.farmerId === `farmer-${user?.id ?? 1}`)
-        .reduce((sum, i) => sum + i.price * i.quantity, 0);
-      return s + myItemsTotal;
-    }
-    return s;
-  }, 0);
+  const totalRevenue = sellerDashboard?.summary.salesTotal ?? 0;
 
   const pendingOrders = sellerOrders.filter((o) =>
-    ["order_placed", "payment_confirmed", "processing"].includes(o.status)
+    ["pending", "confirmed", "processing", "order_placed", "payment_confirmed"].includes(o.status)
   ).length;
 
   return (
@@ -317,6 +319,12 @@ export default function SellerPage() {
                   <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
                 ))}
               </div>
+            ) : ordersError ? (
+              <div className="text-center py-16" data-testid="seller-orders-error-state">
+                <XCircle className="h-12 w-12 text-destructive mx-auto mb-3" />
+                <p className="font-semibold">Unable to load orders</p>
+                <Button size="sm" variant="outline" onClick={() => refetchOrders()} className="mt-4">Try again</Button>
+              </div>
             ) : filteredOrders.length === 0 ? (
               <div className="text-center py-16">
                 <ShoppingBag className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-40" />
@@ -330,10 +338,10 @@ export default function SellerPage() {
             ) : (
               <div className="space-y-3">
                 {filteredOrders.map((order, idx) => {
-                  const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.order_placed;
+                  const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
                   const StatusIcon = cfg.icon;
-                  const myItems = order.items.filter((i) => i.farmerId === `farmer-${user?.id ?? 1}`);
-                  const myTotal = myItems.reduce((s, i) => s + i.price * i.quantity, 0);
+                  const myItems = order.items;
+                  const myTotal = order.total;
 
                   return (
                     <motion.div
@@ -390,7 +398,7 @@ export default function SellerPage() {
                             </p>
 
                             {/* Status update */}
-                            {order.status !== "cancelled" && order.status !== "delivered" && (
+                            {order.status !== "cancelled" && order.status !== "delivered" && order.status !== "refunded" && (
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-muted-foreground flex-shrink-0">{t("seller.performance_title")}:</span>
                                 <Select
@@ -414,11 +422,11 @@ export default function SellerPage() {
                               </div>
                             )}
 
-                            {(order.status === "delivered" || order.status === "cancelled") && (
+                            {(order.status === "delivered" || order.status === "cancelled" || order.status === "refunded") && (
                               <div className={`flex items-center gap-1.5 text-xs ${order.status === "delivered" ? "text-green-600" : "text-destructive"}`}>
                                 {order.status === "delivered"
                                   ? <><CheckCircle className="h-3.5 w-3.5" /> {t("seller.delivered")}</>
-                                  : <><XCircle className="h-3.5 w-3.5" /> {t("seller.pending")}</>
+                                  : <><XCircle className="h-3.5 w-3.5" /> {order.status === "refunded" ? "Refunded" : t("seller.pending")}</>
                                 }
                               </div>
                             )}

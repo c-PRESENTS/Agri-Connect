@@ -2,13 +2,16 @@ import type { Express, Request, Response } from "express";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import {
+  cartCheckoutSchema,
   cartItemInputSchema,
   cartShippingQuotesRequestSchema,
   updateCartItemSchema,
 } from "@shared/schema";
+import type { OrderItem } from "@shared/schema";
 import { isAuthenticated } from "../../auth";
 import { storage } from "../../storage";
 import { calculateQuotesFromCoords, geocodePostcode } from "../../shipping/quote-engine";
+import { queueOrderConfirmation } from "../../notifications";
 
 type CartRouteDeps = {
   getUserId: (req: Request) => string | undefined;
@@ -31,7 +34,7 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
       await deps.mergeGuestCartIfNeeded(req);
       const userId = deps.getUserIdOrSession(req);
       const cart = await storage.getCart(userId);
-      const total = cart.reduce((acc, item) => acc + (item.unitPrice ?? item.product?.price ?? 0) * item.quantity, 0);
+      const total = cart.reduce((acc, item) => acc + (item.product?.price ?? 0) * item.quantity, 0);
       res.json({ items: cart, total });
     } catch {
       res.status(500).json({ error: "Failed to fetch cart" });
@@ -48,7 +51,7 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
       res.status(201).json(item);
     } catch (error: any) {
       if (handleZod(error, res)) return;
-      res.status(500).json({ error: error.message || "Failed to add to cart" });
+      res.status(400).json({ error: error.message || "Failed to add to cart" });
     }
   });
 
@@ -62,9 +65,9 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
         return res.status(404).json({ error: "Cart item not found" });
       }
       res.json(item || { deleted: true });
-    } catch (error) {
+    } catch (error: any) {
       if (handleZod(error, res)) return;
-      res.status(500).json({ error: "Failed to update cart item" });
+      res.status(400).json({ error: error.message || "Failed to update cart item" });
     }
   });
 
@@ -104,6 +107,87 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
       res.json(result);
     } catch (error: any) {
       res.status(500).json({ error: error?.message || "Failed to validate cart" });
+    }
+  });
+
+  app.post("/api/cart/checkout", isAuthenticated, async (req, res) => {
+    try {
+      const userId = deps.getUserId(req)!;
+      const { deliveryAddress, deliveryMethod, shippingChoices, deliveryAddressStruct } = cartCheckoutSchema.parse(req.body);
+      const cart = await storage.getCart(userId);
+      if (cart.length === 0) return res.status(400).json({ error: "Cart is empty" });
+
+      const availability = await storage.validateCart(
+        cart.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+      );
+      if (!availability.ok) {
+        return res.status(400).json({ error: "One or more products are unavailable", issues: availability.issues });
+      }
+      if (cart.some((item) => item.product.farmerId === userId)) {
+        return res.status(400).json({ error: "You cannot order your own product" });
+      }
+
+      let shippingTotal = 0;
+      if (shippingChoices && deliveryAddressStruct) {
+        const drop = geocodePostcode({ postcode: deliveryAddressStruct.postcode, country: deliveryAddressStruct.country });
+        const itemsByFarmer = new Map<string, typeof cart>();
+        for (const item of cart) {
+          const grouped = itemsByFarmer.get(item.product.farmerId) ?? [];
+          grouped.push(item);
+          itemsByFarmer.set(item.product.farmerId, grouped);
+        }
+        for (const [farmerId, farmerItems] of Array.from(itemsByFarmer.entries())) {
+          const choice = shippingChoices[farmerId];
+          if (!choice) return res.status(400).json({ error: "Shipping selection is required for every seller" });
+          const firstProduct = farmerItems[0].product;
+          const quotes = calculateQuotesFromCoords({
+            pickup: { lat: firstProduct.farmerLatitude, lng: firstProduct.farmerLongitude, country: "GB" },
+            drop: { lat: drop.lat, lng: drop.lng, country: deliveryAddressStruct.country },
+            service: choice.service,
+            items: farmerItems.map((item) => ({
+              name: item.product.name,
+              quantity: item.quantity,
+              weightKg: /grain|flour|feed|hay/.test(item.product.categoryId.toLowerCase()) ? 1 : 0.5,
+              coldChain: /dairy|meat|seafood|frozen/.test(item.product.categoryId.toLowerCase()),
+              fragile: /egg|berry|tomato/.test(item.product.name.toLowerCase()),
+            })),
+          });
+          const quote = quotes.quotes.find((candidate) => candidate.partnerId === choice.partnerId && candidate.service === choice.service);
+          if (!quote) return res.status(400).json({ error: "Selected shipping option is no longer available" });
+          shippingTotal += quote.price;
+        }
+        shippingTotal = parseFloat(shippingTotal.toFixed(2));
+      }
+
+      const order = await storage.createOrder(
+        userId,
+        cart.map((item) => ({
+          productId: item.productId,
+          productName: item.product.name,
+          productImage: item.product.images?.[0],
+          quantity: item.quantity,
+          price: item.product.price,
+          farmerId: item.product.farmerId,
+          farmerName: item.product.farmerName,
+        })) as OrderItem[],
+        deliveryAddress,
+        "manual",
+        deliveryMethod,
+        {
+          shippingChoices,
+          deliveryAddressStruct,
+          shippingTotal,
+        },
+      );
+      await storage.clearCart(userId);
+      queueOrderConfirmation(order, `${req.protocol}://${req.get("host")}`);
+      res.status(201).json(order);
+    } catch (error: any) {
+      if (handleZod(error, res)) return;
+      if (error instanceof Error && /Product|stock|available/.test(error.message)) {
+        return res.status(400).json({ error: error.message });
+      }
+      res.status(500).json({ error: "Failed to create order from cart" });
     }
   });
 

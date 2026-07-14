@@ -4,6 +4,7 @@ import { fromZodError } from "zod-validation-error";
 import { supportTicketSchema } from "@shared/schema";
 import { isAuthenticated } from "../../auth";
 import { storage } from "../../storage";
+import { queueSupportTicketEmails } from "../../notifications";
 
 type SupportRouteDeps = {
   getUserId: (req: Request) => string | undefined;
@@ -27,6 +28,7 @@ export function registerSupportRoutes(app: Express, deps: SupportRouteDeps): voi
       const parsed = supportTicketSchema.parse(req.body);
       const userId = deps.getUserId(req);
       const ticket = await storage.createSupportTicket({ ...parsed, userId });
+      queueSupportTicketEmails(ticket);
       res.status(201).json({ id: ticket.id, status: ticket.status });
     } catch (error) {
       if (handleZod(error, res)) return;

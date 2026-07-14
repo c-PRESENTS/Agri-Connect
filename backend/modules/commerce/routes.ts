@@ -2,11 +2,11 @@ import type { Express, Request, Response } from "express";
 import type Stripe from "stripe";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import type { Order, OrderItem, OrderStatus, Shipment } from "@shared/schema";
+import type { BasicOrderStatus, Order, OrderItem, OrderStatus, Shipment } from "@shared/schema";
 import { bookShipmentSchema, createOrderSchema, quoteShipmentSchema } from "@shared/schema";
 import { isAuthenticated } from "../../auth";
 import { authStorage } from "../../auth/storage";
-import { buildShipmentBookedEmail, notify } from "../../notifications";
+import { buildShipmentBookedEmail, notify, queueOrderConfirmation } from "../../notifications";
 import { getStripe, getWebhookSecret } from "../../payments/stripe";
 import { getAdapter } from "../../shipping/adapters";
 import { calculateQuotes, calculateQuotesFromCoords, geocodePostcode, rateCardById } from "../../shipping/quote-engine";
@@ -14,6 +14,33 @@ import { storage } from "../../storage";
 
 interface CommerceRouteDeps {
   getUserId(req: Request): string | undefined;
+}
+
+const DAY_16_STATUS_TRANSITIONS: Record<BasicOrderStatus, BasicOrderStatus[]> = {
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["processing", "cancelled"],
+  processing: ["shipped", "cancelled"],
+  shipped: ["delivered"],
+  delivered: [],
+  cancelled: ["refunded"],
+  refunded: [],
+};
+
+function toSellerOrderView(order: Order, sellerId: string): Order {
+  const items = order.items.filter((item) => item.farmerId === sellerId);
+  const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
+  return {
+    ...order,
+    items,
+    subtotal,
+    total: subtotal,
+    tax: 0,
+    deliveryFee: 0,
+    shippingTotal: undefined,
+    buyerEmail: undefined,
+    shippingChoices: undefined,
+    deliveryAddressStruct: undefined,
+  };
 }
 
 
@@ -216,8 +243,11 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       const userId = getUserId(req)!;
       const order = await storage.getOrder(req.params.id);
       if (!order) return res.status(404).json({ error: "Order not found" });
-      if (order.buyerId !== userId) return res.status(403).json({ error: "Access denied" });
-      res.json(order);
+      if (order.buyerId === userId) return res.json(order);
+      if (!order.items.some((item) => item.farmerId === userId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      res.json(toSellerOrderView(order, userId));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch order" });
     }
@@ -227,6 +257,21 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
     try {
       const userId = getUserId(req)!;
       const parsed = createOrderSchema.parse(req.body);
+      const availability = await storage.validateCart(
+        parsed.items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+      );
+      if (!availability.ok) {
+        return res.status(400).json({
+          error: "One or more products are unavailable",
+          issues: availability.issues,
+        });
+      }
+      for (const item of parsed.items) {
+        const product = await storage.getProduct(item.productId);
+        if (product?.farmerId === userId) {
+          return res.status(400).json({ error: "You cannot order your own product" });
+        }
+      }
       const order = await storage.createOrder(
         userId,
         parsed.items as OrderItem[],
@@ -235,9 +280,13 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
         parsed.deliveryMethod,
       );
       await storage.clearCart(userId);
+      queueOrderConfirmation(order, resolveStripeOrigin(req));
       res.status(201).json(order);
     } catch (error) {
       if (handleZod(error, res)) return;
+      if (error instanceof Error && /Product not found|Insufficient stock/.test(error.message)) {
+        return res.status(400).json({ error: error.message });
+      }
       res.status(500).json({ error: "Failed to create order" });
     }
   });
@@ -506,16 +555,10 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       const existing = await storage.getOrder(req.params.id);
       if (!existing) return res.status(404).json({ error: "Order not found" });
       const isSellerOnOrder = existing.items.some((it) => it.farmerId === userId);
-      if (!isSellerOnOrder) return res.status(403).json({ error: "Access denied" });
-
-      const allowedStatuses: OrderStatus[] = [
-        "payment_confirmed",
-        "processing",
-        "shipped",
-        "out_for_delivery",
-        "delivered",
-        "cancelled",
-      ];
+      const ownsEveryItem = existing.items.every((it) => it.farmerId === userId);
+      if (!isSellerOnOrder || !ownsEveryItem) {
+        return res.status(403).json({ error: "Only the seller for this order can update its status" });
+      }
       const { status, note, trackingNumber, carrier, trackingUrl } = req.body as {
         status: OrderStatus;
         note?: string;
@@ -523,8 +566,13 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
         carrier?: string;
         trackingUrl?: string;
       };
-      if (!status || !allowedStatuses.includes(status)) {
+      if (!status || !(status in DAY_16_STATUS_TRANSITIONS)) {
         return res.status(400).json({ error: "Invalid status" });
+      }
+      const nextStatus = status as BasicOrderStatus;
+      const allowedNext = DAY_16_STATUS_TRANSITIONS[existing.status as BasicOrderStatus];
+      if (!allowedNext || !allowedNext.includes(nextStatus)) {
+        return res.status(400).json({ error: "Invalid status transition" });
       }
 
       const tracking =
@@ -532,7 +580,7 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
           ? { trackingNumber, carrier, trackingUrl }
           : undefined;
 
-      const order = await storage.updateOrderStatus(req.params.id, status, note, tracking);
+      const order = await storage.updateOrderStatus(req.params.id, nextStatus, note, tracking);
       if (!order) return res.status(404).json({ error: "Order not found" });
       res.json(order);
     } catch (error) {
@@ -547,7 +595,7 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       if (!existing) return res.status(404).json({ error: "Order not found" });
       if (existing.buyerId !== userId) return res.status(403).json({ error: "Access denied" });
 
-      const cancellable = ["order_placed", "payment_confirmed", "processing"];
+      const cancellable = ["pending", "confirmed", "processing", "order_placed", "payment_confirmed"];
       if (!cancellable.includes(existing.status)) {
         return res.status(400).json({ error: "This order can no longer be cancelled" });
       }
@@ -595,8 +643,9 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
   // Seller orders
   app.get("/api/seller/orders", isAuthenticated, async (req, res) => {
     try {
-      const orders = await storage.getSellerOrders(getUserId(req)!);
-      res.json(orders);
+      const sellerId = getUserId(req)!;
+      const orders = await storage.getSellerOrders(sellerId);
+      res.json(orders.map((order) => toSellerOrderView(order, sellerId)));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch seller orders" });
     }
