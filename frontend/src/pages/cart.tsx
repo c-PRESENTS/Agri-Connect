@@ -175,6 +175,7 @@ export default function CartPage() {
                                 })
                               }
                               disabled={updateItem.isPending}
+                              aria-label={`Decrease quantity for ${item.product.name}`}
                               data-testid={`button-decrease-${item.id}`}
                             >
                               <Minus className="h-3 w-3" />
@@ -199,6 +200,7 @@ export default function CartPage() {
                                 updateItem.isPending ||
                                 item.quantity >= item.product.stock
                               }
+                              aria-label={`Increase quantity for ${item.product.name}`}
                               data-testid={`button-increase-${item.id}`}
                             >
                               <Plus className="h-3 w-3" />
@@ -228,6 +230,7 @@ export default function CartPage() {
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         onClick={() => removeItem.mutate(item.id)}
                         disabled={removeItem.isPending}
+                        aria-label={`Remove ${item.product.name} from cart`}
                         data-testid={`button-remove-${item.id}`}
                       >
                         <Trash2 className="h-4 w-4" />

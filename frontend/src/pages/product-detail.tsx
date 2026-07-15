@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Product, Review } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
+import { getProductImage } from "@/lib/product-images";
 
 const REVIEWER_NAMES = [
   "Priya Sharma", "James O'Brien", "Mei Lin", "Tariq Hassan", "Sophie Adeyemi",
@@ -228,8 +229,11 @@ export default function ProductDetailPage() {
     },
   });
 
+  const fallbackProductImage = product
+    ? getProductImage(product.name, product.categoryId, "lg")
+    : "";
   const allImages = product
-    ? [product.images?.[0] || "", ...ADDITIONAL_IMAGES.slice(0, 3)]
+    ? [product.images?.[0]?.trim() || fallbackProductImage, ...ADDITIONAL_IMAGES.slice(0, 3)]
     : [];
 
   const reviews = product ? generateReviews(product) : [];
@@ -237,8 +241,8 @@ export default function ProductDetailPage() {
 
   const getImg = (idx: number) =>
     imageError[idx]
-      ? `https://placehold.co/600x600/22c55e/white?text=${encodeURIComponent(product?.name?.split(" ")[0] || "")}`
-      : allImages[idx] || allImages[0];
+      ? fallbackProductImage
+      : allImages[idx] || fallbackProductImage;
 
   if (isLoading) {
     return (

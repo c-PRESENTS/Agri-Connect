@@ -27,6 +27,7 @@ interface CartShippingGroup {
   farmerId: string;
   farmerName: string;
   farmerLocation: string;
+  locationEstimated?: boolean;
   itemCount: number;
   weightKg: number;
   distanceKm: number;
@@ -425,7 +426,7 @@ export default function CheckoutPage() {
                                   <div className="min-w-0">
                                     <p className="font-semibold text-sm truncate">{group.farmerName}</p>
                                     <p className="text-[11px] text-muted-foreground truncate">
-                                      {group.farmerLocation} · {group.itemCount} item{group.itemCount === 1 ? "" : "s"} · {group.weightKg.toFixed(1)}kg · {group.distanceKm}km
+                                      {group.locationEstimated ? `${group.farmerLocation} (seller location not set)` : group.farmerLocation} · {group.itemCount} item{group.itemCount === 1 ? "" : "s"} · {group.weightKg.toFixed(1)}kg · {group.distanceKm}km
                                     </p>
                                   </div>
                                 </div>

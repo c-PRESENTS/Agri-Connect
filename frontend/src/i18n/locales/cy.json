@@ -1123,7 +1123,7 @@
     "phone_delivery_note": "Ar gyfer diweddariadau danfon yn unig",
     "save_address": "Cadw'r cyfeiriad hwn ar gyfer archebion yn y dyfodol",
     "shipping_title": "Opsiynau Llong",
-    "shipping_description": "Dewiswch opsiwn danfon ar gyfer eitemau gan {sellerCount} fferm(ydd)",
+    "shipping_description": "Dewiswch opsiwn danfon ar gyfer eitemau gan {{sellerCount}} fferm(ydd)",
     "select_carrier": "Dewis cludwr",
     "payment_title": "Taliad",
     "payment_description": "Cewch eich ailgyfeirio i dudalen taliad diogel Stripe.",

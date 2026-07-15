@@ -361,6 +361,34 @@ export function rateCardById(partnerId: string): RateCard | undefined {
   return RATE_CARDS.find((r) => r.partnerId === partnerId);
 }
 
+const UK_REGIONAL_PICKUP = { lat: 52.3555, lng: -1.1743, country: "GB" } as const;
+const PLACEHOLDER_LOCATIONS = new Set(["", "global", "unknown", "location not specified"]);
+
+/**
+ * Older products may contain placeholder locations and the former India-centre
+ * fallback coordinates. Use an explicit UK-regional estimate for those records
+ * instead of calculating an artificial international-scale domestic quote.
+ */
+export function resolveSellerPickupCoordinates(input: {
+  lat: number;
+  lng: number;
+  location?: string;
+  country?: string;
+}): { lat: number; lng: number; country: string; estimated: boolean } {
+  const country = normaliseCountry(input.country || "GB") || "GB";
+  const location = (input.location || "").trim().toLowerCase();
+  const hasValidCoordinates = Number.isFinite(input.lat) && Number.isFinite(input.lng);
+  const isWithinUK = hasValidCoordinates
+    && input.lat >= 49.5 && input.lat <= 61
+    && input.lng >= -8.7 && input.lng <= 2.2;
+
+  if (country === "GB" && (PLACEHOLDER_LOCATIONS.has(location) || !isWithinUK)) {
+    return { ...UK_REGIONAL_PICKUP, estimated: true };
+  }
+
+  return { lat: input.lat, lng: input.lng, country, estimated: false };
+}
+
 /**
  * Variant of calculateQuotes that takes pre-resolved coordinates (e.g.
  * a farmer's stored lat/lng) instead of geocoding from postcode. Used by

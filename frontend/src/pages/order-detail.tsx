@@ -26,14 +26,21 @@ const ORDER_STAGES: { status: OrderStatus; label: string; desc: string; icon: ty
   { status: "processing",        label: "Processing",        desc: "Seller is preparing your items",   icon: Package },
   { status: "shipped",           label: "Shipped",           desc: "Your order is on the way",         icon: Truck },
   { status: "delivered",         label: "Delivered",         desc: "Order successfully delivered",     icon: CheckCircle },
-  { status: "order_placed",      label: "Order Placed",      desc: "We've received your order",        icon: ShoppingBag },
-  { status: "payment_confirmed", label: "Payment Confirmed", desc: "Payment has been processed",       icon: CheckCircle },
-  { status: "out_for_delivery",  label: "Out for Delivery",  desc: "Driver is heading to you",         icon: Truck },
 ];
 
 const STATUS_ORDER: OrderStatus[] = [
   "pending", "confirmed", "processing", "shipped", "delivered"
 ];
+
+function paymentStatusLabel(status: Order["paymentStatus"]): string {
+  switch (status) {
+    case "manual": return "Manual payment pending";
+    case "pending": return "Payment pending";
+    case "paid": return "Paid";
+    case "failed": return "Payment failed";
+    case "refunded": return "Refunded";
+  }
+}
 
 function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const [hovered, setHovered] = useState(0);
@@ -147,6 +154,8 @@ export default function OrderDetailPage() {
   const estimatedDate = order.estimatedDelivery
     ? new Date(order.estimatedDelivery).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
     : null;
+  const deliveryCharge = (order.deliveryFee ?? 0) + (order.shippingTotal ?? 0);
+  const displayedPaymentStatus = paymentStatusLabel(order.paymentStatus);
 
   return (
     <div className="min-h-screen bg-background">
@@ -166,6 +175,10 @@ export default function OrderDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
+            <Badge variant="outline" className="h-8 gap-1.5 px-2.5" data-testid="text-payment-status">
+              <span className="text-muted-foreground">{t("order_detail.payment_status")}:</span>
+              <span>{displayedPaymentStatus}</span>
+            </Badge>
             {(order.status === "pending" || order.status === "confirmed" || order.status === "processing" || order.status === "order_placed" || order.status === "payment_confirmed") && (
               <Button
                 variant="destructive"
@@ -286,9 +299,9 @@ export default function OrderDetailPage() {
                           <span className={`font-semibold text-sm ${completed ? "text-foreground" : "text-muted-foreground/60"}`}>
                             {stage.label}
                           </span>
-                            {current && (
+                          {current && (
                             <Badge className="bg-primary/10 text-primary border-primary/30 text-[10px] h-4 px-1.5 animate-pulse">
-                              {t("order_detail.payment_status")}
+                              {t("order_detail.current_status", "Current")}
                             </Badge>
                           )}
                         </div>
@@ -364,6 +377,10 @@ export default function OrderDetailPage() {
                       src={item.productImage || getProductImage(item.productName, "", "sm")}
                       alt={item.productName}
                       loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.onerror = null;
+                        event.currentTarget.src = getProductImage(item.productName, "", "sm");
+                      }}
                       className="h-14 w-14 rounded-xl object-cover border border-border/50 flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
@@ -454,7 +471,7 @@ export default function OrderDetailPage() {
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>{t("cart.delivery")}</span>
-                <span>{(order.deliveryFee ?? 0) === 0 ? <span className="text-green-600 font-medium">{t("cart.free_delivery")}</span> : `£${order.deliveryFee?.toFixed(2)}`}</span>
+                <span>{deliveryCharge === 0 ? <span className="text-green-600 font-medium">{t("cart.free_delivery")}</span> : `£${deliveryCharge.toFixed(2)}`}</span>
               </div>
               {order.tax !== undefined && (
                 <div className="flex justify-between text-muted-foreground">

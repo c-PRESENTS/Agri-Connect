@@ -11,7 +11,6 @@ import {
   Package,
   TrendingUp
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
 interface MenuItem {
@@ -113,18 +112,14 @@ export function FarmerDashboardMenu() {
           transition={{ delay: index * 0.05 }}
           onClick={() => setLocation(item.href)}
           aria-label={`${t(item.label)}: ${item.description}`}
-          className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="shadcn-card glass-card w-full rounded-lg border border-card-border bg-card p-4 text-card-foreground shadow-sm hover-elevate transition-all duration-200 flex flex-col items-center text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          data-testid={`menu-item-${item.id}`}
         >
-          <Card
-            className="p-4 cursor-pointer hover-elevate transition-all duration-200 flex flex-col items-center text-center"
-            data-testid={`menu-item-${item.id}`}
-          >
-            <div className={`${item.color} text-white p-3 rounded-xl mb-3`}>
-              {item.icon}
-            </div>
-            <span className="font-semibold text-sm mb-0.5">{t(item.label)}</span>
-            <span className="text-xs text-muted-foreground">{item.description}</span>
-          </Card>
+          <div className={`${item.color} text-white p-3 rounded-xl mb-3`}>
+            {item.icon}
+          </div>
+          <span className="font-semibold text-sm mb-0.5">{t(item.label)}</span>
+          <span className="text-xs text-muted-foreground">{item.description}</span>
         </motion.button>
       ))}
     </div>

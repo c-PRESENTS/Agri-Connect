@@ -9,7 +9,7 @@ import { authStorage } from "../../auth/storage";
 import { buildShipmentBookedEmail, notify, queueOrderConfirmation } from "../../notifications";
 import { getStripe, getWebhookSecret } from "../../payments/stripe";
 import { getAdapter } from "../../shipping/adapters";
-import { calculateQuotes, calculateQuotesFromCoords, geocodePostcode, rateCardById } from "../../shipping/quote-engine";
+import { calculateQuotes, calculateQuotesFromCoords, geocodePostcode, rateCardById, resolveSellerPickupCoordinates } from "../../shipping/quote-engine";
 import { storage } from "../../storage";
 import { audit } from "../../audit";
 
@@ -140,8 +140,14 @@ async function ensureShipmentsForOrderInner(order: Order, origin: string): Promi
         };
       });
 
+    const pickup = resolveSellerPickupCoordinates({
+      lat: firstProduct.farmerLatitude,
+      lng: firstProduct.farmerLongitude,
+      location: firstProduct.farmerLocation,
+      country: "GB",
+    });
     const recomputed = calculateQuotesFromCoords({
-      pickup: { lat: firstProduct.farmerLatitude, lng: firstProduct.farmerLongitude, country: "GB" },
+      pickup,
       drop: { lat: dropLL.lat, lng: dropLL.lng, country: drop.country },
       items: shipItems,
       service: choice.service,
@@ -164,12 +170,12 @@ async function ensureShipmentsForOrderInner(order: Order, origin: string): Promi
         pickup: {
           name: firstProduct.farmerName,
           phone: drop.phone, // farmer phone not denormalised; use buyer for callback
-          line1: firstProduct.farmerLocation || "Farm",
-          city: firstProduct.farmerLocation || "Farm",
+          line1: pickup.estimated ? "UK regional pickup" : firstProduct.farmerLocation || "Farm",
+          city: pickup.estimated ? "Regional pickup" : firstProduct.farmerLocation || "Farm",
           postcode: "FA RM",
           country: "GB",
-          lat: firstProduct.farmerLatitude,
-          lng: firstProduct.farmerLongitude,
+          lat: pickup.lat,
+          lng: pickup.lng,
         },
         drop: {
           name: drop.name,
@@ -354,8 +360,14 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
             const weightPerUnit = /grain|flour|feed|hay/.test(cat) ? 1.0 : 0.5;
             return { name: it.productName, quantity: it.quantity, weightKg: weightPerUnit, coldChain: isCold, fragile: isFragile };
           });
+          const pickup = resolveSellerPickupCoordinates({
+            lat: firstProd.farmerLatitude,
+            lng: firstProd.farmerLongitude,
+            location: firstProd.farmerLocation,
+            country: "GB",
+          });
           const recomputed = calculateQuotesFromCoords({
-            pickup: { lat: firstProd.farmerLatitude, lng: firstProd.farmerLongitude, country: "GB" },
+            pickup,
             drop: { lat: dropLL.lat, lng: dropLL.lng, country: drop.country },
             items: shipItems,
             service: choice.service,

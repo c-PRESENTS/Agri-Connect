@@ -26,6 +26,7 @@ function matchesRoute(path) {
 
 const internal = [];
 const external = [];
+let dynamicUnknown = 0;
 for (const file of await sourceFiles(frontendRoot)) {
   const source = await readFile(file, "utf8");
   const label = relative(root, file);
@@ -38,6 +39,10 @@ for (const file of await sourceFiles(frontendRoot)) {
   }
   for (const match of source.matchAll(/(?:href\s*=\s*\{|setLocation\()\s*`([^`]+)`/g)) {
     if (match[1].startsWith("/")) {
+      if (match[1].startsWith("/${")) {
+        dynamicUnknown += 1;
+        continue;
+      }
       internal.push({ file: label, value: match[1].replace(/\$\{[^}]+\}/g, "dynamic") });
     }
   }
@@ -58,5 +63,6 @@ if (malformedExternal.length) {
 }
 
 console.log(`Checked ${routePatterns.length} route patterns, ${internal.length} literal internal links, and ${external.length} external URL references.`);
+console.log(`Skipped ${dynamicUnknown} fully dynamic internal destination(s) for manual verification.`);
 console.log("External availability is not claimed by this static check; verify it manually or through an approved CI network check.");
 process.exitCode = brokenInternal.length || malformedExternal.length ? 1 : 0;

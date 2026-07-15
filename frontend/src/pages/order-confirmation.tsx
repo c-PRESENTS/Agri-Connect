@@ -14,6 +14,28 @@ import type { Order } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { getProductImage } from "@/lib/product-images";
 
+function confirmationCopy(status: Order["status"]): { title: string; description: string } {
+  switch (status) {
+    case "pending":
+    case "order_placed":
+      return { title: "Order received!", description: "Your order is pending seller confirmation." };
+    case "confirmed":
+    case "payment_confirmed":
+      return { title: "Order confirmed!", description: "The seller has confirmed your order." };
+    case "processing":
+      return { title: "Order is being prepared", description: "The seller is preparing your items for dispatch." };
+    case "shipped":
+    case "out_for_delivery":
+      return { title: "Order shipped!", description: "Your order is on its way." };
+    case "delivered":
+      return { title: "Order delivered!", description: "This order has been marked as delivered." };
+    case "cancelled":
+      return { title: "Order cancelled", description: "This order is no longer active." };
+    case "refunded":
+      return { title: "Order refunded", description: "A refund has been recorded for this order." };
+  }
+}
+
 export default function OrderConfirmationPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
@@ -55,6 +77,8 @@ export default function OrderConfirmationPage() {
   const estimatedDate = order.estimatedDelivery
     ? new Date(order.estimatedDelivery).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
     : "5–7 business days";
+  const deliveryCharge = (order.deliveryFee ?? 0) + (order.shippingTotal ?? 0);
+  const statusCopy = confirmationCopy(order.status);
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,9 +95,11 @@ export default function OrderConfirmationPage() {
           <div className="h-20 w-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="h-10 w-10 text-green-600" />
           </div>
-          <h1 className="text-3xl font-black text-foreground mb-2">{t("order_detail.confirmation_title")}</h1>
+          <h1 className="text-3xl font-black text-foreground mb-2">
+            {statusCopy.title}
+          </h1>
           <p className="text-muted-foreground">
-            {t("order_detail.confirmation_description")}
+            {statusCopy.description}
           </p>
         </motion.div>
 
@@ -164,6 +190,10 @@ export default function OrderConfirmationPage() {
                       src={item.productImage || getProductImage(item.productName, "", "sm")}
                       alt={item.productName}
                       loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.onerror = null;
+                        event.currentTarget.src = getProductImage(item.productName, "", "sm");
+                      }}
                       className="h-12 w-12 rounded-xl object-cover border border-border/50 flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
@@ -181,7 +211,7 @@ export default function OrderConfirmationPage() {
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>{t("cart.delivery")}</span>
-                  <span>{(order.deliveryFee ?? 0) === 0 ? <span className="text-green-600">{t("cart.free_delivery")}</span> : `£${order.deliveryFee?.toFixed(2)}`}</span>
+                  <span>{deliveryCharge === 0 ? <span className="text-green-600">{t("cart.free_delivery")}</span> : `£${deliveryCharge.toFixed(2)}`}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>{t("checkout.vat")}</span><span>£{order.tax?.toFixed(2) || "—"}</span>

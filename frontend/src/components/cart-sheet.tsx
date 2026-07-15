@@ -104,6 +104,7 @@ export function CartSheet({
                                 ? onRemoveItem(item.id)
                                 : onUpdateQuantity(item.id, item.quantity - 1)
                             }
+                            aria-label={`Decrease quantity for ${item.product.name}`}
                             data-testid={`button-decrease-${item.id}`}
                           >
                             <Minus className="h-4 w-4" />
@@ -117,6 +118,7 @@ export function CartSheet({
                             className="h-8 w-8"
                             onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
                             disabled={item.quantity >= item.product.stock}
+                            aria-label={`Increase quantity for ${item.product.name}`}
                             data-testid={`button-increase-${item.id}`}
                           >
                             <Plus className="h-4 w-4" />
@@ -129,6 +131,7 @@ export function CartSheet({
                       variant="ghost"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       onClick={() => onRemoveItem(item.id)}
+                      aria-label={`Remove ${item.product.name} from cart`}
                       data-testid={`button-remove-${item.id}`}
                     >
                       <Trash2 className="h-5 w-5" />

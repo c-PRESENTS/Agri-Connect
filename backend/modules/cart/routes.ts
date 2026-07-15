@@ -10,7 +10,7 @@ import {
 import type { OrderItem } from "@shared/schema";
 import { isAuthenticated } from "../../auth";
 import { storage } from "../../storage";
-import { calculateQuotesFromCoords, geocodePostcode } from "../../shipping/quote-engine";
+import { calculateQuotesFromCoords, geocodePostcode, resolveSellerPickupCoordinates } from "../../shipping/quote-engine";
 import { queueOrderConfirmation } from "../../notifications";
 import { audit } from "../../audit";
 
@@ -144,8 +144,14 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
           const choice = shippingChoices[farmerId];
           if (!choice) return res.status(400).json({ error: "Shipping selection is required for every seller" });
           const firstProduct = farmerItems[0].product;
+          const pickup = resolveSellerPickupCoordinates({
+            lat: firstProduct.farmerLatitude,
+            lng: firstProduct.farmerLongitude,
+            location: firstProduct.farmerLocation,
+            country: "GB",
+          });
           const quotes = calculateQuotesFromCoords({
-            pickup: { lat: firstProduct.farmerLatitude, lng: firstProduct.farmerLongitude, country: "GB" },
+            pickup,
             drop: { lat: drop.lat, lng: drop.lng, country: deliveryAddressStruct.country },
             service: choice.service,
             items: farmerItems.map((item) => ({
@@ -242,15 +248,22 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
 
       const dropLL = geocodePostcode({ postcode: drop.postcode, country: drop.country });
       const result = Array.from(groups.values()).map((g) => {
+        const pickup = resolveSellerPickupCoordinates({
+          lat: g.farmerLat,
+          lng: g.farmerLng,
+          location: g.farmerLocation,
+          country: "GB",
+        });
         const refined = calculateQuotesFromCoords({
-          pickup: { lat: g.farmerLat, lng: g.farmerLng, country: "GB" },
+          pickup,
           drop: { lat: dropLL.lat, lng: dropLL.lng, country: drop.country },
           items: g.items.map((i) => ({ name: i.name, quantity: i.quantity, weightKg: i.weightKg, coldChain: i.coldChain, fragile: i.fragile })),
         });
         return {
           farmerId: g.farmerId,
           farmerName: g.farmerName,
-          farmerLocation: g.farmerLocation,
+          farmerLocation: pickup.estimated ? "UK regional estimate" : g.farmerLocation,
+          locationEstimated: pickup.estimated,
           itemCount: g.items.reduce((s, i) => s + i.quantity, 0),
           weightKg: refined.weightKg,
           distanceKm: refined.distanceKm,

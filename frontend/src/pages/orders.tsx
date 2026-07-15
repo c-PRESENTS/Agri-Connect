@@ -191,6 +191,10 @@ export default function OrdersPage() {
                               src={item.productImage || getProductImage(item.productName, "", "sm")}
                               alt={item.productName}
                               loading="lazy"
+                              onError={(event) => {
+                                event.currentTarget.onerror = null;
+                                event.currentTarget.src = getProductImage(item.productName, "", "sm");
+                              }}
                               className="h-9 w-9 rounded-lg object-cover border-2 border-background"
                             />
                           ))}

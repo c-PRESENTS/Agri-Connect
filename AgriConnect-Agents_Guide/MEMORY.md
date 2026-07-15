@@ -83,7 +83,7 @@ See `AgriConnect-Agents_Guide/roadmap.md` for feature details and gaps. Day 16's
 
 ### Day 20 facts
 
-- `npm run qa:links` statically matches literal internal destinations to registered routes and validates external URL syntax. The current run checked 38 route patterns, 288 internal links, and 20 external references with no unmatched literal internal route remaining.
+- `npm run qa:links` statically matches literal and parameterized internal destinations to registered routes and validates external URL syntax. The current run checked 38 route patterns, 313 internal links, and 20 external references with no unmatched checked route; one fully dynamic destination remains a manual check.
 - Low-risk QA fixes corrected seller-product and mobile Ship navigation, replaced broken dashboard destinations, disabled unavailable land posting, improved keyboard semantics, lazy-loaded two routes and commerce thumbnails, and removed unused mobile-navigation code.
 - `QA_RELEASE_CHECKLIST.md`, this memory, and `roadmap.md` separate code completion from retained/manual evidence and external setup. Final status is release candidate, not production-approved.
 
