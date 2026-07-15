@@ -485,7 +485,6 @@ Tasks:
 * Penetration testing checklist
 * User acceptance testing checklist
 * Practical working status of all features
-* RELEASE_NOTES.md
 * CLIENT_DEMO_CHECKLIST.md
 * Final update to ROADMAP_STATUS.md
 
@@ -494,7 +493,6 @@ Rules:
 * Do not add large new features today
 * Focus on stabilization, documentation, status accuracy, and demo readiness
 * Do not make risky architecture changes
-* Mark every remaining item honestly as Done, Partial, UI Shell, Planned, Blocked, Needs External Setup, or Frozen
 
 ---
 
@@ -533,30 +531,3 @@ Do not mark these as Done unless they are truly working, tested, verified, and e
 
 ---
 
-# Daily Batch Rules
-
-For every day:
-
-1. Work one day at a time.
-2. Do not implement multiple risky systems in one batch.
-3. Do not change unrelated files.
-4. Do not touch frozen authentication.
-5. Do not break navigation, taxonomy, map, product listing, or UI logic.
-6. Update ROADMAP_STATUS.md after each day.
-7. List changed files.
-8. Add manual test steps.
-9. Mention incomplete/risky parts.
-10. Add rollback notes.
-
----
-
-# Batch Completion Template
-
-After each daily batch, report:
-
-1. Changed files:
-2. Implemented:
-3. Manual test:
-4. Incomplete or risky parts:
-5. ROADMAP_STATUS.md updates:
-6. Rollback notes:

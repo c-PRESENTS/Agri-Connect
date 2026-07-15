@@ -4,6 +4,7 @@ import { authStorage } from "../../auth/storage";
 import { listAdapters } from "../../shipping/adapters";
 import { storage } from "../../storage";
 import type { Order } from "@shared/schema";
+import { audit } from "../../audit";
 
 type DashboardRouteDeps = { getUserId: (req: Request) => string | undefined };
 
@@ -28,6 +29,7 @@ export function registerDashboardRoutes(app: Express, deps: DashboardRouteDeps):
     try {
       const userId = await hasRole(req, res, deps.getUserId, ["farmer", "admin"]);
       if (!userId) return;
+      audit({ action: "seller.dashboard_viewed", actorId: userId, targetType: "dashboard", targetId: "seller" });
       const [products, orders] = await Promise.all([
         storage.getProductsByFarmer(userId),
         storage.getSellerOrders(userId),
@@ -50,6 +52,7 @@ export function registerDashboardRoutes(app: Express, deps: DashboardRouteDeps):
     try {
       const userId = await hasRole(req, res, deps.getUserId, ["admin"]);
       if (!userId) return;
+      audit({ action: "operator.dashboard_viewed", actorId: userId, targetType: "dashboard", targetId: "operator" });
       const [orders, products] = await Promise.all([storage.getAllOrders(), storage.getProducts()]);
       const statusCounts = orders.reduce<Record<string, number>>((counts, order) => {
         counts[order.status] = (counts[order.status] || 0) + 1;

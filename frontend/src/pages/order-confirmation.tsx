@@ -163,6 +163,7 @@ export default function OrderConfirmationPage() {
                     <img
                       src={item.productImage || getProductImage(item.productName, "", "sm")}
                       alt={item.productName}
+                      loading="lazy"
                       className="h-12 w-12 rounded-xl object-cover border border-border/50 flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">

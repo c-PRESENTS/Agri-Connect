@@ -190,6 +190,7 @@ export default function OrdersPage() {
                               key={i}
                               src={item.productImage || getProductImage(item.productName, "", "sm")}
                               alt={item.productName}
+                              loading="lazy"
                               className="h-9 w-9 rounded-lg object-cover border-2 border-background"
                             />
                           ))}

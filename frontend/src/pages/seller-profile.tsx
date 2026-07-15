@@ -179,7 +179,7 @@ export default function SellerProfilePage() {
                     key={p.id}
                     product={p}
                     onAddToCart={handleAddToCart}
-                    onClick={(prod) => setLocation(`/product/${prod.id}`)}
+                    onClick={(prod) => setLocation(`/products/${prod.id}`)}
                   />
                 ))}
               </div>

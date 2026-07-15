@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { 
   Wheat, 
@@ -29,7 +29,7 @@ const menuItems: MenuItem[] = [
     icon: <Wheat className="h-8 w-8" />,
     label: "farmer_dashboard.crop_management",
     description: "List my produce",
-    href: "/dashboard/products",
+    href: "/dashboard/list-product",
     color: "bg-green-500",
   },
   {
@@ -45,7 +45,7 @@ const menuItems: MenuItem[] = [
     icon: <Beef className="h-8 w-8" />,
     label: "farmer_dashboard.livestock",
     description: "Sell livestock",
-    href: "/dashboard/animals",
+    href: "/dashboard/list-product",
     color: "bg-orange-500",
   },
   {
@@ -61,7 +61,7 @@ const menuItems: MenuItem[] = [
     icon: <Wallet className="h-8 w-8" />,
     label: "farmer_dashboard.financial_overview",
     description: "Earnings & payments",
-    href: "/dashboard/earnings",
+    href: "/seller",
     color: "bg-yellow-500",
   },
   {
@@ -77,7 +77,7 @@ const menuItems: MenuItem[] = [
     icon: <Package className="h-8 w-8" />,
     label: "nav.cart",
     description: "View all orders",
-    href: "/dashboard/orders",
+    href: "/seller",
     color: "bg-teal-500",
   },
   {
@@ -85,7 +85,7 @@ const menuItems: MenuItem[] = [
     icon: <TrendingUp className="h-8 w-8" />,
     label: "Analytics",
     description: "Sales & trends",
-    href: "/dashboard/analytics",
+    href: "/seller",
     color: "bg-indigo-500",
   },
   {
@@ -93,7 +93,7 @@ const menuItems: MenuItem[] = [
     icon: <Phone className="h-8 w-8" />,
     label: "nav.help",
     description: "Voice help, support",
-    href: "/dashboard/help",
+    href: "/support",
     color: "bg-pink-500",
   },
 ];
@@ -105,15 +105,18 @@ export function FarmerDashboardMenu() {
   return (
     <div className="grid grid-cols-3 gap-3 p-4">
       {menuItems.map((item, index) => (
-        <motion.div
+        <motion.button
+          type="button"
           key={item.id}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: index * 0.05 }}
+          onClick={() => setLocation(item.href)}
+          aria-label={`${t(item.label)}: ${item.description}`}
+          className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <Card
             className="p-4 cursor-pointer hover-elevate transition-all duration-200 flex flex-col items-center text-center"
-            onClick={() => setLocation(item.href)}
             data-testid={`menu-item-${item.id}`}
           >
             <div className={`${item.color} text-white p-3 rounded-xl mb-3`}>
@@ -122,7 +125,7 @@ export function FarmerDashboardMenu() {
             <span className="font-semibold text-sm mb-0.5">{t(item.label)}</span>
             <span className="text-xs text-muted-foreground">{item.description}</span>
           </Card>
-        </motion.div>
+        </motion.button>
       ))}
     </div>
   );

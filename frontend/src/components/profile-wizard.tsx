@@ -171,7 +171,7 @@ export function ProfileWizard() {
               <div className="flex flex-col items-center gap-4">
                 <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-primary/20">
                   {avatar ? (
-                    <img src={avatar} alt="Avatar" className="h-full w-full object-cover" />
+                    <img src={avatar} alt="Profile avatar preview" className="h-full w-full object-cover" />
                   ) : (
                     <User className="h-12 w-12 text-muted-foreground" />
                   )}

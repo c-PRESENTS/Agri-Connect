@@ -4,6 +4,7 @@ import { Home, LayoutGrid, Map, ShoppingCart, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Cart } from "@shared/schema";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/use-auth";
 
 interface MobileBottomNavProps {
   onCategories?: () => void;
@@ -12,6 +13,7 @@ interface MobileBottomNavProps {
 export function MobileBottomNav({ onCategories }: MobileBottomNavProps) {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
+  const { isAuthenticated } = useAuth();
 
   const { data: cart } = useQuery<Cart>({ queryKey: ["/api/cart"] });
   const cartCount = cart?.items?.reduce((acc, i) => acc + i.quantity, 0) ?? 0;
@@ -27,7 +29,7 @@ export function MobileBottomNav({ onCategories }: MobileBottomNavProps) {
     { id: "categories", label: t("nav.browse"),     icon: LayoutGrid,  path: "/?category=daily-needs" },
     { id: "map",        label: t("nav.map"),        icon: Map,         path: "/map" },
     { id: "cart",       label: t("nav.cart"),       icon: ShoppingCart, path: "/cart", badge: cartCount },
-    { id: "profile",    label: t("nav.profile"),    icon: User,        path: "/login" },
+    { id: "profile",    label: t("nav.profile"),    icon: User,        path: isAuthenticated ? "/my-profile" : "/login" },
   ];
 
   const handleTap = (item: typeof items[number]) => {

@@ -183,7 +183,7 @@ export function PhotoSellFlow({ onComplete, onCancel, onManualListing }: PhotoSe
           >
             {capturedImage && (
               <div className="w-48 h-48 rounded-2xl overflow-hidden mb-6 ring-4 ring-primary/20">
-                <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+                <img src={capturedImage} alt="Captured product image being analysed" className="w-full h-full object-cover" />
               </div>
             )}
             
@@ -212,7 +212,7 @@ export function PhotoSellFlow({ onComplete, onCancel, onManualListing }: PhotoSe
             <div className="flex gap-4 mb-6">
               {capturedImage && (
                 <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
-                  <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+                  <img src={capturedImage} alt={`Captured image for ${detection?.productName || "product"}`} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="flex-1">

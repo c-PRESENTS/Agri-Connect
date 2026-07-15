@@ -59,8 +59,8 @@
 | **Day 16** | Basic orders without payment: confirmation, history (buyer/seller), status model | **Implemented; Not Verified** | Manual checkout; server-authoritative stock validation, scoped buyer/seller access, and `pending -> confirmed -> processing -> shipped -> delivered` with cancellation/refund transitions. Browser checks need authenticated buyer and seller sessions. |
 | **Day 17** | Cart & checkout without payment: add/update/remove, summary, create order, connect to order history | **Implemented; Not Verified** | User-scoped cart validation and server-side manual checkout via Day 16 order creation. No payment gateway, escrow, fees, or card data. |
 | **Day 18** | Logistics foundation, seller dashboard, order fulfillment dashboard, operator dashboard, email automation foundation | **Implemented; Not Verified** | Role-scoped seller and admin summaries, fulfillment UI, provider abstraction/status API, and best-effort SendGrid email hooks. No live provider required. |
-| **Day 19** | Security/compliance foundation: rate limiting, SSL docs, DDoS notes, encryption notes, GDPR foundation, audit trail, keyboard nav, alt text, API/form testing foundation | **Planned** | Mark provider-dependent as Needs External Setup |
-| **Day 20** | QA, performance, release notes: cross-browser, mobile, perf pass, link checker, security scan, pentest checklist, UAT, RELEASE_NOTES.md, CLIENT_DEMO_CHECKLIST.md, final ROADMAP_STATUS.md | **Planned** | Stabilization & documentation only |
+| **Day 19** | Security/compliance foundation: rate limiting, SSL docs, DDoS notes, encryption notes, GDPR foundation, audit trail, keyboard nav, alt text, API/form testing foundation | **Implemented; Not Verified** | Optional non-auth API limiter, metadata-only audit/logging foundation, keyboard and alt-text improvements, deployment checklist, and read-only Playwright foundations. |
+| **Day 20** | QA and release readiness: clickable/mobile QA, perf pass, link checker, security/pentest/UAT checklists, and final status | **Implemented; Not Verified** | Static link QA passed after low-risk route fixes; manual gates are documented in `QA_RELEASE_CHECKLIST.md`. No browser, build, scan, or penetration test was run. |
 
 ---
 
@@ -72,6 +72,7 @@
 | PCI DSS compliance | **Needs External Setup** | Requires full payment integration |
 | GDPR / CCPA full compliance | **Needs External Setup** | Legal review + DPA |
 | DDoS protection | **Needs External Setup** | Infrastructure/WAF config |
+| TLS certificates, HSTS, and encryption at rest | **Needs External Setup** | Managed hosting, certificate lifecycle, database/backups, and key-management configuration |
 | Penetration testing | **Needs External Setup** | External audit required |
 | International payment gateways | **Needs External Setup** | Provider accounts + KYC |
 | SendGrid email (production) | **Needs External Setup** | SENDGRID_API_KEY, SENDGRID_FROM_EMAIL |
@@ -90,9 +91,9 @@
 | E2E Verified | 2 |
 | Partial E2E | 7 |
 | Not Verified | 0 |
-| Implemented; Not Verified | 12 |
-| Planned | 7 |
-| Needs External Setup | 12 |
+| Implemented; Not Verified | 14 |
+| Planned | 5 |
+| Needs External Setup | 13 |
 | Frozen (Auth) | 1 |
 
 > **Update rule:** When you change a feature's status, update both the detail row and the summary counts above.

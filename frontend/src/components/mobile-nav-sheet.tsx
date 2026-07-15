@@ -41,7 +41,7 @@ const ITEMS: RailItem[] = [
   { id: "map",           path: "/map",                  icon: Map,             label: "Map",       public: true  },
   { id: "land",          path: "/land-leasing",         icon: Landmark,        label: "Land",      public: true  },
   { id: "share",         path: "/share-care",           icon: HeartHandshake,  label: "Share",     public: true  },
-  { id: "ship",          path: "/logistics",            icon: Truck,           label: "Ship",      public: true  },
+  { id: "ship",          path: "/ship",                 icon: Truck,           label: "Ship",      public: true  },
   { id: "schemes",       path: "/government-schemes",   icon: FileText,        label: "Schemes",   public: true  },
   { id: "cart",          path: "/cart",                 icon: ShoppingCart,    label: "Cart",      public: true  },
   { id: "dash",          path: "/dashboard",            icon: LayoutDashboard, label: "Dash",      public: false },

@@ -135,6 +135,7 @@ export default function CartPage() {
                         <img
                           src={getProductImage(item.product.name, item.product.categoryId, "sm")}
                           alt={item.product.name}
+                          loading="lazy"
                           className="h-full w-full object-cover"
                         />
                       </div>

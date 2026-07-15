@@ -12,6 +12,7 @@ import { isAuthenticated } from "../../auth";
 import { storage } from "../../storage";
 import { calculateQuotesFromCoords, geocodePostcode } from "../../shipping/quote-engine";
 import { queueOrderConfirmation } from "../../notifications";
+import { audit } from "../../audit";
 
 type CartRouteDeps = {
   getUserId: (req: Request) => string | undefined;
@@ -48,6 +49,7 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
       const { productId, quantity, unitPrice, purchaseMode, subFrequency } = cartItemInputSchema.parse(req.body);
       const userId = deps.getUserIdOrSession(req);
       const item = await storage.addToCart(userId, productId, quantity, { unitPrice, purchaseMode, subFrequency });
+      audit({ action: "cart.item_added", actorId: userId, targetType: "cart", targetId: item.id });
       res.status(201).json(item);
     } catch (error: any) {
       if (handleZod(error, res)) return;
@@ -64,6 +66,7 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
       if (!item && quantity > 0) {
         return res.status(404).json({ error: "Cart item not found" });
       }
+      audit({ action: "cart.item_updated", actorId: userId, targetType: "cart", targetId: req.params.itemId });
       res.json(item || { deleted: true });
     } catch (error: any) {
       if (handleZod(error, res)) return;
@@ -79,6 +82,7 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
       if (!deleted) {
         return res.status(404).json({ error: "Cart item not found" });
       }
+      audit({ action: "cart.item_removed", actorId: userId, targetType: "cart", targetId: req.params.itemId });
       res.status(204).send();
     } catch {
       res.status(500).json({ error: "Failed to remove cart item" });
@@ -181,6 +185,7 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
       );
       await storage.clearCart(userId);
       queueOrderConfirmation(order, `${req.protocol}://${req.get("host")}`);
+      audit({ action: "cart.checked_out", actorId: userId, targetType: "order", targetId: order.id });
       res.status(201).json(order);
     } catch (error: any) {
       if (handleZod(error, res)) return;

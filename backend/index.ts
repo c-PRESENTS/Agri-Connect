@@ -17,7 +17,9 @@ declare module "http" {
 }
 
 const isProd = process.env.NODE_ENV === "production";
-const enableApiRateLimit = isProd || process.env.ENABLE_API_RATE_LIMIT === "true";
+// Disabled by default so local feature work is unaffected. Enable explicitly
+// in staging/production after choosing limits appropriate to deployed traffic.
+const enableApiRateLimit = process.env.ENABLE_API_RATE_LIMIT === "true";
 const apiRateLimitWindowMs = Number(process.env.API_RATE_LIMIT_WINDOW_MS ?? (isProd ? 15 * 60 * 1000 : 60 * 1000));
 const apiRateLimitMax = Number(process.env.API_RATE_LIMIT_MAX ?? (isProd ? 100 : 5000));
 
@@ -53,7 +55,19 @@ const apiLimiter = rateLimit({
 });
 
 if (enableApiRateLimit) {
-  app.use("/api/", apiLimiter);
+  // Authentication and OTP routes intentionally remain outside this optional
+  // foundation; their existing protections are owned by the frozen auth area.
+  app.use([
+    "/api/products",
+    "/api/categories",
+    "/api/farmers",
+    "/api/search",
+    "/api/support",
+    "/api/cart",
+    "/api/orders",
+    "/api/dashboard",
+    "/api/logistics",
+  ], apiLimiter);
 }
 
 app.use(
@@ -80,23 +94,13 @@ export function log(message: string, source = "express") {
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
 
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse && !path.startsWith("/api/auth")) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      log(logLine);
+      // Responses can contain addresses, support messages, and other personal
+      // data. Keep request logs operational rather than recording payloads.
+      log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
     }
   });
 

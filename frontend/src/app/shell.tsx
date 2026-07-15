@@ -16,6 +16,10 @@ function ShellFallback() {
   return null;
 }
 
+function SkipLink() {
+  return <a href="#main-content" className="sr-only fixed left-4 top-4 z-[100] rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">Skip to main content</a>;
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const isNoRail = NO_RAIL_ROUTES.includes(location);
@@ -23,17 +27,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const showMarketPanel = !NO_MARKET_PANEL_ROUTES.includes(location);
   const showMobileNav = !NO_MOBILE_NAV_ROUTES.includes(location);
 
-  if (isNoRail) return <>{children}</>;
+  if (isNoRail) return <><SkipLink /><div id="main-content" tabIndex={-1}>{children}</div></>;
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <><SkipLink /><div className="flex h-screen overflow-hidden">
       <Suspense fallback={<ShellFallback />}>
         <AppNavRail />
         <GlobalSubcategoryPanel />
       </Suspense>
       {showMarketPanel ? (
         <div className="flex flex-1 min-w-0 h-full overflow-hidden">
-          <div className={`flex-1 min-w-0 ${isFullScreen ? "overflow-hidden" : "overflow-y-auto"} ${showMobileNav ? "pb-16 md:pb-0" : ""}`}>
+          <div id="main-content" tabIndex={-1} className={`flex-1 min-w-0 ${isFullScreen ? "overflow-hidden" : "overflow-y-auto"} ${showMobileNav ? "pb-16 md:pb-0" : ""}`}>
             {children}
           </div>
           <div className="hidden lg:block">
@@ -43,7 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       ) : (
-        <div className={`flex-1 min-w-0 ${isFullScreen ? "overflow-hidden" : "overflow-y-auto"} ${showMobileNav ? "pb-16 md:pb-0" : ""}`}>
+        <div id="main-content" tabIndex={-1} className={`flex-1 min-w-0 ${isFullScreen ? "overflow-hidden" : "overflow-y-auto"} ${showMobileNav ? "pb-16 md:pb-0" : ""}`}>
           {children}
         </div>
       )}
@@ -57,6 +61,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Suspense fallback={<ShellFallback />}>
         <MobileNavSheet />
       </Suspense>
-    </div>
+    </div></>
   );
 }

@@ -160,7 +160,7 @@ export default function SupportPage() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (canSubmit) submit.mutate(); }}>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="s-name">{t("support.your_name")}</Label>
@@ -220,7 +220,7 @@ export default function SupportPage() {
                 </div>
                 <div className="flex justify-end pt-2">
                   <Button
-                    onClick={() => submit.mutate()}
+                    type="submit"
                     disabled={!canSubmit}
                     data-testid="button-send-support"
                   >
@@ -228,7 +228,7 @@ export default function SupportPage() {
                     {t("support.send_button")}
                   </Button>
                 </div>
-              </div>
+              </form>
             )}
           </CardContent>
         </Card>

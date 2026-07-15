@@ -6,9 +6,9 @@
 
 AgriConnect is a React/Vite frontend with an Express/TypeScript backend, PostgreSQL/Drizzle models, and shared TypeScript contracts. It is an agriculture marketplace and support platform covering products, sellers/farmers, discovery, logistics/help content, maps, and profile UX.
 
-The active roadmap position is **Day 18 implemented in code; focused E2E verification is still pending for Days 13–18**.
+The planned implementation scope through Day 20 is code-complete; final manual, automated, provider, and deployment verification remains pending.
 
-## Status through Day 18
+## Status through Day 20
 
 | Day | Area | Status |
 |---|---|---|
@@ -30,6 +30,8 @@ The active roadmap position is **Day 18 implemented in code; focused E2E verific
 | 16 | Basic manual orders, buyer history, seller visibility, and lifecycle status | **Implemented; Not Verified** |
 | 17 | User cart and manual cart checkout | **Implemented; Not Verified** |
 | 18 | Dashboards, logistics foundation, and email foundation | **Implemented; Not Verified** |
+| 19 | Security, accessibility, and compliance foundation | **Implemented; Not Verified** |
+| 20 | QA, performance, release notes, and final status | **Implemented; Not Verified** |
 
 See `AgriConnect-Agents_Guide/roadmap.md` for feature details and gaps. Day 16's authenticated browser checks require a buyer and seller test session.
 
@@ -72,6 +74,18 @@ See `AgriConnect-Agents_Guide/roadmap.md` for feature details and gaps. Day 16's
 - Seller summaries are scoped server-side to the authenticated farmer; fulfillment uses the existing seller-authorized Day 16 status endpoint. `/operator` is admin-only and exposes aggregate product/order counts and status totals only.
 - Carrier adapters remain environment-configured with simulated fallbacks. `GET /api/logistics/providers` returns only provider names, handled IDs, and live state to authorized operational roles.
 - Order confirmation and support emails are queued after persistence and failures are safely logged. `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`, and optional `SUPPORT_INBOX_EMAIL` are required for production delivery/routing.
+
+### Day 19 facts
+
+- Optional API rate limiting is disabled by default and excludes frozen auth/OTP routes. Structured audit logging is opt-in (`ENABLE_AUDIT_LOG=true`) and records identifiers/outcomes only; general API logs no longer serialize response bodies.
+- Shared skip navigation and native support-form submission improve keyboard use. Relevant image previews now have contextual alt text; deliberately decorative images retain empty alt text.
+- `SECURITY_DEPLOYMENT_FOUNDATION.md` documents provider-dependent TLS, WAF/DDoS, encryption-at-rest, and regional-compliance work. Read-only Playwright API/form checks are skipped unless explicitly enabled.
+
+### Day 20 facts
+
+- `npm run qa:links` statically matches literal internal destinations to registered routes and validates external URL syntax. The current run checked 38 route patterns, 288 internal links, and 20 external references with no unmatched literal internal route remaining.
+- Low-risk QA fixes corrected seller-product and mobile Ship navigation, replaced broken dashboard destinations, disabled unavailable land posting, improved keyboard semantics, lazy-loaded two routes and commerce thumbnails, and removed unused mobile-navigation code.
+- `QA_RELEASE_CHECKLIST.md`, this memory, and `roadmap.md` separate code completion from retained/manual evidence and external setup. Final status is release candidate, not production-approved.
 
 ## Constraints and verification
 

@@ -340,7 +340,7 @@ export default function LandLeasingPage() {
             <h1 className="text-2xl font-bold">{t("land_leasing.title", "Land Leasing Marketplace")}</h1>
             <p className="text-muted-foreground">{t("land_leasing.subtitle", "Find and lease agricultural land across the UK")}</p>
           </div>
-          <Button onClick={() => setLocation("/land-leasing/post")} data-testid="button-post-land">
+          <Button disabled title="Land posting is not available yet" data-testid="button-post-land">
             {t("land_leasing.post_land", "Post Your Land")}
           </Button>
         </div>

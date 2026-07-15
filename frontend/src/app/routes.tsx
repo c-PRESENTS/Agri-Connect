@@ -1,11 +1,11 @@
 import { lazy } from "react";
 import { Route, Switch } from "wouter";
 import { ProtectedRoute } from "@/components/protected-route";
-import AboutPage from "@/pages/about";
-import LogisticsPage from "@/pages/logistics";
 
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Home = lazy(() => import("@/pages/home"));
+const AboutPage = lazy(() => import("@/pages/about"));
+const LogisticsPage = lazy(() => import("@/pages/logistics"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const PhotoSell = lazy(() => import("@/pages/photo-sell"));
 const ProductListingPage = lazy(() => import("@/pages/product-listing"));

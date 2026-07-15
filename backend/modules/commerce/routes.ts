@@ -11,6 +11,7 @@ import { getStripe, getWebhookSecret } from "../../payments/stripe";
 import { getAdapter } from "../../shipping/adapters";
 import { calculateQuotes, calculateQuotesFromCoords, geocodePostcode, rateCardById } from "../../shipping/quote-engine";
 import { storage } from "../../storage";
+import { audit } from "../../audit";
 
 interface CommerceRouteDeps {
   getUserId(req: Request): string | undefined;
@@ -281,6 +282,7 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       );
       await storage.clearCart(userId);
       queueOrderConfirmation(order, resolveStripeOrigin(req));
+      audit({ action: "order.created", actorId: userId, targetType: "order", targetId: order.id });
       res.status(201).json(order);
     } catch (error) {
       if (handleZod(error, res)) return;
@@ -582,6 +584,7 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
 
       const order = await storage.updateOrderStatus(req.params.id, nextStatus, note, tracking);
       if (!order) return res.status(404).json({ error: "Order not found" });
+      audit({ action: "order.status_changed", actorId: userId, targetType: "order", targetId: order.id });
       res.json(order);
     } catch (error) {
       res.status(500).json({ error: "Failed to update order status" });

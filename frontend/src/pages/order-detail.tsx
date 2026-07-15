@@ -363,6 +363,7 @@ export default function OrderDetailPage() {
                     <img
                       src={item.productImage || getProductImage(item.productName, "", "sm")}
                       alt={item.productName}
+                      loading="lazy"
                       className="h-14 w-14 rounded-xl object-cover border border-border/50 flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">

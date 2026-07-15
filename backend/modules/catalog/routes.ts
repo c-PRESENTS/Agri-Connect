@@ -4,6 +4,7 @@ import { fromZodError } from "zod-validation-error";
 import { insertProductSchema, type ProductFilters } from "@shared/schema";
 import { isAuthenticated } from "../../auth";
 import { storage } from "../../storage";
+import { audit } from "../../audit";
 
 function getUserId(req: Request): string | undefined {
   return req.session?.userId;
@@ -71,6 +72,7 @@ export function registerCatalogRoutes(app: Express): void {
         return res.status(400).json({ error: "Please select a valid subcategory." });
       }
       const product = await storage.createProduct(productData as any, userId);
+      audit({ action: "seller.product_created", actorId: userId, targetType: "product", targetId: product.id });
       res.status(201).json(product);
     } catch (error) {
       if (handleZod(error, res)) return;
@@ -86,6 +88,7 @@ export function registerCatalogRoutes(app: Express): void {
       if (existing.farmerId !== userId) return res.status(403).json({ error: "Access denied" });
       const updates = insertProductSchema.partial().parse(req.body);
       const product = await storage.updateProduct(req.params.id, updates as any);
+      audit({ action: "seller.product_updated", actorId: userId, targetType: "product", targetId: req.params.id });
       res.json(product);
     } catch (error) {
       if (handleZod(error, res)) return;
@@ -100,6 +103,7 @@ export function registerCatalogRoutes(app: Express): void {
       if (!existing) return res.status(404).json({ error: "Product not found" });
       if (existing.farmerId !== userId) return res.status(403).json({ error: "Access denied" });
       await storage.deleteProduct(req.params.id);
+      audit({ action: "seller.product_deleted", actorId: userId, targetType: "product", targetId: req.params.id });
       res.status(204).send();
     } catch {
       res.status(500).json({ error: "Failed to delete product" });

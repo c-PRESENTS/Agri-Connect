@@ -18,53 +18,6 @@ import { useTranslation } from "react-i18next";
 import type { Product, ProductFilters as Filters, Region } from "@shared/schema";
 import { getShoppableCategories, regions } from "@/lib/categories";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home as HomeIcon, LayoutGrid, Map, ShoppingCart as CartIcon, User } from "lucide-react";
-
-function MobileBottomNav({
-  onHome,
-  cartCount,
-  onCart,
-  onNavigate,
-}: {
-  onHome: () => void;
-  cartCount: number;
-  onCart: () => void;
-  onNavigate: (path: string) => void;
-}) {
-  const items = [
-    { id: "home", label: "Home", icon: HomeIcon, action: onHome, badge: null },
-    { id: "categories", label: "Categories", icon: LayoutGrid, action: () => onNavigate("/?category=daily-needs"), badge: null },
-    { id: "map", label: "Map", icon: Map, action: () => onNavigate("/map"), badge: null },
-    { id: "cart", label: "Cart", icon: CartIcon, action: onCart, badge: cartCount > 0 ? cartCount : null },
-    { id: "profile", label: "Profile", icon: User, action: () => onNavigate("/login"), badge: null },
-  ] as const;
-
-  return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden bg-background/95 backdrop-blur-xl border-t border-border/50 flex items-center justify-around h-16 px-1"
-      data-testid="mobile-bottom-nav"
-    >
-      {items.map(({ id, label, icon: Icon, action, badge }) => (
-        <button
-          key={id}
-          onClick={action as () => void}
-          data-testid={`mobile-nav-${id}`}
-          className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full rounded-xl transition-all active:scale-95 text-muted-foreground hover:text-foreground relative py-1"
-        >
-          <div className="relative">
-            <Icon className="h-5 w-5" />
-            {(badge as number | null) != null && (
-              <span className="absolute -top-1 -right-1.5 h-4 min-w-4 px-0.5 rounded-full bg-primary text-[9px] font-bold text-primary-foreground flex items-center justify-center">
-                {(badge as number) > 9 ? "9+" : badge}
-              </span>
-            )}
-          </div>
-          <span className="text-[9px] font-semibold tracking-tight leading-none">{label}</span>
-        </button>
-      ))}
-    </nav>
-  );
-}
 
 function findCategoryForSubcategory(subcategoryId: string | null) {
   if (!subcategoryId) return null;
