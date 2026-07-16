@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ImageOff } from "lucide-react";
+import { LOCAL_BRANDED_PRODUCT_FALLBACK } from "@/lib/product-images";
 
 interface SafeProductImageProps {
   src?: string | null;
@@ -20,7 +20,7 @@ export function SafeProductImage({ src, fallbackSrc, alt, className }: SafeProdu
   }, [preferred]);
 
   if (!activeSrc || failed) {
-    return <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground" role="img" aria-label={`${alt} image unavailable`}><ImageOff className="h-8 w-8 opacity-50" /></div>;
+    return <img src={LOCAL_BRANDED_PRODUCT_FALLBACK} alt={`${alt} image unavailable`} className={className} loading="lazy" />;
   }
 
   return <img src={activeSrc} alt={alt} className={className} loading="lazy" onError={() => {

@@ -15,6 +15,7 @@ function getClient(): OAuth2Client {
 export interface GoogleUserInfo {
   googleId: string;
   email: string;
+  emailVerified: boolean;
   name: string;
   picture: string;
 }
@@ -33,6 +34,7 @@ export async function verifyGoogleToken(idToken: string): Promise<GoogleUserInfo
   return {
     googleId: payload.sub,
     email: payload.email || "",
+    emailVerified: payload.email_verified === true,
     name: payload.name || payload.email?.split("@")[0] || "User",
     picture: payload.picture || "",
   };

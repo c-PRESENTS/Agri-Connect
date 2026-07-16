@@ -9,7 +9,7 @@ import { SafeProductImage } from "@/components/safe-product-image";
 import { VerificationTiers } from "@/components/verification-badges";
 import { ProfileCompletionChecklist } from "@/components/profile-completion";
 import { useAuth } from "@/hooks/use-auth";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import { LISTING_POLICY } from "@/lib/listing-policy";
 import type { Product } from "@shared/schema";
 
@@ -103,9 +103,8 @@ export default function MyProfilePage() {
                     <CardContent className="p-4">
                       <div className="mb-3 aspect-[4/3] overflow-hidden rounded-md bg-muted">
                         <SafeProductImage
-                          src={product.images?.[0]}
-                          fallbackSrc={getProductImage(name, product.categoryId, "sm")}
-                          alt={name}
+                          src={resolveProductImageForProduct(product, { imageOwnership: "seller" }).src}
+                          alt={`${name} product image`}
                           className="h-full w-full object-cover"
                         />
                       </div>

@@ -122,7 +122,10 @@ export default function LoginPage() {
       if (!google?.accounts?.id || !container) return false;
 
       try {
-        if (initializedGoogleClientId !== googleClientId) {
+        // Google Identity Services keeps one page-global callback. Reinitialize
+        // on each fresh login-page mount so a prior student-login visit cannot
+        // leave its callback active for the marketplace button.
+        if (!googleButtonRenderedRef.current || initializedGoogleClientId !== googleClientId) {
           google.accounts.id.initialize({
             client_id: googleClientId,
             callback: (response: { credential?: string }) => activeGoogleCredentialHandler(response),
@@ -483,6 +486,10 @@ function PhoneStep({
             </p>
           )}
         </div>
+
+        <a href="/student/login" className="block text-center text-sm font-semibold text-emerald-700 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+          Student login
+        </a>
 
         <Button
           type="button"

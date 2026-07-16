@@ -5,11 +5,11 @@ export type TestAccount = {
   password: string;
 };
 
-export function hasTestAccount(prefix: "BUYER" | "SELLER" | "ADMIN"): boolean {
+export function hasTestAccount(prefix: "BUYER" | "SELLER" | "ADMIN" | "STUDENT"): boolean {
   return Boolean(process.env[`E2E_${prefix}_EMAIL`] && process.env[`E2E_${prefix}_PASSWORD`]);
 }
 
-export function getTestAccount(prefix: "BUYER" | "SELLER" | "ADMIN"): TestAccount {
+export function getTestAccount(prefix: "BUYER" | "SELLER" | "ADMIN" | "STUDENT"): TestAccount {
   const email = process.env[`E2E_${prefix}_EMAIL`];
   const password = process.env[`E2E_${prefix}_PASSWORD`];
   if (!email || !password) {

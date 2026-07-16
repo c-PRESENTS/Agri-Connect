@@ -13,8 +13,7 @@ import { TranslateButton } from "./translate-button";
 import type { Product } from "@shared/schema";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { getProductImage as resolveProductImage } from "@/lib/product-images";
-import { getCategoryImage } from "@/lib/categories";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { SafeProductImage } from "./safe-product-image";
@@ -100,21 +99,7 @@ export function ProductCard({
     pcToast({ title: added ? "Added to favorites" : "Removed from favorites" });
   };
 
-  const getProductImage = () => {
-    // Prefer a locally-bundled stock image (always reliable, matches the
-    // subcategory shown in the side panel). Many of the remote Unsplash photo
-    // IDs in the keyword map have rotted, so trusting them first leaves every
-    // card showing the same default vegetable basket.
-    const local =
-      getCategoryImage((product as any).subcategoryId) ||
-      getCategoryImage(product.categoryId);
-    if (local) return local;
-    // Fall back to the keyword-resolved remote image if we have no local match
-    // (or the local one somehow failed to load).
-    const resolved = resolveProductImage(product.name, product.categoryId, "md");
-    if (resolved) return resolved;
-    return resolved;
-  };
+  const imageResolution = resolveProductImageForProduct(product);
 
   return (
     <motion.div
@@ -130,7 +115,7 @@ export function ProductCard({
         data-testid={`card-product-${product.id}`}
       >
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-          <SafeProductImage src={product.images?.find((image) => typeof image === "string" && image.trim())} fallbackSrc={getProductImage()} alt={productName} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-108" />
+          <SafeProductImage src={imageResolution.src} fallbackSrc={imageResolution.fallbackSrc} alt={`${productName} product image`} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-108" />
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           

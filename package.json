@@ -12,6 +12,8 @@
     "qa:links": "node scripts/qa-static-links.mjs",
     "qa:foundation": "playwright test tests/e2e/security-accessibility.foundation.spec.ts",
     "qa:marketplace": "playwright test tests/e2e/marketplace-workflows.spec.ts",
+    "qa:student": "playwright test tests/e2e/student-help-point.spec.ts",
+    "student:registry:import": "node --env-file=.env scripts/student-registry-import.mjs",
     "env:verify:ps51": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-codex-env.ps1",
     "e2e:env": "playwright test tests/e2e/environment-readiness.spec.ts",
     "db:push": "drizzle-kit push",

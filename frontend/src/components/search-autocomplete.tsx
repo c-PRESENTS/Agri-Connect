@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { categories, getShoppableCategories } from "@/lib/categories";
 import { apiRequest } from "@/lib/queryClient";
 import { SafeProductImage } from "@/components/safe-product-image";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 
 interface SearchAutocompleteProps {
   value: string;
@@ -375,7 +376,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                     data-testid={`search-result-${product.id}`}
                   >
                     <div className="h-8 w-8 rounded-md overflow-hidden bg-muted shrink-0">
-                      <SafeProductImage src={product.images?.[0]} alt={product.name || "Product"} className="w-full h-full object-cover" />
+                      <SafeProductImage src={resolveProductImageForProduct(product).src} alt={`${product.name || "Product"} product image`} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[12px] font-semibold truncate group-hover:text-primary transition-colors">

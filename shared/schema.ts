@@ -4,6 +4,7 @@ import { z } from "zod";
 // importing from "@shared/schema". The canonical users + sessions tables live
 // in shared/models/auth.ts.
 export * from "./models/auth";
+export * from "./models/student";
 
 // Categories
 export interface Category {

@@ -15,12 +15,15 @@ export type AuditAction =
   | "seller.product_updated"
   | "seller.product_deleted"
   | "seller.dashboard_viewed"
-  | "operator.dashboard_viewed";
+  | "operator.dashboard_viewed"
+  | "student.login_requested"
+  | "student.access_verified"
+  | "student.support_requested";
 
 type AuditEvent = {
   action: AuditAction;
   actorId?: string;
-  targetType: "cart" | "order" | "product" | "dashboard";
+  targetType: "cart" | "order" | "product" | "dashboard" | "student_access" | "student_support";
   targetId?: string;
   outcome?: "success" | "denied" | "failed";
 };

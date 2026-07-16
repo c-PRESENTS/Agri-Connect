@@ -1,6 +1,7 @@
 import { lazy } from "react";
 import { Route, Switch } from "wouter";
 import { ProtectedRoute } from "@/components/protected-route";
+import { StudentAccessRoute } from "@/components/student-access-route";
 
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Home = lazy(() => import("@/pages/home"));
@@ -38,6 +39,9 @@ const FavoritesPage = lazy(() => import("@/pages/favorites"));
 const MyProfilePage = lazy(() => import("@/pages/my-profile"));
 const ProfileCompletionPage = lazy(() => import("@/pages/profile-completion"));
 const StudentHelpPointPage = lazy(() => import("@/pages/student-help-point"));
+const StudentLoginPage = lazy(() => import("@/pages/student-login"));
+const StudentVerifyEmailPage = lazy(() => import("@/pages/student-verify-email"));
+const StudentConfirmLoginPage = lazy(() => import("@/pages/student-confirm-login"));
 const FulfillmentPage = lazy(() => import("@/pages/fulfillment"));
 const OperatorDashboardPage = lazy(() => import("@/pages/operator-dashboard"));
 
@@ -71,8 +75,15 @@ export function AppRoutes() {
         <ProtectedRoute><ProfileCompletionPage /></ProtectedRoute>
       </Route>
       <Route path="/student-help-point">
-        <ProtectedRoute><StudentHelpPointPage /></ProtectedRoute>
+        <StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute>
       </Route>
+      <Route path="/student/login" component={StudentLoginPage} />
+      <Route path="/student/verify-email" component={StudentVerifyEmailPage} />
+      <Route path="/student/confirm-login" component={StudentConfirmLoginPage} />
+      <Route path="/student/dashboard"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
+      <Route path="/student/resources"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
+      <Route path="/student/support"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
+      <Route path="/student/requests"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
       <Route path="/farmers-help" component={FarmersHelp} />
       <Route path="/land-leasing" component={LandLeasingPage} />
       <Route path="/logistics" component={LogisticsPage} />

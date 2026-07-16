@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getShoppableCategories, categoryImages, getCategoryExamples } from "@/lib/categories";
+import { getShoppableCategories, getCategoryExamples } from "@/lib/categories";
 import { getSubSubcategories, SubSubItem } from "@/lib/sub-subcategories";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "@shared/schema";
 import { SafeProductImage } from "./safe-product-image";
+import { resolveProductImage, resolveProductImageForProduct } from "@/lib/product-images";
 
 interface ProductShowcaseProps {
   categoryId: string | null;
@@ -286,7 +287,7 @@ export function ProductShowcase({
                 <div className="h-1 w-1 rounded-full bg-primary" />
                 <h2 className="text-[10px] font-bold uppercase tracking-tight">{section.title}</h2>
                 <div className="flex-1 h-px bg-border/30" />
-                <span className="text-[8px] text-muted-foreground uppercase font-bold">{section.items.length} {t("product_showcase.item_count", { count: section.items.length })}</span>
+                <span className="text-[8px] text-muted-foreground uppercase font-bold">{section.items.length}</span>
               </div>
 
               {/* Product Grid */}
@@ -305,13 +306,14 @@ export function ProductShowcase({
                   // then the product's own subcategory, then the URL subcategory,
                   // then the parent category. Fixes "every card shows the parent
                   // category image" bug.
-                  const itemKey = item.toLowerCase().split(/[\s(]/)[0];
-                  const image =
-                    categoryImages[itemKey] ||
-                    categoryImages[product.subcategoryId || ''] ||
-                    categoryImages[subcategoryId || ''] ||
-                    categoryImages[product.categoryId || ''] ||
-                    categoryImages[categoryId || ''];
+                  const imageResolution = resolveProductImage({
+                    id: product.id,
+                    name: item,
+                    categoryId: product.categoryId,
+                    subcategoryId: product.subcategoryId,
+                    images: product.images,
+                  });
+                  const image = imageResolution.src;
                   
                   return (
                     <motion.div
@@ -323,7 +325,7 @@ export function ProductShowcase({
                       <Card data-product-tile data-product-name={item.toLowerCase()} className="overflow-hidden group hover:shadow-sm border-border/40 transition-all duration-200 active:scale-[0.97] cursor-pointer scroll-mt-20" onClick={() => onProductClick?.(product)}>
                         {/* Product Image */}
                         <div className="relative aspect-square bg-muted/20 overflow-hidden">
-                          <SafeProductImage src={product.images?.[0] || image} fallbackSrc={image} alt={item} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <SafeProductImage src={imageResolution.src} fallbackSrc={imageResolution.fallbackSrc} alt={`${item} product image`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           
                           {/* Badges */}
                           <div className="absolute top-1 left-1 flex flex-col gap-0.5">
@@ -385,7 +387,7 @@ export function ProductShowcase({
           {content.length === 0 && products.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {products.slice(0, 24).map((product, idx) => {
-                const image = categoryImages[product.subcategoryId] || categoryImages[product.categoryId];
+                const image = resolveProductImageForProduct(product).src;
                 
                 return (
                   <motion.div
@@ -396,18 +398,7 @@ export function ProductShowcase({
                   >
                     <Card data-product-tile data-product-name={product.name.toLowerCase()} className="overflow-hidden group hover:shadow-md transition-all duration-200 active:scale-[0.98] cursor-pointer scroll-mt-20" onClick={() => onProductClick?.(product)}>
                       <div className="relative aspect-square bg-muted overflow-hidden">
-                        {image ? (
-                          <img 
-                            src={image} 
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-green-500/10">
-                            <Package className="h-8 w-8 text-primary/40" />
-                          </div>
-                        )}
+                        <SafeProductImage src={image} fallbackSrc={resolveProductImageForProduct(product).fallbackSrc} alt={`${product.name} product image`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         
                           {product.isOrganic && (
                             <Badge className="absolute top-1.5 left-1.5 text-[8px] px-1.5 py-0 bg-green-600 hover:bg-green-600">
