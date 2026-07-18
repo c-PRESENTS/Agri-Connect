@@ -9,6 +9,14 @@ import meatImg from "@assets/stock_images/fresh_meat_chicken_r_349370c8.jpg";
 import fishImg from "@assets/stock_images/fresh_fish_seafood_m_3fbaedf9.jpg";
 import spicesImg from "@assets/stock_images/colorful_spices_turm_cbd23e5f.jpg";
 import oilsImg from "@assets/stock_images/cooking_oil_bottles__c5a93db4.jpg";
+import coldPressedCoconutOilImg from "@assets/stock_images/cold pressed coconut.jpeg";
+import coconutOilImg from "@assets/stock_images/coconut oil.jpg";
+import groundnutOilImg from "@assets/stock_images/groundnut oil.jpeg";
+import mustardOilImg from "@assets/stock_images/mustard oil.jpeg";
+import oliveOilImg from "@assets/stock_images/olive oil.jpeg";
+import riceBranOilImg from "@assets/stock_images/rice bran oil.jpeg";
+import sesameOilImg from "@assets/stock_images/sesame oil.jpeg";
+import sunflowerOilImg from "@assets/stock_images/sunflower oil.jpeg";
 import pulsesImg from "@assets/stock_images/pulses_lentils_beans_d1c24845.jpg";
 import cowImg from "@assets/stock_images/dairy_cow_farm_cattl_790c48d9.jpg";
 import goatImg from "@assets/stock_images/goat_farm_livestock__360f46d7.jpg";
@@ -1163,14 +1171,14 @@ export const productData: Record<string, { name: string; price: number; unit: st
     { name: "Jaggery", price: 80, unit: "kg", image: spicesImg },
   ],
   "oils": [
-    { name: "Sunflower Oil", price: 130, unit: "liter", image: oilsImg },
-    { name: "Groundnut Oil", price: 180, unit: "liter", image: oilsImg },
-    { name: "Mustard Oil", price: 160, unit: "liter", image: oilsImg },
-    { name: "Coconut Oil", price: 200, unit: "liter", image: oilsImg },
-    { name: "Olive Oil", price: 600, unit: "liter", image: oilsImg },
-    { name: "Sesame Oil", price: 350, unit: "liter", image: oilsImg },
-    { name: "Rice Bran Oil", price: 150, unit: "liter", image: oilsImg },
-    { name: "Cold Pressed Coconut Oil", price: 280, unit: "liter", image: oilsImg },
+    { name: "Sunflower Oil", price: 130, unit: "liter", image: sunflowerOilImg },
+    { name: "Groundnut Oil", price: 180, unit: "liter", image: groundnutOilImg },
+    { name: "Mustard Oil", price: 160, unit: "liter", image: mustardOilImg },
+    { name: "Coconut Oil", price: 200, unit: "liter", image: coconutOilImg },
+    { name: "Olive Oil", price: 600, unit: "liter", image: oliveOilImg },
+    { name: "Sesame Oil", price: 350, unit: "liter", image: sesameOilImg },
+    { name: "Rice Bran Oil", price: 150, unit: "liter", image: riceBranOilImg },
+    { name: "Cold Pressed Coconut Oil", price: 280, unit: "liter", image: coldPressedCoconutOilImg },
   ],
   "honey": [
     { name: "Multiflora Honey", price: 350, unit: "kg", image: honeyImg },
