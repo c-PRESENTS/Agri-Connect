@@ -2,7 +2,7 @@
   "name": "rest-express",
   "version": "1.0.0",
   "type": "module",
-  "packageManager": "npm@10",
+  "packageManager": "npm@10.0.0",
   "license": "MIT",
   "scripts": {
     "dev": "tsx --env-file=.env backend/index.ts",

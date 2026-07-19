@@ -137,6 +137,71 @@ const bundled = (label: string): ProductImageAttribution => ({
   label,
 });
 
+/**
+ * All locally curated product assets are indexed from their filenames. This
+ * keeps the image folders aligned with product-card names without requiring a
+ * per-file import whenever a new taxonomy branch is added. Ambiguous filenames
+ * are deliberately excluded and continue through the explicit registry or
+ * taxonomy fallback path.
+ */
+const localCuratedProductImages = import.meta.glob(
+  "../assets/AgriConnect Images/**/*.{avif,jpg,jpeg,png,webp}",
+  { eager: true, import: "default", query: "?url" },
+) as Record<string, string>;
+
+function getAssetProductName(assetPath: string): string {
+  const filename = assetPath.split("/").at(-1) ?? "";
+  return filename
+    .replace(/\.[^.]+$/, "")
+    .replace(/^\d+[_\s-]+/, "")
+    .replace(/_/g, " ");
+}
+
+function getAssetFolder(assetPath: string): string {
+  const pathParts = assetPath.split("/");
+  return pathParts.at(-2) ?? "uncategorized";
+}
+
+const categoryIdByTopLevelAssetFolder: Readonly<Record<string, string>> = {
+  daily_needs: "daily-needs",
+  "Inputs & Tools": "inputs-tools",
+  Specialty: "specialty",
+  "Other Agricultural": "other-agri",
+  Market: "supermarket",
+  "Modern Farming": "modern-farming",
+};
+
+function getAssetCategoryId(assetPath: string): string {
+  const pathParts = assetPath.split("/");
+  const assetsIndex = pathParts.lastIndexOf("AgriConnect Images");
+  const topLevelFolder = pathParts.at(assetsIndex + 1) ?? "";
+
+  return categoryIdByTopLevelAssetFolder[topLevelFolder] ?? normalizeProductImageKey(topLevelFolder);
+}
+
+function getUniqueLocalAsset(productName: string, fallback: string): string {
+  const matches = Object.entries(localCuratedProductImages).filter(([assetPath]) =>
+    normalizeProductImageKey(getAssetProductName(assetPath)) === normalizeProductImageKey(productName),
+  );
+
+  return matches.length === 1 ? matches[0][1] : fallback;
+}
+
+const dailyNeedsSubcategoryByAssetFolder: Readonly<Record<string, string>> = {
+  "Bakery & Bread": "bakery",
+  "cooking oils": "oils",
+  "Dairy & Eggs": "dairy",
+  "Fish & SeaFood": "fish",
+  "food_grains & Cereals": "grains",
+  Fruits: "fruits",
+  "Meat & Poultry": "meat",
+  "Organic Produce": "organic-produce",
+  "Pulses & Lentils": "pulses",
+  "Ready-to-Eat-Packaged": "packaged",
+  "Spices & Condamients": "spices",
+  Vegetables: "vegetables",
+};
+
 const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "white-rice", name: "White Rice", aliases: [], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: whiteRiceImage, attribution: bundled("AgriConnect white rice stock asset") },
   { slug: "brown-rice", name: "Brown Rice", aliases: [], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: brownRiceImage, attribution: bundled("AgriConnect brown rice stock asset") },
@@ -165,17 +230,17 @@ const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "millet-flour", name: "Millet Flour", aliases: [], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: milletFlourImage, attribution: bundled("AgriConnect millet flour stock asset") },
   { slug: "maida", name: "Maida", aliases: ["Refined Flour"], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: maidaImage, attribution: bundled("AgriConnect maida product asset") },
   { slug: "daliya", name: "Daliya", aliases: ["Broken Wheat"], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: daliyaImage, attribution: bundled("AgriConnect daliya product asset") },
-  { slug: "tomato", name: "Tomato", aliases: ["Tomatoes", "Organic Tomatoes", "Fresh Tomatoes", "Cherry Tomato"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: categoryImages.tomato, attribution: bundled("AgriConnect tomato stock asset") },
-  { slug: "potato", name: "Potato", aliases: ["Potatoes", "Fresh Potatoes", "Sweet Potato"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: categoryImages.potato, attribution: bundled("AgriConnect potato stock asset") },
-  { slug: "onion", name: "Onion", aliases: ["Onions", "Red Onions", "Spring Onion", "Shallots", "Garlic"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: categoryImages.onion, attribution: bundled("AgriConnect onion stock asset") },
-  { slug: "carrot", name: "Carrot", aliases: ["Carrots", "Beetroot", "Radish", "Turnip"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: categoryImages.carrot, attribution: bundled("AgriConnect root vegetable stock asset") },
-  { slug: "spinach", name: "Spinach", aliases: ["Coriander Leaves", "Mint Leaves", "Curry Leaves", "Lettuce", "Amaranth Leaves", "Fenugreek Leaves", "Moringa Leaves", "Leafy Greens"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: categoryImages.spinach, attribution: bundled("AgriConnect leafy greens stock asset") },
+  { slug: "tomato", name: "Tomato", aliases: ["Tomatoes", "Organic Tomatoes", "Fresh Tomatoes", "Cherry Tomato"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("tomato", categoryImages.tomato), attribution: bundled("AgriConnect tomato stock asset") },
+  { slug: "potato", name: "Potato", aliases: ["Potatoes", "Fresh Potatoes", "Sweet Potato"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("potato", categoryImages.potato), attribution: bundled("AgriConnect potato stock asset") },
+  { slug: "onion", name: "Onion", aliases: ["Onions", "Red Onions", "Spring Onion", "Shallots", "Garlic"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("onion", categoryImages.onion), attribution: bundled("AgriConnect onion stock asset") },
+  { slug: "carrot", name: "Carrot", aliases: ["Carrots", "Beetroot", "Radish", "Turnip"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("carrot", categoryImages.carrot), attribution: bundled("AgriConnect root vegetable stock asset") },
+  { slug: "spinach", name: "Spinach", aliases: ["Coriander Leaves", "Mint Leaves", "Curry Leaves", "Lettuce", "Amaranth Leaves", "Fenugreek Leaves", "Moringa Leaves", "Leafy Greens"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("spinach", categoryImages.spinach), attribution: bundled("AgriConnect leafy greens stock asset") },
   { slug: "vegetables", name: "Mixed Vegetables", aliases: ["Organic Vegetables Mix", "Bulk Mixed Vegetables Crate", "Organic Seasonal Vegetable Box", "Wholesale Gourd Selection", "Wholesale Root Vegetables Sack"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: categoryImages.vegetables, attribution: bundled("AgriConnect vegetable stock asset") },
-  { slug: "apple", name: "Apple", aliases: ["Apples", "Shimla Apple", "Kashmiri Apple", "Green Apple", "Wholesale Apple Pear Crate"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: categoryImages.apple, attribution: bundled("AgriConnect apple stock asset") },
-  { slug: "mango", name: "Mango", aliases: ["Mangoes", "Alphonso Mango", "Alphonso Mangoes", "Kesar Mango", "Premium Mangoes"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: categoryImages.mango, attribution: bundled("AgriConnect mango stock asset") },
+  { slug: "apple", name: "Apple", aliases: ["Apples", "Shimla Apple", "Kashmiri Apple", "Green Apple", "Wholesale Apple Pear Crate"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: getUniqueLocalAsset("apple", categoryImages.apple), attribution: bundled("AgriConnect apple stock asset") },
+  { slug: "mango", name: "Mango", aliases: ["Mangoes", "Alphonso Mango", "Alphonso Mangoes", "Kesar Mango", "Premium Mangoes"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: getUniqueLocalAsset("mango", categoryImages.mango), attribution: bundled("AgriConnect mango stock asset") },
   { slug: "banana", name: "Banana", aliases: ["Bananas"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: bananaProductImage, attribution: bundled("AgriConnect banana product asset") },
-  { slug: "orange", name: "Orange", aliases: ["Oranges", "Lemon", "Sweet Lime", "Grapefruit", "Pomelo", "Kinnow", "Mandarin", "Wholesale Citrus Fruit Box"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: categoryImages.orange, attribution: bundled("AgriConnect citrus stock asset") },
-  { slug: "grapes", name: "Grapes", aliases: ["Green Grapes", "Black Grapes", "Red Grapes", "Seedless Grapes", "Raisins", "Bulk Berry Pack"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: categoryImages.grapes, attribution: bundled("AgriConnect grape stock asset") },
+  { slug: "orange", name: "Orange", aliases: ["Oranges", "Lemon", "Sweet Lime", "Grapefruit", "Pomelo", "Kinnow", "Mandarin", "Wholesale Citrus Fruit Box"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: getUniqueLocalAsset("orange", categoryImages.orange), attribution: bundled("AgriConnect citrus stock asset") },
+  { slug: "grapes", name: "Grapes", aliases: ["Green Grapes", "Black Grapes", "Red Grapes", "Seedless Grapes", "Raisins", "Bulk Berry Pack"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: getUniqueLocalAsset("grapes", categoryImages.grapes), attribution: bundled("AgriConnect grape stock asset") },
   { slug: "fruits", name: "Mixed Fruits", aliases: ["Bulk Tropical Fruits Crate", "Bulk Exotic Fruit Box", "Seasonal Mixed Fruit Crate"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: categoryImages.fruits, attribution: bundled("AgriConnect fruit stock asset") },
   { slug: "organic-carrots", name: "Organic Carrots", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicCarrotsImage, attribution: bundled("AgriConnect organic carrots product asset") },
   { slug: "organic-potatoes", name: "Organic Potatoes", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicPotatoesImage, attribution: bundled("AgriConnect organic potatoes product asset") },
@@ -275,11 +340,41 @@ const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "irrigation", name: "Irrigation", aliases: ["Drip Irrigation", "Sprinkler", "Water Pump"], categoryId: "inputs-tools", subcategoryId: "irrigation", localAssetPath: categoryImages.irrigation, attribution: bundled("AgriConnect irrigation stock asset") },
 ];
 
+const explicitSlugs = new Set(entries.map((entry) => entry.slug));
+
+const localAssetCandidates = Object.entries(localCuratedProductImages).reduce<
+  Record<string, { assetPath: string; localAssetPath: string; count: number }>
+>((candidates, [assetPath, localAssetPath]) => {
+  const slug = normalizeProductImageKey(getAssetProductName(assetPath));
+  if (!slug) return candidates;
+
+  const existing = candidates[slug];
+  candidates[slug] = existing
+    ? { ...existing, count: existing.count + 1 }
+    : { assetPath, localAssetPath, count: 1 };
+  return candidates;
+}, {});
+
+const automaticAssetEntries: readonly ProductImageRegistryEntry[] = Object.entries(localAssetCandidates)
+  .filter(([slug, candidate]) => !explicitSlugs.has(slug) && candidate.count === 1)
+  .map(([slug, candidate]) => ({
+    slug,
+    name: getAssetProductName(candidate.assetPath),
+    aliases: [],
+    categoryId: getAssetCategoryId(candidate.assetPath),
+    subcategoryId: dailyNeedsSubcategoryByAssetFolder[getAssetFolder(candidate.assetPath)]
+      ?? normalizeProductImageKey(getAssetFolder(candidate.assetPath)),
+    localAssetPath: candidate.localAssetPath,
+    attribution: bundled(`AgriConnect local asset: ${candidate.assetPath}`),
+  }));
+
+const allEntries = [...entries, ...automaticAssetEntries];
+
 export const productImageRegistry: Readonly<Record<string, ProductImageRegistryEntry>> =
-  Object.freeze(Object.fromEntries(entries.map((entry) => [entry.slug, entry])));
+  Object.freeze(Object.fromEntries(allEntries.map((entry) => [entry.slug, entry])));
 
 export const productImageAliasIndex: Readonly<Record<string, readonly string[]>> = Object.freeze(
-  entries.reduce<Record<string, string[]>>((index, entry) => {
+  allEntries.reduce<Record<string, string[]>>((index, entry) => {
     for (const alias of entry.aliases) {
       const key = normalizeProductImageKey(alias);
       index[key] = [...(index[key] ?? []), entry.slug];
