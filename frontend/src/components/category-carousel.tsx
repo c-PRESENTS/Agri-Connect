@@ -9,8 +9,8 @@ import { getShoppableCategories } from "@/lib/categories";
 import { getCategoryIconComponent } from "@/lib/category-icons";
 import type { Product } from "@shared/schema";
 
-import vegetablesImg from "@assets/stock_images/fresh_vegetables_col_2df74665.jpg";
-import fruitsImg from "@assets/stock_images/fresh_fruits_colorfu_e1e1e36e.jpg";
+import vegetablesImg from "@assets/AgriConnect Images/stock_images/fresh_vegetables.jpeg";
+import fruitsImg from "@assets/AgriConnect Images/stock_images/fresh_fruits.jpeg";
 
 interface CategoryCarouselProps {
   onCategorySelect: (categoryId: string, subcategoryId?: string) => void;

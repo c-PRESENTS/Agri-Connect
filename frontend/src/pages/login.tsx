@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/auth/phone-input";
 import { OtpInput } from "@/components/auth/otp-input";
-import farmerImage from "@/assets/stock_images/Farmer Image.png";
+import farmerImage from "@/assets/AgriConnect Images/stock_images/Farmer Image.png";
 import {
   ArrowLeft,
   Check,

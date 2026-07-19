@@ -1,4 +1,4 @@
-import brandedFallbackImage from "@assets/stock_images/agri-connect logo.png";
+import brandedFallbackImage from "@assets/AgriConnect Images/stock_images/agri-connect logo.png";
 import countryEggsImage from "@assets/AgriConnect Images/daily_needs/Dairy & Eggs/country eggs.jpeg";
 import duckEggsImage from "@assets/AgriConnect Images/daily_needs/Dairy & Eggs/duck eggs.jpeg";
 import farmEggsImage from "@assets/AgriConnect Images/daily_needs/Dairy & Eggs/farm eggs.jpg";
@@ -139,13 +139,13 @@ const bundled = (label: string): ProductImageAttribution => ({
 
 /**
  * All locally curated product assets are indexed from their filenames. This
- * keeps the image folders aligned with product-card names without requiring a
- * per-file import whenever a new taxonomy branch is added. Ambiguous filenames
- * are deliberately excluded and continue through the explicit registry or
- * taxonomy fallback path.
+ * keeps clearly named curated assets available to product cards without
+ * requiring another per-file import. Ambiguous filenames are deliberately
+ * excluded and continue through the explicit registry or taxonomy fallback
+ * path.
  */
 const localCuratedProductImages = import.meta.glob(
-  "../assets/AgriConnect Images/**/*.{avif,jpg,jpeg,png,webp}",
+  "../assets/AgriConnect Images/daily_needs/{Vegetables,Fruits,Meat & Poultry,Fish & SeaFood,Spices & Condamients,Dairy & Eggs}/*.{avif,jpg,jpeg,png,webp}",
   { eager: true, import: "default", query: "?url" },
 ) as Record<string, string>;
 
