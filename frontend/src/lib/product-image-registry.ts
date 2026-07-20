@@ -32,7 +32,7 @@ import kambuGrainImage from "@assets/AgriConnect Images/daily_needs/food_grains 
 import littleMilletImage from "@assets/AgriConnect Images/daily_needs/food_grains & Cereals/little-milet.jpeg";
 import maizeGrainImage from "@assets/AgriConnect Images/daily_needs/food_grains & Cereals/maize.jpg";
 import milletFlourImage from "@assets/AgriConnect Images/daily_needs/food_grains & Cereals/millet flour.webp";
-import oatsGrainImage from "@assets/AgriConnect Images/daily_needs/Ready-to-Eat-Packaged/oats.jpeg";
+import oatsGrainImage from "@assets/AgriConnect Images/daily_needs/food_grains & Cereals/oats.avif";
 import parboiledRiceImage from "@assets/AgriConnect Images/daily_needs/food_grains & Cereals/paraboiled rice.jpeg";
 import ponniRiceImage from "@assets/AgriConnect Images/daily_needs/food_grains & Cereals/ponni rice.webp";
 import quinoaGrainImage from "@assets/AgriConnect Images/daily_needs/food_grains & Cereals/quinoa.webp";
@@ -145,7 +145,7 @@ const bundled = (label: string): ProductImageAttribution => ({
  * path.
  */
 const localCuratedProductImages = import.meta.glob(
-  "../assets/AgriConnect Images/daily_needs/{Vegetables,Fruits,Meat & Poultry,Fish & SeaFood,Spices & Condamients,Dairy & Eggs}/*.{avif,jpg,jpeg,png,webp}",
+  "../assets/AgriConnect Images/{Bio,Commercial & Industry Crops,daily_needs,Dietary,Fresh_Produce,Inputs & Tools,Market,Modern Farming,Other Agricultural,Processed,Specialty}/**/*.{avif,jpg,jpeg,png,webp}",
   { eager: true, import: "default", query: "?url" },
 ) as Record<string, string>;
 
@@ -163,12 +163,17 @@ function getAssetFolder(assetPath: string): string {
 }
 
 const categoryIdByTopLevelAssetFolder: Readonly<Record<string, string>> = {
+  Bio: "bio-products",
+  "Commercial & Industry Crops": "commercial-crops",
   daily_needs: "daily-needs",
+  Dietary: "dietary",
+  Fresh_Produce: "fresh-produce",
   "Inputs & Tools": "inputs-tools",
   Specialty: "specialty",
   "Other Agricultural": "other-agri",
   Market: "supermarket",
   "Modern Farming": "modern-farming",
+  Processed: "processed",
 };
 
 function getAssetCategoryId(assetPath: string): string {
@@ -201,6 +206,96 @@ const dailyNeedsSubcategoryByAssetFolder: Readonly<Record<string, string>> = {
   "Spices & Condamients": "spices",
   Vegetables: "vegetables",
 };
+
+const taxonomyByAssetFolder: Readonly<Record<string, { categoryId: string; subcategoryId: string }>> = {
+  "Bio/BioEnergy & Biomass": { categoryId: "bio-products", subcategoryId: "bioenergy" },
+  "Bio/Biofertilizers & Biopesticides": { categoryId: "bio-products", subcategoryId: "biofertilizers" },
+  "Bio/Herbal & Pharma Products": { categoryId: "bio-products", subcategoryId: "herbal-pharma" },
+  "Commercial & Industry Crops/Beverage Crops": { categoryId: "commercial-crops", subcategoryId: "beverage-crops" },
+  "Commercial & Industry Crops/Latex & Resin Crops": { categoryId: "commercial-crops", subcategoryId: "latex-crops" },
+  "Commercial & Industry Crops/Other Commercial Crops": { categoryId: "commercial-crops", subcategoryId: "other-commercial" },
+  "Commercial & Industry Crops/Sugar Crops": { categoryId: "commercial-crops", subcategoryId: "sugar-crops" },
+  "Dietary/Ayurvedic & Traditional": { categoryId: "dietary", subcategoryId: "ayurvedic" },
+  "Dietary/Baby & Infant Nutrition": { categoryId: "dietary", subcategoryId: "baby-nutrition" },
+  "Dietary/Dairy-free & Lactose-free": { categoryId: "dietary", subcategoryId: "dairy-free" },
+  "Dietary/Diabatic Friendly": { categoryId: "dietary", subcategoryId: "diabetic" },
+  "Dietary/Gluten Free": { categoryId: "dietary", subcategoryId: "gluten-free" },
+  "Dietary/Gym & BodyBuilding": { categoryId: "dietary", subcategoryId: "high-protein" },
+  "Dietary/Heart Healthy": { categoryId: "dietary", subcategoryId: "heart-healthy" },
+  "Dietary/Keto & Low Carb": { categoryId: "dietary", subcategoryId: "keto" },
+  "Dietary/Mediterranean Diet": { categoryId: "dietary", subcategoryId: "mediterranean" },
+  "Dietary/Paleo Diet": { categoryId: "dietary", subcategoryId: "paleo" },
+  "Dietary/Pregnancy & lactation": { categoryId: "dietary", subcategoryId: "pregnancy" },
+  "Dietary/Senior & Nutrition": { categoryId: "dietary", subcategoryId: "senior-nutrition" },
+  "Dietary/Vegan & Plant Based": { categoryId: "dietary", subcategoryId: "vegan" },
+  "Dietary/Whole30 & Clean Eating": { categoryId: "dietary", subcategoryId: "whole30" },
+  "Fresh_Produce/Flowers & Decorative": { categoryId: "fresh-produce", subcategoryId: "flowers" },
+  "Fresh_Produce/Fruits-WholeSale": { categoryId: "fresh-produce", subcategoryId: "wholesale-fruits" },
+  "Fresh_Produce/Vegetables-WholeSale": { categoryId: "fresh-produce", subcategoryId: "wholesale-veg" },
+  "Inputs & Tools/Agricultural Sensors & IoT": { categoryId: "inputs-tools", subcategoryId: "sensors" },
+  "Inputs & Tools/Animal Husbandry equpments": { categoryId: "inputs-tools", subcategoryId: "animal-equipment" },
+  "Inputs & Tools/Farm Machinery": { categoryId: "inputs-tools", subcategoryId: "machinery" },
+  "Inputs & Tools/Farming Tools & Equipments": { categoryId: "inputs-tools", subcategoryId: "tools" },
+  "Inputs & Tools/Fertilizers": { categoryId: "inputs-tools", subcategoryId: "fertilizers" },
+  "Inputs & Tools/GIS & Mapping Tools": { categoryId: "inputs-tools", subcategoryId: "gis" },
+  "Inputs & Tools/Irrigation Equipment": { categoryId: "inputs-tools", subcategoryId: "irrigation" },
+  "Inputs & Tools/Pesticides & Protection": { categoryId: "inputs-tools", subcategoryId: "pesticides" },
+  "Inputs & Tools/Precision Farming Equipment": { categoryId: "inputs-tools", subcategoryId: "precision" },
+  "Inputs & Tools/Protective Gear": { categoryId: "inputs-tools", subcategoryId: "protective-gear" },
+  "Inputs & Tools/Remote Sensing & Drones": { categoryId: "inputs-tools", subcategoryId: "remote-sensing" },
+  "Inputs & Tools/Seeds & Planting Materials": { categoryId: "inputs-tools", subcategoryId: "seeds" },
+  "Market/Allied Products": { categoryId: "supermarket", subcategoryId: "allied-products" },
+  "Market/Automotive": { categoryId: "supermarket", subcategoryId: "automotive" },
+  "Market/Baby & kids": { categoryId: "supermarket", subcategoryId: "baby-kids" },
+  "Market/Books & Media": { categoryId: "supermarket", subcategoryId: "books-media" },
+  "Market/Clothing & Accessories": { categoryId: "supermarket", subcategoryId: "clothing" },
+  "Market/Foods & Beverages": { categoryId: "supermarket", subcategoryId: "food-beverages" },
+  "Market/Gardening": { categoryId: "supermarket", subcategoryId: "gardening" },
+  "Market/Health & Wellness": { categoryId: "supermarket", subcategoryId: "health-wellness" },
+  "Market/Home  & Kitchen": { categoryId: "supermarket", subcategoryId: "home-kitchen" },
+  "Market/HouseHold Items": { categoryId: "supermarket", subcategoryId: "household" },
+  "Market/Party & Celebration": { categoryId: "supermarket", subcategoryId: "party" },
+  "Market/Personal Care & Hygiene": { categoryId: "supermarket", subcategoryId: "personal-care" },
+  "Market/Pet Care": { categoryId: "supermarket", subcategoryId: "pet-care" },
+  "Market/Religious & Cultural": { categoryId: "supermarket", subcategoryId: "religious" },
+  "Market/Sports & Outdoors": { categoryId: "supermarket", subcategoryId: "sports-outdoors" },
+  "Market/Stationary & Office": { categoryId: "supermarket", subcategoryId: "stationery" },
+  "Market/Tech Accessories & Electronics": { categoryId: "supermarket", subcategoryId: "tech-accessories" },
+  "Market/Travel": { categoryId: "supermarket", subcategoryId: "travel" },
+  "Modern Farming/Aeroponics": { categoryId: "modern-farming", subcategoryId: "aeroponics" },
+  "Modern Farming/Greenhouse-polyhouse": { categoryId: "modern-farming", subcategoryId: "greenhouse" },
+  "Modern Farming/Hydroponics": { categoryId: "modern-farming", subcategoryId: "hydroponics" },
+  "Modern Farming/Precision Farming Tools": { categoryId: "modern-farming", subcategoryId: "precision-farming" },
+  "Modern Farming/Vertical Farming": { categoryId: "modern-farming", subcategoryId: "vertical" },
+  "Other Agricultural/Animal Feed": { categoryId: "other-agri", subcategoryId: "animal-feed" },
+  "Other Agricultural/Fibre Crops": { categoryId: "other-agri", subcategoryId: "fibre" },
+  "Other Agricultural/Plantation Crops": { categoryId: "other-agri", subcategoryId: "plantation" },
+  "Other Agricultural/Timber & Bamboo": { categoryId: "other-agri", subcategoryId: "timber" },
+  "Processed/Beverages": { categoryId: "processed", subcategoryId: "beverages" },
+  "Processed/Health & Organic Foods": { categoryId: "processed", subcategoryId: "health-foods" },
+  "Processed/Pickles & Preserves": { categoryId: "processed", subcategoryId: "pickles" },
+  "Processed/Snacks & Ready Foods": { categoryId: "processed", subcategoryId: "snacks" },
+  "Processed/Spices & Powders": { categoryId: "processed", subcategoryId: "spice-powders" },
+  "Specialty/Aromatic Plants": { categoryId: "specialty", subcategoryId: "aromatic" },
+  "Specialty/Honey & BEE Products": { categoryId: "specialty", subcategoryId: "honey" },
+  "Specialty/Medicinal Plants & Herbs": { categoryId: "specialty", subcategoryId: "medicinal" },
+  "Specialty/Mushrooms": { categoryId: "specialty", subcategoryId: "mushrooms" },
+  "Specialty/Organic Products": { categoryId: "specialty", subcategoryId: "organic" },
+  "Specialty/Premium Corps": { categoryId: "specialty", subcategoryId: "premium-crops" },
+};
+
+function getAssetTaxonomy(assetPath: string): { categoryId: string; subcategoryId: string } {
+  const pathParts = assetPath.split("/");
+  const assetsIndex = pathParts.lastIndexOf("AgriConnect Images");
+  const topLevelFolder = pathParts.at(assetsIndex + 1) ?? "";
+  const subcategoryFolder = pathParts.at(assetsIndex + 2) ?? "";
+  const knownTaxonomy = taxonomyByAssetFolder[`${topLevelFolder}/${subcategoryFolder}`];
+
+  return knownTaxonomy ?? {
+    categoryId: getAssetCategoryId(assetPath),
+    subcategoryId: dailyNeedsSubcategoryByAssetFolder[subcategoryFolder] ?? normalizeProductImageKey(subcategoryFolder),
+  };
+}
 
 const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "white-rice", name: "White Rice", aliases: [], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: whiteRiceImage, attribution: bundled("AgriConnect white rice stock asset") },
@@ -343,30 +438,63 @@ const entries: readonly ProductImageRegistryEntry[] = [
 const explicitSlugs = new Set(entries.map((entry) => entry.slug));
 
 const localAssetCandidates = Object.entries(localCuratedProductImages).reduce<
-  Record<string, { assetPath: string; localAssetPath: string; count: number }>
+  Record<string, ProductImageRegistryEntry[]>
 >((candidates, [assetPath, localAssetPath]) => {
   const slug = normalizeProductImageKey(getAssetProductName(assetPath));
   if (!slug) return candidates;
 
-  const existing = candidates[slug];
-  candidates[slug] = existing
-    ? { ...existing, count: existing.count + 1 }
-    : { assetPath, localAssetPath, count: 1 };
+  const taxonomy = getAssetTaxonomy(assetPath);
+  candidates[slug] = [
+    ...(candidates[slug] ?? []),
+    {
+      slug,
+      name: getAssetProductName(assetPath),
+      aliases: [],
+      categoryId: taxonomy.categoryId,
+      subcategoryId: taxonomy.subcategoryId,
+      localAssetPath,
+      attribution: bundled(`AgriConnect local asset: ${assetPath}`),
+    },
+  ];
   return candidates;
 }, {});
 
 const automaticAssetEntries: readonly ProductImageRegistryEntry[] = Object.entries(localAssetCandidates)
-  .filter(([slug, candidate]) => !explicitSlugs.has(slug) && candidate.count === 1)
-  .map(([slug, candidate]) => ({
-    slug,
-    name: getAssetProductName(candidate.assetPath),
-    aliases: [],
-    categoryId: getAssetCategoryId(candidate.assetPath),
-    subcategoryId: dailyNeedsSubcategoryByAssetFolder[getAssetFolder(candidate.assetPath)]
-      ?? normalizeProductImageKey(getAssetFolder(candidate.assetPath)),
-    localAssetPath: candidate.localAssetPath,
-    attribution: bundled(`AgriConnect local asset: ${candidate.assetPath}`),
-  }));
+  .filter(([slug, candidates]) => !explicitSlugs.has(slug) && candidates.length === 1)
+  .map(([, candidates]) => candidates[0]);
+
+const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
+  "banana-sucker": ["banana-plants"],
+  "lemon-plant": ["citrus-plants"],
+  "mango-plant": ["mango-plants"],
+  "mushroom-spawn": ["button-spawn"],
+  "npk-10-26-26": ["npk"],
+};
+
+/**
+ * Returns an exact filename match when its taxonomy context makes the asset
+ * unambiguous. This lets names such as "mint" resolve to the correct image
+ * in vegetables, aromatic plants, or modern farming without fuzzy matching.
+ */
+export function getScopedLocalProductImage(
+  normalizedName: string,
+  categoryId?: string,
+  subcategoryId?: string,
+): ProductImageRegistryEntry | undefined {
+  const candidateKeys = [normalizedName, ...(localAssetNameAliases[normalizedName] ?? [])];
+  const candidates = candidateKeys.flatMap((candidateKey) => localAssetCandidates[candidateKey] ?? []);
+  if (candidates.length === 1) return candidates[0];
+
+  const subcategoryMatches = subcategoryId
+    ? candidates.filter((candidate) => candidate.subcategoryId === subcategoryId)
+    : [];
+  if (subcategoryMatches.length === 1) return subcategoryMatches[0];
+
+  const categoryMatches = categoryId
+    ? candidates.filter((candidate) => candidate.categoryId === categoryId)
+    : [];
+  return categoryMatches.length === 1 ? categoryMatches[0] : undefined;
+}
 
 const allEntries = [...entries, ...automaticAssetEntries];
 

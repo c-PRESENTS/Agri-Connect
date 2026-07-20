@@ -293,6 +293,10 @@ export function ProductShowcase({
               {/* Product Grid */}
               <div data-product-grid="showcase" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {section.items.map((item, itemIdx) => {
+                  const sectionSubcategoryId = getShoppableCategories()
+                    .find((category) => category.id === categoryId)
+                    ?.subcategories.find((subcategory) => subcategory.name === section.title)
+                    ?.id;
                   const matchingProducts = getProductsForItem(item);
                   // Prefer a matching real product. Otherwise substitute any
                   // real product from the loaded list so click/add actions
@@ -309,8 +313,8 @@ export function ProductShowcase({
                   const imageResolution = resolveProductImage({
                     id: product.id,
                     name: item,
-                    categoryId: product.categoryId,
-                    subcategoryId: product.subcategoryId,
+                    categoryId: categoryId || product.categoryId,
+                    subcategoryId: subcategoryId || sectionSubcategoryId || product.subcategoryId,
                     images: product.images,
                   });
                   const image = imageResolution.src;

@@ -1,6 +1,7 @@
 import { getCategoryImage } from "./categories";
 import {
   LOCAL_BRANDED_PRODUCT_FALLBACK,
+  getScopedLocalProductImage,
   normalizeProductImageKey,
   productImageAliasIndex,
   productImageRegistry,
@@ -150,6 +151,25 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
       normalizedName,
       matchedSlug: exact.slug,
       attribution: exact.attribution,
+      reviewRequired: false,
+      ambiguousMatches: [],
+      ignoredProvidedImage: systemProvided ? providedImage : undefined,
+    };
+  }
+
+  const scopedLocalAsset = getScopedLocalProductImage(
+    normalizedName,
+    input.categoryId,
+    input.subcategoryId,
+  );
+  if (scopedLocalAsset) {
+    return {
+      src: scopedLocalAsset.localAssetPath,
+      source: "exact-product",
+      reason: "Matched the normalized product name to a local asset in the declared taxonomy",
+      normalizedName,
+      matchedSlug: scopedLocalAsset.slug,
+      attribution: scopedLocalAsset.attribution,
       reviewRequired: false,
       ambiguousMatches: [],
       ignoredProvidedImage: systemProvided ? providedImage : undefined,
