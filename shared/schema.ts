@@ -193,8 +193,11 @@ export interface Order {
   shippingTotal?: number;
   deliveryAddress: string;
   deliveryMethod: "standard" | "express" | "pickup";
-  paymentMethod: string;
+  paymentMethod: "manual" | "stripe" | "paypal" | "razorpay" | "upi" | "card" | "cod";
   paymentStatus: "pending" | "manual" | "paid" | "failed" | "refunded";
+  paymentProvider?: "stripe" | "paypal" | "razorpay";
+  paymentReference?: string;
+  paymentTransactionId?: string;
   stripeSessionId?: string;
   stripePaymentIntentId?: string;
   estimatedDelivery?: string;
@@ -333,7 +336,7 @@ export const createOrderSchema = z.object({
     farmerName: z.string().min(1),
   })).min(1),
   deliveryAddress: z.string().min(1).max(500),
-  paymentMethod: z.enum(["manual", "upi", "card", "cod", "stripe"]),
+  paymentMethod: z.enum(["manual", "upi", "card", "cod", "stripe", "paypal", "razorpay"]),
   deliveryMethod: z.enum(["standard", "express", "pickup"]),
   /** Optional per-farmer shipping selections from cart → shipping handoff. */
   shippingChoices: z.record(z.string(), z.object({

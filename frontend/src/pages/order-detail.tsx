@@ -185,7 +185,7 @@ export default function OrderDetailPage() {
                 size="sm"
                 onClick={() => {
                   const refundNotice = order.paymentStatus === "paid"
-                    ? "This will cancel your order and refund your payment via Stripe. Continue?"
+                    ? `This will cancel your order and refund your payment via ${order.paymentProvider === "paypal" ? "PayPal" : order.paymentProvider === "razorpay" ? "Razorpay" : "Stripe"}. Continue?`
                     : "Are you sure you want to cancel this order?";
                   if (window.confirm(refundNotice)) cancelMutation.mutate();
                 }}

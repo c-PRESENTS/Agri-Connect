@@ -3,17 +3,32 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
+  server: {
+    // The Express development server owns port 5000 and serves Vite in
+    // middleware mode. Tell the browser to use that same WebSocket endpoint
+    // instead of falling back to a separate (non-existent) port 5173 server.
+    hmr:{
+      protocol: "ws",
+      host: "localhost",
+      clientPort: 5000,
+      path: "vite-hmr",
+    },
+    fs:{
+      strict: true,
+      deny: ["**/.*"],
+    },
+  },
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "frontend", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "frontend", "src", "assets"),
+      "@": path.resolve(new URL("frontend/src", import.meta.url).pathname),
+      "@shared": path.resolve(new URL("shared", import.meta.url).pathname),
+      "@assets": path.resolve(new URL("frontend/src/assets", import.meta.url).pathname),
     },
   },
-  root: path.resolve(import.meta.dirname, "frontend"),
+  root: path.resolve(new URL("frontend", import.meta.url).pathname),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(new URL("dist/public", import.meta.url).pathname),
     emptyOutDir: true,
     rollupOptions: {
       output: {
@@ -109,12 +124,6 @@ export default defineConfig({
           }
         },
       },
-    },
-  },
-  server: {
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
     },
   },
 });

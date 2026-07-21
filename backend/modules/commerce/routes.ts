@@ -8,6 +8,8 @@ import { isAuthenticated } from "../../auth";
 import { authStorage } from "../../auth/storage";
 import { buildShipmentBookedEmail, notify, queueOrderConfirmation } from "../../notifications";
 import { getStripe, getWebhookSecret } from "../../payments/stripe";
+import { capturePayPalOrder, createPayPalOrder, getPayPalCapture, refundPayPalCapture, verifyPayPalWebhook } from "../../payments/paypal";
+import { createRazorpayOrder, getRazorpayPayment, refundRazorpayPayment, verifyRazorpayPayment, verifyRazorpayWebhook } from "../../payments/razorpay";
 import { getAdapter } from "../../shipping/adapters";
 import { calculateQuotes, calculateQuotesFromCoords, geocodePostcode, rateCardById, resolveSellerPickupCoordinates } from "../../shipping/quote-engine";
 import { storage } from "../../storage";
@@ -233,6 +235,61 @@ async function ensureShipmentsForOrderInner(order: Order, origin: string): Promi
   return created;
 }
 
+async function calculateAuthoritativeShipping(
+  items: OrderItem[],
+  shippingChoices: NonNullable<Order["shippingChoices"]>,
+  drop: NonNullable<Order["deliveryAddressStruct"]>,
+): Promise<number> {
+  const dropLL = geocodePostcode({ postcode: drop.postcode, country: drop.country });
+  const itemsByFarmer = new Map<string, OrderItem[]>();
+  for (const item of items) {
+    if (!itemsByFarmer.has(item.farmerId)) itemsByFarmer.set(item.farmerId, []);
+    itemsByFarmer.get(item.farmerId)!.push(item);
+  }
+  let total = 0;
+  for (const [farmerId, farmerItems] of Array.from(itemsByFarmer.entries())) {
+    const choice = shippingChoices[farmerId];
+    if (!choice) throw new Error(`Shipping selection required for seller ${farmerId}`);
+    const products = await Promise.all(farmerItems.map((item) => storage.getProduct(item.productId)));
+    const firstProduct = products.find(Boolean);
+    if (!firstProduct) throw new Error("Product is no longer available");
+    const shipItems = farmerItems.map((item, index) => {
+      const category = (products[index]?.categoryId || "").toLowerCase();
+      return {
+        name: item.productName,
+        quantity: item.quantity,
+        weightKg: /grain|flour|feed|hay/.test(category) ? 1 : 0.5,
+        coldChain: /dairy|meat|seafood|frozen/.test(category),
+        fragile: /egg|berry|tomato/.test(item.productName.toLowerCase()),
+      };
+    });
+    const quotes = calculateQuotesFromCoords({
+      pickup: resolveSellerPickupCoordinates({ lat: firstProduct.farmerLatitude, lng: firstProduct.farmerLongitude, location: firstProduct.farmerLocation, country: "GB" }),
+      drop: { lat: dropLL.lat, lng: dropLL.lng, country: drop.country },
+      items: shipItems,
+      service: choice.service,
+    }).quotes;
+    const selected = quotes.find((quote) => quote.partnerId === choice.partnerId && quote.service === choice.service);
+    if (!selected) throw new Error("Selected shipping option is no longer available");
+    total += selected.price;
+  }
+  return parseFloat(total.toFixed(2));
+}
+
+async function confirmVerifiedPayment(order: Order, provider: "stripe" | "paypal" | "razorpay", reference: string, origin: string): Promise<Order | undefined> {
+  const wasAlreadyPaid = order.paymentStatus === "paid";
+  const updated = await storage.markOrderPaid(order.id, provider === "stripe" ? reference : undefined);
+  if (!updated) return undefined;
+  if (provider === "stripe") await storage.setOrderPaymentReference(updated.id, provider, reference);
+  else await storage.setOrderPaymentTransactionId(updated.id, reference);
+  const finalOrder = await storage.getOrder(updated.id) ?? updated;
+  if (wasAlreadyPaid) return finalOrder;
+  queueOrderConfirmation(finalOrder, origin);
+  ensureShipmentsForOrder(finalOrder, origin).catch((error) => console.warn(`[${provider}/paid] auto-ship failed`, error));
+  audit({ action: `payment.${provider}_verified`, actorId: finalOrder.buyerId, targetType: "order", targetId: finalOrder.id });
+  return finalOrder;
+}
+
 export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): void {
   const { getUserId } = deps;
   // Orders (require authentication)
@@ -273,21 +330,43 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
           issues: availability.issues,
         });
       }
+      const canonicalItems: OrderItem[] = [];
       for (const item of parsed.items) {
         const product = await storage.getProduct(item.productId);
+        if (!product) return res.status(400).json({ error: `Product no longer available: ${item.productName}` });
         if (product?.farmerId === userId) {
           return res.status(400).json({ error: "You cannot order your own product" });
         }
+        canonicalItems.push({
+          ...item,
+          productName: product.name,
+          productImage: product.images?.[0],
+          price: product.price,
+          farmerId: product.farmerId,
+          farmerName: product.farmerName,
+        });
       }
+      const onlinePayment = parsed.paymentMethod === "stripe" || parsed.paymentMethod === "paypal" || parsed.paymentMethod === "razorpay";
+      if (onlinePayment && (!parsed.shippingChoices || !parsed.deliveryAddressStruct || Object.keys(parsed.shippingChoices).length === 0)) {
+        return res.status(400).json({ error: "Shipping selection required. Please choose carriers on the Shipping step." });
+      }
+      const shippingTotal = parsed.shippingChoices && parsed.deliveryAddressStruct
+        ? await calculateAuthoritativeShipping(canonicalItems, parsed.shippingChoices, parsed.deliveryAddressStruct)
+        : undefined;
       const order = await storage.createOrder(
         userId,
-        parsed.items as OrderItem[],
+        canonicalItems,
         parsed.deliveryAddress,
         parsed.paymentMethod,
         parsed.deliveryMethod,
+        {
+          shippingChoices: parsed.shippingChoices,
+          deliveryAddressStruct: parsed.deliveryAddressStruct,
+          shippingTotal,
+        },
       );
       await storage.clearCart(userId);
-      queueOrderConfirmation(order, resolveStripeOrigin(req));
+      if (order.paymentStatus === "manual") queueOrderConfirmation(order, resolveStripeOrigin(req));
       audit({ action: "order.created", actorId: userId, targetType: "order", targetId: order.id });
       res.status(201).json(order);
     } catch (error) {
@@ -297,6 +376,100 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       }
       res.status(500).json({ error: "Failed to create order" });
     }
+  });
+
+  app.post("/api/paypal/orders/:orderId", isAuthenticated, async (req, res) => {
+    try {
+      const order = await storage.getOrder(req.params.orderId);
+      if (!order || order.buyerId !== getUserId(req)!) return res.status(404).json({ error: "Order not found" });
+      if (order.paymentMethod !== "paypal" || order.paymentStatus !== "pending") return res.status(400).json({ error: "Order is not awaiting PayPal payment" });
+      const paypalOrder = await createPayPalOrder(order.id, order.total);
+      await storage.setOrderPaymentReference(order.id, "paypal", paypalOrder.id);
+      res.status(201).json({ id: paypalOrder.id, clientId: process.env.PAYPAL_CLIENT_ID || "" });
+    } catch (error) {
+      await storage.markOrderPaymentFailed(req.params.orderId, "PayPal checkout could not be created");
+      res.status(502).json({ error: "Could not create PayPal payment" });
+    }
+  });
+
+  app.post("/api/paypal/orders/:paypalOrderId/capture", isAuthenticated, async (req, res) => {
+    try {
+      const order = await storage.getOrderByPaymentReference("paypal", req.params.paypalOrderId);
+      if (!order || order.buyerId !== getUserId(req)!) return res.status(404).json({ error: "Order not found" });
+      const captured = await capturePayPalOrder(req.params.paypalOrderId, order.id);
+      const capture = getPayPalCapture(captured);
+      if (captured.status !== "COMPLETED" || capture?.status !== "COMPLETED") return res.status(409).json({ error: "PayPal payment is not captured" });
+      const updated = await confirmVerifiedPayment(order, "paypal", capture.id, resolveStripeOrigin(req));
+      res.json(updated);
+    } catch {
+      res.status(502).json({ error: "Could not verify PayPal payment" });
+    }
+  });
+
+  app.post("/api/paypal/webhook", async (req, res) => {
+    try {
+      const headers = Object.fromEntries(Object.entries(req.headers).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]));
+      if (!await verifyPayPalWebhook(headers, req.body)) return res.status(400).send("Invalid PayPal webhook");
+      const event = req.body as { event_type?: string; resource?: { id?: string; supplementary_data?: { related_ids?: { order_id?: string } } } };
+      if (event.event_type === "PAYMENT.CAPTURE.COMPLETED") {
+        const paymentId = event.resource?.id;
+        const paypalOrderId = event.resource?.supplementary_data?.related_ids?.order_id;
+        if (paymentId && paypalOrderId) {
+          const order = await storage.getOrderByPaymentReference("paypal", paypalOrderId);
+          if (order) await confirmVerifiedPayment(order, "paypal", paymentId, resolveStripeOrigin(req));
+        }
+      } else if (event.event_type === "PAYMENT.CAPTURE.DENIED" || event.event_type === "PAYMENT.CAPTURE.DECLINED") {
+        const paypalOrderId = event.resource?.supplementary_data?.related_ids?.order_id;
+        if (paypalOrderId) {
+          const order = await storage.getOrderByPaymentReference("paypal", paypalOrderId);
+          if (order) await storage.markOrderPaymentFailed(order.id, "PayPal payment was declined");
+        }
+      }
+      res.json({ received: true });
+    } catch { res.status(500).json({ error: "PayPal webhook failed" }); }
+  });
+
+  app.post("/api/razorpay/orders/:orderId", isAuthenticated, async (req, res) => {
+    try {
+      const order = await storage.getOrder(req.params.orderId);
+      if (!order || order.buyerId !== getUserId(req)!) return res.status(404).json({ error: "Order not found" });
+      if (order.paymentMethod !== "razorpay" || order.paymentStatus !== "pending") return res.status(400).json({ error: "Order is not awaiting Razorpay payment" });
+      const razorpayOrder = await createRazorpayOrder(order.id, order.total);
+      await storage.setOrderPaymentReference(order.id, "razorpay", razorpayOrder.id);
+      res.status(201).json({ id: razorpayOrder.id, amount: razorpayOrder.amount, currency: razorpayOrder.currency, keyId: process.env.RAZORPAY_KEY_ID || "" });
+    } catch {
+      await storage.markOrderPaymentFailed(req.params.orderId, "Razorpay checkout could not be created");
+      res.status(502).json({ error: "Could not create Razorpay payment" });
+    }
+  });
+
+  app.post("/api/razorpay/verify", isAuthenticated, async (req, res) => {
+    try {
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body as Record<string, string>;
+      const order = await storage.getOrderByPaymentReference("razorpay", razorpay_order_id);
+      if (!order || order.buyerId !== getUserId(req)!) return res.status(404).json({ error: "Order not found" });
+      if (!verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature)) return res.status(400).json({ error: "Invalid payment signature" });
+      const payment = await getRazorpayPayment(razorpay_payment_id);
+      if (payment.order_id !== razorpay_order_id || payment.status !== "captured" || payment.amount !== Math.round(order.total * 100)) return res.status(409).json({ error: "Razorpay payment is not captured" });
+      res.json(await confirmVerifiedPayment(order, "razorpay", payment.id, resolveStripeOrigin(req)));
+    } catch { res.status(502).json({ error: "Could not verify Razorpay payment" }); }
+  });
+
+  app.post("/api/razorpay/webhook", async (req, res) => {
+    const rawBody = (req as any).rawBody as Buffer | undefined;
+    if (!rawBody || !verifyRazorpayWebhook(rawBody, req.headers["x-razorpay-signature"] as string | undefined)) return res.status(400).send("Invalid Razorpay webhook");
+    try {
+      const event = req.body as { event?: string; payload?: { payment?: { entity?: { id?: string; order_id?: string; status?: string } } } };
+      const payment = event.payload?.payment?.entity;
+      if ((event.event === "payment.captured" || event.event === "order.paid") && payment?.status === "captured" && payment.order_id && payment.id) {
+        const order = await storage.getOrderByPaymentReference("razorpay", payment.order_id);
+        if (order) await confirmVerifiedPayment(order, "razorpay", payment.id, resolveStripeOrigin(req));
+      } else if (event.event === "payment.failed" && payment?.order_id) {
+        const order = await storage.getOrderByPaymentReference("razorpay", payment.order_id);
+        if (order) await storage.markOrderPaymentFailed(order.id, "Razorpay payment failed");
+      }
+      res.json({ received: true });
+    } catch { res.status(500).json({ error: "Razorpay webhook failed" }); }
   });
 
   // ===== Stripe Checkout =====
@@ -487,15 +660,12 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
           const stripe = getStripe();
           const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
           if (session.payment_status === "paid") {
-            const updated = await storage.markOrderPaid(
-              order.id,
-              typeof session.payment_intent === "string"  ? session.payment_intent : undefined,
+            const updated = await confirmVerifiedPayment(
+              order,
+              "stripe",
+              typeof session.payment_intent === "string" ? session.payment_intent : session.id,
+              resolveStripeOrigin(req),
             );
-            if (updated) {
-              const origin = `${req.protocol}://${req.get("host")}`;
-              ensureShipmentsForOrder(updated, origin)
-                .catch((e) => console.warn("[order/paid] auto-ship failed", e));
-            }
             return res.json(updated);
           }
           if (session.status === "expired") {
@@ -534,12 +704,8 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
           const orderId = session.metadata?.orderId;
           if (orderId && session.payment_status === "paid") {
             const pi = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
-            const updated = await storage.markOrderPaid(orderId, pi);
-            if (updated) {
-              const origin = `${req.protocol}://${req.get("host")}`;
-              ensureShipmentsForOrder(updated, origin)
-                .catch((e) => console.warn("[webhook/paid] auto-ship failed", e));
-            }
+            const order = await storage.getOrder(orderId);
+            if (order) await confirmVerifiedPayment(order, "stripe", pi || session.id, resolveStripeOrigin(req));
           }
           break;
         }
@@ -619,22 +785,24 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       // stays in its current state — we never want to cancel inventory while
       // the buyer's money is still held by Stripe.
       let refundId: string | undefined;
-      if (existing.paymentStatus === "paid" && existing.stripePaymentIntentId) {
+      if (existing.paymentStatus === "paid") {
         try {
-          const stripe = getStripe();
-          const refund = await stripe.refunds.create(
-            {
-              payment_intent: existing.stripePaymentIntentId,
-              reason: "requested_by_customer",
-              metadata: { orderId: existing.id, userId },
-            },
-            // Idempotency key prevents duplicate refunds if the buyer
-            // double-clicks or the request is retried.
-            { idempotencyKey: `refund-${existing.id}` },
-          );
-          refundId = refund.id;
+          if (existing.paymentProvider === "stripe" && existing.stripePaymentIntentId) {
+            const stripe = getStripe();
+            const refund = await stripe.refunds.create(
+              { payment_intent: existing.stripePaymentIntentId, reason: "requested_by_customer", metadata: { orderId: existing.id, userId } },
+              { idempotencyKey: `refund-${existing.id}` },
+            );
+            refundId = refund.id;
+          } else if (existing.paymentProvider === "paypal" && existing.paymentTransactionId) {
+            refundId = await refundPayPalCapture(existing.paymentTransactionId, existing.id);
+          } else if (existing.paymentProvider === "razorpay" && existing.paymentTransactionId) {
+            refundId = await refundRazorpayPayment(existing.paymentTransactionId);
+          } else {
+            return res.status(409).json({ error: "The payment reference is unavailable; contact support to cancel this order." });
+          }
         } catch (refundErr: any) {
-          console.error("Stripe refund failed:", refundErr?.message || refundErr);
+          console.error("Payment refund failed:", refundErr?.message || refundErr);
           return res.status(502).json({
             error: "Could not refund your payment. Please try again or contact support.",
           });
@@ -645,7 +813,7 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       if (!order) return res.status(400).json({ error: "This order can no longer be cancelled" });
 
       if (refundId) {
-        await storage.markOrderRefunded(existing.id, refundId, "Refunded via Stripe");
+        await storage.markOrderRefunded(existing.id, refundId, `Refunded via ${existing.paymentProvider}`);
       }
 
       const final = await storage.getOrder(existing.id);
