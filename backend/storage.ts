@@ -1057,7 +1057,10 @@ export interface IStorage {
   // Orders
   getOrders(userId: string): Promise<Order[]>;
   getOrder(id: string): Promise<Order | undefined>;
-  createOrder(userId: string, items: OrderItem[], deliveryAddress: string, paymentMethod: string, deliveryMethod?: string): Promise<Order>;
+  createOrder(userId: string, items: OrderItem[], deliveryAddress: string, paymentMethod: string, deliveryMethod?: string, extra?: { shippingChoices?: Order["shippingChoices"]; deliveryAddressStruct?: Order["deliveryAddressStruct"]; shippingTotal?: number }): Promise<Order>;
+  setOrderPaymentReference(id: string, provider: "stripe" | "paypal" | "razorpay", reference: string): Promise<Order | undefined>;
+  setOrderPaymentTransactionId(id: string, transactionId: string): Promise<Order | undefined>;
+  getOrderByPaymentReference(provider: "stripe" | "paypal" | "razorpay", reference: string): Promise<Order | undefined>;
   updateOrderStatus(id: string, status: OrderStatus, note?: string, tracking?: { trackingNumber?: string; carrier?: string; trackingUrl?: string }): Promise<Order | undefined>;
   cancelOrder(id: string, userId: string): Promise<Order | undefined>;
   markOrderRefunded(id: string, refundId?: string, note?: string): Promise<Order | undefined>;
@@ -1545,6 +1548,9 @@ export class MemStorage implements IStorage {
     const now = new Date().toISOString();
     
     const isManualOrder = paymentMethod === "manual";
+    const paymentProvider = ["stripe", "paypal", "razorpay"].includes(paymentMethod)
+      ? paymentMethod as "stripe" | "paypal" | "razorpay"
+      : undefined;
     const order: Order = {
       id,
       orderNumber: generateOrderNumber(),
@@ -1555,7 +1561,7 @@ export class MemStorage implements IStorage {
       status: isManualOrder ? "pending" : "order_placed",
       statusHistory: [
         { status: isManualOrder ? "pending" : "order_placed", timestamp: now, note: "Order received" },
-        ...(isManualOrder || paymentMethod === "stripe"
+        ...(isManualOrder || paymentProvider
           ? []
           : [{ status: "payment_confirmed" as OrderStatus, timestamp: new Date(Date.now() + 30000).toISOString(), note: "Payment confirmed" }]),
       ],
@@ -1566,8 +1572,9 @@ export class MemStorage implements IStorage {
       total,
       deliveryAddress,
       deliveryMethod: (deliveryMethod as Order["deliveryMethod"]) || "standard",
-      paymentMethod,
-      paymentStatus: isManualOrder ? "manual" : paymentMethod === "stripe" ? "pending" : "paid",
+      paymentMethod: paymentMethod as Order["paymentMethod"],
+      paymentStatus: isManualOrder ? "manual" : paymentProvider ? "pending" : "paid",
+      paymentProvider,
       estimatedDelivery: getEstimatedDelivery(deliveryMethod),
       shippingChoices: extra?.shippingChoices,
       deliveryAddressStruct: extra?.deliveryAddressStruct,
@@ -1615,6 +1622,36 @@ export class MemStorage implements IStorage {
     order.status = "payment_confirmed";
     this.orders.set(id, order);
     return order;
+  }
+
+  async setOrderPaymentReference(
+    id: string,
+    provider: "stripe" | "paypal" | "razorpay",
+    reference: string,
+  ): Promise<Order | undefined> {
+    const order = this.orders.get(id);
+    if (!order) return undefined;
+    order.paymentProvider = provider;
+    order.paymentReference = reference;
+    this.orders.set(id, order);
+    return order;
+  }
+
+  async setOrderPaymentTransactionId(id: string, transactionId: string): Promise<Order | undefined> {
+    const order = this.orders.get(id);
+    if (!order) return undefined;
+    order.paymentTransactionId = transactionId;
+    this.orders.set(id, order);
+    return order;
+  }
+
+  async getOrderByPaymentReference(
+    provider: "stripe" | "paypal" | "razorpay",
+    reference: string,
+  ): Promise<Order | undefined> {
+    return Array.from(this.orders.values()).find(
+      (order) => order.paymentProvider === provider && order.paymentReference === reference,
+    );
   }
 
   async markOrderPaymentFailed(id: string, note?: string): Promise<Order | undefined> {

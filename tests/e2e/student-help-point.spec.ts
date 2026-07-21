@@ -3,17 +3,11 @@ import { Client } from "pg";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { createAuthenticatedApi, getTestAccount, hasTestAccount } from "./helpers/authenticated-api";
 
-const enabled = process.env.RUN_STUDENT_E2E === "true";
 const allowDatabaseSetup = process.env.STUDENT_E2E_ALLOW_DB_SETUP === "true";
-const configured = hasTestAccount("STUDENT") && Boolean(process.env.DATABASE_URL);
-const strictModeConfigured = process.env.STUDENT_DEMO_MODE === "false";
 
 test.describe("verified student help point", () => {
   test.describe.configure({ mode: "serial" });
-  test.skip(!enabled, "Set RUN_STUDENT_E2E=true to run student portal checks.");
   test.skip(!allowDatabaseSetup, "Set STUDENT_E2E_ALLOW_DB_SETUP=true only against a disposable test database.");
-  test.skip(!configured, "Set E2E_STUDENT_EMAIL, E2E_STUDENT_PASSWORD, and DATABASE_URL.");
-  test.skip(!strictModeConfigured, "Set STUDENT_DEMO_MODE=false on the test server and runner to verify strict student authorization.");
 
   let api: APIRequestContext;
   let db: Client;
@@ -63,6 +57,7 @@ test.describe("verified student help point", () => {
     }
     await api?.dispose();
   });
+
 
   test("returns only the verified student's profile and published resources", async () => {
     const profile = await api.get("/api/student/profile");

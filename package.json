@@ -11,6 +11,7 @@
     "check": "tsc",
     "qa:links": "node scripts/qa-static-links.mjs",
     "qa:foundation": "playwright test tests/e2e/security-accessibility.foundation.spec.ts",
+    "qa:payments": "playwright test tests/e2e/payment-api.spec.ts",
     "qa:marketplace": "playwright test tests/e2e/marketplace-workflows.spec.ts",
     "qa:student": "playwright test tests/e2e/student-help-point.spec.ts",
     "images:pilot": "node scripts/product-image-pilot.mjs",

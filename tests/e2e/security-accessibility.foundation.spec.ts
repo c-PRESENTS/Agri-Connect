@@ -4,8 +4,6 @@ import { expect, test } from "@playwright/test";
 // providers, alter sessions, or require credentials. Set RUN_FOUNDATION_E2E
 // to run them against an already-running local/staging server.
 test.describe("security and accessibility foundation", () => {
-  test.skip(process.env.RUN_FOUNDATION_E2E !== "true", "Set RUN_FOUNDATION_E2E=true for read-only foundation checks.");
-
   test("public API endpoints return safe responses", async ({ request }) => {
     const health = await request.get("/api/health");
     expect(health.ok()).toBeTruthy();

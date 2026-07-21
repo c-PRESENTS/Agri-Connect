@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import {
   createAuthenticatedApi,
@@ -39,16 +40,8 @@ type Order = {
   total: number;
 };
 
-const enabled = process.env.RUN_MARKETPLACE_E2E === "true";
-const accountsConfigured = hasTestAccount("BUYER") && hasTestAccount("SELLER") && hasTestAccount("ADMIN");
-
 test.describe("orders, cart, checkout, and role-safe dashboards", () => {
   test.describe.configure({ mode: "serial" });
-  test.skip(!enabled, "Set RUN_MARKETPLACE_E2E=true to run state-changing marketplace checks.");
-  test.skip(
-    !accountsConfigured,
-    "Set dedicated E2E_BUYER_*, E2E_SELLER_*, and E2E_ADMIN_* credentials before running these checks.",
-  );
 
   let buyerApi: APIRequestContext;
   let sellerApi: APIRequestContext;
