@@ -18,7 +18,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useTranslation } from "react-i18next";
 import type { Order, OrderStatus } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForOrderItem } from "@/lib/product-images";
 
 const ORDER_STAGES: { status: OrderStatus; label: string; desc: string; icon: typeof Package }[] = [
   { status: "pending",           label: "Pending",           desc: "Waiting for the seller to confirm", icon: Clock },
@@ -374,12 +374,12 @@ export default function OrderDetailPage() {
                 <div key={idx}>
                   <div className="flex items-center gap-3">
                     <img
-                      src={item.productImage || getProductImage(item.productName, "", "sm")}
+                      src={resolveProductImageForOrderItem(item).src}
                       alt={item.productName}
                       loading="lazy"
                       onError={(event) => {
                         event.currentTarget.onerror = null;
-                        event.currentTarget.src = getProductImage(item.productName, "", "sm");
+                        event.currentTarget.src = resolveProductImageForOrderItem(item).fallbackSrc ?? resolveProductImageForOrderItem(item).src;
                       }}
                       className="h-14 w-14 rounded-xl object-cover border border-border/50 flex-shrink-0"
                     />

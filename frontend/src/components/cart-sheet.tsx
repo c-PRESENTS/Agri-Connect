@@ -12,6 +12,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import type { CartItem } from "@shared/schema";
 
 interface CartSheetProps {
@@ -72,7 +73,7 @@ export function CartSheet({
                   <div key={item.id} className="flex gap-3" data-testid={`cart-item-${item.id}`}>
                     <div className="h-20 w-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                       <img
-                        src={item.product.images[0] || `https://placehold.co/80x80/22c55e/white?text=${encodeURIComponent(item.product.name[0])}`}
+                        src={resolveProductImageForProduct(item.product).src}
                         alt={item.product.name}
                         className="h-full w-full object-cover"
                       />

@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { LifeBuoy, Mail, MessageCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
+import { encryptSupportMessage, type E2eSupportRecipient } from "@/lib/e2e-support";
 
 export default function SupportPage() {
   const { t } = useTranslation();
@@ -56,10 +57,16 @@ export default function SupportPage() {
 
   const submit = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/support", {
-        ...form,
+      const recipient = await (await apiRequest("GET", "/api/e2e/support-key")).json() as E2eSupportRecipient;
+      const contact = {
         name: form.name || user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "",
         email: form.email || user?.email || "",
+      };
+      const encryptedMessage = recipient.enabled ? await encryptSupportMessage(form.message, recipient) : undefined;
+      const res = await apiRequest("POST", "/api/support", {
+        ...form,
+        ...contact,
+        ...(encryptedMessage ? { message: undefined, encryptedMessage } : {}),
       });
       return res.json();
     },

@@ -47,6 +47,14 @@ export interface ProductImageLike {
   images?: readonly (string | null | undefined)[] | null;
 }
 
+/** The image fields retained on an order item. Kept separate from the order
+ * schema so historic orders can use the current canonical local image map. */
+export interface OrderItemImageLike {
+  productId?: string | null;
+  productName?: string | null;
+  productImage?: string | null;
+}
+
 const SYSTEM_PRODUCT_ID = /^product-\d+$/;
 
 function firstUsableImage(input: ProductImageResolverInput): string | undefined {
@@ -212,6 +220,21 @@ export function resolveProductImageForProduct(
     images: product.images ?? undefined,
     providedImage: options?.providedImage,
     imageOwnership: options?.imageOwnership,
+  });
+}
+
+/**
+ * Resolves an order thumbnail using the same rules as live products. System
+ * product IDs deliberately ignore a persisted remote seed URL; seller product
+ * IDs retain their uploaded image and receive a local fallback if it fails.
+ */
+export function resolveProductImageForOrderItem(
+  item: OrderItemImageLike,
+): ProductImageResolution {
+  return resolveProductImage({
+    id: item.productId ?? undefined,
+    name: item.productName?.trim() || "Unnamed product",
+    providedImage: item.productImage ?? undefined,
   });
 }
 

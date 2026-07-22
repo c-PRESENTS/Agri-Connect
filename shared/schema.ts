@@ -291,15 +291,38 @@ export interface SupportTicket {
   email: string;
   topic: string;
   message: string;
+  encryptedMessage?: {
+    version: "agriconnect-e2e-v1";
+    keyId: string;
+    wrappedKey: string;
+    iv: string;
+    ciphertext: string;
+  };
   status: "open" | "resolved";
   createdAt: string;
 }
+
+export const encryptedSupportMessageSchema = z.object({
+  version: z.literal("agriconnect-e2e-v1"),
+  keyId: z.string().min(1).max(160),
+  wrappedKey: z.string().min(32).max(16_384),
+  iv: z.string().min(8).max(128),
+  ciphertext: z.string().min(16).max(16_384),
+});
 
 export const supportTicketSchema = z.object({
   name: z.string().min(1).max(120),
   email: z.string().email().max(200),
   topic: z.string().min(1).max(40),
-  message: z.string().min(10).max(5000),
+  message: z.string().min(10).max(5000).optional(),
+  encryptedMessage: encryptedSupportMessageSchema.optional(),
+}).superRefine((value, context) => {
+  if (!value.message && !value.encryptedMessage) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "A message is required" });
+  }
+  if (value.message && value.encryptedMessage) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "Submit either plaintext or encrypted content, not both" });
+  }
 });
 
 export const schemeApplicationSchema = z.object({

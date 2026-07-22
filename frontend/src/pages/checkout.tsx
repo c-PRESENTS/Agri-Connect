@@ -21,7 +21,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Cart, ShipQuote, ShipServiceType } from "@shared/schema";
 import { COUNTRIES } from "@/lib/countries";
 import { TopNavigation } from "@/components/top-navigation";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 
 interface CartShippingGroup {
   farmerId: string;
@@ -682,7 +682,7 @@ export default function CheckoutPage() {
                             {cart?.items.map((item) => (
                               <div key={item.id} className="flex items-center gap-3">
                                 <img
-                                  src={getProductImage(item.product.name, item.product.categoryId, "sm")}
+                                  src={resolveProductImageForProduct(item.product).src}
                                   alt={item.product.name}
                                   className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
                                 />
@@ -758,7 +758,7 @@ export default function CheckoutPage() {
                     <div key={item.id} className="flex items-center gap-2">
                       <div className="h-8 w-8 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                         <img
-                          src={getProductImage(item.product.name, item.product.categoryId, "sm")}
+                          src={resolveProductImageForProduct(item.product).src}
                           alt={item.product.name}
                           className="h-full w-full object-cover"
                         />

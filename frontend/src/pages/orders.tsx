@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Order, OrderStatus } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForOrderItem } from "@/lib/product-images";
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: typeof Package }> = {
   pending:            { label: "Pending",            color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",     icon: Clock },
@@ -188,12 +188,12 @@ export default function OrdersPage() {
                           {order.items.slice(0, 4).map((item, i) => (
                             <img
                               key={i}
-                              src={item.productImage || getProductImage(item.productName, "", "sm")}
+                              src={resolveProductImageForOrderItem(item).src}
                               alt={item.productName}
                               loading="lazy"
                               onError={(event) => {
                                 event.currentTarget.onerror = null;
-                                event.currentTarget.src = getProductImage(item.productName, "", "sm");
+                                event.currentTarget.src = resolveProductImageForOrderItem(item).fallbackSrc ?? resolveProductImageForOrderItem(item).src;
                               }}
                               className="h-9 w-9 rounded-lg object-cover border-2 border-background"
                             />

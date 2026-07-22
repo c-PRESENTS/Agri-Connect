@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Order } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForOrderItem } from "@/lib/product-images";
 
 function confirmationCopy(status: Order["status"]): { title: string; description: string } {
   switch (status) {
@@ -187,12 +187,12 @@ export default function OrderConfirmationPage() {
                 {order.items.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3">
                     <img
-                      src={item.productImage || getProductImage(item.productName, "", "sm")}
+                      src={resolveProductImageForOrderItem(item).src}
                       alt={item.productName}
                       loading="lazy"
                       onError={(event) => {
                         event.currentTarget.onerror = null;
-                        event.currentTarget.src = getProductImage(item.productName, "", "sm");
+                        event.currentTarget.src = resolveProductImageForOrderItem(item).fallbackSrc ?? resolveProductImageForOrderItem(item).src;
                       }}
                       className="h-12 w-12 rounded-xl object-cover border border-border/50 flex-shrink-0"
                     />

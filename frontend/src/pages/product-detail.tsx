@@ -25,7 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Product, Review } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
-import { getProductImage } from "@/lib/product-images";
+import { getProductImage, resolveProductImageForProduct } from "@/lib/product-images";
 
 const REVIEWER_NAMES = [
   "Priya Sharma", "James O'Brien", "Mei Lin", "Tariq Hassan", "Sophie Adeyemi",
@@ -230,10 +230,10 @@ export default function ProductDetailPage() {
   });
 
   const fallbackProductImage = product
-    ? getProductImage(product.name, product.categoryId, "lg")
+    ? resolveProductImageForProduct(product).src
     : "";
   const allImages = product
-    ? [product.images?.[0]?.trim() || fallbackProductImage, ...ADDITIONAL_IMAGES.slice(0, 3)]
+    ? [fallbackProductImage, ...ADDITIONAL_IMAGES.slice(0, 3)]
     : [];
 
   const reviews = product ? generateReviews(product) : [];
@@ -906,7 +906,7 @@ export default function ProductDetailPage() {
                   >
                     <div className="w-14 h-14 sm:w-28 sm:h-28 rounded-lg sm:rounded-xl overflow-hidden border border-border bg-muted">
                       <img
-                        src={p.images[0] || `https://placehold.co/200x200/22c55e/white?text=${encodeURIComponent(p.name.split(" ")[0])}`}
+                        src={getProductImage(p.name, p.categoryId, "sm")}
                         alt={p.name}
                         className="w-full h-full object-cover"
                       />
@@ -976,7 +976,7 @@ export default function ProductDetailPage() {
                   <Card className="overflow-hidden border-border/50 hover:border-primary/40 hover:shadow-md transition-all">
                     <div className="aspect-square overflow-hidden bg-muted">
                       <img
-                        src={p.images[0] || `https://placehold.co/300x300/22c55e/white?text=${encodeURIComponent(p.name.split(" ")[0])}`}
+                        src={getProductImage(p.name, p.categoryId, "md")}
                         alt={p.name}
                         loading="lazy"
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
@@ -1337,7 +1337,7 @@ export default function ProductDetailPage() {
                         <Card className="overflow-hidden border-border/50 hover:border-primary/30 hover:shadow-lg transition-all">
                           <div className="aspect-square overflow-hidden bg-muted">
                             <img
-                              src={p.images[0] || `https://placehold.co/300x300/22c55e/white?text=${encodeURIComponent(p.name.split(" ")[0])}`}
+                        src={getProductImage(p.name, p.categoryId, "md")}
                               alt={p.name}
                               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                             />

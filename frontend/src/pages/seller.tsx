@@ -22,7 +22,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Product, Order, OrderStatus } from "@shared/schema";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForOrderItem } from "@/lib/product-images";
 
 type SellerDashboard = {
   products: Product[];
@@ -376,7 +376,7 @@ export default function SellerPage() {
                                 {myItems.slice(0, 3).map((item, i) => (
                                   <img
                                     key={i}
-                                    src={item.productImage || getProductImage(item.productName, "", "sm")}
+                                    src={resolveProductImageForOrderItem(item).src}
                                     alt={item.productName}
                                     loading="lazy"
                                     className="h-8 w-8 rounded-lg object-cover border-2 border-background"

@@ -105,6 +105,14 @@ import sesameOilImage from "@assets/AgriConnect Images/daily_needs/cooking oils/
 import soybeanOilImage from "@assets/AgriConnect Images/daily_needs/cooking oils/soybean oil.webp";
 import sunflowerOilImage from "@assets/AgriConnect Images/daily_needs/cooking oils/sunflower oil.jpeg";
 import tilOilImage from "@assets/AgriConnect Images/daily_needs/cooking oils/til oil.jpeg";
+import duckMeatImage from "@assets/AgriConnect Images/daily_needs/Meat & Poultry/Duck_Meat.png";
+import porkImage from "@assets/AgriConnect Images/daily_needs/Meat & Poultry/Pork.png";
+import sourdoughBreadImage from "@assets/AgriConnect Images/daily_needs/Bakery & Bread/Sourdough_Bread.png";
+import wholeGrainBreadImage from "@assets/AgriConnect Images/daily_needs/Bakery & Bread/Whole_Grain_Bread.png";
+import handSprayerImage from "@assets/AgriConnect Images/Inputs & Tools/Farming Tools & Equipments/Hand_Sprayer.png";
+import hybridSeedsPackImage from "@assets/AgriConnect Images/Inputs & Tools/Seeds & Planting Materials/Hybrid_Seeds_Pack.png";
+import neemCakeImage from "@assets/AgriConnect Images/Inputs & Tools/Fertilizers/Neem_Cake.png";
+import organicFertilizerImage from "@assets/AgriConnect Images/Inputs & Tools/Fertilizers/Organic_Fertilizer.png";
 
 export interface ProductImageAttribution {
   source: "bundled" | "generated" | "licensed";
@@ -433,6 +441,14 @@ const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "farm-tools", name: "Farm Tools", aliases: ["Farming Tools", "Spade", "Shovel", "Sickle", "Plough", "Hoe"], categoryId: "inputs-tools", subcategoryId: "tools", localAssetPath: categoryImages.tools, attribution: bundled("AgriConnect tool stock asset") },
   { slug: "farm-machinery", name: "Farm Machinery", aliases: ["Tractor", "Harvester", "Thresher", "Machinery"], categoryId: "inputs-tools", subcategoryId: "machinery", localAssetPath: categoryImages.machinery, attribution: bundled("AgriConnect machinery stock asset") },
   { slug: "irrigation", name: "Irrigation", aliases: ["Drip Irrigation", "Sprinkler", "Water Pump"], categoryId: "inputs-tools", subcategoryId: "irrigation", localAssetPath: categoryImages.irrigation, attribution: bundled("AgriConnect irrigation stock asset") },
+  { slug: "duck-meat", name: "Duck Meat", aliases: [], categoryId: "daily-needs", subcategoryId: "meat", localAssetPath: duckMeatImage, attribution: bundled("AgriConnect duck meat product asset") },
+  { slug: "pork", name: "Pork", aliases: [], categoryId: "daily-needs", subcategoryId: "meat", localAssetPath: porkImage, attribution: bundled("AgriConnect pork product asset") },
+  { slug: "sourdough-bread", name: "Sourdough Bread", aliases: [], categoryId: "daily-needs", subcategoryId: "bakery", localAssetPath: sourdoughBreadImage, attribution: bundled("AgriConnect sourdough bread product asset") },
+  { slug: "whole-grain-bread", name: "Whole Grain Bread", aliases: [], categoryId: "daily-needs", subcategoryId: "bakery", localAssetPath: wholeGrainBreadImage, attribution: bundled("AgriConnect whole grain bread product asset") },
+  { slug: "hand-sprayer", name: "Hand Sprayer", aliases: [], categoryId: "inputs-tools", subcategoryId: "tools", localAssetPath: handSprayerImage, attribution: bundled("AgriConnect hand sprayer product asset") },
+  { slug: "hybrid-seeds-pack", name: "Hybrid Seeds Pack", aliases: [], categoryId: "inputs-tools", subcategoryId: "seeds", localAssetPath: hybridSeedsPackImage, attribution: bundled("AgriConnect hybrid seeds pack product asset") },
+  { slug: "neem-cake", name: "Neem Cake", aliases: [], categoryId: "inputs-tools", subcategoryId: "fertilizers", localAssetPath: neemCakeImage, attribution: bundled("AgriConnect neem cake product asset") },
+  { slug: "organic-fertilizer", name: "Organic Fertilizer", aliases: [], categoryId: "inputs-tools", subcategoryId: "fertilizers", localAssetPath: organicFertilizerImage, attribution: bundled("AgriConnect organic fertilizer product asset") },
 ];
 
 const explicitSlugs = new Set(entries.map((entry) => entry.slug));
@@ -464,11 +480,80 @@ const automaticAssetEntries: readonly ProductImageRegistryEntry[] = Object.entri
   .map(([, candidates]) => candidates[0]);
 
 const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
+  "amaranth-leaves": ["amaranth"],
+  "banana-suckers": ["banana-plants"],
   "banana-sucker": ["banana-plants"],
+  "black-gram-whole": ["black-gram"],
+  blueberries: ["blueberry"],
+  "buffalo-ghee": ["ghee"],
+  carrots: ["carrot"],
+  "cinnamon-sticks": ["cinnamon"],
+  cloves: ["clove"],
+  "cold-pressed-coconut-oil": ["cold-pressed-coconut"],
+  "dap-fertilizer": ["dap"],
+  "dried-fish": ["sundried-fish"],
+  "farm-fresh-eggs": ["farm-eggs"],
+  "fenugreek-leaves": ["fenugreek"],
+  figs: ["fig"],
+  "foxtail-millet": ["fox-tail-milet"],
+  "fresh-butter": ["butter"],
+  "fresh-curd": ["curd"],
+  "green-fodder": ["green-fodder-napier"],
+  "green-gram-whole": ["green-gram"],
+  "kashmiri-red-chilli": ["kashmiri-chilli"],
+  lemons: ["lemon"],
   "lemon-plant": ["citrus-plants"],
+  lobster: ["lobsters"],
+  "mango-saplings": ["mango-plants"],
   "mango-plant": ["mango-plants"],
   "mushroom-spawn": ["button-spawn"],
   "npk-10-26-26": ["npk"],
+  onions: ["onion"],
+  oranges: ["orange"],
+  pears: ["pear"],
+  "poultry-feed": ["poultry-feed-starter"],
+  "premium-basmati-rice": ["basmati-rice"],
+  "pruning-shears": ["secateurs"],
+  "pure-cow-ghee": ["ghee"],
+  raspberries: ["raspberry"],
+  "tissue-culture-banana": ["banana-tc"],
+  "toor-dal": ["tur-dal"],
+  "wheat-flour": ["wheat-flour-atta"],
+  // Seed names that include a regional, plural, or specification qualifier.
+  // Each target is an existing local asset; these are exact approved aliases,
+  // never fuzzy matches.
+  "apples-kashmir": ["kashmiri-apple"],
+  "apples-shimla": ["shimla-apple"],
+  apricots: ["apricot"],
+  "ashwagandha-extract-5-withanolides": ["ashwagandha-extract-5-percent-withanolides"],
+  blackberries: ["blackberry"],
+  "brinjal-eggplant": ["brinjal"],
+  "capsicum-bell-pepper": ["capsicum"],
+  "cardamom-green": ["green-cardamom"],
+  cherries: ["cherry"],
+  cranberries: ["cranberry"],
+  "face-shield-goggles-set": ["face-shield-and-goggles-set"],
+  "figs-fresh": ["fig"],
+  "greenhouse-hdpe-net-50": ["greenhouse-hdpe-net-50-1"],
+  "jaggery-organic": ["jaggery"],
+  "mop-potash": ["mop"],
+  mulberries: ["mulberry"],
+  "multispectral-camera-for-drone": ["multispectral-camera"],
+  nectarines: ["nectarine"],
+  "okra-bhindi": ["okra"],
+  "paddy-seeds-hyv": ["paddy-seeds"],
+  peaches: ["peach"],
+  plums: ["plum"],
+  "sapota-chikoo": ["sapota"],
+  "sweet-lime-mosambi": ["sweet-lime"],
+  "urea-46-n": ["urea"],
+  "whey-protein-isolate-farm-fresh": ["whey-protein-isolate"],
+  "yield-monitor-mapping-system": ["yield-monitor-and-mapping-system"],
+  // Prefer the subfolder's exact visual over the broad meat/leafy aliases.
+  "goat-mutton": ["goat-meat"],
+  "lamb-mutton": ["lamb-meat"],
+  "coriander-leaves": ["coriander"],
+  "mint-leaves": ["mint"],
 };
 
 /**

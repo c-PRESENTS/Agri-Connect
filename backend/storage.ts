@@ -1091,6 +1091,7 @@ export interface IStorage {
   // Support
   createSupportTicket(t: Omit<SupportTicket, "id" | "createdAt" | "status">): Promise<SupportTicket>;
   getSupportTickets(userId?: string): Promise<SupportTicket[]>;
+  getAllSupportTickets(): Promise<SupportTicket[]>;
 
   // Shipping
   createShipment(s: Omit<Shipment, "id" | "trackingId" | "createdAt" | "updatedAt" | "status"> & { status?: ShipmentStatus }): Promise<Shipment>;
@@ -2085,6 +2086,11 @@ export class MemStorage implements IStorage {
     if (!userId) return [];
     return Array.from(this.supportTickets.values())
       .filter((t) => t.userId === userId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  async getAllSupportTickets(): Promise<SupportTicket[]> {
+    return Array.from(this.supportTickets.values())
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
