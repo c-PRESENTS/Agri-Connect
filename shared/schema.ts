@@ -5,6 +5,9 @@ import { z } from "zod";
 // in shared/models/auth.ts.
 export * from "./models/auth";
 export * from "./models/student";
+export * from "./models/commerce";
+export * from "./models/payments";
+export * from "./models/payment-operations";
 
 // Categories
 export interface Category {

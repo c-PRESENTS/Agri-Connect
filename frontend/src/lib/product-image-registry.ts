@@ -135,7 +135,9 @@ export function normalizeProductImageKey(value: string): string {
     .normalize("NFKD")
     .toLowerCase()
     .replace(/&/g, " and ")
-    .replace(/\([^)]*\)/g, " ")
+    // Keep meaningful qualifiers such as "Grade A", "HYV", and "Potash".
+    // Only the punctuation is discarded so product and filename tokens agree.
+    .replace(/[()]/g, " ")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
@@ -490,6 +492,7 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "cinnamon-sticks": ["cinnamon"],
   cloves: ["clove"],
   "cold-pressed-coconut-oil": ["cold-pressed-coconut"],
+  "country-chicken-eggs": ["country-eggs"],
   "dap-fertilizer": ["dap"],
   "dried-fish": ["sundried-fish"],
   "farm-fresh-eggs": ["farm-eggs"],
@@ -519,6 +522,18 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "tissue-culture-banana": ["banana-tc"],
   "toor-dal": ["tur-dal"],
   "wheat-flour": ["wheat-flour-atta"],
+  "wholesale-root-vegetables-sack": ["wholesale-root-vegetables"],
+  "organic-seasonal-vegetable-box": ["organic-seasonal-vegetables"],
+  "semolina-suji": ["semolina"],
+  "ragi-finger-millet": ["ragi"],
+  "bajra-pearl-millet": ["bajra"],
+  "jowar-sorghum": ["jowar"],
+  "chickpeas-kabuli-chana": ["chickpea"],
+  "kidney-beans-rajma": ["kidney-beans"],
+  "cow-milk-fresh": ["cow-milk"],
+  "buffalo-milk-fresh": ["buffalo-milk"],
+  "paneer-fresh": ["paneer"],
+  "king-fish-surmai": ["king-fish"],
   // Seed names that include a regional, plural, or specification qualifier.
   // Each target is an existing local asset; these are exact approved aliases,
   // never fuzzy matches.
@@ -549,6 +564,17 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "urea-46-n": ["urea"],
   "whey-protein-isolate-farm-fresh": ["whey-protein-isolate"],
   "yield-monitor-mapping-system": ["yield-monitor-and-mapping-system"],
+  // Prefer the dedicated subcategory assets over same-name overview images.
+  "tulsi-plants": ["tulsi"],
+  "aloe-vera-plant": ["aloe-vera"],
+  "ashwagandha-root": ["ashwagandha"],
+  "brahmi-leaves": ["brahmi"],
+  "neem-leaves": ["neem"],
+  "button-mushrooms": ["button-mushroom"],
+  "oyster-mushrooms": ["oyster-mushroom"],
+  "shiitake-mushrooms": ["shiitake"],
+  "portobello-mushrooms": ["portobello"],
+  "enoki-mushrooms": ["enoki"],
   // Prefer the subfolder's exact visual over the broad meat/leafy aliases.
   "goat-mutton": ["goat-meat"],
   "lamb-mutton": ["lamb-meat"],
@@ -568,7 +594,6 @@ export function getScopedLocalProductImage(
 ): ProductImageRegistryEntry | undefined {
   const candidateKeys = [normalizedName, ...(localAssetNameAliases[normalizedName] ?? [])];
   const candidates = candidateKeys.flatMap((candidateKey) => localAssetCandidates[candidateKey] ?? []);
-  if (candidates.length === 1) return candidates[0];
 
   const subcategoryMatches = subcategoryId
     ? candidates.filter((candidate) => candidate.subcategoryId === subcategoryId)
@@ -578,7 +603,9 @@ export function getScopedLocalProductImage(
   const categoryMatches = categoryId
     ? candidates.filter((candidate) => candidate.categoryId === categoryId)
     : [];
-  return categoryMatches.length === 1 ? categoryMatches[0] : undefined;
+  if (categoryMatches.length === 1) return categoryMatches[0];
+
+  return candidates.length === 1 ? candidates[0] : undefined;
 }
 
 const allEntries = [...entries, ...automaticAssetEntries];

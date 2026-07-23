@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { authStorage } from "./auth/storage";
+import { commerceRepository } from "./repositories/commerce-repository";
 import type {
   Product, 
   InsertProduct, 
@@ -2189,4 +2190,408 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+class PersistentCommerceStorage extends MemStorage {
+  private seedPromise?: Promise<void>;
+
+  private async ensureCatalog(): Promise<void> {
+    if (!this.seedPromise) {
+      this.seedPromise = super.getProducts().then((products) => commerceRepository.seedProducts(products));
+    }
+    await this.seedPromise;
+  }
+
+  override async getProducts(filters?: ProductFilters): Promise<Product[]> {
+    await this.ensureCatalog();
+    let products = await commerceRepository.listProducts();
+    if (!filters) return products;
+    if (filters.categoryId) products = products.filter((p) => p.categoryId === filters.categoryId);
+    if (filters.subcategoryId) products = products.filter((p) => p.subcategoryId === filters.subcategoryId);
+    if (filters.isOrganic) products = products.filter((p) => p.isOrganic);
+    if (filters.inStock) products = products.filter((p) => p.stock > 0);
+    if (filters.distance) products = products.filter((p) => (p.distance ?? 0) <= filters.distance!);
+    if (filters.rating) products = products.filter((p) => p.rating >= filters.rating!);
+    if (filters.minPrice !== undefined) products = products.filter((p) => p.price >= filters.minPrice!);
+    if (filters.maxPrice !== undefined) products = products.filter((p) => p.price <= filters.maxPrice!);
+    if (filters.search) {
+      const query = filters.search.toLowerCase();
+      const categories = await super.getCategories();
+      products = products.filter((product) => {
+        const category = categories.find((item) => item.id === product.categoryId);
+        const subcategory = category?.subcategories.find((item) => item.id === product.subcategoryId);
+        return [
+          product.name,
+          product.farmerName,
+          product.description,
+          product.farmerLocation,
+          category?.name,
+          subcategory?.name,
+        ].some((value) => value?.toLowerCase().includes(query));
+      });
+    }
+    if (filters.sortBy === "price_asc") products.sort((a, b) => a.price - b.price);
+    if (filters.sortBy === "price_desc") products.sort((a, b) => b.price - a.price);
+    if (filters.sortBy === "rating") products.sort((a, b) => b.rating - a.rating);
+    if (filters.sortBy === "distance") products.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+    if (filters.sortBy === "newest") {
+      products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    return products;
+  }
+
+  override async getProduct(id: string): Promise<Product | undefined> {
+    await this.ensureCatalog();
+    return commerceRepository.getProduct(id);
+  }
+
+  override async createProduct(insertProduct: InsertProduct, farmerId: string): Promise<Product> {
+    await this.ensureCatalog();
+    const farmer = await authStorage.getUser(farmerId);
+    const product: Product = {
+      id: randomUUID(),
+      ...insertProduct,
+      farmerId,
+      farmerName:
+        farmer?.name ||
+        [farmer?.firstName, farmer?.lastName].filter(Boolean).join(" ").trim() ||
+        farmer?.email ||
+        "Unknown Farmer",
+      farmerAvatar:
+        farmer?.avatar ||
+        farmer?.profileImageUrl ||
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${farmerId}`,
+      farmerRating: farmer?.rating ?? 4.5,
+      farmerLocation: farmer?.location || "Location not specified",
+      farmerLatitude: farmer?.latitude ?? 52.3555,
+      farmerLongitude: farmer?.longitude ?? -1.1743,
+      distance: Math.round(Math.random() * 150) / 10,
+      isOrganic: insertProduct.isOrganic ?? false,
+      isFeatured: false,
+      rating: 0,
+      reviewCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+    return commerceRepository.saveProduct(product);
+  }
+
+  override async updateProduct(id: string, updates: Partial<Product>): Promise<Product | undefined> {
+    const existing = await this.getProduct(id);
+    if (!existing) return undefined;
+    return commerceRepository.saveProduct({ ...existing, ...updates, id });
+  }
+
+  override async deleteProduct(id: string): Promise<boolean> {
+    await this.ensureCatalog();
+    return commerceRepository.deleteProduct(id);
+  }
+
+  override async getProductsByFarmer(farmerId: string): Promise<Product[]> {
+    return (await this.getProducts()).filter((product) => product.farmerId === farmerId);
+  }
+
+  override async getCart(userId: string): Promise<CartItem[]> {
+    await this.ensureCatalog();
+    return commerceRepository.getCart(userId);
+  }
+
+  override async addToCart(
+    userId: string,
+    productId: string,
+    quantity: number,
+    options?: { unitPrice?: number; purchaseMode?: "one-time" | "subscribe"; subFrequency?: "weekly" | "biweekly" | "monthly" },
+  ): Promise<CartItem> {
+    if (!Number.isInteger(quantity) || quantity <= 0) throw new Error("Quantity must be a positive integer");
+    const product = await this.getProduct(productId);
+    if (!product) throw new Error("Product not found");
+    const existing = (await this.getCart(userId)).find((item) => item.productId === productId);
+    if ((existing?.quantity ?? 0) + quantity > product.stock) {
+      throw new Error(`Only ${product.stock} ${product.unit} available for ${product.name}`);
+    }
+    return commerceRepository.putCartItem(userId, product, quantity, options);
+  }
+
+  override async updateCartItem(userId: string, itemId: string, quantity: number): Promise<CartItem | undefined> {
+    const existing = (await this.getCart(userId)).find((item) => item.id === itemId);
+    if (!existing) return undefined;
+    if (quantity <= 0) {
+      await this.removeFromCart(userId, itemId);
+      return undefined;
+    }
+    if (quantity > existing.product.stock) {
+      throw new Error(`Only ${existing.product.stock} ${existing.product.unit} available for ${existing.product.name}`);
+    }
+    await commerceRepository.updateCartItem(userId, itemId, quantity);
+    return { ...existing, quantity };
+  }
+
+  override async removeFromCart(userId: string, itemId: string): Promise<boolean> {
+    return commerceRepository.removeCartItem(userId, itemId);
+  }
+
+  override async clearCart(userId: string): Promise<void> {
+    await commerceRepository.clearCart(userId);
+  }
+
+  override async mergeGuestCart(guestKey: string, userId: string): Promise<void> {
+    const guestItems = await this.getCart(guestKey);
+    for (const item of guestItems) {
+      const current = (await this.getCart(userId)).find((candidate) => candidate.productId === item.productId);
+      const available = Math.max(0, item.product.stock - (current?.quantity ?? 0));
+      if (available > 0) {
+        await this.addToCart(userId, item.productId, Math.min(item.quantity, available), {
+          unitPrice: item.unitPrice,
+          purchaseMode: item.purchaseMode,
+          subFrequency: item.subFrequency,
+        });
+      }
+    }
+    await this.clearCart(guestKey);
+  }
+
+  override async createOrder(
+    userId: string,
+    items: OrderItem[],
+    deliveryAddress: string,
+    paymentMethod: string,
+    deliveryMethod = "standard",
+    extra?: { shippingChoices?: Order["shippingChoices"]; deliveryAddressStruct?: Order["deliveryAddressStruct"]; shippingTotal?: number },
+  ): Promise<Order> {
+    const canonicalItems: OrderItem[] = [];
+    for (const item of items) {
+      const product = await this.getProduct(item.productId);
+      if (!product) throw new Error(`Product not found: ${item.productId}`);
+      canonicalItems.push({
+        productId: product.id,
+        productName: product.name,
+        productImage: product.images?.[0],
+        quantity: item.quantity,
+        price: product.price,
+        farmerId: product.farmerId,
+        farmerName: product.farmerName,
+      });
+    }
+    const user = await authStorage.getUser(userId);
+    const subtotal = canonicalItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const shippingTotal = Number((extra?.shippingTotal ?? 0).toFixed(2));
+    const deliveryFee = shippingTotal > 0 ? 0 : deliveryMethod === "express" ? 5.99 : subtotal > 0 && subtotal < 30 ? 4.99 : 0;
+    const tax = Number((subtotal * 0.2).toFixed(2));
+    const total = Number((subtotal + deliveryFee + shippingTotal + tax).toFixed(2));
+    const now = new Date().toISOString();
+    const isManual = paymentMethod === "manual";
+    const provider = ["stripe", "paypal", "razorpay"].includes(paymentMethod)
+      ? paymentMethod as Order["paymentProvider"]
+      : undefined;
+    const order: Order = {
+      id: randomUUID(),
+      orderNumber: generateOrderNumber(),
+      buyerId: userId,
+      buyerName: user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || user?.email || "Buyer",
+      buyerEmail: user?.email ?? undefined,
+      items: canonicalItems,
+      status: isManual ? "pending" : "order_placed",
+      statusHistory: [{ status: isManual ? "pending" : "order_placed", timestamp: now, note: "Order received" }],
+      total, subtotal, tax, deliveryFee,
+      shippingTotal: shippingTotal || undefined,
+      deliveryAddress,
+      deliveryMethod: deliveryMethod as Order["deliveryMethod"],
+      paymentMethod: paymentMethod as Order["paymentMethod"],
+      paymentStatus: isManual ? "manual" : provider ? "pending" : "paid",
+      paymentProvider: provider,
+      estimatedDelivery: getEstimatedDelivery(deliveryMethod),
+      shippingChoices: extra?.shippingChoices,
+      deliveryAddressStruct: extra?.deliveryAddressStruct,
+      createdAt: now,
+    };
+    return commerceRepository.createOrder(order);
+  }
+
+  override async getOrders(userId: string): Promise<Order[]> {
+    return commerceRepository.listOrders("WHERE buyer_id=$1", [userId]);
+  }
+
+  override async getOrder(id: string): Promise<Order | undefined> {
+    return commerceRepository.getOrder(id);
+  }
+
+  override async getAllOrders(): Promise<Order[]> {
+    return commerceRepository.listOrders();
+  }
+
+  override async getSellerOrders(sellerId: string): Promise<Order[]> {
+    return commerceRepository.listOrders(
+      "WHERE EXISTS (SELECT 1 FROM commerce_order_items oi WHERE oi.order_id=commerce_orders.id AND oi.seller_id=$1)",
+      [sellerId],
+    );
+  }
+
+  override async setOrderPaymentReference(id: string, provider: "stripe" | "paypal" | "razorpay", reference: string): Promise<Order | undefined> {
+    const order = await this.getOrder(id);
+    if (!order) return undefined;
+    order.paymentProvider = provider;
+    order.paymentReference = reference;
+    return commerceRepository.saveOrder(order);
+  }
+
+  override async setOrderPaymentTransactionId(id: string, transactionId: string): Promise<Order | undefined> {
+    const order = await this.getOrder(id);
+    if (!order) return undefined;
+    order.paymentTransactionId = transactionId;
+    return commerceRepository.saveOrder(order);
+  }
+
+  override async getOrderByPaymentReference(provider: "stripe" | "paypal" | "razorpay", reference: string): Promise<Order | undefined> {
+    return (await commerceRepository.listOrders()).find(
+      (order) => order.paymentProvider === provider && order.paymentReference === reference,
+    );
+  }
+
+  override async setOrderStripeSession(id: string, sessionId: string): Promise<void> {
+    const order = await this.getOrder(id);
+    if (!order) return;
+    order.stripeSessionId = sessionId;
+    await commerceRepository.saveOrder(order);
+  }
+
+  override async getOrderByStripeSession(sessionId: string): Promise<Order | undefined> {
+    return (await commerceRepository.listOrders()).find((order) => order.stripeSessionId === sessionId);
+  }
+
+  override async markOrderPaid(id: string, paymentIntentId?: string): Promise<Order | undefined> {
+    const order = await this.getOrder(id);
+    if (!order || order.paymentStatus === "paid") return order;
+    order.paymentStatus = "paid";
+    order.status = "payment_confirmed";
+    order.stripePaymentIntentId = paymentIntentId ?? order.stripePaymentIntentId;
+    order.statusHistory.push({ status: "payment_confirmed", timestamp: new Date().toISOString(), note: "Payment confirmed" });
+    return commerceRepository.saveOrder(order, true);
+  }
+
+  override async markOrderPaymentFailed(id: string, note?: string): Promise<Order | undefined> {
+    const order = await this.getOrder(id);
+    if (!order || order.paymentStatus === "paid") return order;
+    await this.restoreStockForOrder(order);
+    order.paymentStatus = "failed";
+    order.status = "cancelled";
+    order.statusHistory.push({ status: "cancelled", timestamp: new Date().toISOString(), note: note || "Payment failed" });
+    return commerceRepository.saveOrder(order, true);
+  }
+
+  override async updateOrderStatus(
+    id: string,
+    status: OrderStatus,
+    note?: string,
+    tracking?: { trackingNumber?: string; carrier?: string; trackingUrl?: string },
+  ): Promise<Order | undefined> {
+    const order = await this.getOrder(id);
+    if (!order) return undefined;
+    order.status = status;
+    order.statusHistory.push({ status, timestamp: new Date().toISOString(), note });
+    if (tracking?.trackingNumber !== undefined) order.trackingNumber = tracking.trackingNumber || undefined;
+    if (tracking?.carrier !== undefined) order.carrier = tracking.carrier || undefined;
+    if (tracking?.trackingUrl !== undefined) order.trackingUrl = tracking.trackingUrl || undefined;
+    return commerceRepository.saveOrder(order, true);
+  }
+
+  override async restoreStockForOrder(order: Order): Promise<void> {
+    await commerceRepository.restoreStock(order);
+  }
+
+  override async cancelOrder(id: string, userId: string): Promise<Order | undefined> {
+    const order = await this.getOrder(id);
+    if (!order || order.buyerId !== userId) return undefined;
+    if (!["order_placed", "payment_confirmed", "processing"].includes(order.status)) return undefined;
+    await this.restoreStockForOrder(order);
+    return this.updateOrderStatus(id, "cancelled", "Cancelled by buyer");
+  }
+
+  override async markOrderRefunded(id: string, refundId?: string, note?: string): Promise<Order | undefined> {
+    const order = await this.getOrder(id);
+    if (!order) return undefined;
+    order.paymentStatus = "refunded";
+    order.refundId = refundId ?? order.refundId;
+    order.statusHistory.push({ status: order.status, timestamp: new Date().toISOString(), note: note || "Refund issued" });
+    return commerceRepository.saveOrder(order, true);
+  }
+
+  override async validateCart(items: { productId: string; quantity: number }[]): Promise<{
+    ok: boolean;
+    issues: { productId: string; productName: string; reason: "missing" | "insufficient_stock" | "out_of_stock"; available?: number; requested: number }[];
+  }> {
+    const issues: { productId: string; productName: string; reason: "missing" | "insufficient_stock" | "out_of_stock"; available?: number; requested: number }[] = [];
+    for (const item of items) {
+      const product = await this.getProduct(item.productId);
+      if (!product) issues.push({ productId: item.productId, productName: "Unknown product", reason: "missing", requested: item.quantity });
+      else if (product.stock <= 0) issues.push({ productId: item.productId, productName: product.name, reason: "out_of_stock", available: 0, requested: item.quantity });
+      else if (product.stock < item.quantity) issues.push({ productId: item.productId, productName: product.name, reason: "insufficient_stock", available: product.stock, requested: item.quantity });
+    }
+    return { ok: issues.length === 0, issues };
+  }
+
+  override async createReview(
+    userId: string,
+    userName: string,
+    userAvatar: string,
+    data: InsertReview,
+  ): Promise<Review> {
+    const review = await super.createReview(userId, userName, userAvatar, data);
+    const product = await this.getProduct(data.productId);
+    if (product) {
+      const reviews = await super.getProductReviews(data.productId);
+      const average = reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length;
+      await commerceRepository.saveProduct({
+        ...product,
+        rating: Number(average.toFixed(1)),
+        reviewCount: reviews.length,
+      });
+    }
+    return review;
+  }
+
+  override async getUserOrderForProduct(userId: string, productId: string): Promise<Order | undefined> {
+    return (await this.getOrders(userId)).find(
+      (order) => order.status === "delivered" && order.items.some((item) => item.productId === productId),
+    );
+  }
+
+  override async getFarmerStats(farmerId: string): Promise<FarmerStats> {
+    const [products, orders] = await Promise.all([
+      this.getProductsByFarmer(farmerId),
+      this.getSellerOrders(farmerId),
+    ]);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const totalEarnings = orders
+      .filter((order) => order.status !== "cancelled")
+      .reduce(
+        (sum, order) =>
+          sum +
+          order.items
+            .filter((item) => item.farmerId === farmerId)
+            .reduce((itemSum, item) => itemSum + item.price * item.quantity, 0),
+        0,
+      );
+    return {
+      totalEarnings: totalEarnings || 67500,
+      todayOrders: orders.filter((order) => new Date(order.createdAt) >= today).length || 8,
+      pendingOrders:
+        orders.filter((order) =>
+          ["order_placed", "payment_confirmed", "processing"].includes(order.status),
+        ).length || 3,
+      totalProducts: products.length || 12,
+      averageRating:
+        products.length > 0
+          ? products.reduce((sum, product) => sum + product.rating, 0) / products.length
+          : 4.7,
+    };
+  }
+
+  override async cancelStaleStripePendingOrders(userId: string, olderThanMs = 30 * 60 * 1000): Promise<number> {
+    const cutoff = Date.now() - olderThanMs;
+    const stale = (await this.getOrders(userId)).filter(
+      (order) => order.paymentProvider === "stripe" && order.paymentStatus === "pending" && new Date(order.createdAt).getTime() < cutoff,
+    );
+    for (const order of stale) await this.markOrderPaymentFailed(order.id, "Stripe checkout expired");
+    return stale.length;
+  }
+}
+
+export const storage = new PersistentCommerceStorage();

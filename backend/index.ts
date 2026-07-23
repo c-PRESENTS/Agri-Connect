@@ -6,9 +6,11 @@ import { serveStatic } from "./runtime/static";
 import { createServer } from "http";
 import { setupAuth, registerAuthRoutes } from "./auth";
 import { registerOtpRoutes } from "./otp/routes";
+import { paymentRuntimeConfig } from "./payments/config";
 
 const app = express();
 const httpServer = createServer(app);
+void paymentRuntimeConfig;
 
 declare module "http" {
   interface IncomingMessage {

@@ -150,21 +150,6 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
     };
   }
 
-  const exact = productImageRegistry[normalizedName];
-  if (exact) {
-    return {
-      src: exact.localAssetPath,
-      source: "exact-product",
-      reason: "Matched the normalized product name in the canonical registry",
-      normalizedName,
-      matchedSlug: exact.slug,
-      attribution: exact.attribution,
-      reviewRequired: false,
-      ambiguousMatches: [],
-      ignoredProvidedImage: systemProvided ? providedImage : undefined,
-    };
-  }
-
   const scopedLocalAsset = getScopedLocalProductImage(
     normalizedName,
     input.categoryId,
@@ -178,6 +163,21 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
       normalizedName,
       matchedSlug: scopedLocalAsset.slug,
       attribution: scopedLocalAsset.attribution,
+      reviewRequired: false,
+      ambiguousMatches: [],
+      ignoredProvidedImage: systemProvided ? providedImage : undefined,
+    };
+  }
+
+  const exact = productImageRegistry[normalizedName];
+  if (exact) {
+    return {
+      src: exact.localAssetPath,
+      source: "exact-product",
+      reason: "Matched the normalized product name in the canonical registry",
+      normalizedName,
+      matchedSlug: exact.slug,
+      attribution: exact.attribution,
       reviewRequired: false,
       ambiguousMatches: [],
       ignoredProvidedImage: systemProvided ? providedImage : undefined,
