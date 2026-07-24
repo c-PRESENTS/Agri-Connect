@@ -31,6 +31,9 @@ const OrdersPage = lazy(() => import("@/pages/orders"));
 const OrderDetailPage = lazy(() => import("@/pages/order-detail"));
 const PaymentSuccessPage = lazy(() => import("@/pages/payment-success"));
 const PaymentCancelledPage = lazy(() => import("@/pages/payment-cancelled"));
+const PaymentProcessingPage = lazy(() => import("@/pages/payment-processing"));
+const PaymentFailedPage = lazy(() => import("@/pages/payment-failed"));
+const PaymentRetryPage = lazy(() => import("@/pages/payment-retry"));
 const SupportPage = lazy(() => import("@/pages/support"));
 const PrivacyPolicyPage = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfServicePage = lazy(() => import("@/pages/terms-of-service"));
@@ -122,6 +125,21 @@ export function AppRoutes() {
         <ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>
       </Route>
       <Route path="/payment/cancelled" component={PaymentCancelledPage} />
+      <Route path="/payment/:attemptId/processing">
+        <ProtectedRoute><PaymentProcessingPage /></ProtectedRoute>
+      </Route>
+      <Route path="/payment/:attemptId/success">
+        <ProtectedRoute><PaymentProcessingPage /></ProtectedRoute>
+      </Route>
+      <Route path="/payment/:attemptId/failed">
+        <ProtectedRoute><PaymentFailedPage /></ProtectedRoute>
+      </Route>
+      <Route path="/payment/:attemptId/cancelled">
+        <ProtectedRoute><PaymentFailedPage /></ProtectedRoute>
+      </Route>
+      <Route path="/payment/:attemptId/retry">
+        <ProtectedRoute><PaymentRetryPage /></ProtectedRoute>
+      </Route>
       <Route path="/support" component={SupportPage} />
       <Route path="/about" component={AboutPage} />
       <Route path="/privacy-policy" component={PrivacyPolicyPage} />

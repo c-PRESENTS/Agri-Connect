@@ -40,6 +40,17 @@ export class PaymentOperationsRepository {
     return config;
   }
 
+  async listProviderConfigs() {
+    return db.select().from(paymentProviderConfigs);
+  }
+
+  async suspendProvider(provider: string, reason: string): Promise<void> {
+    await db
+      .update(paymentProviderConfigs)
+      .set({ status: "suspended", suspensionReason: reason, updatedAt: new Date() })
+      .where(eq(paymentProviderConfigs.provider, provider));
+  }
+
   async addProviderCapabilities(
     input: typeof paymentProviderCapabilities.$inferInsert,
   ) {

@@ -2,6 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "../config/db";
 import {
   apiIdempotencyKeys,
+  checkoutQuotes,
   paymentAttempts,
   providerWebhookEvents,
   type NewPaymentAttempt,
@@ -9,6 +10,16 @@ import {
 } from "@shared/schema";
 
 export class PaymentRepository {
+  async createQuote(input: typeof checkoutQuotes.$inferInsert) {
+    const [quote] = await db.insert(checkoutQuotes).values(input).returning();
+    return quote;
+  }
+
+  async getQuote(id: string) {
+    const [quote] = await db.select().from(checkoutQuotes).where(eq(checkoutQuotes.id, id));
+    return quote;
+  }
+
   async createAttempt(input: NewPaymentAttempt): Promise<PaymentAttempt> {
     const [attempt] = await db.insert(paymentAttempts).values(input).returning();
     return attempt;
@@ -16,6 +27,55 @@ export class PaymentRepository {
 
   async getAttempt(id: string): Promise<PaymentAttempt | undefined> {
     const [attempt] = await db.select().from(paymentAttempts).where(eq(paymentAttempts.id, id));
+    return attempt;
+  }
+
+  async getAttemptByIdempotency(
+    provider: string,
+    idempotencyReference: string,
+  ): Promise<PaymentAttempt | undefined> {
+    const [attempt] = await db
+      .select()
+      .from(paymentAttempts)
+      .where(
+        and(
+          eq(paymentAttempts.provider, provider),
+          eq(paymentAttempts.idempotencyReference, idempotencyReference),
+        ),
+      );
+    return attempt;
+  }
+
+  async getAttemptByProviderPayment(
+    provider: string,
+    providerPaymentId: string,
+  ): Promise<PaymentAttempt | undefined> {
+    const [attempt] = await db
+      .select()
+      .from(paymentAttempts)
+      .where(
+        and(
+          eq(paymentAttempts.provider, provider),
+          eq(paymentAttempts.providerPaymentId, providerPaymentId),
+        ),
+      );
+    return attempt;
+  }
+
+  async applyVerifiedPaymentStatus(
+    id: string,
+    status: "processing" | "succeeded" | "failed" | "cancelled",
+  ): Promise<PaymentAttempt | undefined> {
+    const [attempt] = await db
+      .update(paymentAttempts)
+      .set({
+        paymentStatus: status === "cancelled" ? "cancelled" : status,
+        reconciliationStatus: "resolved",
+        updatedAt: new Date(),
+        version: sql`${paymentAttempts.version} + 1`,
+      })
+      .where(eq(paymentAttempts.id, id))
+      .returning();
     return attempt;
   }
 
@@ -87,6 +147,25 @@ export class PaymentRepository {
         version: sql`${paymentAttempts.version} + 1`,
       })
       .where(eq(paymentAttempts.id, id))
+      .returning();
+    return attempt;
+  }
+
+  async cancelAttempt(id: string): Promise<PaymentAttempt | undefined> {
+    const [attempt] = await db
+      .update(paymentAttempts)
+      .set({
+        paymentStatus: "cancelled",
+        providerCallStatus: "failed",
+        updatedAt: new Date(),
+        version: sql`${paymentAttempts.version} + 1`,
+      })
+      .where(
+        and(
+          eq(paymentAttempts.id, id),
+          eq(paymentAttempts.paymentStatus, "created"),
+        ),
+      )
       .returning();
     return attempt;
   }

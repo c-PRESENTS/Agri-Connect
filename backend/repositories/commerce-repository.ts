@@ -343,6 +343,11 @@ export class CommerceRepository {
           [item.productId, item.quantity],
         );
       }
+      await client.query(
+        `UPDATE inventory_reservations SET status='released',updated_at=now()
+         WHERE order_id=$1 AND status='active'`,
+        [order.id],
+      );
       const restored = { ...order, stockRestored: true };
       await client.query(
         "UPDATE commerce_orders SET stock_restored=true, order_data=$2::jsonb, updated_at=now() WHERE id=$1",
@@ -385,6 +390,14 @@ export class CommerceRepository {
     } finally {
       client.release();
     }
+  }
+
+  async consumeReservations(orderId: string): Promise<void> {
+    await pool.query(
+      `UPDATE inventory_reservations SET status='consumed',updated_at=now()
+       WHERE order_id=$1 AND status='active'`,
+      [orderId],
+    );
   }
 }
 

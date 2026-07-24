@@ -7,10 +7,12 @@ import { createServer } from "http";
 import { setupAuth, registerAuthRoutes } from "./auth";
 import { registerOtpRoutes } from "./otp/routes";
 import { paymentRuntimeConfig } from "./payments/config";
+import { capabilityMonitor } from "./payments/capability-monitor";
 
 const app = express();
 const httpServer = createServer(app);
 void paymentRuntimeConfig;
+capabilityMonitor.start(paymentRuntimeConfig.reconciliationIntervalMinutes);
 
 declare module "http" {
   interface IncomingMessage {
@@ -71,6 +73,25 @@ if (enableApiRateLimit) {
     "/api/logistics",
   ], apiLimiter);
 }
+
+app.use(
+  "/api/webhooks/payments/:provider",
+  (req, res, next) => {
+    const limits: Record<string, string> = {
+      stripe: "512kb",
+      paypal: "512kb",
+      razorpay: "256kb",
+      mock: "64kb",
+    };
+    const limit = limits[req.params.provider];
+    if (!limit) return res.status(404).json({ error: "Unknown payment provider" });
+    return express.raw({ type: "application/json", limit })(req, res, (error) => {
+      if (error) return next(error);
+      req.rawBody = req.body;
+      next();
+    });
+  },
+);
 
 app.use(
   express.json({

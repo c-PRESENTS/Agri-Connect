@@ -13,6 +13,8 @@ import { registerSearchRoutes } from "./search/routes";
 import { registerSupportRoutes } from "./support/routes";
 import { registerDashboardRoutes } from "./dashboard/routes";
 import { registerStudentRoutes } from "./student/routes";
+import { registerPaymentRoutes } from "./payments/routes";
+import { registerPaymentWebhookRoutes } from "./payments/webhooks";
 
 export interface BackendModuleDeps {
   getUserId(req: Request): string | undefined;
@@ -32,6 +34,8 @@ export function registerBackendModules(app: Express, deps: BackendModuleDeps): v
     mergeGuestCartIfNeeded: deps.mergeGuestCartIfNeeded,
   });
   registerCommerceRoutes(app, { getUserId: deps.getUserId });
+  registerPaymentRoutes(app, { getUserId: deps.getUserId });
+  registerPaymentWebhookRoutes(app);
   registerReviewsRoutes(app, { getUserId: deps.getUserId });
   registerFarmerRoutes(app);
   registerLocalNeedsRoutes(app);
