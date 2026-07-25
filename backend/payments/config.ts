@@ -49,12 +49,15 @@ export interface PaymentRuntimeConfig {
   reservationTtlMinutes: number;
   reconciliationIntervalMinutes: number;
   webhookRetentionDays: number;
+  idempotencyRetentionDays: number;
+  operationalRetentionDays: number;
+  providerReviewIntervalMinutes: number;
+  maintenanceIntervalHours: number;
   releaseDelayHours: number;
-  /**
-   * Phase 0-2 are deliberately inert. Phase 3 must replace this guard with
-   * server-authoritative provider activation and capability checks.
-   */
-  providerExecutionEnabled: false;
+  disputeFilingDays: number;
+  disputeResponseDays: number;
+  providerExecutionEnabled: boolean;
+  uiPreviewEnabled: boolean;
 }
 
 export function loadPaymentRuntimeConfig(
@@ -85,12 +88,6 @@ export function loadPaymentRuntimeConfig(
     }
   }
 
-  if (mode === "live" && requestedProviders.length > 0) {
-    throw new Error(
-      "Live payment providers remain disabled through Phase 2; provider activation belongs to Phase 3 or later",
-    );
-  }
-
   return {
     mode,
     requestedProviders,
@@ -105,8 +102,21 @@ export function loadPaymentRuntimeConfig(
       15,
     ),
     webhookRetentionDays: positiveInteger(environment.PAYMENT_WEBHOOK_RETENTION_DAYS, 90),
+    idempotencyRetentionDays: positiveInteger(environment.PAYMENT_IDEMPOTENCY_RETENTION_DAYS, 30),
+    operationalRetentionDays: positiveInteger(environment.PAYMENT_OPERATIONAL_RETENTION_DAYS, 365),
+    providerReviewIntervalMinutes: positiveInteger(
+      environment.PAYMENT_PROVIDER_REVIEW_INTERVAL_MINUTES,
+      60,
+    ),
+    maintenanceIntervalHours: positiveInteger(environment.PAYMENT_MAINTENANCE_INTERVAL_HOURS, 1),
     releaseDelayHours: positiveInteger(environment.ESCROW_RELEASE_DELAY_HOURS, 48),
-    providerExecutionEnabled: false,
+    disputeFilingDays: positiveInteger(environment.PAYMENT_DISPUTE_FILING_DAYS, 30),
+    disputeResponseDays: positiveInteger(environment.PAYMENT_DISPUTE_RESPONSE_DAYS, 7),
+    providerExecutionEnabled: requestedProviders.length > 0,
+    uiPreviewEnabled:
+      environment.NODE_ENV !== "production" &&
+      mode !== "live" &&
+      environment.PAYMENT_UI_PREVIEW_ENABLED === "true",
   };
 }
 

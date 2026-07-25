@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -428,6 +429,9 @@ export function VoiceCommand({ onSearch }: VoiceCommandProps) {
                 </Button>
               )}
             </DialogTitle>
+            <DialogDescription>
+              Speak or type a command to search, navigate, or use AgriConnect features.
+            </DialogDescription>
           </DialogHeader>
 
           {/* Conversation History */}

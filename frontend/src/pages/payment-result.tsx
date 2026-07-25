@@ -14,10 +14,15 @@ export default function PaymentResultPage() {
   const query = useQuery({
     queryKey: ["/api/payments/attempts", attemptId],
     queryFn: () => getPaymentAttempt(attemptId),
-    refetchInterval: (state) =>
-      ["created", "processing", "requires_action"].includes(state.state.data?.attempt.paymentStatus ?? "")
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    refetchOnReconnect: true,
+    refetchInterval: (state) => {
+      const paymentStatus = state.state.data?.attempt.paymentStatus;
+      return !paymentStatus || ["created", "processing", "requires_action"].includes(paymentStatus)
         ? 1500
-        : false,
+        : false;
+    },
   });
   const status = query.data?.attempt.paymentStatus ?? "processing";
   useEffect(() => {
@@ -32,7 +37,7 @@ export default function PaymentResultPage() {
       <div className="max-w-xl mx-auto px-4 py-10">
         <Card>
           <CardContent className="p-8">
-            <PaymentStatePanel status={query.isError ? "failed" : status} />
+            <PaymentStatePanel status={query.isError ? "unavailable" : status} />
             <div className="flex gap-2 justify-center mt-6">
               {status === "succeeded" && query.data ? (
                 <Button onClick={() => navigate(`/orders/${query.data.order.id}`)}>View order</Button>

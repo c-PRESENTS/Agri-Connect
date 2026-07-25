@@ -16,7 +16,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TopNavigation } from "@/components/top-navigation";
 import { TextToSpeech } from "@/components/text-to-speech";
 import { TranslateButton } from "@/components/translate-button";
-import { apiRequest } from "@/lib/queryClient";
 import {
   Dialog,
   DialogContent,
@@ -610,28 +609,10 @@ export default function FarmersHelp() {
   const analyzeLocationAndRecommend = async (location: LocationData) => {
     setIsAnalyzing(true);
     try {
-      const response = await apiRequest("POST", "/api/chat", {
-        message: `As an agricultural expert, analyze this location and provide product recommendations:
-Location: ${location.district}, ${location.state}
-Climate: ${location.climate}
-Soil: ${location.soilType}
-
-Provide 5 product categories farmers can sell with:
-1. Category name
-2. Top 3 products in that category
-3. Estimated market value (Low/Medium/High)
-4. Number of competitors (estimate 1-50)
-5. Current demand level (Low/Medium/High)
-6. Best season to sell
-7. 2 quick tips for success
-
-Format as JSON array.`,
-        conversationHistory: []
-      });
-      
-      const data = await response.json();
-      
-      const mockRecommendations: AIRecommendation[] = [
+      // These recommendations are curated application data and do not require
+      // an external AI provider. Provider-backed chat remains an optional,
+      // separately reported capability.
+      const localRecommendations: AIRecommendation[] = [
         {
           category: "Vegetables",
           products: ["Tomatoes", "Onions", "Green Chillies"],
@@ -679,9 +660,7 @@ Format as JSON array.`,
         }
       ];
       
-      setRecommendations(mockRecommendations);
-    } catch (error) {
-      console.error("Analysis error:", error);
+      setRecommendations(localRecommendations);
     } finally {
       setIsAnalyzing(false);
     }

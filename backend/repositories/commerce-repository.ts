@@ -44,6 +44,53 @@ export class CommerceRepository {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
+      const catalogFarmers = new Map<
+        string,
+        Pick<
+          Product,
+          | "farmerId"
+          | "farmerName"
+          | "farmerAvatar"
+          | "farmerLocation"
+          | "farmerLatitude"
+          | "farmerLongitude"
+          | "farmerRating"
+        >
+      >();
+      for (const product of products) {
+        if (!catalogFarmers.has(product.farmerId)) {
+          catalogFarmers.set(product.farmerId, {
+            farmerId: product.farmerId,
+            farmerName: product.farmerName,
+            farmerAvatar: product.farmerAvatar,
+            farmerLocation: product.farmerLocation,
+            farmerLatitude: product.farmerLatitude,
+            farmerLongitude: product.farmerLongitude,
+            farmerRating: product.farmerRating,
+          });
+        }
+      }
+      for (const farmer of Array.from(catalogFarmers.values())) {
+        const [firstName, ...lastNameParts] = farmer.farmerName.trim().split(/\s+/);
+        await client.query(
+          `INSERT INTO users
+             (id, auth_method, first_name, last_name, role, name, avatar, location,
+              latitude, longitude, rating, is_verified, profile_complete)
+           VALUES ($1,'catalog_seed',$2,$3,'farmer',$4,$5,$6,$7,$8,$9,true,true)
+           ON CONFLICT (id) DO NOTHING`,
+          [
+            farmer.farmerId,
+            firstName || farmer.farmerName,
+            lastNameParts.join(" ") || null,
+            farmer.farmerName,
+            farmer.farmerAvatar,
+            farmer.farmerLocation,
+            farmer.farmerLatitude,
+            farmer.farmerLongitude,
+            farmer.farmerRating,
+          ],
+        );
+      }
       for (const product of products) {
         await client.query(
           `INSERT INTO commerce_products

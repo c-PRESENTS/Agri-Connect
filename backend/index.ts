@@ -8,11 +8,23 @@ import { setupAuth, registerAuthRoutes } from "./auth";
 import { registerOtpRoutes } from "./otp/routes";
 import { paymentRuntimeConfig } from "./payments/config";
 import { capabilityMonitor } from "./payments/capability-monitor";
+import { providerActivationService } from "./payments/provider-activation-service";
+import { paymentMaintenanceService } from "./payments/maintenance-service";
 
 const app = express();
 const httpServer = createServer(app);
+
+// PostgreSQL bigint monetary columns are represented as native BigInt values
+// by Drizzle. JSON has no BigInt primitive, so expose them as lossless decimal
+// strings across every API response instead of allowing res.json() to crash.
+app.set("json replacer", (_key: string, value: unknown) =>
+  typeof value === "bigint" ? value.toString() : value,
+);
+
 void paymentRuntimeConfig;
 capabilityMonitor.start(paymentRuntimeConfig.reconciliationIntervalMinutes);
+providerActivationService.start(paymentRuntimeConfig.providerReviewIntervalMinutes);
+paymentMaintenanceService.start(paymentRuntimeConfig.maintenanceIntervalHours);
 
 declare module "http" {
   interface IncomingMessage {
@@ -28,7 +40,11 @@ const apiRateLimitWindowMs = Number(process.env.API_RATE_LIMIT_WINDOW_MS ?? (isP
 const apiRateLimitMax = Number(process.env.API_RATE_LIMIT_MAX ?? (isProd ? 100 : 5000));
 
 app.use(helmet({
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  // Google/PayPal popup SDKs need an opener relationship. Production keeps
+  // the popup-compatible isolation policy; development omits COOP because
+  // localhost HMR and third-party popup probes otherwise emit false-positive
+  // postMessage warnings.
+  crossOriginOpenerPolicy: isProd ? { policy: "same-origin-allow-popups" } : false,
   // In development Vite injects inline scripts for HMR and React Fast Refresh.
   // Those are blocked by a strict CSP, which breaks the dev experience.
   // The built production output has no inline scripts, so the policy is safe
@@ -37,12 +53,40 @@ app.use(helmet({
     ? {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "https://accounts.google.com", "https://apis.google.com"],
+          scriptSrc: [
+            "'self'",
+            "https://accounts.google.com",
+            "https://apis.google.com",
+            "https://js.stripe.com",
+            "https://www.paypal.com",
+            "https://www.paypalobjects.com",
+            "https://checkout.razorpay.com",
+          ],
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "https://fonts.gstatic.com"],
           imgSrc: ["'self'", "data:", "https:", "blob:"],
-          connectSrc: ["'self'", "https://api.sendgrid.com", "https://rest.nexmo.com", "https://accounts.google.com"],
-          frameSrc: ["https://accounts.google.com"],
+          connectSrc: [
+            "'self'",
+            "https://api.sendgrid.com",
+            "https://rest.nexmo.com",
+            "https://accounts.google.com",
+            "https://api.stripe.com",
+            "https://checkout.stripe.com",
+            "https://www.paypal.com",
+            "https://api-m.paypal.com",
+            "https://api-m.sandbox.paypal.com",
+            "https://api.razorpay.com",
+          ],
+          frameSrc: [
+            "https://accounts.google.com",
+            "https://js.stripe.com",
+            "https://checkout.stripe.com",
+            "https://www.paypal.com",
+            "https://checkout.razorpay.com",
+            "https://api.razorpay.com",
+          ],
+          frameAncestors: ["'none'"],
+          baseUri: ["'self'"],
           objectSrc: ["'none'"],
           upgradeInsecureRequests: [],
         },
@@ -56,6 +100,22 @@ const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many requests. Try again later." },
+});
+
+const paymentLimiter = rateLimit({
+  windowMs: Number(process.env.PAYMENT_RATE_LIMIT_WINDOW_MS ?? 60_000),
+  max: Number(process.env.PAYMENT_RATE_LIMIT_MAX ?? (isProd ? 60 : 1000)),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many payment requests. Please try again shortly." },
+});
+
+const paymentWebhookLimiter = rateLimit({
+  windowMs: 60_000,
+  max: Number(process.env.PAYMENT_WEBHOOK_RATE_LIMIT_MAX ?? 300),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Webhook request rate exceeded" },
 });
 
 if (enableApiRateLimit) {
@@ -74,8 +134,34 @@ if (enableApiRateLimit) {
   ], apiLimiter);
 }
 
+if (isProd || process.env.PAYMENT_RATE_LIMIT_ENABLED === "true") {
+  app.use("/api/payments", paymentLimiter);
+}
+
+app.all(
+  ["/api/stripe/webhook", "/api/paypal/webhook", "/api/razorpay/webhook"],
+  (_req, res) =>
+    res.status(410).json({
+      error: "Legacy payment webhook URL is retired; use /api/webhooks/payments/:provider",
+    }),
+);
+app.post(
+  [
+    "/api/stripe/create-checkout-session",
+    "/api/paypal/orders/:orderId",
+    "/api/paypal/orders/:paypalOrderId/capture",
+    "/api/razorpay/orders/:orderId",
+    "/api/razorpay/verify",
+  ],
+  (_req, res) =>
+    res.status(410).json({
+      error: "Legacy payment creation is retired; use the protected checkout flow",
+    }),
+);
+
 app.use(
   "/api/webhooks/payments/:provider",
+  paymentWebhookLimiter,
   (req, res, next) => {
     const limits: Record<string, string> = {
       stripe: "512kb",
@@ -85,6 +171,9 @@ app.use(
     };
     const limit = limits[req.params.provider];
     if (!limit) return res.status(404).json({ error: "Unknown payment provider" });
+    if (!req.is("application/json")) {
+      return res.status(415).json({ error: "Payment webhooks require application/json" });
+    }
     return express.raw({ type: "application/json", limit })(req, res, (error) => {
       if (error) return next(error);
       req.rawBody = req.body;
@@ -149,11 +238,19 @@ app.use((req, res, next) => {
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
+    const validationError = err?.name === "ZodError";
+    const status = validationError ? 400 : Number(err?.status || err?.statusCode || 500);
+    const message =
+      validationError
+        ? "Request validation failed"
+        : status >= 500
+          ? "Internal Server Error"
+          : (err?.message || "Request failed");
+    console.error("[api] request failed", {
+      status,
+      errorCode: typeof err?.code === "string" ? err.code : err?.name ?? "unknown_error",
+    });
+    if (!res.headersSent) res.status(status).json({ message });
   });
 
   if (process.env.NODE_ENV === "production") {

@@ -19,6 +19,15 @@ import { useTranslation } from "react-i18next";
 import type { Order, OrderStatus } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { resolveProductImageForOrderItem } from "@/lib/product-images";
+import { OrderDisputes } from "@/components/payments/order-disputes";
+
+interface PaymentRefund {
+  id: string;
+  currency: string;
+  amount_minor: string;
+  status: string;
+  failure_code?: string | null;
+}
 
 const ORDER_STAGES: { status: OrderStatus; label: string; desc: string; icon: typeof Package }[] = [
   { status: "pending",           label: "Pending",           desc: "Waiting for the seller to confirm", icon: Clock },
@@ -98,6 +107,59 @@ export default function OrderDetailPage() {
     },
     onError: () => {
       toast({ title: "Cannot cancel", description: "This order cannot be cancelled.", variant: "destructive" });
+    },
+  });
+  const { data: refundData } = useQuery<{ refunds: PaymentRefund[] }>({
+    queryKey: ["/api/payments/orders", id, "refunds"],
+    queryFn: async () => {
+      const response = await fetch(`/api/payments/orders/${id}/refunds`, {
+        credentials: "include",
+      });
+      if (!response.ok) return { refunds: [] };
+      return response.json();
+    },
+  });
+
+  const confirmDeliveryMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("POST", `/api/payments/orders/${id}/confirm-delivery`, {}),
+    onSuccess: () => {
+      toast({
+        title: "Delivery confirmed",
+        description: "Seller payout is on hold until the protected release time.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Could not confirm delivery",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const refundMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/payments/orders/${id}/refunds`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": `buyer-full-refund-${id}`,
+        },
+        body: "{}",
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Refund could not be created");
+      return body;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/payments/orders", id, "refunds"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders", id] });
+      toast({ title: "Refund submitted", description: "Provider verification is in progress." });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Refund failed", description: error.message, variant: "destructive" });
     },
   });
 
@@ -197,6 +259,34 @@ export default function OrderDetailPage() {
                 {t("common.cancel")}
               </Button>
             )}
+            {order.status === "delivered" && order.paymentStatus === "paid" && (
+              <Button
+                size="sm"
+                onClick={() => confirmDeliveryMutation.mutate()}
+                disabled={confirmDeliveryMutation.isPending}
+                className="gap-1"
+              >
+                {confirmDeliveryMutation.isPending
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <CheckCircle className="h-3.5 w-3.5" />}
+                Confirm delivery
+              </Button>
+            )}
+            {order.status === "delivered" && order.paymentStatus === "paid" && (
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={refundMutation.isPending}
+                onClick={() => {
+                  if (window.confirm("Request a full refund for this protected payment?")) {
+                    refundMutation.mutate();
+                  }
+                }}
+              >
+                {refundMutation.isPending && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}
+                Request refund
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -208,6 +298,30 @@ export default function OrderDetailPage() {
             </Button>
           </div>
         </div>
+
+        {(refundData?.refunds.length ?? 0) > 0 && (
+          <Card className="mb-4">
+            <CardContent className="p-4">
+              <h2 className="text-sm font-semibold">Refund status</h2>
+              <div className="mt-2 space-y-2">
+                {refundData!.refunds.map((refund) => (
+                  <div key={refund.id} className="flex items-center justify-between gap-3 text-sm">
+                    <span>
+                      {new Intl.NumberFormat("en-GB", {
+                        style: "currency",
+                        currency: refund.currency,
+                      }).format(Number(refund.amount_minor) / 100)}
+                    </span>
+                    <Badge variant={refund.status === "succeeded" ? "default" : "secondary"}>
+                      {refund.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        <OrderDisputes orderId={order.id} paid={order.paymentStatus === "paid"} />
 
         {/* Tracking info */}
         {(order.trackingNumber || order.carrier || order.trackingUrl) && order.status !== "cancelled" && (

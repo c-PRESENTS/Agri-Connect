@@ -10,17 +10,12 @@ test.describe("payment API security boundaries", () => {
   test("payment creation and verification endpoints require a buyer session", async ({ request }) => {
     const protectedRequests = [
       request.post("/api/orders", { data: {} }),
-      request.post("/api/stripe/create-checkout-session", { data: {} }),
-      request.post("/api/paypal/orders/not-a-real-order", { data: {} }),
-      request.post("/api/paypal/orders/not-a-real-provider-order/capture", { data: {} }),
-      request.post("/api/razorpay/orders/not-a-real-order", { data: {} }),
-      request.post("/api/razorpay/verify", {
-        data: {
-          razorpay_order_id: "order_untrusted",
-          razorpay_payment_id: "pay_untrusted",
-          razorpay_signature: "untrusted",
-        },
-      }),
+      request.get("/api/payments/methods"),
+      request.post("/api/checkout/quotes", { data: {} }),
+      request.post("/api/checkout/intents", { data: {} }),
+      request.get("/api/payments/buyer/transactions"),
+      request.get("/api/payments/seller/balance"),
+      request.get("/api/payments/operator/providers/readiness"),
     ];
 
     for (const response of await Promise.all(protectedRequests)) {
@@ -29,23 +24,37 @@ test.describe("payment API security boundaries", () => {
   });
 
   test("unsigned provider webhooks are rejected", async ({ request }) => {
-    const stripe = await request.post("/api/stripe/webhook", {
+    const stripe = await request.post("/api/webhooks/payments/stripe", {
       headers: { "content-type": "application/json" },
       data: { type: "checkout.session.completed", data: { object: {} } },
     });
-    expect(stripe.status()).toBe(400);
+    expect(stripe.status()).toBe(401);
 
-    const paypal = await request.post("/api/paypal/webhook", {
+    const paypal = await request.post("/api/webhooks/payments/paypal", {
       headers: { "content-type": "application/json" },
       data: { event_type: "PAYMENT.CAPTURE.COMPLETED", resource: { id: "capture_untrusted" } },
     });
-    expect([400, 500]).toContain(paypal.status());
+    expect(paypal.status()).toBe(401);
 
-    const razorpay = await request.post("/api/razorpay/webhook", {
+    const razorpay = await request.post("/api/webhooks/payments/razorpay", {
       headers: { "content-type": "application/json" },
       data: { event: "payment.captured", payload: { payment: { entity: { id: "pay_untrusted", order_id: "order_untrusted", status: "captured" } } } },
     });
-    expect([400, 500]).toContain(razorpay.status());
+    expect(razorpay.status()).toBe(401);
+  });
+
+  test("webhook routing rejects unknown providers and invalid content types", async ({ request }) => {
+    const unknown = await request.post("/api/webhooks/payments/not-a-provider", {
+      headers: { "content-type": "application/json" },
+      data: {},
+    });
+    expect(unknown.status()).toBe(404);
+
+    const invalidContentType = await request.post("/api/webhooks/payments/stripe", {
+      headers: { "content-type": "text/plain" },
+      data: "{}",
+    });
+    expect(invalidContentType.status()).toBe(415);
   });
 
   test("a browser redirect URL cannot confirm payment", async ({ request }) => {

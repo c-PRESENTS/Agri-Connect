@@ -14,6 +14,17 @@ export type AuditAction =
   | "payment.stripe_verified"
   | "payment.paypal_verified"
   | "payment.razorpay_verified"
+  | "payment.delivery_confirmed"
+  | "payment.payout_retry_scheduled"
+  | "payment.refund_requested"
+  | "payment.dispute_opened"
+  | "payment.dispute_resolved"
+  | "payment.reconciliation_requested"
+  | "payment.recovery_case_updated"
+  | "payment.provider_configuration_updated"
+  | "payment.provider_activation_requested"
+  | "payment.provider_suspended"
+  | "payment.recovery_drill_run"
   | "seller.product_created"
   | "seller.product_updated"
   | "seller.product_deleted"
@@ -26,7 +37,7 @@ export type AuditAction =
 type AuditEvent = {
   action: AuditAction;
   actorId?: string;
-  targetType: "cart" | "order" | "product" | "dashboard" | "student_access" | "student_support";
+  targetType: "cart" | "order" | "product" | "dashboard" | "protected_allocation" | "payment_dispute" | "payment_attempt" | "payment_provider" | "payment_recovery_case" | "student_access" | "student_support";
   targetId?: string;
   outcome?: "success" | "denied" | "failed";
 };

@@ -1,5 +1,8 @@
 import type { PaymentProviderAdapter, ProviderName } from "./types";
 import { MockPaymentAdapter } from "./providers/mock";
+import { StripePaymentAdapter } from "./providers/stripe";
+import { PayPalPaymentAdapter } from "./providers/paypal";
+import { RazorpayPaymentAdapter } from "./providers/razorpay";
 
 export class ProviderRegistry {
   private readonly adapters = new Map<ProviderName, PaymentProviderAdapter>();
@@ -24,3 +27,6 @@ export class ProviderRegistry {
 
 export const providerRegistry = new ProviderRegistry();
 providerRegistry.register(new MockPaymentAdapter());
+providerRegistry.register(new StripePaymentAdapter());
+providerRegistry.register(new PayPalPaymentAdapter());
+providerRegistry.register(new RazorpayPaymentAdapter());

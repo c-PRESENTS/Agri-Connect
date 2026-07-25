@@ -48,6 +48,7 @@ export const protectedAllocations = pgTable(
     grossMinor: bigint("gross_minor", { mode: "bigint" }).notNull(),
     platformFeeMinor: bigint("platform_fee_minor", { mode: "bigint" }).notNull(),
     sellerNetMinor: bigint("seller_net_minor", { mode: "bigint" }).notNull(),
+    refundedMinor: bigint("refunded_minor", { mode: "bigint" }).notNull().default(sql`0`),
     status: varchar("status", { length: 40 }).notNull(),
     deliveryVerifiedAt: timestamp("delivery_verified_at", { withTimezone: true }),
     releaseDueAt: timestamp("release_due_at", { withTimezone: true }),
@@ -55,22 +56,35 @@ export const protectedAllocations = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [uniqueIndex("protected_allocations_order_seller_idx").on(table.orderId, table.sellerId)],
+  (table) => [
+    uniqueIndex("protected_allocations_order_seller_idx").on(table.orderId, table.sellerId),
+    index("protected_allocations_seller_status_idx").on(table.sellerId, table.status, table.createdAt),
+  ],
 );
 
-export const sellerTransfers = pgTable("seller_transfers", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  allocationId: varchar("allocation_id").notNull().references(() => protectedAllocations.id),
-  provider: varchar("provider", { length: 20 }).notNull(),
-  currency: varchar("currency", { length: 3 }).notNull(),
-  amountMinor: bigint("amount_minor", { mode: "bigint" }).notNull(),
-  status: varchar("status", { length: 40 }).notNull(),
-  providerTransferId: varchar("provider_transfer_id", { length: 255 }),
-  idempotencyReference: varchar("idempotency_reference", { length: 160 }).notNull(),
-  failureCode: varchar("failure_code", { length: 120 }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const sellerTransfers = pgTable(
+  "seller_transfers",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    allocationId: varchar("allocation_id").notNull().references(() => protectedAllocations.id),
+    provider: varchar("provider", { length: 20 }).notNull(),
+    currency: varchar("currency", { length: 3 }).notNull(),
+    amountMinor: bigint("amount_minor", { mode: "bigint" }).notNull(),
+    status: varchar("status", { length: 40 }).notNull(),
+    providerTransferId: varchar("provider_transfer_id", { length: 255 }),
+    idempotencyReference: varchar("idempotency_reference", { length: 160 }).notNull(),
+    failureCode: varchar("failure_code", { length: 120 }),
+    reversedMinor: bigint("reversed_minor", { mode: "bigint" }).notNull().default(sql`0`),
+    providerReversalId: varchar("provider_reversal_id", { length: 255 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("seller_transfers_allocation_idx").on(table.allocationId),
+    uniqueIndex("seller_transfers_idempotency_idx").on(table.provider, table.idempotencyReference),
+    index("seller_transfers_status_updated_idx").on(table.status, table.updatedAt),
+  ],
+);
 
 export const paymentDisputes = pgTable("payment_disputes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -80,9 +94,15 @@ export const paymentDisputes = pgTable("payment_disputes", {
   status: varchar("status", { length: 40 }).notNull(),
   reason: varchar("reason", { length: 120 }).notNull(),
   resolutionData: jsonb("resolution_data"),
+  responseDueAt: timestamp("response_due_at", { withTimezone: true }),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  providerCaseId: varchar("provider_case_id", { length: 255 }),
+  providerCaseStatus: varchar("provider_case_status", { length: 60 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index("payment_disputes_status_created_idx").on(table.status, table.createdAt),
+]);
 
 export const disputeEvents = pgTable("dispute_events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -99,8 +119,33 @@ export const disputeEvidence = pgTable("dispute_evidence", {
   submittedBy: varchar("submitted_by").notNull().references(() => users.id),
   evidenceType: varchar("evidence_type", { length: 80 }).notNull(),
   storageReference: text("storage_reference").notNull(),
+  evidenceData: jsonb("evidence_data"),
+  contentHash: varchar("content_hash", { length: 128 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const providerChargebacks = pgTable(
+  "provider_chargebacks",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    paymentAttemptId: varchar("payment_attempt_id").notNull().references(() => paymentAttempts.id),
+    provider: varchar("provider", { length: 20 }).notNull(),
+    providerCaseId: varchar("provider_case_id", { length: 255 }).notNull(),
+    status: varchar("status", { length: 60 }).notNull(),
+    reason: varchar("reason", { length: 120 }),
+    amountMinor: bigint("amount_minor", { mode: "bigint" }).notNull(),
+    currency: varchar("currency", { length: 3 }).notNull(),
+    evidenceDueAt: timestamp("evidence_due_at", { withTimezone: true }),
+    providerData: jsonb("provider_data"),
+    openedAt: timestamp("opened_at", { withTimezone: true }).notNull(),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("provider_chargebacks_case_idx").on(table.provider, table.providerCaseId),
+  ],
+);
 
 export const paymentProviderConfigs = pgTable("payment_provider_configs", {
   provider: varchar("provider", { length: 20 }).primaryKey(),
@@ -114,7 +159,9 @@ export const paymentProviderConfigs = pgTable("payment_provider_configs", {
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   suspensionReason: text("suspension_reason"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index("payment_provider_configs_review_idx").on(table.status, table.nextReviewAt, table.expiresAt),
+]);
 
 export const paymentProviderCapabilities = pgTable(
   "payment_provider_capabilities",
@@ -151,16 +198,25 @@ export const paymentJobs = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [index("payment_jobs_claim_idx").on(table.status, table.availableAt, table.leaseExpiresAt)],
+  (table) => [
+    index("payment_jobs_claim_idx").on(table.status, table.availableAt, table.leaseExpiresAt),
+    index("payment_jobs_retention_idx").on(table.status, table.updatedAt),
+  ],
 );
 
-export const ledgerTransactions = pgTable("ledger_transactions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  referenceType: varchar("reference_type", { length: 60 }).notNull(),
-  referenceId: varchar("reference_id").notNull(),
-  currency: varchar("currency", { length: 3 }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const ledgerTransactions = pgTable(
+  "ledger_transactions",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    referenceType: varchar("reference_type", { length: 60 }).notNull(),
+    referenceId: varchar("reference_id").notNull(),
+    currency: varchar("currency", { length: 3 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("ledger_transactions_reference_idx").on(table.referenceType, table.referenceId),
+  ],
+);
 
 export const ledgerEntries = pgTable("ledger_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -189,7 +245,9 @@ export const operatorRecoveryCases = pgTable("operator_recovery_cases", {
   assignedTo: varchar("assigned_to").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index("operator_recovery_status_created_idx").on(table.status, table.createdAt),
+]);
 
 export const providerHealthEvents = pgTable("provider_health_events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -199,7 +257,14 @@ export const providerHealthEvents = pgTable("provider_health_events", {
   eventType: varchar("event_type", { length: 100 }).notNull(),
   details: jsonb("details"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index("provider_health_events_review_idx").on(
+    table.provider,
+    table.trusted,
+    table.eventType,
+    table.createdAt,
+  ),
+]);
 
 export type PaymentJob = typeof paymentJobs.$inferSelect;
 export type NewPaymentJob = typeof paymentJobs.$inferInsert;

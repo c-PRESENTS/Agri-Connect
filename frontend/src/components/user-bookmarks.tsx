@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -383,6 +383,11 @@ export function UserBookmarks() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>{editing ? t("nav.edit") + " Site" : t("home.add_site")}</DialogTitle>
+            <DialogDescription>
+              {editing
+                ? "Update the bookmark name or destination."
+                : "Add a website or an AgriConnect page to your bookmarks."}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">

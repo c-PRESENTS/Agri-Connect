@@ -15,6 +15,12 @@ import { registerDashboardRoutes } from "./dashboard/routes";
 import { registerStudentRoutes } from "./student/routes";
 import { registerPaymentRoutes } from "./payments/routes";
 import { registerPaymentWebhookRoutes } from "./payments/webhooks";
+import { registerSellerPaymentRoutes } from "./payments/seller-routes";
+import { registerSettlementRoutes } from "./payments/settlement-routes";
+import { registerRefundRoutes } from "./payments/refund-routes";
+import { registerDisputeRoutes } from "./payments/dispute-routes";
+import { registerPaymentDashboardRoutes } from "./payments/dashboard-routes";
+import { registerPaymentOperatorRoutes } from "./payments/operator-routes";
 
 export interface BackendModuleDeps {
   getUserId(req: Request): string | undefined;
@@ -35,6 +41,12 @@ export function registerBackendModules(app: Express, deps: BackendModuleDeps): v
   });
   registerCommerceRoutes(app, { getUserId: deps.getUserId });
   registerPaymentRoutes(app, { getUserId: deps.getUserId });
+  registerSellerPaymentRoutes(app, { getUserId: deps.getUserId });
+  registerSettlementRoutes(app, { getUserId: deps.getUserId });
+  registerRefundRoutes(app, { getUserId: deps.getUserId });
+  registerDisputeRoutes(app, { getUserId: deps.getUserId });
+  registerPaymentDashboardRoutes(app, { getUserId: deps.getUserId });
+  registerPaymentOperatorRoutes(app, { getUserId: deps.getUserId });
   registerPaymentWebhookRoutes(app);
   registerReviewsRoutes(app, { getUserId: deps.getUserId });
   registerFarmerRoutes(app);

@@ -1,10 +1,35 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
-function credentials() {
+export function getRazorpayCredentials() {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
   if (!keyId || !keySecret) throw new Error("Razorpay test credentials are not configured");
   return { keyId, keySecret };
+}
+
+export async function razorpayApi<T>(
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  const { keyId, keySecret } = getRazorpayCredentials();
+  const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+  const response = await fetch(`https://api.razorpay.com${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/json",
+      ...(init.headers ?? {}),
+    },
+  });
+  if (!response.ok) {
+    const error = new Error(`Razorpay API request failed (${response.status})`);
+    Object.assign(error, {
+      providerStatus: response.status,
+      outcomeUnknown: response.status >= 500,
+    });
+    throw error;
+  }
+  return response.json() as Promise<T>;
 }
 
 function signature(value: string, secret: string): string {
@@ -18,7 +43,7 @@ function matches(expected: string, received: string): boolean {
 }
 
 export async function createRazorpayOrder(orderId: string, amount: number, currency = "GBP") {
-  const { keyId, keySecret } = credentials();
+  const { keyId, keySecret } = getRazorpayCredentials();
   const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
   const response = await fetch("https://api.razorpay.com/v1/orders", {
     method: "POST",
@@ -30,7 +55,7 @@ export async function createRazorpayOrder(orderId: string, amount: number, curre
 }
 
 export async function getRazorpayPayment(paymentId: string) {
-  const { keyId, keySecret } = credentials();
+  const { keyId, keySecret } = getRazorpayCredentials();
   const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
   const response = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}`, { headers: { Authorization: `Basic ${auth}` } });
   if (!response.ok) throw new Error("Razorpay payment lookup failed");
@@ -38,7 +63,7 @@ export async function getRazorpayPayment(paymentId: string) {
 }
 
 export async function refundRazorpayPayment(paymentId: string): Promise<string> {
-  const { keyId, keySecret } = credentials();
+  const { keyId, keySecret } = getRazorpayCredentials();
   const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
   const response = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}/refund`, {
     method: "POST",
@@ -51,7 +76,7 @@ export async function refundRazorpayPayment(paymentId: string): Promise<string> 
 }
 
 export function verifyRazorpayPayment(orderId: string, paymentId: string, receivedSignature: string): boolean {
-  return matches(signature(`${orderId}|${paymentId}`, credentials().keySecret), receivedSignature);
+  return matches(signature(`${orderId}|${paymentId}`, getRazorpayCredentials().keySecret), receivedSignature);
 }
 
 export function verifyRazorpayWebhook(rawBody: Buffer, receivedSignature: string | undefined): boolean {

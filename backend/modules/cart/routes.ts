@@ -204,6 +204,7 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
 
   app.post("/api/cart/shipping-quotes", isAuthenticated, async (req, res) => {
     try {
+      await deps.mergeGuestCartIfNeeded(req);
       const userId = deps.getUserId(req)!;
       const { drop } = cartShippingQuotesRequestSchema.parse(req.body);
       const cart = await storage.getCart(userId);

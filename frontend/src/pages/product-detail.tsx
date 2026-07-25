@@ -107,13 +107,6 @@ function getRatingBreakdown(rating: number, count: number) {
   }));
 }
 
-const ADDITIONAL_IMAGES = [
-  "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1573246123716-6b1782bfc499?w=400&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=400&h=400&fit=crop",
-];
-
 export default function ProductDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
@@ -233,7 +226,7 @@ export default function ProductDetailPage() {
     ? resolveProductImageForProduct(product).src
     : "";
   const allImages = product
-    ? [fallbackProductImage, ...ADDITIONAL_IMAGES.slice(0, 3)]
+    ? [fallbackProductImage]
     : [];
 
   const reviews = product ? generateReviews(product) : [];
@@ -377,22 +370,24 @@ export default function ProductDetailPage() {
             </motion.div>
 
             {/* Thumbnails */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {allImages.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  className={`flex-none w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${i === selectedImage ? "border-primary shadow-md shadow-primary/20" : "border-border/40 hover:border-primary/40"}`}
-                >
-                  <img
-                    src={getImg(i)}
-                    alt={`View ${i + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={() => setImageError(p => ({ ...p, [i]: true }))}
-                  />
-                </button>
-              ))}
-            </div>
+            {allImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {allImages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(i)}
+                    className={`flex-none w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${i === selectedImage ? "border-primary shadow-md shadow-primary/20" : "border-border/40 hover:border-primary/40"}`}
+                  >
+                    <img
+                      src={getImg(i)}
+                      alt={`View ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={() => setImageError(p => ({ ...p, [i]: true }))}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Trust badges */}
             <div className="grid grid-cols-3 gap-2 mt-2">

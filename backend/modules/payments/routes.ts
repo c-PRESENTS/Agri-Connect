@@ -11,6 +11,9 @@ import { paymentRuntimeConfig, paymentCurrencySchema } from "../../payments/conf
 import { paymentService } from "../../payments/payment-service";
 import { pricingService } from "../../payments/pricing-service";
 import { reconciliationService } from "../../payments/reconciliation-service";
+import { paymentOperationsRepository } from "../../repositories/payment-operations-repository";
+import { paymentStateService } from "../../payments/payment-state-service";
+import { providerRegistry } from "../../payments/provider-registry";
 import type { Order, OrderItem } from "@shared/schema";
 import type { ShipServiceType } from "@shared/schema";
 import { calculateQuotesFromCoords, geocodePostcode, resolveSellerPickupCoordinates } from "../../shipping/quote-engine";
@@ -41,9 +44,14 @@ const quoteSchema = z.object({
 
 const intentSchema = z.object({
   quoteId: z.string().uuid(),
-  provider: z.literal("mock"),
+  provider: z.enum(["stripe", "paypal", "razorpay", "mock"]),
   deliveryAddress: z.string().min(3).max(500),
   scenario: z.enum(["success", "failure", "cancelled", "requires_action", "pending", "timeout"]).optional(),
+});
+const clientConfirmationSchema = z.object({
+  providerPaymentId: z.string().min(1).max(255),
+  providerSessionId: z.string().min(1).max(255),
+  signature: z.string().min(1).max(1024),
 });
 
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -55,16 +63,22 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
     const cart = await storage.getCart(userId);
     const sellerIds = Array.from(new Set(cart.map((item) => item.product.farmerId)));
     const currency = paymentCurrencySchema.parse(req.query.currency ?? "GBP");
-    const mock = await eligibilityService.evaluate("mock", currency, sellerIds, sellerIds.length);
+    const methods = await Promise.all(
+      (["mock", "stripe", "paypal", "razorpay"] as const).map((provider) =>
+        eligibilityService.evaluate(
+          provider,
+          currency,
+          sellerIds,
+          sellerIds.length,
+          { allowUiPreview: true },
+        ),
+      ),
+    );
     res.json({
       currency,
       protectionLabel: "Protected payment",
-      methods: [
-        mock,
-        { provider: "stripe", eligible: false, reasons: ["provider_not_activated"] },
-        { provider: "paypal", eligible: false, reasons: ["provider_not_activated"] },
-        { provider: "razorpay", eligible: false, reasons: ["provider_not_activated", ...(currency === "INR" ? [] : ["currency_not_supported"]) ] },
-      ],
+      uiPreviewEnabled: paymentRuntimeConfig.uiPreviewEnabled,
+      methods,
     });
   });
 
@@ -163,7 +177,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         sellerCount: sellerIds.length,
       });
     } catch (error) {
-      res.status(400).json({ error: error instanceof Error ? error.message : "Unable to create checkout quote" });
+      res.status(400).json({ error: "Unable to create checkout quote" });
     }
   });
 
@@ -226,7 +240,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         total: Number(quote.totalMinor) / 100,
         deliveryAddress: input.deliveryAddress,
         deliveryMethod: quoteData.deliveryMethod ?? "standard",
-        paymentMethod: "card",
+        paymentMethod: input.provider === "mock" ? "card" : input.provider,
         paymentStatus: "pending",
         shippingChoices: quoteData.shippingChoices,
         deliveryAddressStruct: quoteData.deliveryAddressStruct,
@@ -242,33 +256,117 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         requestFingerprint: hash({ input, quoteId: quote.id }),
         expiresAt: new Date(Date.now() + paymentRuntimeConfig.reservationTtlMinutes * 60_000),
       });
-      const result = await paymentService.executeProviderCall(input.provider, {
-        attemptId: records.attemptId,
-        orderId: order.id,
-        idempotencyReference,
-        amount: { currency: quote.currency as "GBP" | "INR", amountMinor: quote.totalMinor.toString() },
-        sellerIds,
-        allocationCount: sellerIds.length,
-        returnBaseUrl: paymentRuntimeConfig.returnBaseUrl ?? `${req.protocol}://${req.get("host")}`,
-        scenario: input.scenario,
-      }, `http:${process.pid}`);
+      const sellerAccounts =
+        input.provider === "mock"
+          ? []
+          : await paymentOperationsRepository.getSellerPaymentAccounts(input.provider, sellerIds);
+      const accountBySeller = new Map(
+        sellerAccounts.map((account) => [account.sellerId, account.providerAccountId]),
+      );
+      const sellerSubtotals = sellerIds.map((sellerId) => ({
+        sellerId,
+        subtotalMinor: BigInt(
+          Math.round(
+            cart
+              .filter((item) => item.product.farmerId === sellerId)
+              .reduce((sum, item) => sum + item.product.price * item.quantity, 0) * 100,
+          ),
+        ),
+      }));
+      const subtotalTotal = sellerSubtotals.reduce(
+        (total, allocation) => total + allocation.subtotalMinor,
+        BigInt(0),
+      );
+      let allocatedTotal = BigInt(0);
+      let allocatedFee = BigInt(0);
+      const allocations = sellerSubtotals.map((allocation, index) => {
+        const last = index === sellerSubtotals.length - 1;
+        const amountMinor = last
+          ? quote.totalMinor - allocatedTotal
+          : (quote.totalMinor * allocation.subtotalMinor) / subtotalTotal;
+        const platformFeeMinor = last
+          ? quote.platformFeeMinor - allocatedFee
+          : (quote.platformFeeMinor * allocation.subtotalMinor) / subtotalTotal;
+        allocatedTotal += amountMinor;
+        allocatedFee += platformFeeMinor;
+        return {
+          sellerId: allocation.sellerId,
+          providerAccountId: accountBySeller.get(allocation.sellerId) ?? "",
+          amount: {
+            currency: quote.currency as "GBP" | "INR",
+            amountMinor: amountMinor.toString(),
+          },
+          platformFeeMinor: platformFeeMinor.toString(),
+        };
+      });
+      let result;
+      try {
+        result = await paymentService.executeProviderCall(input.provider, {
+          attemptId: records.attemptId,
+          orderId: order.id,
+          idempotencyReference,
+          amount: { currency: quote.currency as "GBP" | "INR", amountMinor: quote.totalMinor.toString() },
+          sellerIds,
+          allocationCount: sellerIds.length,
+          allocations,
+          returnBaseUrl: paymentRuntimeConfig.returnBaseUrl ?? `${req.protocol}://${req.get("host")}`,
+          scenario: input.scenario,
+        }, `http:${process.pid}`);
+      } catch (error) {
+        const failedAttempt = await paymentRepository.getAttempt(records.attemptId);
+        if (
+          failedAttempt?.providerCallStatus === "failed" &&
+          failedAttempt.paymentStatus === "failed"
+        ) {
+          const persistedOrder = await storage.getOrder(order.id);
+          if (persistedOrder) {
+            await storage.restoreStockForOrder(persistedOrder);
+            await storage.updateOrderStatus(
+              order.id,
+              "cancelled",
+              "Payment provider could not create the payment",
+            );
+          }
+        }
+        throw error;
+      }
       res.status(201).json({ orderId: order.id, attemptId: records.attemptId, nextAction: result.nextAction });
     } catch (error) {
-      res.status(400).json({ error: error instanceof Error ? error.message : "Unable to create checkout intent" });
+      res.status(400).json({ error: "Unable to create checkout intent" });
     }
   });
 
   app.get("/api/payments/attempts/:attemptId", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    let attempt = await paymentRepository.getAttempt(req.params.attemptId);
-    if (!attempt) return res.status(404).json({ error: "Payment attempt not found" });
-    const order = await storage.getOrder(attempt.orderId);
-    if (!order || order.buyerId !== userId) return res.status(404).json({ error: "Payment attempt not found" });
-    if (!["succeeded", "failed", "cancelled", "refunded"].includes(attempt.paymentStatus)) {
-      await reconciliationService.reconcileAttempt(attempt.id);
-      attempt = await paymentRepository.getAttempt(attempt.id);
+    try {
+      const userId = deps.getUserId(req)!;
+      let attempt = await paymentRepository.getAttempt(req.params.attemptId);
+      if (!attempt) return res.status(404).json({ error: "Payment attempt not found" });
+      const order = await storage.getOrder(attempt.orderId);
+      if (!order || order.buyerId !== userId) return res.status(404).json({ error: "Payment attempt not found" });
+      if (!["succeeded", "failed", "cancelled", "refunded"].includes(attempt.paymentStatus)) {
+        const attemptId = attempt.id;
+        try {
+          await reconciliationService.reconcileAttempt(attemptId);
+          const refreshedAttempt = await paymentRepository.getAttempt(attemptId);
+          if (refreshedAttempt) attempt = refreshedAttempt;
+        } catch (error) {
+          // A provider or reconciliation outage must not terminate the API
+          // process or turn an unknown payment into a failed payment. Return
+          // the last server-authoritative state and let the polling client retry.
+          console.error("[payments] reconciliation deferred", {
+            attemptId,
+            errorCode: error instanceof Error ? error.name : "unknown_error",
+          });
+        }
+      }
+      return res.json({ attempt, order: await storage.getOrder(order.id) });
+    } catch (error) {
+      console.error("[payments] status lookup failed", {
+        attemptId: req.params.attemptId,
+        errorCode: error instanceof Error ? error.name : "unknown_error",
+      });
+      return res.status(500).json({ error: "Payment status is temporarily unavailable" });
     }
-    res.json({ attempt, order: await storage.getOrder(order.id) });
   });
 
   app.post("/api/payments/attempts/:attemptId/cancel", isAuthenticated, async (req, res) => {
@@ -277,7 +375,15 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
     const order = attempt ? await storage.getOrder(attempt.orderId) : undefined;
     if (!attempt || !order || order.buyerId !== userId) return res.status(404).json({ error: "Payment attempt not found" });
     const cancelled = await paymentRepository.cancelAttempt(attempt.id);
-    if (!cancelled) return res.status(409).json({ error: "Payment attempt can no longer be cancelled" });
+    if (!cancelled) {
+      await reconciliationService.reconcileAttempt(attempt.id);
+      const current = await paymentRepository.getAttempt(attempt.id);
+      if (!current || !["failed", "cancelled"].includes(current.paymentStatus)) {
+        return res.status(409).json({
+          error: "Provider cancellation is not yet verified. Payment status is still being checked.",
+        });
+      }
+    }
     await storage.restoreStockForOrder(order);
     await storage.updateOrderStatus(order.id, "cancelled", "Payment cancelled by buyer");
     res.json(cancelled);
@@ -285,5 +391,78 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
 
   app.post("/api/payments/attempts/:attemptId/retry", isAuthenticated, async (_req, res) => {
     res.status(409).json({ error: "A fresh quote is required before retrying", code: "quote_required" });
+  });
+
+  app.post(
+    "/api/payments/attempts/:attemptId/client-confirmation",
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const userId = deps.getUserId(req)!;
+        const confirmation = clientConfirmationSchema.parse(req.body);
+        let attempt = await paymentRepository.getAttempt(req.params.attemptId);
+        const order = attempt ? await storage.getOrder(attempt.orderId) : undefined;
+        if (!attempt || !order || order.buyerId !== userId) {
+          return res.status(404).json({ error: "Payment attempt not found" });
+        }
+        if (
+          attempt.providerSessionId !== confirmation.providerSessionId ||
+          attempt.provider !== "razorpay"
+        ) {
+          return res.status(409).json({ error: "Payment confirmation does not match the attempt" });
+        }
+        const adapter = providerRegistry.get("razorpay");
+        if (!adapter.verifyClientConfirmation) {
+          return res.status(503).json({ error: "Provider confirmation is unavailable" });
+        }
+        const payment = await adapter.verifyClientConfirmation(confirmation);
+        attempt =
+          (await paymentRepository.replaceProviderPaymentReference(
+            attempt.id,
+            payment.providerPaymentId,
+          )) ?? attempt;
+        await paymentStateService.applyVerifiedPayment(attempt, payment);
+        return res.json({ attemptId: attempt.id, paymentStatus: payment.status });
+      } catch (error) {
+        return res.status(400).json({
+          error: "Payment confirmation failed",
+        });
+      }
+    },
+  );
+
+  app.get("/api/payments/returns/:provider", async (req, res) => {
+    const provider = z.enum(["paypal"]).safeParse(req.params.provider);
+    const attemptId = z.string().uuid().safeParse(req.query.attemptId);
+    const token = z.string().min(1).safeParse(req.query.token);
+    const returnBase = paymentRuntimeConfig.returnBaseUrl ?? `${req.protocol}://${req.get("host")}`;
+    if (!provider.success || !attemptId.success || !token.success) {
+      return res.redirect(`${returnBase}/payment/failed?reason=invalid_provider_return`);
+    }
+    const attempt = await paymentRepository.getAttempt(attemptId.data);
+    if (
+      !attempt ||
+      attempt.provider !== provider.data ||
+      attempt.providerSessionId !== token.data
+    ) {
+      return res.redirect(`${returnBase}/payment/failed?reason=provider_return_mismatch`);
+    }
+    try {
+      const adapter = providerRegistry.get(provider.data);
+      if (!adapter.completeCheckout) throw new Error("Provider return is not supported");
+      const payment = await adapter.completeCheckout(
+        token.data,
+        attempt.idempotencyReference,
+      );
+      await paymentStateService.applyVerifiedPayment(attempt, payment);
+      return res.redirect(
+        `${returnBase}/payment/${encodeURIComponent(attempt.id)}/processing`,
+      );
+    } catch {
+      await paymentRepository.markReconciliationPending(attempt.id);
+      return res.redirect(
+        `${returnBase}/payment/${encodeURIComponent(attempt.id)}/processing`,
+      );
+    }
   });
 }

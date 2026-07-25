@@ -73,9 +73,10 @@ export function registerAIRoutes(app: Express, deps: AIRouteDeps): void {
         return res.status(400).json({ error: "Message too long (max 1000 characters)" });
       }
       if (!openai) {
-        return res.status(503).json({
-          error: "AI chat provider is not configured or unavailable",
-          code: "AI_CHAT_UNAVAILABLE",
+        return res.json({
+          available: false,
+          reply:
+            "The AI assistant is not configured yet. Marketplace browsing, seller tools, and the Farmers Help knowledge guides remain available.",
         });
       }
 
@@ -136,7 +137,7 @@ GUIDELINES:
 
       const reply = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
       
-      res.json({ reply });
+      res.json({ reply, available: true });
     } catch (error) {
       console.error("AI Chat error:", error);
       res.status(500).json({ error: "Failed to process chat message" });

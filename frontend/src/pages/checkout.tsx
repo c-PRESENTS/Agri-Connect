@@ -24,6 +24,7 @@ import { TopNavigation } from "@/components/top-navigation";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { PaymentMethodSelector, type CheckoutPaymentMethod } from "@/components/payments/payment-method-selector";
 import { usePaymentCheckout } from "@/hooks/use-payment-checkout";
+import { followCheckoutNextAction } from "@/lib/payment-client";
 
 interface CartShippingGroup {
   farmerId: string;
@@ -51,7 +52,7 @@ const STEPS = [
 export default function CheckoutPage() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
 
   const [step, setStep] = useState(1);
@@ -70,8 +71,12 @@ export default function CheckoutPage() {
   // farmerId -> { partnerId, service }
   const [shippingChoices, setShippingChoices] = useState<Record<string, { partnerId: string; service: ShipServiceType }>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>("mock");
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>("manual");
+  const [paymentPreviewOnly, setPaymentPreviewOnly] = useState(false);
   const protectedCheckoutMutation = usePaymentCheckout();
+  const checkoutCurrency: "GBP" | "INR" =
+    shippingGroups?.[0]?.quotes[0]?.currency === "INR" ? "INR" : "GBP";
+  const currencySymbol = checkoutCurrency === "INR" ? "₹" : "£";
 
   const { data: cart, isLoading: isCartLoading, isError: isCartError, refetch: refetchCart } = useQuery<Cart>({
     queryKey: ["/api/cart"],
@@ -91,6 +96,12 @@ export default function CheckoutPage() {
 
   const cartQuotesMutation = useMutation({
     mutationFn: async () => {
+      if (!isAuthenticated) {
+        throw new Error("Please sign in before requesting delivery quotes");
+      }
+      if (!cart?.items.length) {
+        throw new Error("Your cart is empty");
+      }
       const res = await apiRequest("POST", "/api/cart/shipping-quotes", {
         drop: {
           name: address.fullName,
@@ -182,6 +193,11 @@ export default function CheckoutPage() {
     try {
       const result = await protectedCheckoutMutation.mutateAsync({
         deliveryAddress,
+        provider:
+          paymentMethod === "manual" || paymentPreviewOnly
+            ? "mock"
+            : paymentMethod,
+        currency: checkoutCurrency,
         shippingChoices,
         deliveryAddressStruct: {
           name: address.fullName,
@@ -195,6 +211,8 @@ export default function CheckoutPage() {
           country: address.country,
         },
       });
+      const outcome = await followCheckoutNextAction(result.nextAction);
+      if (outcome === "navigated") return;
       navigate(`/payment/${result.attemptId}/processing`);
     } catch (error) {
       toast({
@@ -206,8 +224,17 @@ export default function CheckoutPage() {
   }
 
   useEffect(() => {
-    if (!isAuthenticated) navigate("/login");
-  }, [isAuthenticated]);
+    if (!isAuthLoading && !isAuthenticated) navigate("/login?next=%2Fcheckout");
+  }, [isAuthLoading, isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    setAddress((current) => ({
+      ...current,
+      fullName: current.fullName || user.name || "",
+      email: current.email || user.email || "",
+    }));
+  }, [user]);
 
   useEffect(() => {
     if (cart && cart.items.length === 0 && !manualOrderMutation.isSuccess) {
@@ -252,7 +279,7 @@ export default function CheckoutPage() {
     setStep((s) => Math.min(s + 1, 4));
   }
 
-  if (isCartLoading) {
+  if (isAuthLoading || isCartLoading) {
     return <div className="min-h-screen bg-background"><TopNavigation /><div className="flex justify-center py-32"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div></div>;
   }
 
@@ -509,7 +536,7 @@ export default function CheckoutPage() {
                                               <span>· {q.co2Kg.toFixed(2)}kg CO₂</span>
                                             </p>
                                           </div>
-                                          <span className="font-bold text-base flex-shrink-0">£{q.price.toFixed(2)}</span>
+                                          <span className="font-bold text-base flex-shrink-0">{currencySymbol}{q.price.toFixed(2)}</span>
                                         </label>
                                       );
                                     })}
@@ -533,7 +560,14 @@ export default function CheckoutPage() {
                         <h2 className="text-lg font-bold">{t("checkout.payment_title")}</h2>
                       </div>
                       <p className="text-xs text-muted-foreground mb-5">Select a payment method. Online orders are confirmed only after the provider is verified by AgriConnect.</p>
-                      <PaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} />
+                      <PaymentMethodSelector
+                        value={paymentMethod}
+                        onChange={(method, options) => {
+                          setPaymentMethod(method);
+                          setPaymentPreviewOnly(options?.previewOnly === true);
+                        }}
+                        currency={checkoutCurrency}
+                      />
                     </CardContent>
                   </Card>
                 )}
@@ -579,7 +613,7 @@ export default function CheckoutPage() {
                                       {q ? `${q.partnerName} · ${q.service.replace("_", " ")} · ${q.etaWindow}` : "—"}
                                     </p>
                                   </div>
-                                  <span className="font-bold text-sm flex-shrink-0">£{(q?.price ?? 0).toFixed(2)}</span>
+                                  <span className="font-bold text-sm flex-shrink-0">{currencySymbol}{(q?.price ?? 0).toFixed(2)}</span>
                                 </div>
                               );
                             })}
@@ -604,7 +638,7 @@ export default function CheckoutPage() {
                                   <p className="text-sm font-medium truncate">{item.product.name}</p>
                                   <p className="text-xs text-muted-foreground">x{item.quantity} · {item.product.farmerName}</p>
                                 </div>
-                                <span className="text-sm font-bold">£{(item.product.price * item.quantity).toFixed(2)}</span>
+                                <span className="text-sm font-bold">{currencySymbol}{(item.product.price * item.quantity).toFixed(2)}</span>
                               </div>
                             ))}
                           </div>
@@ -617,9 +651,13 @@ export default function CheckoutPage() {
                             <span className="font-semibold text-sm">{t("checkout.payment_title")}</span>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            {paymentMethod === "mock"
+                            {paymentPreviewOnly
+                              ? `${paymentMethod[0].toUpperCase()}${paymentMethod.slice(1)} UI preview. This demonstration uses the local mock provider and collects no money.`
+                              : paymentMethod === "mock"
                               ? "Protected payment in test mode. The order is confirmed only after server verification."
-                              : "Manual payment pending — no online payment is collected or protected."}
+                              : paymentMethod === "manual"
+                                ? "Manual payment pending — no online payment is collected or protected."
+                                : `${paymentMethod[0].toUpperCase()}${paymentMethod.slice(1)} protected payment. The order is confirmed only after server verification.`}
                           </p>
                         </div>
                       </div>
@@ -679,7 +717,7 @@ export default function CheckoutPage() {
                         <p className="text-xs font-medium truncate">{item.product.name}</p>
                         <p className="text-[10px] text-muted-foreground">x{item.quantity}</p>
                       </div>
-                      <span className="text-xs font-bold">£{((item.unitPrice ?? item.product.price) * item.quantity).toFixed(2)}</span>
+                      <span className="text-xs font-bold">{currencySymbol}{((item.unitPrice ?? item.product.price) * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -687,20 +725,20 @@ export default function CheckoutPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("cart.subtotal")}</span>
-                    <span>£{subtotal.toFixed(2)}</span>
+                    <span>{currencySymbol}{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("cart.delivery")}{shippingGroups && shippingGroups.length > 1 ? ` (${shippingGroups.length} ${t("logistics.parcels_tab").toLowerCase()})` : ""}</span>
-                    <span data-testid="text-shipping-total">{shippingTotal === 0 ? <span className="text-muted-foreground">—</span> : `£${shippingTotal.toFixed(2)}`}</span>
+                    <span data-testid="text-shipping-total">{shippingTotal === 0 ? <span className="text-muted-foreground">—</span> : `${currencySymbol}${shippingTotal.toFixed(2)}`}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("checkout.vat")}</span>
-                    <span>£{tax.toFixed(2)}</span>
+                    <span>{currencySymbol}{tax.toFixed(2)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-bold text-base">
                     <span>{t("cart.total")}</span>
-                    <span>£{total.toFixed(2)}</span>
+                    <span>{currencySymbol}{total.toFixed(2)}</span>
                   </div>
                 </div>
                 <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">

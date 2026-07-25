@@ -1,4 +1,6 @@
 import { paymentOperationsRepository } from "../repositories/payment-operations-repository";
+import { sellerAccountService } from "./seller-account-service";
+import { protectedFundsService } from "./protected-funds-service";
 
 export class CapabilityMonitor {
   async inspectProvider(provider: string, at = new Date()): Promise<"active" | "suspended"> {
@@ -17,6 +19,10 @@ export class CapabilityMonitor {
     for (const provider of providers) {
       await this.inspectProvider(provider.provider, at);
     }
+    await sellerAccountService.suspendStaleAccounts(at);
+    await protectedFundsService.recoverMissingAllocations();
+    await protectedFundsService.processDueAllocations();
+    await protectedFundsService.reconcilePendingPayouts();
   }
 
   start(intervalMinutes: number): () => void {

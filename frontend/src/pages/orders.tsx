@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Order, OrderStatus } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { resolveProductImageForOrderItem } from "@/lib/product-images";
+import { BuyerTransactionHistory } from "@/components/payments/buyer-transaction-history";
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: typeof Package }> = {
   pending:            { label: "Pending",            color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",     icon: Clock },
@@ -83,6 +84,7 @@ export default function OrdersPage() {
             <p className="text-sm text-muted-foreground">{orders.length} {t("orders.title").toLowerCase()}</p>
           </div>
         </div>
+        <BuyerTransactionHistory />
 
         {/* Filters */}
         <div className="flex gap-3 mb-6 flex-wrap">

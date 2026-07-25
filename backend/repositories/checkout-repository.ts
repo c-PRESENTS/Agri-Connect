@@ -1,12 +1,13 @@
 import { pool } from "../config/db";
 import type { Order } from "@shared/schema";
+import type { ProviderName } from "../payments/types";
 
 const toMinor = (value: number): string => Math.round(value * 100).toString();
 
 export interface CreateCheckoutRecordsInput {
   order: Order;
   quoteId: string;
-  provider: "mock";
+  provider: ProviderName;
   amountMinor: string;
   currency: "GBP" | "INR";
   idempotencyReference: string;

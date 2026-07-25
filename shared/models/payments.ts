@@ -77,6 +77,7 @@ export const paymentAttempts = pgTable(
     uniqueIndex("payment_attempts_provider_payment_idx").on(table.provider, table.providerPaymentId),
     index("payment_attempts_order_idx").on(table.orderId, table.createdAt),
     index("payment_attempts_reconciliation_idx").on(table.reconciliationStatus, table.leaseExpiresAt),
+    index("payment_attempts_status_updated_idx").on(table.paymentStatus, table.updatedAt),
   ],
 );
 
@@ -94,7 +95,11 @@ export const providerWebhookEvents = pgTable(
     receivedAt: timestamp("received_at", { withTimezone: true }).defaultNow().notNull(),
     processedAt: timestamp("processed_at", { withTimezone: true }),
   },
-  (table) => [uniqueIndex("provider_webhook_event_idx").on(table.provider, table.providerEventId)],
+  (table) => [
+    uniqueIndex("provider_webhook_event_idx").on(table.provider, table.providerEventId),
+    index("provider_webhook_status_idx").on(table.provider, table.processingStatus, table.receivedAt),
+    index("provider_webhook_events_retention_idx").on(table.processingStatus, table.receivedAt),
+  ],
 );
 
 export const apiIdempotencyKeys = pgTable(
@@ -110,7 +115,10 @@ export const apiIdempotencyKeys = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [uniqueIndex("api_idempotency_actor_idx").on(table.actorId, table.operation, table.idempotencyKey)],
+  (table) => [
+    uniqueIndex("api_idempotency_actor_idx").on(table.actorId, table.operation, table.idempotencyKey),
+    index("api_idempotency_keys_expiry_idx").on(table.expiresAt),
+  ],
 );
 
 export const paymentRefunds = pgTable(
@@ -133,6 +141,8 @@ export const paymentRefunds = pgTable(
   (table) => [
     uniqueIndex("payment_refunds_idempotency_idx").on(table.provider, table.idempotencyReference),
     uniqueIndex("payment_refunds_provider_idx").on(table.provider, table.providerRefundId),
+    index("payment_refunds_order_created_idx").on(table.orderId, table.createdAt),
+    index("payment_refunds_status_updated_idx").on(table.status, table.updatedAt),
   ],
 );
 
