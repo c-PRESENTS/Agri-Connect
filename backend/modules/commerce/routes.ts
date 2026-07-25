@@ -808,7 +808,9 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
                 ? normalizedRefund.providerRefundId
                 : undefined;
             refundRecordedByPaymentService = true;
-          } else if (existing.paymentProvider === "stripe" && existing.stripePaymentIntentId) {
+          if (existing.paymentStatus === "paid") {
+        try {
+          if (existing.paymentProvider === "stripe" && existing.stripePaymentIntentId) {
             const stripe = getStripe();
             const refund = await stripe.refunds.create(
               { payment_intent: existing.stripePaymentIntentId, reason: "requested_by_customer", metadata: { orderId: existing.id, userId } },
