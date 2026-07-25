@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { getLoginPath } from "@/lib/auth-utils";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function CartPage() {
@@ -133,7 +133,7 @@ export default function CartPage() {
                     >
                       <div className="h-20 w-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                         <img
-                          src={getProductImage(item.product.name, item.product.categoryId, "sm")}
+                          src={resolveProductImageForProduct(item.product).src}
                           alt={item.product.name}
                           loading="lazy"
                           className="h-full w-full object-cover"

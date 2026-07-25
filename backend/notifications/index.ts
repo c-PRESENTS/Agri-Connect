@@ -171,6 +171,8 @@ export function queueSupportTicketEmails(ticket: SupportTicket): void {
   notify({
     to: { email: supportInbox },
     subject: `New support request · ${ticket.topic}`,
-    body: `Ticket: ${ticket.id}\nFrom: ${ticket.name}\nTopic: ${ticket.topic}\n\n${ticket.message}`,
+    body: ticket.encryptedMessage
+      ? `Ticket: ${ticket.id}\nFrom: ${ticket.name}\nTopic: ${ticket.topic}\n\nThis ticket is end-to-end encrypted. Retrieve its ciphertext from the authenticated support inbox and decrypt it using the externally managed private key (${ticket.encryptedMessage.keyId}).`
+      : `Ticket: ${ticket.id}\nFrom: ${ticket.name}\nTopic: ${ticket.topic}\n\n${ticket.message}`,
   }).catch((error) => console.warn("[support-email] forwarding failed", (error as Error).message));
 }

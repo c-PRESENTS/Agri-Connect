@@ -1,4 +1,4 @@
-const CACHE_NAME = "agriconnect-static-v1";
+const CACHE_NAME = "agriconnect-static-v2";
 const APP_SHELL = [
   "/",
   "/manifest.json",
@@ -37,8 +37,24 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
-        .then((response) => response)
-        .catch(() => caches.match(request).then((cached) => cached || caches.match("/") || Response.error())),
+        .then(async (response) => {
+          if (response.ok) return response;
+          if (response.status < 500) return response;
+          return (await caches.match(request))
+            || (await caches.match("/"))
+            || new Response("AgriConnect is temporarily unavailable.", {
+              status: 503,
+              headers: { "Content-Type": "text/plain; charset=utf-8" },
+            });
+        })
+        .catch(async () =>
+          (await caches.match(request))
+          || (await caches.match("/"))
+          || new Response("AgriConnect is offline.", {
+            status: 503,
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+          }),
+        ),
     );
     return;
   }
@@ -55,7 +71,13 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         })
-        .catch(() => caches.match(request).then((fallback) => fallback || Response.error()));
+        .catch(async () =>
+          (await caches.match(request))
+          || new Response("Resource unavailable while offline.", {
+            status: 503,
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+          }),
+        );
     }),
   );
 });

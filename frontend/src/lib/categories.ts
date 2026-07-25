@@ -58,26 +58,37 @@ import carrotImg from "@assets/AgriConnect Images/stock_images/fresh_vegetables.
 import appleImg from "@assets/AgriConnect Images/stock_images/fresh_fruits.jpeg";
 import orangeImg from "@assets/AgriConnect Images/stock_images/orange.jpeg";
 import grapesImg from "@assets/AgriConnect Images/stock_images/grapes.jpeg";
+import bioProductsImg from "@assets/AgriConnect Images/Bio/neem-based-biopesticide.png";
+import commercialCropsImg from "@assets/AgriConnect Images/Commercial & Industry Crops/tea-leaves-orthodox.png";
+import dailyNeedsImg from "@assets/AgriConnect Images/daily_needs/organic-produce.png";
+import dietaryImg from "@assets/AgriConnect Images/Dietary/01_keto_almond_flour.png";
+import freshProduceImg from "@assets/AgriConnect Images/Fresh_Produce/07_bulk_mixed_vegetables_crate.png";
+import inputsToolsImg from "@assets/AgriConnect Images/Inputs & Tools/04_Drip_Irrigation_Kit.png";
+import marketImg from "@assets/AgriConnect Images/Market/Plants & Seeds.png";
+import modernFarmingImg from "@assets/AgriConnect Images/Modern Farming/hydroponic-nft-channel-system.png";
+import otherAgriculturalImg from "@assets/AgriConnect Images/Other Agricultural/green-fodder-napier.png";
+import processedImg from "@assets/AgriConnect Images/Processed/01_whole_spices.png";
+import specialtyImg from "@assets/AgriConnect Images/Specialty/01_organic_fruits.png";
 
 export const categoryImages: Record<string, string> = {
   // ── Top-level categories ──────────────────────────────────────────
-  "daily-needs": vegetablesImg,
-  "fresh-produce": fruitsImg,
+  "daily-needs": dailyNeedsImg,
+  "fresh-produce": freshProduceImg,
   "livestock": cowImg,
-  "inputs-tools": toolsImg,
-  "processed": picklesImg,
-  "specialty": organicImg,
-  "other-agri": cottonImg,
-  "supermarket": snacksImg,
+  "inputs-tools": inputsToolsImg,
+  "processed": processedImg,
+  "specialty": specialtyImg,
+  "other-agri": otherAgriculturalImg,
+  "supermarket": marketImg,
   "services": farmServicesImg,
   "government": governmentImg,
-  "modern-farming": hydroponicsImg,
-  "dietary": organicImg,
+  "modern-farming": modernFarmingImg,
+  "dietary": dietaryImg,
   "land-leasing": farmServicesImg,
   "logistics": machineryImg,
   "share-care": bakeryImg,
-  "commercial-crops": teaImg,
-  "bio-products": herbsImg,
+  "commercial-crops": commercialCropsImg,
+  "bio-products": bioProductsImg,
 
   // ── Daily Needs ──────────────────────────────────────────────────
   "grains": riceImg,
@@ -260,6 +271,113 @@ export const categoryImages: Record<string, string> = {
   "apples-pears": appleImg,
   "exotic-fruits": fruitsImg,
 };
+
+// Each populated asset subfolder represents one catalogue card. Resolve its
+// representative thumbnail from that exact folder so the navigation never
+// falls back to an unrelated stock photo.
+const categoryThumbnailAssets = import.meta.glob(
+  "../assets/AgriConnect Images/{Bio,Commercial & Industry Crops,daily_needs,Dietary,Fresh_Produce,Inputs & Tools,Market,Modern Farming,Other Agricultural,Processed,Specialty}/**/*.{avif,jpg,jpeg,png,webp}",
+  { eager: true, import: "default", query: "?url" },
+) as Record<string, string>;
+
+function thumbnailFromFolder(folder: string, fallback: string): string {
+  const prefix = `../assets/AgriConnect Images/${folder}/`;
+  return Object.entries(categoryThumbnailAssets).find(([path]) => path.startsWith(prefix))?.[1] ?? fallback;
+}
+
+const thumbnailFolderByCategoryId: Readonly<Record<string, string>> = {
+  grains: "daily_needs/food_grains & Cereals",
+  pulses: "daily_needs/Pulses & Lentils",
+  oils: "daily_needs/cooking oils",
+  vegetables: "daily_needs/Vegetables",
+  fruits: "daily_needs/Fruits",
+  dairy: "daily_needs/Dairy & Eggs",
+  meat: "daily_needs/Meat & Poultry",
+  fish: "daily_needs/Fish & SeaFood",
+  spices: "daily_needs/Spices & Condamients",
+  "organic-produce": "daily_needs/Organic Produce",
+  packaged: "daily_needs/Ready-to-Eat-Packaged",
+  bakery: "daily_needs/Bakery & Bread",
+  "wholesale-veg": "Fresh_Produce/Vegetables-WholeSale",
+  "wholesale-fruits": "Fresh_Produce/Fruits-WholeSale",
+  flowers: "Fresh_Produce/Flowers & Decorative",
+  seeds: "Inputs & Tools/Seeds & Planting Materials",
+  fertilizers: "Inputs & Tools/Fertilizers",
+  pesticides: "Inputs & Tools/Pesticides & Protection",
+  tools: "Inputs & Tools/Farming Tools & Equipments",
+  machinery: "Inputs & Tools/Farm Machinery",
+  irrigation: "Inputs & Tools/Irrigation Equipment",
+  "protective-gear": "Inputs & Tools/Protective Gear",
+  "animal-equipment": "Inputs & Tools/Animal Husbandry equpments",
+  sensors: "Inputs & Tools/Agricultural Sensors & IoT",
+  gis: "Inputs & Tools/GIS & Mapping Tools",
+  "remote-sensing": "Inputs & Tools/Remote Sensing & Drones",
+  precision: "Inputs & Tools/Precision Farming Equipment",
+  "precision-farming": "Modern Farming/Precision Farming Tools",
+  "spice-powders": "Processed/Spices & Powders",
+  pickles: "Processed/Pickles & Preserves",
+  "health-foods": "Processed/Health & Organic Foods",
+  beverages: "Processed/Beverages",
+  snacks: "Processed/Snacks & Ready Foods",
+  organic: "Specialty/Organic Products",
+  medicinal: "Specialty/Medicinal Plants & Herbs",
+  aromatic: "Specialty/Aromatic Plants",
+  mushrooms: "Specialty/Mushrooms",
+  honey: "Specialty/Honey & BEE Products",
+  "premium-crops": "Specialty/Premium Corps",
+  plantation: "Other Agricultural/Plantation Crops",
+  fibre: "Other Agricultural/Fibre Crops",
+  timber: "Other Agricultural/Timber & Bamboo",
+  "animal-feed": "Other Agricultural/Animal Feed",
+  keto: "Dietary/Keto & Low Carb",
+  "high-protein": "Dietary/Gym & BodyBuilding",
+  vegan: "Dietary/Vegan & Plant Based",
+  "gluten-free": "Dietary/Gluten Free",
+  "dairy-free": "Dietary/Dairy-free & Lactose-free",
+  diabetic: "Dietary/Diabatic Friendly",
+  "heart-healthy": "Dietary/Heart Healthy",
+  pregnancy: "Dietary/Pregnancy & lactation",
+  "baby-nutrition": "Dietary/Baby & Infant Nutrition",
+  "senior-nutrition": "Dietary/Senior & Nutrition",
+  paleo: "Dietary/Paleo Diet",
+  mediterranean: "Dietary/Mediterranean Diet",
+  whole30: "Dietary/Whole30 & Clean Eating",
+  ayurvedic: "Dietary/Ayurvedic & Traditional",
+  "sugar-crops": "Commercial & Industry Crops/Sugar Crops",
+  "beverage-crops": "Commercial & Industry Crops/Beverage Crops",
+  "latex-crops": "Commercial & Industry Crops/Latex & Resin Crops",
+  "other-commercial": "Commercial & Industry Crops/Other Commercial Crops",
+  bioenergy: "Bio/BioEnergy & Biomass",
+  biofertilizers: "Bio/Biofertilizers & Biopesticides",
+  "herbal-pharma": "Bio/Herbal & Pharma Products",
+  "food-beverages": "Market/Foods & Beverages",
+  "personal-care": "Market/Personal Care & Hygiene",
+  "home-kitchen": "Market/Home  & Kitchen",
+  household: "Market/HouseHold Items",
+  clothing: "Market/Clothing & Accessories",
+  "health-wellness": "Market/Health & Wellness",
+  stationery: "Market/Stationary & Office",
+  "pet-care": "Market/Pet Care",
+  automotive: "Market/Automotive",
+  "baby-kids": "Market/Baby & kids",
+  "sports-outdoors": "Market/Sports & Outdoors",
+  "books-media": "Market/Books & Media",
+  gardening: "Market/Gardening",
+  travel: "Market/Travel",
+  religious: "Market/Religious & Cultural",
+  party: "Market/Party & Celebration",
+  "tech-accessories": "Market/Tech Accessories & Electronics",
+  "allied-products": "Market/Allied Products",
+  hydroponics: "Modern Farming/Hydroponics",
+  aeroponics: "Modern Farming/Aeroponics",
+  vertical: "Modern Farming/Vertical Farming",
+  greenhouse: "Modern Farming/Greenhouse-polyhouse",
+};
+
+for (const [categoryId, folder] of Object.entries(thumbnailFolderByCategoryId)) {
+  const fallback = categoryImages[categoryId];
+  if (fallback) categoryImages[categoryId] = thumbnailFromFolder(folder, fallback);
+}
 
 export const categories: Category[] = [
   {

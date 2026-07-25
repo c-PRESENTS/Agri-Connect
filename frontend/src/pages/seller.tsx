@@ -22,7 +22,10 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Product, Order, OrderStatus } from "@shared/schema";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForOrderItem } from "@/lib/product-images";
+import { SellerPaymentAccounts } from "@/components/payments/seller-payment-accounts";
+import { SellerPayoutSummary } from "@/components/payments/seller-payout-summary";
+import { SellerDisputes } from "@/components/payments/seller-disputes";
 
 type SellerDashboard = {
   products: Product[];
@@ -67,7 +70,8 @@ type TabId = "overview" | "orders";
 export default function SellerPage() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const isSeller = isAuthenticated && user?.role === "farmer";
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -75,7 +79,7 @@ export default function SellerPage() {
 
   const { data: sellerDashboard, isLoading: ordersLoading, isError: ordersError, refetch: refetchOrders } = useQuery<SellerDashboard>({
     queryKey: ["/api/dashboard/seller"],
-    enabled: isAuthenticated,
+    enabled: isSeller,
   });
   const myProducts = sellerDashboard?.products ?? [];
   const sellerOrders = sellerDashboard?.orders ?? [];
@@ -128,6 +132,39 @@ export default function SellerPage() {
   const pendingOrders = sellerOrders.filter((o) =>
     ["pending", "confirmed", "processing", "order_placed", "payment_confirmed"].includes(o.status)
   ).length;
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNavigation />
+        <div className="flex justify-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSeller) {
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNavigation />
+        <div className="mx-auto max-w-lg px-4 py-16">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Store className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
+              <h1 className="text-xl font-bold">Seller access required</h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                This dashboard is available to registered farmer accounts.
+              </p>
+              <Button className="mt-5" onClick={() => setLocation("/")}>
+                Return to marketplace
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -195,6 +232,9 @@ export default function SellerPage() {
         {/* ====== OVERVIEW TAB ====== */}
         {activeTab === "overview" && (
           <div className="space-y-8">
+            <SellerPaymentAccounts />
+            <SellerPayoutSummary />
+            <SellerDisputes />
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base font-bold">{t("seller.quick_actions")}</h2>
@@ -376,7 +416,7 @@ export default function SellerPage() {
                                 {myItems.slice(0, 3).map((item, i) => (
                                   <img
                                     key={i}
-                                    src={item.productImage || getProductImage(item.productName, "", "sm")}
+                                    src={resolveProductImageForOrderItem(item).src}
                                     alt={item.productName}
                                     loading="lazy"
                                     className="h-8 w-8 rounded-lg object-cover border-2 border-background"

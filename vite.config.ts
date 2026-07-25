@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const workspaceRoot = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   server: {
@@ -21,14 +24,14 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(new URL("frontend/src", import.meta.url).pathname),
-      "@shared": path.resolve(new URL("shared", import.meta.url).pathname),
-      "@assets": path.resolve(new URL("frontend/src/assets", import.meta.url).pathname),
+      "@": path.resolve(workspaceRoot, "frontend/src"),
+      "@shared": path.resolve(workspaceRoot, "shared"),
+      "@assets": path.resolve(workspaceRoot, "frontend/src/assets"),
     },
   },
-  root: path.resolve(new URL("frontend", import.meta.url).pathname),
+  root: path.resolve(workspaceRoot, "frontend"),
   build: {
-    outDir: path.resolve(new URL("dist/public", import.meta.url).pathname),
+    outDir: path.resolve(workspaceRoot, "dist/public"),
     emptyOutDir: true,
     rollupOptions: {
       output: {

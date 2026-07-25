@@ -25,7 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Product, Review } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
-import { getProductImage } from "@/lib/product-images";
+import { getProductImage, resolveProductImageForProduct } from "@/lib/product-images";
 
 const REVIEWER_NAMES = [
   "Priya Sharma", "James O'Brien", "Mei Lin", "Tariq Hassan", "Sophie Adeyemi",
@@ -106,13 +106,6 @@ function getRatingBreakdown(rating: number, count: number) {
     count: Math.round((base[i] + (i < 2 ? offset : -offset / 3)) * count),
   }));
 }
-
-const ADDITIONAL_IMAGES = [
-  "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1573246123716-6b1782bfc499?w=400&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=400&h=400&fit=crop",
-];
 
 export default function ProductDetailPage() {
   const { t } = useTranslation();
@@ -230,10 +223,10 @@ export default function ProductDetailPage() {
   });
 
   const fallbackProductImage = product
-    ? getProductImage(product.name, product.categoryId, "lg")
+    ? resolveProductImageForProduct(product).src
     : "";
   const allImages = product
-    ? [product.images?.[0]?.trim() || fallbackProductImage, ...ADDITIONAL_IMAGES.slice(0, 3)]
+    ? [fallbackProductImage]
     : [];
 
   const reviews = product ? generateReviews(product) : [];
@@ -377,22 +370,24 @@ export default function ProductDetailPage() {
             </motion.div>
 
             {/* Thumbnails */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {allImages.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  className={`flex-none w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${i === selectedImage ? "border-primary shadow-md shadow-primary/20" : "border-border/40 hover:border-primary/40"}`}
-                >
-                  <img
-                    src={getImg(i)}
-                    alt={`View ${i + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={() => setImageError(p => ({ ...p, [i]: true }))}
-                  />
-                </button>
-              ))}
-            </div>
+            {allImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {allImages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(i)}
+                    className={`flex-none w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${i === selectedImage ? "border-primary shadow-md shadow-primary/20" : "border-border/40 hover:border-primary/40"}`}
+                  >
+                    <img
+                      src={getImg(i)}
+                      alt={`View ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={() => setImageError(p => ({ ...p, [i]: true }))}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Trust badges */}
             <div className="grid grid-cols-3 gap-2 mt-2">
@@ -906,7 +901,7 @@ export default function ProductDetailPage() {
                   >
                     <div className="w-14 h-14 sm:w-28 sm:h-28 rounded-lg sm:rounded-xl overflow-hidden border border-border bg-muted">
                       <img
-                        src={p.images[0] || `https://placehold.co/200x200/22c55e/white?text=${encodeURIComponent(p.name.split(" ")[0])}`}
+                        src={getProductImage(p.name, p.categoryId, "sm")}
                         alt={p.name}
                         className="w-full h-full object-cover"
                       />
@@ -976,7 +971,7 @@ export default function ProductDetailPage() {
                   <Card className="overflow-hidden border-border/50 hover:border-primary/40 hover:shadow-md transition-all">
                     <div className="aspect-square overflow-hidden bg-muted">
                       <img
-                        src={p.images[0] || `https://placehold.co/300x300/22c55e/white?text=${encodeURIComponent(p.name.split(" ")[0])}`}
+                        src={getProductImage(p.name, p.categoryId, "md")}
                         alt={p.name}
                         loading="lazy"
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
@@ -1337,7 +1332,7 @@ export default function ProductDetailPage() {
                         <Card className="overflow-hidden border-border/50 hover:border-primary/30 hover:shadow-lg transition-all">
                           <div className="aspect-square overflow-hidden bg-muted">
                             <img
-                              src={p.images[0] || `https://placehold.co/300x300/22c55e/white?text=${encodeURIComponent(p.name.split(" ")[0])}`}
+                        src={getProductImage(p.name, p.categoryId, "md")}
                               alt={p.name}
                               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                             />

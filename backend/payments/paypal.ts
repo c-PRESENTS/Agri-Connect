@@ -1,6 +1,6 @@
 type PayPalOrder = { id: string; status: string; purchase_units?: Array<{ payments?: { captures?: Array<{ id: string; status: string }> } }> };
 
-const baseUrl = () => process.env.PAYPAL_ENV === "live"
+export const paypalBaseUrl = () => process.env.PAYPAL_ENV === "live"
   ? "https://api-m.paypal.com"
   : "https://api-m.sandbox.paypal.com";
 
@@ -11,23 +11,56 @@ function credentials() {
   return { clientId, clientSecret };
 }
 
-async function accessToken(): Promise<string> {
+export async function getPayPalAccessToken(): Promise<string> {
   const { clientId, clientSecret } = credentials();
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
-  const response = await fetch(`${baseUrl()}/v1/oauth2/token`, {
+  const response = await fetch(`${paypalBaseUrl()}/v1/oauth2/token`, {
     method: "POST",
     headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
     body: "grant_type=client_credentials",
   });
-  if (!response.ok) throw new Error("PayPal authentication failed");
+  if (!response.ok) {
+    throw Object.assign(new Error("PayPal authentication failed"), {
+      providerStatus: response.status,
+      code: "invalid_client",
+    });
+  }
   const body = await response.json() as { access_token?: string };
   if (!body.access_token) throw new Error("PayPal did not return an access token");
   return body.access_token;
 }
 
+export async function paypalApi<T>(
+  path: string,
+  init: RequestInit = {},
+  additionalHeaders: Record<string, string> = {},
+): Promise<T> {
+  const token = await getPayPalAccessToken();
+  const response = await fetch(`${paypalBaseUrl()}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      ...additionalHeaders,
+      ...(init.headers ?? {}),
+    },
+  });
+  if (!response.ok) {
+    const requestId = response.headers.get("paypal-debug-id");
+    const error = new Error(`PayPal API request failed (${response.status})`);
+    Object.assign(error, {
+      providerStatus: response.status,
+      providerRequestId: requestId,
+      outcomeUnknown: response.status >= 500,
+    });
+    throw error;
+  }
+  return response.json() as Promise<T>;
+}
+
 export async function createPayPalOrder(orderId: string, amount: number, currency = "GBP"): Promise<PayPalOrder> {
-  const token = await accessToken();
-  const response = await fetch(`${baseUrl()}/v2/checkout/orders`, {
+  const token = await getPayPalAccessToken();
+  const response = await fetch(`${paypalBaseUrl()}/v2/checkout/orders`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -44,8 +77,8 @@ export async function createPayPalOrder(orderId: string, amount: number, currenc
 }
 
 export async function capturePayPalOrder(paypalOrderId: string, orderId: string): Promise<PayPalOrder> {
-  const token = await accessToken();
-  const response = await fetch(`${baseUrl()}/v2/checkout/orders/${encodeURIComponent(paypalOrderId)}/capture`, {
+  const token = await getPayPalAccessToken();
+  const response = await fetch(`${paypalBaseUrl()}/v2/checkout/orders/${encodeURIComponent(paypalOrderId)}/capture`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "PayPal-Request-Id": `agriconnect-capture-${orderId}` },
   });
@@ -58,8 +91,8 @@ export function getPayPalCapture(result: PayPalOrder): { id: string; status: str
 }
 
 export async function refundPayPalCapture(captureId: string, orderId: string): Promise<string> {
-  const token = await accessToken();
-  const response = await fetch(`${baseUrl()}/v2/payments/captures/${encodeURIComponent(captureId)}/refund`, {
+  const token = await getPayPalAccessToken();
+  const response = await fetch(`${paypalBaseUrl()}/v2/payments/captures/${encodeURIComponent(captureId)}/refund`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "PayPal-Request-Id": `agriconnect-refund-${orderId}` },
   });
@@ -72,8 +105,8 @@ export async function refundPayPalCapture(captureId: string, orderId: string): P
 export async function verifyPayPalWebhook(headers: Record<string, string | undefined>, event: unknown): Promise<boolean> {
   const webhookId = process.env.PAYPAL_WEBHOOK_ID;
   if (!webhookId) return false;
-  const token = await accessToken();
-  const response = await fetch(`${baseUrl()}/v1/notifications/verify-webhook-signature`, {
+  const token = await getPayPalAccessToken();
+  const response = await fetch(`${paypalBaseUrl()}/v1/notifications/verify-webhook-signature`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({

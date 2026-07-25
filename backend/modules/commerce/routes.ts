@@ -14,6 +14,8 @@ import { getAdapter } from "../../shipping/adapters";
 import { calculateQuotes, calculateQuotesFromCoords, geocodePostcode, rateCardById, resolveSellerPickupCoordinates } from "../../shipping/quote-engine";
 import { storage } from "../../storage";
 import { audit } from "../../audit";
+import { paymentRepository } from "../../repositories/payment-repository";
+import { refundService } from "../../payments/refund-service";
 
 interface CommerceRouteDeps {
   getUserId(req: Request): string | undefined;
@@ -785,9 +787,28 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       // stays in its current state — we never want to cancel inventory while
       // the buyer's money is still held by Stripe.
       let refundId: string | undefined;
+      let refundRecordedByPaymentService = false;
       if (existing.paymentStatus === "paid") {
         try {
-          if (existing.paymentProvider === "stripe" && existing.stripePaymentIntentId) {
+          const normalizedAttempt = await paymentRepository.getSucceededAttemptByOrder(existing.id);
+          if (normalizedAttempt) {
+            const normalizedRefund = await refundService.request({
+              orderId: existing.id,
+              actorId: userId,
+              idempotencyReference: `${userId}:cancel:${existing.id}`,
+            });
+            if (normalizedRefund.status !== "succeeded") {
+              return res.status(202).json({
+                error: "Refund is pending provider confirmation; the order has not been cancelled yet.",
+                refund: normalizedRefund,
+              });
+            }
+            refundId =
+              "providerRefundId" in normalizedRefund
+                ? normalizedRefund.providerRefundId
+                : undefined;
+            refundRecordedByPaymentService = true;
+          } else if (existing.paymentProvider === "stripe" && existing.stripePaymentIntentId) {
             const stripe = getStripe();
             const refund = await stripe.refunds.create(
               { payment_intent: existing.stripePaymentIntentId, reason: "requested_by_customer", metadata: { orderId: existing.id, userId } },
@@ -812,7 +833,9 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       const order = await storage.cancelOrder(req.params.id, userId);
       if (!order) return res.status(400).json({ error: "This order can no longer be cancelled" });
 
-      if (refundId) {
+      // The provider-neutral refund service already updates the order and
+      // ledger. This compatibility write is only required for legacy refunds.
+      if (refundId && !refundRecordedByPaymentService) {
         await storage.markOrderRefunded(existing.id, refundId, `Refunded via ${existing.paymentProvider}`);
       }
 

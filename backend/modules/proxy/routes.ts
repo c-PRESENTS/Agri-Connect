@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import { randomBytes } from "crypto";
 
 export function registerProxyRoutes(app: Express): void {
   // ── Server-side web proxy ──────────────────────────────────────────────────
@@ -37,11 +38,22 @@ export function registerProxyRoutes(app: Express): void {
         "x-frame-options",
         "content-security-policy",
         "content-security-policy-report-only",
+        "feature-policy",
+        "permissions-policy",
+        "origin-agent-cluster",
+        "cross-origin-opener-policy",
+        "cross-origin-embedder-policy",
+        "cross-origin-resource-policy",
         "x-content-type-options",
         "strict-transport-security",
         "transfer-encoding",
+        "content-length",
         "content-encoding",
+        "content-location",
         "connection",
+        "etag",
+        "last-modified",
+        "set-cookie",
       ]);
       upstream.headers.forEach((val, key) => {
         if (!SKIP.has(key.toLowerCase())) res.setHeader(key, val);
@@ -53,6 +65,17 @@ export function registerProxyRoutes(app: Express): void {
       if (contentType.includes("text/html")) {
         let html = await upstream.text();
         const origin = new URL(targetUrl).origin;
+        const scriptNonce = randomBytes(18).toString("base64");
+
+        // Re-serving a third-party application under our origin would allow
+        // its scripts to run with localhost credentials and causes unavoidable
+        // CORS failures for APIs such as BBC IDCTA. The proxy is a safe reading
+        // view: remove upstream executable content and keep only our navigation
+        // bridge.
+        html = html
+          .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, "")
+          .replace(/<script\b[^>]*\/?>/gi, "")
+          .replace(/\s+on[a-z]+\s*=\s*(["'])[\s\S]*?\1/gi, "");
 
         // 1. Inject or replace <base> so relative URLs resolve to original host
         if (/<base\s/i.test(html)) {
@@ -66,7 +89,7 @@ export function registerProxyRoutes(app: Express): void {
 
         // 2. Inject nav-rewriter script so internal links stay in the proxy
         const navScript = `
-<script>
+<script nonce="${scriptNonce}">
 (function(){
   var PROXY = '/api/proxy?url=';
   function rewrite(href){
@@ -100,6 +123,10 @@ export function registerProxyRoutes(app: Express): void {
         if (!html.includes("</body>")) html += navScript;
 
         res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.setHeader(
+          "Content-Security-Policy",
+          `default-src 'self' https: data: blob:; script-src 'nonce-${scriptNonce}'; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri https:; form-action 'self' https:`,
+        );
         res.send(html);
       } else {
         // Non-HTML assets: stream through as-is

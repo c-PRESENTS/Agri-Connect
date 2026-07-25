@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,7 +21,10 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Cart, ShipQuote, ShipServiceType } from "@shared/schema";
 import { COUNTRIES } from "@/lib/countries";
 import { TopNavigation } from "@/components/top-navigation";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
+import { PaymentMethodSelector, type CheckoutPaymentMethod } from "@/components/payments/payment-method-selector";
+import { usePaymentCheckout } from "@/hooks/use-payment-checkout";
+import { followCheckoutNextAction } from "@/lib/payment-client";
 
 interface CartShippingGroup {
   farmerId: string;
@@ -46,31 +49,10 @@ const STEPS = [
   { id: 4, label: "checkout.step_review", icon: CheckCircle },
 ];
 
-declare global {
-  interface Window {
-    paypal?: { Buttons: (options: Record<string, unknown>) => { render: (element: HTMLElement) => Promise<void> } };
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
-  }
-}
-
-function loadPaymentScript(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null;
-    if (existing) return existing.dataset.loaded === "true" ? resolve() : existing.addEventListener("load", () => resolve(), { once: true });
-    const script = document.createElement("script");
-    script.src = src;
-    script.async = true;
-    script.onload = () => { script.dataset.loaded = "true"; resolve(); };
-    script.onerror = () => reject(new Error("Could not load payment provider"));
-    document.head.appendChild(script);
-  });
-}
-
-
 export default function CheckoutPage() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
 
   const [step, setStep] = useState(1);
@@ -89,9 +71,12 @@ export default function CheckoutPage() {
   // farmerId -> { partnerId, service }
   const [shippingChoices, setShippingChoices] = useState<Record<string, { partnerId: string; service: ShipServiceType }>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [paymentMethod, setPaymentMethod] = useState<"manual" | "stripe" | "paypal" | "razorpay">("stripe");
-  const [paypalCheckout, setPaypalCheckout] = useState<{ internalOrderId: string; providerOrderId: string; clientId: string } | null>(null);
-  const paypalContainerRef = useRef<HTMLDivElement>(null);
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>("manual");
+  const [paymentPreviewOnly, setPaymentPreviewOnly] = useState(false);
+  const protectedCheckoutMutation = usePaymentCheckout();
+  const checkoutCurrency: "GBP" | "INR" =
+    shippingGroups?.[0]?.quotes[0]?.currency === "INR" ? "INR" : "GBP";
+  const currencySymbol = checkoutCurrency === "INR" ? "₹" : "£";
 
   const { data: cart, isLoading: isCartLoading, isError: isCartError, refetch: refetchCart } = useQuery<Cart>({
     queryKey: ["/api/cart"],
@@ -111,6 +96,12 @@ export default function CheckoutPage() {
 
   const cartQuotesMutation = useMutation({
     mutationFn: async () => {
+      if (!isAuthenticated) {
+        throw new Error("Please sign in before requesting delivery quotes");
+      }
+      if (!cart?.items.length) {
+        throw new Error("Your cart is empty");
+      }
       const res = await apiRequest("POST", "/api/cart/shipping-quotes", {
         drop: {
           name: address.fullName,
@@ -197,91 +188,53 @@ export default function CheckoutPage() {
     },
   });
 
-  function checkoutPayload(method: "stripe" | "paypal" | "razorpay") {
-    const deliveryAddress = `${address.fullName}, ${address.line1}${address.line2 ? ", " + address.line2 : ""}, ${address.city}, ${address.county} ${address.postcode}, ${address.country}`;
-    return {
-      items: (cart?.items ?? []).map((item) => ({
-        productId: item.product.id, productName: item.product.name, productImage: item.product.images?.[0],
-        quantity: item.quantity, price: item.product.price, farmerId: item.product.farmerId, farmerName: item.product.farmerName,
-      })),
-      deliveryAddress, deliveryMethod: "standard", paymentMethod: method, shippingChoices,
-      deliveryAddressStruct: { name: address.fullName, phone: address.phone || "0000000000", email: address.email || undefined, line1: address.line1, line2: address.line2 || undefined, city: address.city, county: address.county || undefined, postcode: address.postcode, country: address.country },
-    };
-  }
-
-  const stripeCheckoutMutation = useMutation({
-    mutationFn: async () => (await apiRequest("POST", "/api/stripe/create-checkout-session", checkoutPayload("stripe"))).json() as Promise<{ url: string }>,
-    onSuccess: ({ url }) => { window.location.assign(url); },
-    onError: (err: any) => toast({ title: "Could not start Stripe checkout", description: err?.message || "Please try again", variant: "destructive" }),
-  });
-
-  async function startPayPal() {
+  async function startProtectedCheckout() {
+    const deliveryAddress = `${address.fullName}, ${address.line1}${address.line2 ? `, ${address.line2}` : ""}, ${address.city}, ${address.county} ${address.postcode}, ${address.country}`;
     try {
-      const order = await (await apiRequest("POST", "/api/orders", checkoutPayload("paypal"))).json() as { id: string };
-      const provider = await (await apiRequest("POST", `/api/paypal/orders/${order.id}`, {})).json() as { id: string; clientId: string };
-      if (!provider.clientId) throw new Error("PayPal sandbox client ID is not configured");
-      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-      setPaypalCheckout({ internalOrderId: order.id, providerOrderId: provider.id, clientId: provider.clientId });
-    } catch (err: any) {
-      toast({ title: "Could not start PayPal checkout", description: err?.message || "Please try again", variant: "destructive" });
-    }
-  }
-
-  async function startRazorpay() {
-    try {
-      const order = await (await apiRequest("POST", "/api/orders", checkoutPayload("razorpay"))).json() as { id: string };
-      const provider = await (await apiRequest("POST", `/api/razorpay/orders/${order.id}`, {})).json() as { id: string; amount: number; currency: string; keyId: string };
-      if (!provider.keyId) throw new Error("Razorpay test key is not configured");
-      await loadPaymentScript("https://checkout.razorpay.com/v1/checkout.js");
-      if (!window.Razorpay) throw new Error("Razorpay checkout is unavailable");
-      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-      new window.Razorpay({
-        key: provider.keyId, amount: provider.amount, currency: provider.currency, name: "AgriConnect", order_id: provider.id,
-        handler: async (result: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
-          const verified = await apiRequest("POST", "/api/razorpay/verify", result);
-          const paid = await verified.json() as { id: string };
-          navigate(`/order-confirmation/${paid.id}`);
+      const result = await protectedCheckoutMutation.mutateAsync({
+        deliveryAddress,
+        provider:
+          paymentMethod === "manual" || paymentPreviewOnly
+            ? "mock"
+            : paymentMethod,
+        currency: checkoutCurrency,
+        shippingChoices,
+        deliveryAddressStruct: {
+          name: address.fullName,
+          phone: address.phone || "0000000000",
+          email: address.email || undefined,
+          line1: address.line1,
+          line2: address.line2 || undefined,
+          city: address.city,
+          county: address.county || undefined,
+          postcode: address.postcode,
+          country: address.country,
         },
-        modal: { ondismiss: () => {
-          apiRequest("PUT", `/api/orders/${order.id}/cancel`, {}).catch(() => undefined);
-          toast({ title: "Razorpay payment cancelled", description: "Your order was cancelled and remains unpaid." });
-        } },
-      }).open();
-    } catch (err: any) {
-      toast({ title: "Could not start Razorpay checkout", description: err?.message || "Please try again", variant: "destructive" });
+      });
+      const outcome = await followCheckoutNextAction(result.nextAction);
+      if (outcome === "navigated") return;
+      navigate(`/payment/${result.attemptId}/processing`);
+    } catch (error) {
+      toast({
+        title: "Could not start protected payment",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
     }
   }
 
   useEffect(() => {
-    if (!paypalCheckout || !paypalContainerRef.current) return;
-    let cancelled = false;
-    const render = async () => {
-      await loadPaymentScript(`https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalCheckout.clientId)}&currency=GBP&intent=capture`);
-      if (cancelled || !window.paypal || !paypalContainerRef.current) return;
-      paypalContainerRef.current.replaceChildren();
-      await window.paypal.Buttons({
-        createOrder: () => paypalCheckout.providerOrderId,
-        onApprove: async (data: { orderID: string }) => {
-          const response = await apiRequest("POST", `/api/paypal/orders/${encodeURIComponent(data.orderID)}/capture`, {});
-          const paid = await response.json() as { id: string };
-          navigate(`/order-confirmation/${paid.id}`);
-        },
-        onCancel: () => {
-          apiRequest("PUT", `/api/orders/${paypalCheckout.internalOrderId}/cancel`, {}).catch(() => undefined);
-          toast({ title: "PayPal payment cancelled", description: "Your order was cancelled and remains unpaid." });
-        },
-        onError: () => toast({ title: "PayPal payment failed", description: "Your order remains unpaid.", variant: "destructive" }),
-      }).render(paypalContainerRef.current);
-    };
-    render().catch((err) => toast({ title: "Could not load PayPal", description: err.message, variant: "destructive" }));
-    return () => { cancelled = true; };
-  }, [paypalCheckout]);
+    if (!isAuthLoading && !isAuthenticated) navigate("/login?next=%2Fcheckout");
+  }, [isAuthLoading, isAuthenticated, navigate]);
 
   useEffect(() => {
-    if (!isAuthenticated) navigate("/login");
-  }, [isAuthenticated]);
+    if (!user) return;
+    setAddress((current) => ({
+      ...current,
+      fullName: current.fullName || user.name || "",
+      email: current.email || user.email || "",
+    }));
+  }, [user]);
 
   useEffect(() => {
     if (cart && cart.items.length === 0 && !manualOrderMutation.isSuccess) {
@@ -326,7 +279,7 @@ export default function CheckoutPage() {
     setStep((s) => Math.min(s + 1, 4));
   }
 
-  if (isCartLoading) {
+  if (isAuthLoading || isCartLoading) {
     return <div className="min-h-screen bg-background"><TopNavigation /><div className="flex justify-center py-32"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div></div>;
   }
 
@@ -583,7 +536,7 @@ export default function CheckoutPage() {
                                               <span>· {q.co2Kg.toFixed(2)}kg CO₂</span>
                                             </p>
                                           </div>
-                                          <span className="font-bold text-base flex-shrink-0">£{q.price.toFixed(2)}</span>
+                                          <span className="font-bold text-base flex-shrink-0">{currencySymbol}{q.price.toFixed(2)}</span>
                                         </label>
                                       );
                                     })}
@@ -607,19 +560,14 @@ export default function CheckoutPage() {
                         <h2 className="text-lg font-bold">{t("checkout.payment_title")}</h2>
                       </div>
                       <p className="text-xs text-muted-foreground mb-5">Select a payment method. Online orders are confirmed only after the provider is verified by AgriConnect.</p>
-                      <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as typeof paymentMethod)} className="space-y-3">
-                        {[
-                          ["stripe", "Card / Apple Pay", "Secure Stripe-hosted checkout"],
-                          ["paypal", "PayPal", "Pay with a PayPal sandbox account"],
-                          ["razorpay", "Razorpay", "Cards, UPI, and wallets in Razorpay test mode"],
-                          ["manual", "Arrange payment with seller", "No gateway payment is collected"],
-                        ].map(([value, title, description]) => (
-                          <label key={value} className="flex items-start gap-3 rounded-xl border border-border p-4 cursor-pointer hover:border-primary/60">
-                            <RadioGroupItem value={value} className="mt-0.5" />
-                            <span><span className="block font-semibold text-sm">{title}</span><span className="block text-xs text-muted-foreground mt-1">{description}</span></span>
-                          </label>
-                        ))}
-                      </RadioGroup>
+                      <PaymentMethodSelector
+                        value={paymentMethod}
+                        onChange={(method, options) => {
+                          setPaymentMethod(method);
+                          setPaymentPreviewOnly(options?.previewOnly === true);
+                        }}
+                        currency={checkoutCurrency}
+                      />
                     </CardContent>
                   </Card>
                 )}
@@ -665,7 +613,7 @@ export default function CheckoutPage() {
                                       {q ? `${q.partnerName} · ${q.service.replace("_", " ")} · ${q.etaWindow}` : "—"}
                                     </p>
                                   </div>
-                                  <span className="font-bold text-sm flex-shrink-0">£{(q?.price ?? 0).toFixed(2)}</span>
+                                  <span className="font-bold text-sm flex-shrink-0">{currencySymbol}{(q?.price ?? 0).toFixed(2)}</span>
                                 </div>
                               );
                             })}
@@ -682,7 +630,7 @@ export default function CheckoutPage() {
                             {cart?.items.map((item) => (
                               <div key={item.id} className="flex items-center gap-3">
                                 <img
-                                  src={getProductImage(item.product.name, item.product.categoryId, "sm")}
+                                  src={resolveProductImageForProduct(item.product).src}
                                   alt={item.product.name}
                                   className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
                                 />
@@ -690,7 +638,7 @@ export default function CheckoutPage() {
                                   <p className="text-sm font-medium truncate">{item.product.name}</p>
                                   <p className="text-xs text-muted-foreground">x{item.quantity} · {item.product.farmerName}</p>
                                 </div>
-                                <span className="text-sm font-bold">£{(item.product.price * item.quantity).toFixed(2)}</span>
+                                <span className="text-sm font-bold">{currencySymbol}{(item.product.price * item.quantity).toFixed(2)}</span>
                               </div>
                             ))}
                           </div>
@@ -703,7 +651,13 @@ export default function CheckoutPage() {
                             <span className="font-semibold text-sm">{t("checkout.payment_title")}</span>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            Manual payment pending — no online payment is collected.
+                            {paymentPreviewOnly
+                              ? `${paymentMethod[0].toUpperCase()}${paymentMethod.slice(1)} UI preview. This demonstration uses the local mock provider and collects no money.`
+                              : paymentMethod === "mock"
+                              ? "Protected payment in test mode. The order is confirmed only after server verification."
+                              : paymentMethod === "manual"
+                                ? "Manual payment pending — no online payment is collected or protected."
+                                : `${paymentMethod[0].toUpperCase()}${paymentMethod.slice(1)} protected payment. The order is confirmed only after server verification.`}
                           </p>
                         </div>
                       </div>
@@ -724,21 +678,17 @@ export default function CheckoutPage() {
                 <Button onClick={nextStep} className="ml-auto gap-2 h-11 px-6" data-testid="btn-next-step">
                   {t("profile_wizard.continue_button")} <ChevronRight className="h-4 w-4" />
                 </Button>
-              ) : paypalCheckout ? (
-                <div className="ml-auto min-w-[230px]" ref={paypalContainerRef} data-testid="paypal-buttons" />
               ) : (
                 <Button
                   onClick={() => {
                     if (paymentMethod === "manual") manualOrderMutation.mutate();
-                    else if (paymentMethod === "stripe") stripeCheckoutMutation.mutate();
-                    else if (paymentMethod === "paypal") void startPayPal();
-                    else void startRazorpay();
+                    else void startProtectedCheckout();
                   }}
-                  disabled={manualOrderMutation.isPending || stripeCheckoutMutation.isPending}
+                  disabled={manualOrderMutation.isPending || protectedCheckoutMutation.isPending}
                   className="ml-auto gap-2 h-11 px-6"
                   data-testid="btn-place-order"
                 >
-                  {manualOrderMutation.isPending ? (
+                  {manualOrderMutation.isPending || protectedCheckoutMutation.isPending ? (
                     <><Loader2 className="h-4 w-4 animate-spin" /> Creating order…</>
                   ) : (
                     <><CheckCircle className="h-4 w-4" /> Place order</>
@@ -758,7 +708,7 @@ export default function CheckoutPage() {
                     <div key={item.id} className="flex items-center gap-2">
                       <div className="h-8 w-8 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                         <img
-                          src={getProductImage(item.product.name, item.product.categoryId, "sm")}
+                          src={resolveProductImageForProduct(item.product).src}
                           alt={item.product.name}
                           className="h-full w-full object-cover"
                         />
@@ -767,7 +717,7 @@ export default function CheckoutPage() {
                         <p className="text-xs font-medium truncate">{item.product.name}</p>
                         <p className="text-[10px] text-muted-foreground">x{item.quantity}</p>
                       </div>
-                      <span className="text-xs font-bold">£{((item.unitPrice ?? item.product.price) * item.quantity).toFixed(2)}</span>
+                      <span className="text-xs font-bold">{currencySymbol}{((item.unitPrice ?? item.product.price) * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -775,20 +725,20 @@ export default function CheckoutPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("cart.subtotal")}</span>
-                    <span>£{subtotal.toFixed(2)}</span>
+                    <span>{currencySymbol}{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("cart.delivery")}{shippingGroups && shippingGroups.length > 1 ? ` (${shippingGroups.length} ${t("logistics.parcels_tab").toLowerCase()})` : ""}</span>
-                    <span data-testid="text-shipping-total">{shippingTotal === 0 ? <span className="text-muted-foreground">—</span> : `£${shippingTotal.toFixed(2)}`}</span>
+                    <span data-testid="text-shipping-total">{shippingTotal === 0 ? <span className="text-muted-foreground">—</span> : `${currencySymbol}${shippingTotal.toFixed(2)}`}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("checkout.vat")}</span>
-                    <span>£{tax.toFixed(2)}</span>
+                    <span>{currencySymbol}{tax.toFixed(2)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-bold text-base">
                     <span>{t("cart.total")}</span>
-                    <span>£{total.toFixed(2)}</span>
+                    <span>{currencySymbol}{total.toFixed(2)}</span>
                   </div>
                 </div>
                 <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">

@@ -220,12 +220,18 @@ export function registerAuthRoutes(app: Express): void {
     });
   });
 
-  app.get("/api/auth/user", isAuthenticated, async (req, res) => {
+  // Session discovery is intentionally public. An anonymous browser is a
+  // normal application state, so return null instead of producing a noisy 401
+  // for every first-time visitor.
+  app.get("/api/auth/user", async (req, res) => {
     try {
       const userId = getSessionUserId(req);
-      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      if (!userId) return res.json(null);
       const user = await authStorage.getUser(userId);
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user) {
+        req.session.destroy(() => undefined);
+        return res.json(null);
+      }
       res.json(serializeUser(user));
     } catch (error) {
       console.error("Error fetching user:", error);
