@@ -87,6 +87,10 @@ export function AppRoutes() {
       <Route path="/student/resources"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
       <Route path="/student/support"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
       <Route path="/student/requests"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
+      <Route path="/farmers-help/student"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
+      <Route path="/farmers-help/student/resources"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
+      <Route path="/farmers-help/student/support"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
+      <Route path="/farmers-help/student/requests"><StudentAccessRoute><StudentHelpPointPage /></StudentAccessRoute></Route>
       <Route path="/farmers-help" component={FarmersHelp} />
       <Route path="/land-leasing" component={LandLeasingPage} />
       <Route path="/logistics" component={LogisticsPage} />

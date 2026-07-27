@@ -11,7 +11,15 @@ import { getStripe, getWebhookSecret } from "../../payments/stripe";
 import { capturePayPalOrder, createPayPalOrder, getPayPalCapture, refundPayPalCapture, verifyPayPalWebhook } from "../../payments/paypal";
 import { createRazorpayOrder, getRazorpayPayment, refundRazorpayPayment, verifyRazorpayPayment, verifyRazorpayWebhook } from "../../payments/razorpay";
 import { getAdapter } from "../../shipping/adapters";
-import { calculateQuotes, calculateQuotesFromCoords, geocodePostcode, rateCardById, resolveSellerPickupCoordinates } from "../../shipping/quote-engine";
+import {
+  calculateQuotes,
+  calculateQuotesFromCoords,
+  geocodePostcode,
+  isCheckoutFulfillmentPartner,
+  rateCardById,
+  resolveCheckoutFulfillmentQuote,
+  resolveSellerPickupCoordinates,
+} from "../../shipping/quote-engine";
 import { storage } from "../../storage";
 import { audit } from "../../audit";
 import { paymentRepository } from "../../repositories/payment-repository";
@@ -116,6 +124,7 @@ async function ensureShipmentsForOrderInner(order: Order, origin: string): Promi
       console.warn(`[order/auto-ship] no shipping choice for farmer ${farmerId} on order ${order.id}`);
       continue;
     }
+    if (isCheckoutFulfillmentPartner(choice.partnerId)) continue;
     if (!rateCardById(choice.partnerId)) {
       console.warn(`[order/auto-ship] unknown partner ${choice.partnerId}`);
       continue;
@@ -271,7 +280,7 @@ async function calculateAuthoritativeShipping(
       items: shipItems,
       service: choice.service,
     }).quotes;
-    const selected = quotes.find((quote) => quote.partnerId === choice.partnerId && quote.service === choice.service);
+    const selected = resolveCheckoutFulfillmentQuote(quotes, choice);
     if (!selected) throw new Error("Selected shipping option is no longer available");
     total += selected.price;
   }
@@ -547,8 +556,7 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
             items: shipItems,
             service: choice.service,
           });
-          const matched = recomputed.quotes.find((q) => q.partnerId === choice.partnerId && q.service === choice.service)
-            ?? recomputed.quotes[0];
+          const matched = resolveCheckoutFulfillmentQuote(recomputed.quotes, choice);
           if (!matched) continue;
           shippingBreakdown.push({ farmerId, partnerId: matched.partnerId, partnerName: matched.partnerName, service: matched.service, price: matched.price });
           serverShippingTotal += matched.price;

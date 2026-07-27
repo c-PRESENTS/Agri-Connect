@@ -4,13 +4,12 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin, Truck, CreditCard, CheckCircle, ChevronRight, ChevronLeft,
-  Package, Shield, Clock, ArrowLeft, Loader2, Star, AlertCircle
+  Package, Shield, ArrowLeft, Loader2, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -93,6 +92,10 @@ export default function CheckoutPage() {
     : 0;
   const tax = parseFloat((subtotal * 0.2).toFixed(2));
   const total = parseFloat((subtotal + shippingTotal + tax).toFixed(2));
+  const checkoutDeliveryMethod = Object.values(shippingChoices).length > 0
+    && Object.values(shippingChoices).every((choice) => choice.partnerId === "buyer-collection")
+    ? "pickup"
+    : "standard";
 
   const cartQuotesMutation = useMutation({
     mutationFn: async () => {
@@ -105,8 +108,8 @@ export default function CheckoutPage() {
       const res = await apiRequest("POST", "/api/cart/shipping-quotes", {
         drop: {
           name: address.fullName,
-          phone: address.phone || "0000000000",
-          email: address.email || undefined,
+          phone: address.phone.trim(),
+          email: address.email.trim(),
           line1: address.line1,
           line2: address.line2 || undefined,
           city: address.city,
@@ -119,13 +122,7 @@ export default function CheckoutPage() {
     },
     onSuccess: (data) => {
       setShippingGroups(data.groups);
-      // Auto-select cheapest per group
-      const next: typeof shippingChoices = {};
-      for (const g of data.groups) {
-        const cheapest = g.quotes[0];
-        if (cheapest) next[g.farmerId] = { partnerId: cheapest.partnerId, service: cheapest.service };
-      }
-      setShippingChoices(next);
+      setShippingChoices({});
     },
     onError: (err: any) => {
       toast({
@@ -158,12 +155,12 @@ export default function CheckoutPage() {
 
       const res = await apiRequest("POST", "/api/cart/checkout", {
         deliveryAddress,
-        deliveryMethod: "standard",
+        deliveryMethod: checkoutDeliveryMethod,
         shippingChoices,
         deliveryAddressStruct: {
           name: address.fullName,
-          phone: address.phone || "0000000000",
-          email: address.email || undefined,
+          phone: address.phone.trim(),
+          email: address.email.trim(),
           line1: address.line1,
           line2: address.line2 || undefined,
           city: address.city,
@@ -198,11 +195,12 @@ export default function CheckoutPage() {
             ? "mock"
             : paymentMethod,
         currency: checkoutCurrency,
+        deliveryMethod: checkoutDeliveryMethod,
         shippingChoices,
         deliveryAddressStruct: {
           name: address.fullName,
-          phone: address.phone || "0000000000",
-          email: address.email || undefined,
+          phone: address.phone.trim(),
+          email: address.email.trim(),
           line1: address.line1,
           line2: address.line2 || undefined,
           city: address.city,
@@ -248,6 +246,8 @@ export default function CheckoutPage() {
     if (!address.line1.trim()) errs.line1 = t("checkout.address_line1");
     if (!address.city.trim()) errs.city = t("checkout.city");
     if (!address.postcode.trim()) errs.postcode = t("checkout.postcode");
+    if (!address.phone.trim()) errs.phone = `${t("checkout.phone")} is required`;
+    if (!address.email.trim()) errs.email = `${t("support.email")} is required`;
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -432,23 +432,34 @@ export default function CheckoutPage() {
                           </Select>
                         </div>
                         <div>
-                          <Label htmlFor="phone">{t("checkout.phone")}</Label>
+                          <Label htmlFor="phone">{t("checkout.phone")} *</Label>
                           <Input
                             id="phone"
+                            type="tel"
+                            required
+                            aria-invalid={Boolean(errors.phone)}
+                            autoComplete="tel"
                             value={address.phone}
                             onChange={(e) => setAddress({ ...address, phone: e.target.value })}
                             placeholder={t("checkout.phone_placeholder")}
+                            className={errors.phone ? "border-destructive" : ""}
                           />
+                          {errors.phone && <p className="text-[11px] text-destructive mt-1">{errors.phone}</p>}
                         </div>
                         <div>
-                          <Label htmlFor="email">{t("support.email")}</Label>
+                          <Label htmlFor="email">{t("support.email")} *</Label>
                           <Input
                             id="email"
                             type="email"
+                            required
+                            aria-invalid={Boolean(errors.email)}
+                            autoComplete="email"
                             value={address.email}
                             onChange={(e) => setAddress({ ...address, email: e.target.value })}
                             placeholder={t("login.email")}
+                            className={errors.email ? "border-destructive" : ""}
                           />
+                          {errors.email && <p className="text-[11px] text-destructive mt-1">{errors.email}</p>}
                         </div>
                       </div>
                     </CardContent>
@@ -464,7 +475,7 @@ export default function CheckoutPage() {
                         <h2 className="text-lg font-bold">{t("checkout.shipping_title")}</h2>
                       </div>
                       <p className="text-xs text-muted-foreground mb-5">
-                        {t("checkout.shipping_description", { sellerCount: shippingGroups?.length ?? 0 })}
+                        Choose how you want to receive the products from each farmer.
                       </p>
 
                       {cartQuotesMutation.isPending && (
@@ -484,7 +495,7 @@ export default function CheckoutPage() {
                                   <div className="min-w-0">
                                     <p className="font-semibold text-sm truncate">{group.farmerName}</p>
                                     <p className="text-[11px] text-muted-foreground truncate">
-                                      {group.locationEstimated ? `${group.farmerLocation} (seller location not set)` : group.farmerLocation} · {group.itemCount} item{group.itemCount === 1 ? "" : "s"} · {group.weightKg.toFixed(1)}kg · {group.distanceKm}km
+                                      {group.locationEstimated ? `${group.farmerLocation} (seller location not set)` : group.farmerLocation} · {group.itemCount} item{group.itemCount === 1 ? "" : "s"}
                                     </p>
                                   </div>
                                 </div>
@@ -506,9 +517,11 @@ export default function CheckoutPage() {
                                     }}
                                     className="p-3 space-y-2"
                                   >
-                                    {group.quotes.slice(0, 5).map((q) => {
+                                    {group.quotes.map((q) => {
                                       const key = `${q.partnerId}|${q.service}`;
                                       const selected = choiceKey === key;
+                                      const isCollection = q.partnerId === "buyer-collection";
+                                      const OptionIcon = isCollection ? MapPin : Truck;
                                       return (
                                         <label
                                           key={q.id}
@@ -517,26 +530,19 @@ export default function CheckoutPage() {
                                             selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
                                           }`}
                                         >
-                                          <RadioGroupItem value={key} id={`${group.farmerId}-${q.id}`} className="sr-only" />
+                                          <RadioGroupItem value={key} id={`${group.farmerId}-${q.id}`} />
+                                          <OptionIcon className="h-5 w-5 text-primary flex-none" />
                                           <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                              <span className="font-semibold text-sm">{q.partnerName}</span>
-                                              <Badge variant="secondary" className="text-[10px] h-4 px-1.5 capitalize">
-                                                {q.service.replace("_", " ")}
-                                              </Badge>
-                                              {q.coldChain && (
-                                                <Badge className="text-[10px] h-4 px-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                                                  {t("shipping_quote_cards.service_cold_chain")}
-                                                </Badge>
-                                              )}
-                                            </div>
-                                            <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
-                                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {q.etaWindow}</span>
-                                              <span className="flex items-center gap-1"><Star className="h-3 w-3 text-amber-500" /> {q.rating.toFixed(1)}</span>
-                                              <span>· {q.co2Kg.toFixed(2)}kg CO₂</span>
+                                            <span className="font-semibold text-sm">{q.partnerName}</span>
+                                            <p className="text-[11px] text-muted-foreground mt-1">
+                                              {isCollection
+                                                ? `Collect the order directly from ${group.farmerName}.`
+                                                : `${group.farmerName} delivers the order to your address.`}
                                             </p>
                                           </div>
-                                          <span className="font-bold text-base flex-shrink-0">{currencySymbol}{q.price.toFixed(2)}</span>
+                                          <span className="font-bold text-sm flex-shrink-0">
+                                            {q.price === 0 ? "Free" : `${currencySymbol}${q.price.toFixed(2)}`}
+                                          </span>
                                         </label>
                                       );
                                     })}
@@ -610,7 +616,7 @@ export default function CheckoutPage() {
                                   <div className="min-w-0">
                                     <p className="truncate font-medium">{g.farmerName}</p>
                                     <p className="text-[11px] text-muted-foreground truncate">
-                                      {q ? `${q.partnerName} · ${q.service.replace("_", " ")} · ${q.etaWindow}` : "—"}
+                                      {q?.partnerName ?? "—"}
                                     </p>
                                   </div>
                                   <span className="font-bold text-sm flex-shrink-0">{currencySymbol}{(q?.price ?? 0).toFixed(2)}</span>

@@ -19,7 +19,7 @@ export default function StudentLoginPage() {
     fetch("/api/student-auth/status").then((response) => response.json()).then((status) => {
       setPortalEnabled(status.enabled);
       if (!status.enabled) setMessage("Student access has not been enabled for this environment.");
-      else if (status.verified) setLocation("/student/dashboard");
+      else if (status.verified) setLocation("/farmers-help/student");
     }).catch(() => { setPortalEnabled(false); setMessage("Unable to check student portal availability."); });
   }, [setLocation]);
 

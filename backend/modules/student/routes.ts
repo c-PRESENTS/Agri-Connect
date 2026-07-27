@@ -55,7 +55,7 @@ const demoResources = [
     id: "demo-academic-support",
     title: "Academic skills and study planning",
     summary: "Preview guidance for study planning, assessment preparation, and academic skills support.",
-    url: "/student/support",
+    url: "/farmers-help/student/support",
     category: "Academic support",
     studyLevels: ["UG", "PG", "PhD"],
     published: true,
@@ -67,7 +67,7 @@ const demoResources = [
     id: "demo-library-research",
     title: "Library and research support",
     summary: "Preview access point for literature searches, referencing, datasets, and research consultations.",
-    url: "/student/support",
+    url: "/farmers-help/student/support",
     category: "Library and research",
     studyLevels: ["UG", "PG", "PhD"],
     published: true,
@@ -79,7 +79,7 @@ const demoResources = [
     id: "demo-ug-field-learning",
     title: "Undergraduate field learning toolkit",
     summary: "Placement preparation, practical fieldwork checklists, and first-degree academic support.",
-    url: "/student/support",
+    url: "/farmers-help/student/support",
     category: "Academic support",
     studyLevels: ["UG"],
     published: true,
@@ -91,7 +91,7 @@ const demoResources = [
     id: "demo-pg-dissertation",
     title: "Postgraduate dissertation support",
     summary: "Research design, ethics preparation, supervisor meetings, and dissertation planning for taught postgraduates.",
-    url: "/student/support",
+    url: "/farmers-help/student/support",
     category: "Library and research",
     studyLevels: ["PG"],
     published: true,
@@ -103,7 +103,7 @@ const demoResources = [
     id: "demo-phd-researcher",
     title: "Doctoral researcher support",
     summary: "Progression reviews, research integrity, publication planning, and doctoral supervision guidance.",
-    url: "/student/support",
+    url: "/farmers-help/student/support",
     category: "Library and research",
     studyLevels: ["PhD"],
     published: true,
@@ -312,7 +312,7 @@ export function registerStudentRoutes(app: Express, deps: StudentRouteDeps): voi
       });
       req.session.studentPortalVerifiedAt = new Date().toISOString();
       audit({ action: "student.access_verified", actorId: userId, targetType: "student_access", targetId: registry.id });
-      res.json({ verified: true, redirectTo: "/student/dashboard" });
+      res.json({ verified: true, redirectTo: "/farmers-help/student" });
     } catch (error) {
       if (error instanceof ZodError) return res.status(400).json({ error: "Invalid confirmation token" });
       console.warn("[student-auth] confirmation failed", (error as Error).message);

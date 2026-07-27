@@ -7,7 +7,7 @@ import {
   Dog, Lightbulb, FileText, MapPin, Users, BarChart3, BookOpen,
   Globe, Phone, Award, Newspaper, Shield, Sprout, Bug, Droplets,
   Sun, Cloud, ThermometerSun, ArrowLeft, Loader2, Sparkles,
-  ChevronRight, ExternalLink, Home as HomeIcon, Play
+  ChevronRight, ExternalLink, GraduationCap, Home as HomeIcon, Play
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -715,18 +715,30 @@ export default function FarmersHelp() {
                         {t("farmers_help.subtitle", "Practical agricultural guidance for growers worldwide — agronomy, horticulture, livestock, post-harvest, climate-smart practices and market intelligence.")}
                       </p>
                     </div>
-                    {!locationData && (
+                    <div className="flex flex-wrap gap-2">
                       <Button
-                        onClick={detectLocation}
+                        onClick={() => setLocation("/farmers-help/student")}
                         size="sm"
-                        variant="default"
+                        variant="outline"
                         className="gap-1.5"
-                        data-testid="button-personalize"
+                        data-testid="button-student-help-point"
                       >
-                        <MapPin className="h-3.5 w-3.5" />
-                        Personalize for my region
+                        <GraduationCap className="h-3.5 w-3.5" />
+                        Student Help Point
                       </Button>
-                    )}
+                      {!locationData && (
+                        <Button
+                          onClick={detectLocation}
+                          size="sm"
+                          variant="default"
+                          className="gap-1.5"
+                          data-testid="button-personalize"
+                        >
+                          <MapPin className="h-3.5 w-3.5" />
+                          Personalize for my region
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
 

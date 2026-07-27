@@ -24,7 +24,7 @@ import {
   FileText, ShoppingCart, LayoutDashboard, Camera, Settings,
   Pencil, X, Check, RotateCcw, ChevronsRight, ChevronsLeft, GripVertical,
   ShoppingBasket, Wrench, Package, Award, Wheat, Store,
-  Salad, Factory, Leaf, Briefcase, Sparkles, Grid3X3,
+  Salad, Factory, Leaf, Briefcase, Sparkles, Grid3X3, GraduationCap,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { categories as defaultCategories, categoryImages, isShoppableCategory } from "@/lib/categories";
@@ -59,6 +59,7 @@ const ALL_SERVICES = [
   { id: "cat-bio",      path: "/?category=bio-products",    icon: Leaf,           label: "Bio",        public: true, category: "bio-products"    },
   // App services (existing)
   { id: "help",     path: "/farmers-help",         icon: Sprout,          label: "Learn",     public: true  },
+  { id: "student-help", path: "/farmers-help/student", icon: GraduationCap, label: "Student Help Point", public: true },
   { id: "agritech", path: "/agritech",             icon: Cpu,             label: "AgriTech",  public: true  },
   { id: "map",      path: "/map",                  icon: Map,             label: "Smart Map", public: true  },
   { id: "land",     path: "/land-leasing",         icon: Landmark,        label: "Land",      public: true  },
@@ -73,6 +74,8 @@ const ALL_SERVICES = [
 ] as const;
 
 type ServiceItem = typeof ALL_SERVICES[number];
+
+const COMING_SOON_SERVICE_IDS = new Set(["student-help", "agritech", "land", "share", "schemes"]);
 
 const LS_ORDER    = "agri-nav-order";
 const LS_HIDDEN   = "agri-nav-hidden";
@@ -290,6 +293,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
           <SortableContext items={visibleItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
             {visibleItems.map((item) => {
               const itemCat = (item as ServiceItem & { category?: string }).category;
+              const isComingSoon = COMING_SOON_SERVICE_IDS.has(item.id);
               const isActive = itemCat
                 ? location === "/" && currentCategory === itemCat
                 : item.id === "home"
@@ -318,13 +322,15 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                 }}
                 whileHover={!editMode ? { scale: 1.03 } : {}}
                 whileTap={!editMode ? { scale: 0.96 } : {}}
-                title={getItemLabel(item)}
+                title={isComingSoon ? `${getItemLabel(item)} — Coming soon` : getItemLabel(item)}
                 className={`w-full relative flex rounded-xl transition-all duration-150 overflow-hidden ${
                   expanded
                     ? "items-center gap-3 py-2 px-2.5"
                     : "flex-col items-center justify-center gap-1 py-2 px-1"
                 } ${
-                  isActive && !editMode
+                  isComingSoon && !editMode
+                    ? "bg-emerald-50/80 text-emerald-800 ring-1 ring-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-300 dark:ring-emerald-800/60 dark:hover:bg-emerald-950/35"
+                    : isActive && !editMode
                     ? "bg-gradient-to-r from-primary/25 via-primary/15 to-primary/5 text-primary font-semibold shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.35)] ring-1 ring-primary/30"
                     : editMode
                       ? "bg-muted/40 text-muted-foreground cursor-grab active:cursor-grabbing"
@@ -378,6 +384,14 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                 ) : (
                   <span className="text-[10px] font-semibold leading-tight text-center w-full whitespace-nowrap overflow-hidden text-ellipsis">
                     {getItemLabel(item)}
+                  </span>
+                )}
+                {isComingSoon && !editMode && (
+                  <span className={expanded
+                    ? "shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white"
+                    : "absolute right-0.5 top-0.5 rounded-full bg-emerald-600 px-1 py-0.5 text-[7px] font-black uppercase leading-none text-white"
+                  }>
+                    Soon
                   </span>
                 )}
 

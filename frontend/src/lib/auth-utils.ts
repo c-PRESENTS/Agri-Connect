@@ -2,7 +2,7 @@ export function isUnauthorizedError(error: Error): boolean {
   return /^401: .*Unauthorized/.test(error.message);
 }
 
-export function getSafeReturnPath(value: string | null, fallback = "/dashboard"): string {
+export function getSafeReturnPath(value: string | null, fallback = "/"): string {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return fallback;
   return value;
 }

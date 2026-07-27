@@ -55,7 +55,7 @@ export default function MyProfilePage() {
         </div>
 
         <div className="mb-6 rounded-lg border bg-muted/30 p-4" data-testid="my-profile-listing-policy">
-          <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">{LISTING_POLICY.title}</h2><p className="mt-1 text-sm text-muted-foreground">{LISTING_POLICY.zeroEntryMessage}</p><p className="mt-1 text-xs text-muted-foreground">{LISTING_POLICY.enforcementMessage}</p></div><Button variant="outline" size="sm" onClick={() => setLocation("/student-help-point")} data-testid="button-profile-student-help"><GraduationCap className="mr-2 h-4 w-4" />Student Help Point</Button></div>
+          <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">{LISTING_POLICY.title}</h2><p className="mt-1 text-sm text-muted-foreground">{LISTING_POLICY.zeroEntryMessage}</p><p className="mt-1 text-xs text-muted-foreground">{LISTING_POLICY.enforcementMessage}</p></div><Button variant="outline" size="sm" onClick={() => setLocation("/farmers-help/student")} data-testid="button-profile-student-help"><GraduationCap className="mr-2 h-4 w-4" />Student Help Point</Button></div>
         </div>
 
         <VerificationTiers profile={user} />
@@ -121,7 +121,14 @@ export default function MyProfilePage() {
                       </div>
                       <div className="mt-4 flex items-center justify-between gap-2 border-t pt-3">
                         <Link href={`/products/${product.id}`} className="text-sm font-medium text-primary hover:underline">View listing</Link>
-                        <Button variant="outline" size="sm" disabled data-testid={`button-edit-listing-${product.id}`} title="Editing is coming soon">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled
+                          className="border-emerald-200 bg-emerald-50 text-emerald-800 disabled:opacity-100"
+                          data-testid={`button-edit-listing-${product.id}`}
+                          title="Editing is coming soon"
+                        >
                           <Edit3 className="mr-2 h-3.5 w-3.5" /> Edit soon
                         </Button>
                       </div>

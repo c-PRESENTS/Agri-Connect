@@ -29,6 +29,59 @@ export interface RateCard {
   intlSurcharge?: number;
 }
 
+export const BUYER_COLLECTION_PARTNER_ID = "buyer-collection";
+export const FARMER_DELIVERY_PARTNER_ID = "farmer-delivery";
+
+export function buildCheckoutFulfillmentQuotes(baseQuotes: readonly ShipQuote[]): ShipQuote[] {
+  const deliveryEstimate = baseQuotes[0];
+  const expiresAt = deliveryEstimate?.expiresAt ?? new Date(Date.now() + 15 * 60_000).toISOString();
+  return [
+    {
+      id: BUYER_COLLECTION_PARTNER_ID,
+      partnerId: BUYER_COLLECTION_PARTNER_ID,
+      partnerName: "Collect directly from farmer",
+      service: "scheduled",
+      price: 0,
+      currency: deliveryEstimate?.currency ?? "GBP",
+      etaHours: 0,
+      etaWindow: "Arrange collection with the farmer",
+      coldChain: false,
+      co2Kg: 0,
+      rating: 5,
+      notes: "The buyer collects the order directly from the farmer.",
+      expiresAt,
+    },
+    {
+      id: FARMER_DELIVERY_PARTNER_ID,
+      partnerId: FARMER_DELIVERY_PARTNER_ID,
+      partnerName: "Farmer delivers to buyer",
+      service: "standard",
+      price: deliveryEstimate?.price ?? 0,
+      currency: deliveryEstimate?.currency ?? "GBP",
+      etaHours: deliveryEstimate?.etaHours ?? 48,
+      etaWindow: deliveryEstimate?.etaWindow ?? "Arrange delivery with the farmer",
+      coldChain: deliveryEstimate?.coldChain ?? false,
+      co2Kg: deliveryEstimate?.co2Kg ?? 0,
+      rating: 5,
+      notes: "The farmer delivers the order to the buyer's address.",
+      expiresAt,
+    },
+  ];
+}
+
+export function resolveCheckoutFulfillmentQuote(
+  baseQuotes: readonly ShipQuote[],
+  choice: { partnerId: string; service: ShipServiceType },
+): ShipQuote | undefined {
+  return buildCheckoutFulfillmentQuotes(baseQuotes).find(
+    (quote) => quote.partnerId === choice.partnerId && quote.service === choice.service,
+  );
+}
+
+export function isCheckoutFulfillmentPartner(partnerId: string): boolean {
+  return partnerId === BUYER_COLLECTION_PARTNER_ID || partnerId === FARMER_DELIVERY_PARTNER_ID;
+}
+
 /**
  * Rate cards are based on real-world 3rd-party carrier published minimums
  * (Apr 2026). AgriConnect aggregates these — we don't operate trucks ourselves

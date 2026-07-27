@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Check,
   CloudSun,
+  GraduationCap,
   Globe2,
   Leaf,
   LockKeyhole,
@@ -487,21 +488,40 @@ function PhoneStep({
           )}
         </div>
 
-        <a href="/student/login" className="block text-center text-sm font-semibold text-emerald-700 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-          Student login
-        </a>
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="h-14 w-full justify-between rounded-full border-emerald-200 bg-emerald-50/70 px-5 text-base font-bold text-emerald-950 shadow-sm"
+          disabled
+          aria-label="Student login coming soon"
+          title="Student login is coming soon"
+        >
+          <span className="inline-flex items-center gap-3">
+            <GraduationCap className="h-5 w-5 text-emerald-700" />
+            Student Login
+          </span>
+          <span className="rounded-full bg-emerald-700 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
+            Coming soon
+          </span>
+        </Button>
 
         <Button
           type="button"
           variant="outline"
           size="lg"
-          className="h-14 w-full rounded-full border-slate-300 bg-white text-base font-bold text-slate-950 shadow-sm opacity-90"
+          className="h-14 w-full justify-between rounded-full border-emerald-200 bg-emerald-50/70 px-5 text-base font-bold text-emerald-950 shadow-sm"
           disabled
           aria-label={t("login.apple_sign_in_coming_soon")}
           title={t("login.apple_sign_in_coming_soon")}
         >
-          <SiApple className="mr-3 h-5 w-5" />
-          {t("login.apple_sign_in")}
+          <span className="inline-flex items-center gap-3">
+            <SiApple className="h-5 w-5 text-emerald-700" />
+            {t("login.apple_sign_in")}
+          </span>
+          <span className="rounded-full bg-emerald-700 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
+            Coming soon
+          </span>
         </Button>
 
         <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-lime-50/70 p-5">

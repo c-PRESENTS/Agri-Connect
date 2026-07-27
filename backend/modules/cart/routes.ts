@@ -10,7 +10,13 @@ import {
 import type { OrderItem } from "@shared/schema";
 import { isAuthenticated } from "../../auth";
 import { storage } from "../../storage";
-import { calculateQuotesFromCoords, geocodePostcode, resolveSellerPickupCoordinates } from "../../shipping/quote-engine";
+import {
+  buildCheckoutFulfillmentQuotes,
+  calculateQuotesFromCoords,
+  geocodePostcode,
+  resolveCheckoutFulfillmentQuote,
+  resolveSellerPickupCoordinates,
+} from "../../shipping/quote-engine";
 import { queueOrderConfirmation } from "../../notifications";
 import { audit } from "../../audit";
 
@@ -162,7 +168,7 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
               fragile: /egg|berry|tomato/.test(item.product.name.toLowerCase()),
             })),
           });
-          const quote = quotes.quotes.find((candidate) => candidate.partnerId === choice.partnerId && candidate.service === choice.service);
+          const quote = resolveCheckoutFulfillmentQuote(quotes.quotes, choice);
           if (!quote) return res.status(400).json({ error: "Selected shipping option is no longer available" });
           shippingTotal += quote.price;
         }
@@ -268,7 +274,7 @@ export function registerCartRoutes(app: Express, deps: CartRouteDeps): void {
           itemCount: g.items.reduce((s, i) => s + i.quantity, 0),
           weightKg: refined.weightKg,
           distanceKm: refined.distanceKm,
-          quotes: refined.quotes,
+          quotes: buildCheckoutFulfillmentQuotes(refined.quotes),
         };
       });
 

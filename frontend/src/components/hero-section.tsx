@@ -274,8 +274,8 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
             </div>
 
             <h1 className="text-4xl xl:text-5xl font-black text-white mb-3 leading-[1] tracking-tighter">
-              {t("home.fresh_produce")}{" "}
-              <span className="gradient-text">{t("home.direct_to_you")}</span>
+              <span className="block">{t("home.fresh_produce")}</span>
+              <span className="gradient-text block whitespace-nowrap">{t("home.direct_to_you")}</span>
             </h1>
 
             <p className="text-sm text-white/70 mb-4 leading-snug max-w-md">

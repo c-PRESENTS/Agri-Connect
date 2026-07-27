@@ -17,7 +17,7 @@ export default function StudentConfirmLoginPage() {
     if (!token) { setState("error"); setMessage("The confirmation link is incomplete."); return; }
     fetch("/api/student-auth/confirm", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) })
       .then(async (response) => { const body = await response.json(); if (!response.ok) throw new Error(body.error || "Confirmation failed"); return body; })
-      .then(() => { sessionStorage.removeItem("student-confirmation-email"); queryClient.invalidateQueries({ queryKey: ["/api/student-auth/status"] }); setState("success"); setMessage("Student access verified. Redirecting…"); window.setTimeout(() => setLocation("/student/dashboard"), 800); })
+      .then(() => { sessionStorage.removeItem("student-confirmation-email"); queryClient.invalidateQueries({ queryKey: ["/api/student-auth/status"] }); setState("success"); setMessage("Student access verified. Redirecting…"); window.setTimeout(() => setLocation("/farmers-help/student"), 800); })
       .catch((error) => { setState("error"); setMessage(error.message); });
   }, [search, setLocation]);
 
