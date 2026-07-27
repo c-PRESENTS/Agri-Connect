@@ -31,6 +31,7 @@ import { getProductImage } from "@/lib/product-images";
 import { isSellerOnline } from "@/lib/seller-presence";
 import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product, LocalNeed } from "@shared/schema";
+import { FavoriteProductButton } from "@/components/favorite-product-button";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -786,6 +787,12 @@ export default function SmartMapPage() {
                                     <div className="text-[10px] text-muted-foreground">£{product.price}/{product.unit} · {product.stock} in stock</div>
                                   </div>
                                   {product.price === 0 && <Badge className="text-[9px] bg-green-100 text-green-700 border-none">Free</Badge>}
+                                  <FavoriteProductButton
+                                    productId={product.id}
+                                    productName={product.name}
+                                    className="h-7 w-7 bg-background shadow-sm hover:bg-background"
+                                    data-testid={`button-map-farmer-favorite-${product.id}`}
+                                  />
                                 </div>
                               ))}
                               {farmer.productItems.length > 6 && (
@@ -827,12 +834,12 @@ export default function SmartMapPage() {
                           </div>
                           <div className="grid grid-cols-2 gap-1.5">
                             {catProducts.map(product => (
-                              <button
-                                key={product.id}
-                                className="flex items-center gap-2 p-2 rounded-lg border border-border/50 hover:border-primary/30 hover:bg-muted/40 transition-all text-left"
-                                onClick={() => { if (mapRef.current) mapRef.current.flyTo([product.farmerLatitude, product.farmerLongitude], 12, { duration: 1 }); }}
-                                data-testid={`food-product-${product.id}`}
-                              >
+                              <div key={product.id} className="relative">
+                                <button
+                                  className="flex w-full items-center gap-2 rounded-lg border border-border/50 p-2 pr-10 text-left transition-all hover:border-primary/30 hover:bg-muted/40"
+                                  onClick={() => { if (mapRef.current) mapRef.current.flyTo([product.farmerLatitude, product.farmerLongitude], 12, { duration: 1 }); }}
+                                  data-testid={`food-product-${product.id}`}
+                                >
                                 <img
                                   src={getProductImage(product.name, product.categoryId)}
                                   alt={product.name}
@@ -846,7 +853,14 @@ export default function SmartMapPage() {
                                   </div>
                                   <div className="text-[9px] text-muted-foreground truncate">{product.farmerName}</div>
                                 </div>
-                              </button>
+                                </button>
+                                <FavoriteProductButton
+                                  productId={product.id}
+                                  productName={product.name}
+                                  className="absolute right-1.5 top-1/2 h-7 w-7 -translate-y-1/2 bg-background shadow-sm hover:bg-background"
+                                  data-testid={`button-map-food-favorite-${product.id}`}
+                                />
+                              </div>
                             ))}
                           </div>
                         </div>

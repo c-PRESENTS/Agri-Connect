@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { LISTING_POLICY } from "@/lib/listing-policy";
 import type { Product } from "@shared/schema";
+import { FavoriteProductButton } from "@/components/favorite-product-button";
 
 function safePrice(product: Product) {
   return Number.isFinite(product.price) && product.price >= 0
@@ -101,11 +102,17 @@ export default function MyProfilePage() {
                 return (
                   <Card key={product.id} data-testid={`my-profile-product-${product.id}`}>
                     <CardContent className="p-4">
-                      <div className="mb-3 aspect-[4/3] overflow-hidden rounded-md bg-muted">
+                      <div className="relative mb-3 aspect-[4/3] overflow-hidden rounded-md bg-muted">
                         <SafeProductImage
                           src={resolveProductImageForProduct(product, { imageOwnership: "seller" }).src}
                           alt={`${name} product image`}
                           className="h-full w-full object-cover"
+                        />
+                        <FavoriteProductButton
+                          productId={product.id}
+                          productName={name}
+                          className="absolute right-2 top-2 h-8 w-8 border border-background/70 bg-background/90 shadow-md hover:bg-background"
+                          data-testid={`button-profile-favorite-${product.id}`}
                         />
                       </div>
                       <div className="flex items-start justify-between gap-3">

@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "@shared/schema";
 import { SafeProductImage } from "./safe-product-image";
 import { resolveProductImage, resolveProductImageForProduct } from "@/lib/product-images";
+import { FavoriteProductButton } from "./favorite-product-button";
 
 interface ProductShowcaseProps {
   categoryId: string | null;
@@ -341,6 +342,12 @@ export function ProductShowcase({
                           </div>
 
                           {/* Quick Add Button — always visible (Amazon-style) */}
+                          <FavoriteProductButton
+                            productId={product.id}
+                            productName={item}
+                            className="absolute right-1 top-1 h-7 w-7 border border-background/70 bg-background/90 shadow-md hover:bg-background"
+                            data-testid={`button-showcase-favorite-${sectionIdx}-${itemIdx}`}
+                          />
                           <Button
                             size="icon"
                             className="absolute bottom-1 right-1 h-7 w-7 shadow-md bg-primary hover:bg-primary/90 text-primary-foreground border border-background"
@@ -411,6 +418,12 @@ export function ProductShowcase({
                             </Badge>
                           )}
 
+                        <FavoriteProductButton
+                          productId={product.id}
+                          productName={product.name}
+                          className="absolute right-1.5 top-1.5 h-8 w-8 border border-background/70 bg-background/90 shadow-md hover:bg-background"
+                          data-testid={`button-showcase-fallback-favorite-${product.id}`}
+                        />
                         <Button
                           size="icon"
                           className="absolute bottom-1.5 right-1.5 h-8 w-8 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground border border-background"

@@ -12,6 +12,7 @@ import { categories, getShoppableCategories } from "@/lib/categories";
 import { apiRequest } from "@/lib/queryClient";
 import { SafeProductImage } from "@/components/safe-product-image";
 import { resolveProductImageForProduct } from "@/lib/product-images";
+import { FavoriteProductButton } from "@/components/favorite-product-button";
 
 interface SearchAutocompleteProps {
   value: string;
@@ -369,12 +370,12 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                   )}
                 </div>
                 {suggestions.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => handleSelect(product.name)}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-muted/60 transition-colors text-left group"
-                    data-testid={`search-result-${product.id}`}
-                  >
+                  <div key={product.id} className="relative">
+                    <button
+                      onClick={() => handleSelect(product.name)}
+                      className="group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 pr-12 text-left transition-colors hover:bg-muted/60"
+                      data-testid={`search-result-${product.id}`}
+                    >
                     <div className="h-8 w-8 rounded-md overflow-hidden bg-muted shrink-0">
                       <SafeProductImage src={resolveProductImageForProduct(product).src} alt={`${product.name || "Product"} product image`} className="w-full h-full object-cover" />
                     </div>
@@ -385,7 +386,14 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                       <div className="text-[10px] text-muted-foreground truncate">{product.farmerName || "Seller not specified"}</div>
                     </div>
                     <div className="text-[11px] font-bold text-primary shrink-0">£{product.price}</div>
-                  </button>
+                    </button>
+                    <FavoriteProductButton
+                      productId={product.id}
+                      productName={product.name || "Unnamed product"}
+                      className="absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 bg-background/90 shadow-sm hover:bg-background"
+                      data-testid={`button-search-favorite-${product.id}`}
+                    />
+                  </div>
                 ))}
               </div>
             )}
