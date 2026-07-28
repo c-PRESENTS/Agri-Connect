@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowRight, Star, Users, Leaf, TrendingUp,
   ShieldCheck, Truck, Sprout, Globe, Activity, Zap, Satellite,
-  GripVertical, PlusCircle, EyeOff, Pencil, Check, X as XIcon,
   ShoppingCart,
 } from "lucide-react";
 import { LeafletFarmerMap } from "./leaflet-farmer-map";
@@ -18,49 +17,10 @@ import { UserBookmarks } from "./user-bookmarks";
 import type { Product } from "@shared/schema";
 import { getProductImage } from "@/lib/product-images";
 import { categoryImages } from "@/lib/categories";
+import { MAIN_MARKETPLACE_CATEGORIES } from "@/lib/main-marketplace-categories";
 import { FavoriteProductButton } from "./favorite-product-button";
 
-const CAT_LS_KEY = "agri-all-cats-v1";
 type ShareCareItem = { id: string; name: string; unit: string; qty: number; donor: string; location: string; emoji: string; postedAgo: string; category: string };
-
-const ALL_PRODUCT_CATS = [
-  { key: "vegetables",       emoji: "🥦", label: "Vegetables"     },
-  { key: "fruits",           emoji: "🍎", label: "Fruits"         },
-  { key: "dairy",            emoji: "🥛", label: "Dairy & Eggs"   },
-  { key: "grains",           emoji: "🌾", label: "Grains"         },
-  { key: "pulses",           emoji: "🫘", label: "Pulses"         },
-  { key: "oils",             emoji: "🫒", label: "Cooking Oils"   },
-  { key: "meat",             emoji: "🥩", label: "Meat"           },
-  { key: "fish",             emoji: "🐟", label: "Fish & Seafood" },
-  { key: "spices",           emoji: "🌶️",label: "Spices"         },
-  { key: "flowers",          emoji: "🌸", label: "Flowers"        },
-  { key: "organic",          emoji: "🌿", label: "Organic"        },
-  { key: "honey",            emoji: "🍯", label: "Honey & Bee"    },
-  { key: "mushrooms",        emoji: "🍄", label: "Mushrooms"      },
-  { key: "medicinal",        emoji: "💊", label: "Medicinal"      },
-  { key: "seeds",            emoji: "🌱", label: "Seeds"          },
-  { key: "fertilizers",     emoji: "🪣",  label: "Fertilizers"   },
-  { key: "pesticides",       emoji: "🧪", label: "Pesticides"     },
-  { key: "tools",            emoji: "🔧", label: "Tools"          },
-  { key: "machinery",        emoji: "🚜", label: "Machinery"      },
-  { key: "irrigation",       emoji: "💧", label: "Irrigation"     },
-  { key: "protective-gear",  emoji: "🧤", label: "Safety Gear"    },
-  { key: "dairy-animals",    emoji: "🐄", label: "Livestock"      },
-  { key: "poultry",          emoji: "🐓", label: "Poultry"        },
-  { key: "aquaculture",      emoji: "🐠", label: "Aquaculture"    },
-  { key: "tea",              emoji: "🍵", label: "Tea"            },
-  { key: "coffee",           emoji: "☕", label: "Coffee"         },
-  { key: "timber",           emoji: "🪵", label: "Timber"         },
-  { key: "animal-feed",      emoji: "🌾", label: "Animal Feed"    },
-  { key: "hydroponics",      emoji: "🌊", label: "Hydroponics"    },
-  { key: "greenhouse",       emoji: "🏠", label: "Greenhouse"     },
-  { key: "bakery",           emoji: "🍞", label: "Bakery"         },
-  { key: "snacks",           emoji: "🍿", label: "Snacks"         },
-  { key: "pickles",          emoji: "🥫", label: "Pickles"        },
-  { key: "plantation",       emoji: "🌴", label: "Plantation"     },
-  { key: "fibre",            emoji: "🧵", label: "Fibre Crops"    },
-  { key: "farming-services", emoji: "🚛", label: "Farm Services"  },
-];
 
 interface HeroSectionProps {
   onBrowse: () => void;
@@ -85,17 +45,6 @@ const HERO_MAP_MODES: { id: HeroMapMode; label: string; emoji: string; overlays:
   { id: "land-lots", label: "Land & Lots", emoji: "🗺️", overlays: { farmers: false, needs: false, heatmap: false } },
 ];
 
-function loadCatPrefs(): { order: string[]; hidden: string[] } {
-  try {
-    const v = localStorage.getItem(CAT_LS_KEY);
-    if (v) return JSON.parse(v);
-  } catch {}
-  return { order: ALL_PRODUCT_CATS.map(c => c.key), hidden: [] };
-}
-function saveCatPrefs(p: { order: string[]; hidden: string[] }) {
-  localStorage.setItem(CAT_LS_KEY, JSON.stringify(p));
-}
-
 export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: HeroSectionProps) {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
@@ -105,9 +54,6 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
   const heroLeftRef = useRef<HTMLDivElement | null>(null);
   const heroDragging = useRef<{ startX: number; startPct: number; containerW: number } | null>(null);
 
-  // All Categories – order & visibility managed by user
-  const [catPrefs, setCatPrefs] = useState(loadCatPrefs);
-  const [catEditMode, setCatEditMode] = useState(false);
   const [mobileMapHeight, setMobileMapHeight] = useState<number>(180);
   const mobileMapDragRef = useRef<{ startY: number; startHeight: number } | null>(null);
 
@@ -134,19 +80,12 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
     window.addEventListener("touchend", handleEnd);
     document.body.style.userSelect = "none";
   };
-  const catDragIdx = useRef<number | null>(null);
-  const persistCatPrefs = (p: { order: string[]; hidden: string[] }) => { setCatPrefs(p); saveCatPrefs(p); };
-
-  const orderedCats = catPrefs.order
-    .map(k => ALL_PRODUCT_CATS.find(c => c.key === k))
-    .filter(Boolean) as typeof ALL_PRODUCT_CATS;
-  // append any new cats not yet in user order
-  const allKeys = new Set(catPrefs.order);
-  ALL_PRODUCT_CATS.forEach(c => { if (!allKeys.has(c.key)) orderedCats.push(c); });
-
   // Share & Care live items (live query)
   const { data: shareCareItems = [] } = useQuery<ShareCareItem[]>({
     queryKey: ["/api/share-care"],
+  });
+  const { data: dailyNeedsProducts = [] } = useQuery<Product[]>({
+    queryKey: ["/api/products?categoryId=daily-needs"],
   });
 
   const startHeroDrag = (e: React.MouseEvent) => {
@@ -189,7 +128,9 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
     return () => window.removeEventListener("resize", applyWidth);
   }, [heroLeftPct]);
 
-  const paidProducts = products.filter(p => p.price > 0);
+  const freshPickProducts = dailyNeedsProducts.filter(
+    product => product.categoryId === "daily-needs" && product.price > 0,
+  );
   const featuredProducts = products.filter(p => p.isFeatured);
   const farmerCount = new Set(products.map(p => p.farmerId)).size;
   const visibleListings = products.length + shareCareItems.length;
@@ -469,14 +410,14 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
             <div className="flex items-center gap-1.5 sm:gap-2">
               <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-foreground/60">{t("home.fresh_picks")}</span>
-              <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 h-4">{paidProducts.slice(0, 14).length}</Badge>
+              <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 h-4">{freshPickProducts.slice(0, 14).length}</Badge>
             </div>
             <Button variant="ghost" size="sm" onClick={onBrowse} className="h-6 px-2 text-[10px] font-bold text-primary hover:text-primary gap-1">
               {t("common.all")} <ArrowRight className="h-3 w-3" />
             </Button>
           </div>
           <div className="flex gap-1.5 sm:gap-2.5 overflow-x-auto pb-1 sm:pb-1.5 no-scrollbar">
-            {paidProducts.slice(0, 14).map((product, idx) => (
+            {freshPickProducts.slice(0, 14).map((product, idx) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 8 }}
@@ -501,7 +442,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                     productId={product.id}
                     productName={product.name}
                     data-testid={`button-hero-favorite-${product.id}`}
-                    className="absolute bottom-1 right-1 h-6 w-6 bg-background/90 text-muted-foreground shadow-sm hover:bg-background hover:text-red-500"
+                    className="!absolute bottom-1 right-1 h-6 w-6 bg-background/95 text-red-500 shadow-md hover:bg-red-50 hover:text-red-600"
                   />
                   {product.isOrganic && (
                     <div className="absolute top-1 left-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-green-500 flex items-center justify-center">
@@ -571,7 +512,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                       productId={product.id}
                       productName={product.name}
                       data-testid={`button-hero-featured-favorite-${product.id}`}
-                      className="absolute bottom-1 right-1 h-6 w-6 bg-background/90 text-muted-foreground shadow-sm hover:bg-background hover:text-red-500"
+                      className="!absolute bottom-1 right-1 h-6 w-6 bg-background/95 text-red-500 shadow-md hover:bg-red-50 hover:text-red-600"
                     />
                   </div>
                   <h3 className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-amber-600 transition-colors">{product.name}</h3>
@@ -645,107 +586,37 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
               <div className="h-1.5 w-1.5 sm:h-2.5 sm:w-2.5 rounded-full bg-primary flex-shrink-0" />
               <h2 className="text-[11px] sm:text-base font-black uppercase tracking-[0.12em] text-foreground">{t("home.all_categories")}</h2>
               <span className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold">
-                ({orderedCats.filter(c => !catPrefs.hidden.includes(c.key)).length})
+                ({MAIN_MARKETPLACE_CATEGORIES.length})
               </span>
-              <div className="ml-auto flex items-center gap-2">
-                {catEditMode && catPrefs.hidden.length > 0 && (
-                  <button
-                    onClick={() => persistCatPrefs({ ...catPrefs, hidden: [] })}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border border-primary/40 text-primary hover:bg-primary/10 transition-all"
-                  >
-                    <PlusCircle className="h-3 w-3" /> {t("home.restore_all")}
-                  </button>
-                )}
-                <button
-                  onClick={() => setCatEditMode(v => !v)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${
-                    catEditMode
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "border-border/60 text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5"
-                  }`}
-                >
-                  {catEditMode ? <><Check className="h-3 w-3" /> {t("nav.done")}</> : <><Pencil className="h-3 w-3" /> {t("home.customise")}</>}
-                </button>
-              </div>
             </div>
 
-            {catEditMode && (
-              <p className="text-[10px] text-muted-foreground mb-3 bg-muted/50 rounded-lg px-3 py-2">
-                {t("home.customise_hint")}
-              </p>
-            )}
-
-            {/* Category tile grid — visible tiles */}
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-10 gap-1 sm:gap-2 w-full max-w-full">
-              {orderedCats
-                .filter(c => catEditMode || !catPrefs.hidden.includes(c.key))
-                .map(({ key, emoji, label }, idx) => {
-                  const img = categoryImages[key] || "";
-                  const isHidden = catPrefs.hidden.includes(key);
-                  return (
-                    <div
-                      key={key}
-                      draggable={catEditMode}
-                      onDragStart={() => { catDragIdx.current = idx; }}
-                      onDragOver={(e) => { e.preventDefault(); }}
-                      onDrop={() => {
-                        if (catDragIdx.current === null || catDragIdx.current === idx) return;
-                        const visibleKeys = orderedCats
-                          .filter(c => catEditMode || !catPrefs.hidden.includes(c.key))
-                          .map(c => c.key);
-                        const from = catDragIdx.current;
-                        const to = idx;
-                        const newVisible = [...visibleKeys];
-                        const [moved] = newVisible.splice(from, 1);
-                        newVisible.splice(to, 0, moved);
-                        const hiddenItems = orderedCats.filter(c => catPrefs.hidden.includes(c.key)).map(c => c.key);
-                        persistCatPrefs({ ...catPrefs, order: [...newVisible, ...hiddenItems] });
-                        catDragIdx.current = null;
-                      }}
-                      className={`relative group min-w-0 ${catEditMode ? "cursor-grab active:cursor-grabbing" : ""} ${isHidden ? "opacity-40" : ""}`}
-                      style={{ aspectRatio: "4 / 3" }}
-                    >
-                      <button
-                        onClick={() => {
-                          if (catEditMode) return;
-                          navigate(`/?category=${key}`);
-                        }}
-                        data-testid={`cat-tile-${key}`}
-                        className="w-full h-full relative overflow-hidden rounded-lg sm:rounded-xl border-2 border-transparent hover:border-primary/70 hover:scale-[1.05] active:scale-95 transition-all duration-150 shadow-md hover:shadow-xl"
-                      >
-                        {img
-                          ? <img src={img} alt={label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                          : <div className="absolute inset-0 bg-gradient-to-br from-primary/40 to-primary/10" />
-                        }
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent group-hover:from-primary/80 group-hover:via-primary/10 transition-all duration-300" />
-                        <div className="absolute inset-0 flex flex-col items-center justify-end pb-1 sm:pb-1.5 px-0.5 gap-0">
-                          <span className="text-base sm:text-2xl leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] filter">{emoji}</span>
-                          <span className="text-[8px] sm:text-[11px] font-black text-white text-center leading-tight w-full px-0.5 drop-shadow-[0_1px_3px_rgba(0,0,0,1)] tracking-tight truncate">{label}</span>
-                        </div>
-                        {catEditMode && (
-                          <div className="absolute top-1 left-1 w-4 h-4 rounded bg-black/50 flex items-center justify-center">
-                            <GripVertical className="h-2.5 w-2.5 text-white/80" />
-                          </div>
-                        )}
-                      </button>
-                      {/* Hide button (only in edit mode) */}
-                      {catEditMode && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const hidden = catPrefs.hidden.includes(key)
-                              ? catPrefs.hidden.filter(h => h !== key)
-                              : [...catPrefs.hidden, key];
-                            persistCatPrefs({ ...catPrefs, hidden });
-                          }}
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive border-2 border-background flex items-center justify-center shadow-md z-10 hover:bg-destructive/80 transition-colors"
-                          title={isHidden ? t("home.show") : t("home.hide")}
-                        >
-                          {isHidden ? <PlusCircle className="h-2.5 w-2.5 text-white" /> : <XIcon className="h-2.5 w-2.5 text-white" />}
-                        </button>
-                      )}
-                    </div>
-                  );
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-11">
+              {MAIN_MARKETPLACE_CATEGORIES.map(({ id, label }) => {
+                const image = categoryImages[id];
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => navigate(`/?category=${id}`)}
+                    data-testid={`main-category-${id}`}
+                    aria-label={`Open ${label} category`}
+                    className="group relative aspect-[4/3] min-w-0 overflow-hidden rounded-xl border border-border/60 bg-muted text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0"
+                  >
+                    {image ? (
+                      <img
+                        src={image}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/50 to-primary/15" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent transition-colors group-hover:from-primary/90" />
+                    <span className="absolute inset-x-1.5 bottom-1.5 truncate text-center text-[9px] font-black text-white drop-shadow sm:text-[11px]">
+                      {label}
+                    </span>
+                  </button>
+                );
               })}
             </div>
 
