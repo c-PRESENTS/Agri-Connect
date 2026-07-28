@@ -37,6 +37,9 @@ const statusLabel: Record<ShipmentStatus, string> = {
   cancelled: "Cancelled",
 };
 
+const shipTabClass =
+  "flex-col gap-1 rounded-md py-2 text-[10px] font-extrabold text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 sm:text-xs data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-sm";
+
 export default function ShipPage() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
@@ -100,12 +103,12 @@ export default function ShipPage() {
       </Card>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid grid-cols-5 w-full h-auto">
-          <TabsTrigger value="track" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-track"><Package className="h-3.5 w-3.5" />Track</TabsTrigger>
-          <TabsTrigger value="orders" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-orders"><Truck className="h-3.5 w-3.5" />{t("ship.parcels_tab")}</TabsTrigger>
-          <TabsTrigger value="send" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-send"><Send className="h-3.5 w-3.5" />{t("ship.send_parcel_button")}</TabsTrigger>
-          <TabsTrigger value="milk" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-milk"><Calendar className="h-3.5 w-3.5" />{t("ship.settings_tab")}</TabsTrigger>
-          <TabsTrigger value="partner" className="text-[10px] sm:text-xs flex-col gap-0.5 py-2" data-testid="tab-partner"><Building2 className="h-3.5 w-3.5" />{t("ship.parcels_tab")}</TabsTrigger>
+        <TabsList className="grid h-auto w-full grid-cols-5 gap-1 border border-emerald-200 bg-emerald-50/80 p-1">
+          <TabsTrigger value="track" className={shipTabClass} data-testid="tab-track"><Package className="h-4 w-4" />Track</TabsTrigger>
+          <TabsTrigger value="orders" className={shipTabClass} data-testid="tab-orders"><Truck className="h-4 w-4" />{t("ship.parcels_tab")}</TabsTrigger>
+          <TabsTrigger value="send" className={shipTabClass} data-testid="tab-send"><Send className="h-4 w-4" />{t("ship.send_parcel_button")}</TabsTrigger>
+          <TabsTrigger value="milk" className={shipTabClass} data-testid="tab-milk"><Calendar className="h-4 w-4" />{t("ship.settings_tab")}</TabsTrigger>
+          <TabsTrigger value="partner" className={shipTabClass} data-testid="tab-partner"><Building2 className="h-4 w-4" />{t("ship.parcels_tab")}</TabsTrigger>
         </TabsList>
 
         {/* TRACK — list of my shipments */}

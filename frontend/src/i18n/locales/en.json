@@ -1429,7 +1429,7 @@
     "review_title": "Order Summary",
     "deliver_to": "Deliver to",
     "ship_from": "Ship from",
-    "item_count": "{count} item(s)",
+    "item_count": "{{count}} item(s)",
     "subtotal": "Subtotal",
     "vat": "VAT (20%)",
     "total": "Total",
@@ -1753,7 +1753,7 @@
     "subtotal": "Subtotal",
     "checkout_button": "Proceed to Checkout",
     "continue_shopping": "Continue Shopping",
-    "item_count": "{count} item(s)",
+    "item_count": "{{count}} item(s)",
     "remove_item": "Remove item"
   },
   "category": {
@@ -1870,7 +1870,7 @@
   },
   "product_showcase": {
     "badge": "AgriConnect Direct",
-    "item_count": "{count} items",
+    "item_count": "{{count}} items",
     "farm_to_table": "Farm to table",
     "same_day_delivery": "Same day delivery",
     "verified_farmers": "Verified farmers"

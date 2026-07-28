@@ -17,6 +17,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useTranslation } from "react-i18next";
 import type { Product, ProductFilters as Filters, Region } from "@shared/schema";
 import { getShoppableCategories, regions } from "@/lib/categories";
+import { buildProductDetailUrl } from "@/lib/product-navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 function findCategoryForSubcategory(subcategoryId: string | null) {
@@ -55,6 +56,19 @@ export default function Home() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const requestedSubcategory =
+    activeDietaryFilter || activeSubcategory || selectedSubcategory;
+  const effectiveSubcategory = useMemo(() => {
+    if (!selectedCategory || !requestedSubcategory) return undefined;
+    const category = getShoppableCategories().find(
+      (item) => item.id === selectedCategory,
+    );
+    return category?.subcategories.some(
+      (subcategory) => subcategory.id === requestedSubcategory,
+    )
+      ? requestedSubcategory
+      : undefined;
+  }, [requestedSubcategory, selectedCategory]);
 
   useEffect(() => {
     const subcat = urlParams.get("subcategory") || urlParams.get("subcategoryId");
@@ -105,7 +119,7 @@ export default function Home() {
 
   const queryParams = new URLSearchParams();
   if (selectedCategory) queryParams.set("categoryId", selectedCategory);
-  if (selectedSubcategory) queryParams.set("subcategoryId", selectedSubcategory);
+  if (effectiveSubcategory) queryParams.set("subcategoryId", effectiveSubcategory);
   if (searchQuery) queryParams.set("search", searchQuery);
   if (filters.isOrganic) queryParams.set("isOrganic", "true");
   if (filters.inStock) queryParams.set("inStock", "true");
@@ -171,26 +185,14 @@ export default function Home() {
   }, []);
 
   const handleProductClick = (product: Product) => {
-    // Synthetic placeholder products (no backend record) — search instead
-    // of going to a broken detail page.
-    if (product.id.startsWith("agri-")) {
-      const qs = new URLSearchParams({ search: product.name });
-      setLocation(`/?${qs.toString()}`);
-      return;
-    }
-    setLocation(`/products/${product.id}`);
+    setLocation(buildProductDetailUrl(product, {
+      categoryId: selectedCategory,
+      subcategoryId: effectiveSubcategory,
+      section: activeSection,
+    }));
   };
 
   const handleAddToCart = (product: Product) => {
-    if (product.id.startsWith("agri-")) {
-      // Placeholder — can't add to backend cart. Substitute the first real
-      // loaded product as a friendly fallback.
-      const real = products[0];
-      if (real) {
-        addItem.mutate({ product: real, quantity: 1 });
-      }
-      return;
-    }
     addItem.mutate({ product, quantity: 1 });
   };
 
@@ -367,7 +369,7 @@ export default function Home() {
                     left={
                       <ProductShowcase
                         categoryId={selectedCategory || null}
-                        subcategoryId={activeDietaryFilter ? activeDietaryFilter : (activeSubcategory || selectedSubcategory || null)}
+                        subcategoryId={effectiveSubcategory || null}
                         activeSection={activeSection}
                         currencySymbol={currentRegion.currencySymbol}
                         onAddToCart={handleAddToCart}

@@ -1133,7 +1133,7 @@
     "review_title": "Crynodeb o'r Archeb",
     "deliver_to": "Danfon i",
     "ship_from": "Llong o",
-    "item_count": "{count} eitem(au)",
+    "item_count": "{{count}} eitem(au)",
     "subtotal": "Is-gyfanswm",
     "vat": "TAW (5%)",
     "total": "Cyfanswm",
@@ -1455,7 +1455,7 @@
     "subtotal": "Is-gyfanswm",
     "checkout_button": "Ewch i Dalu",
     "continue_shopping": "Parhau i Siopa",
-    "item_count": "{count} eitem(au)",
+    "item_count": "{{count}} eitem(au)",
     "remove_item": "Tynnu eitem"
   },
   "category_carousel": {
@@ -1544,7 +1544,7 @@
   },
   "product_showcase": {
     "badge": "AgriConnect Uniongyrchol",
-    "item_count": "{count} eitem",
+    "item_count": "{{count}} eitem",
     "farm_to_table": "Fferm i'r bwrdd",
     "same_day_delivery": "Danfon yr un diwrnod",
     "verified_farmers": "Ffermwyr wedi'u gwirio"

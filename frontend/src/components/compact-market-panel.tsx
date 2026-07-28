@@ -120,7 +120,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                       <FavoriteProductButton
                         productId={p.id}
                         productName={p.name}
-                        className="absolute right-1 top-1 h-7 w-7 border border-background/70 bg-background/90 shadow-sm hover:bg-background"
+                        className="!absolute right-1 top-1 h-7 w-7 border bg-background/95 shadow-md hover:bg-red-50"
                         data-testid={`button-quick-shop-favorite-${p.id}`}
                       />
                     </div>

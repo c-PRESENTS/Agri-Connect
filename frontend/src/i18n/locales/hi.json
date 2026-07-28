@@ -984,7 +984,7 @@
     "subtotal": "उप-योग",
     "checkout_button": "चेकआउट पर जाएं",
     "continue_shopping": "खरीदारी जारी",
-    "item_count": "{count} आइटम",
+    "item_count": "{{count}} आइटम",
     "remove_item": "हटाएं"
   },
   "category_carousel": {
@@ -1073,7 +1073,7 @@
   },
   "product_showcase": {
     "badge": "AgriConnect डायरेक्ट",
-    "item_count": "{count} आइटम",
+    "item_count": "{{count}} आइटम",
     "farm_to_table": "खेत से थाली",
     "same_day_delivery": "उसी दिन डिलीवरी",
     "verified_farmers": "सत्यापित किसान"
@@ -1556,7 +1556,7 @@
     "review_title": "ऑर्डर सारांश",
     "deliver_to": "पहुंचाएं",
     "ship_from": "भेजें",
-    "item_count": "{count} आइटम",
+    "item_count": "{{count}} आइटम",
     "subtotal": "उप-योग",
     "vat": "VAT (20%)",
     "total": "कुल",

@@ -55,7 +55,10 @@ export interface OrderItemImageLike {
   productImage?: string | null;
 }
 
-const SYSTEM_PRODUCT_ID = /^product-\d+$/;
+// Both the original numeric seeds and the deterministic taxonomy catalog are
+// platform-owned records. Their persisted seed URL is only legacy metadata;
+// the curated local registry must remain authoritative for every UI surface.
+const SYSTEM_PRODUCT_ID = /^(?:product-\d+|catalog-[a-z0-9-]+)$/;
 
 function firstUsableImage(input: ProductImageResolverInput): string | undefined {
   const candidates = [input.providedImage, ...(input.images ?? [])];

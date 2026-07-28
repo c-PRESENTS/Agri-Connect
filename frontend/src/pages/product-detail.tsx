@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, useSearch } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,6 +27,12 @@ import type { Product, Review } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { getProductImage, resolveProductImageForProduct } from "@/lib/product-images";
 import { FavoriteProductButton } from "@/components/favorite-product-button";
+import { getShoppableCategories } from "@/lib/categories";
+import {
+  buildCategoryBrowseUrl,
+  buildProductDetailUrl,
+  getProductBrowseContext,
+} from "@/lib/product-navigation";
 
 const REVIEWER_NAMES = [
   "Priya Sharma", "James O'Brien", "Mei Lin", "Tariq Hassan", "Sophie Adeyemi",
@@ -112,6 +118,7 @@ export default function ProductDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const search = useSearch();
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
 
@@ -293,20 +300,29 @@ export default function ProductDetailPage() {
   const lineTotal = +(effectiveUnitPrice * quantity).toFixed(2);
   const baseLineTotal = +(product.price * quantity).toFixed(2);
   const totalSaved = +(baseLineTotal - lineTotal).toFixed(2);
+  const browseContext = getProductBrowseContext(search, product);
+  const categoryReturnUrl = buildCategoryBrowseUrl(browseContext);
+  const categoryLabel =
+    getShoppableCategories().find((category) => category.id === browseContext.categoryId)?.name ||
+    browseContext.categoryId.replace(/-/g, " ");
+  const relatedProductUrl = (relatedProduct: Product) =>
+    buildProductDetailUrl(relatedProduct, browseContext);
 
   return (
     <div className="min-h-screen bg-background">
-      <TopNavigation />
+      <TopNavigation onBack={() => setLocation(categoryReturnUrl)} />
 
       <div className="max-w-7xl mx-auto px-2 sm:px-4 pt-2 sm:pt-4 pb-36 md:pb-16">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
-          <button onClick={() => setLocation("/")} className="hover:text-primary transition-colors flex items-center gap-1">
+          <button
+            onClick={() => setLocation(categoryReturnUrl)}
+            className="flex items-center gap-1 font-medium capitalize transition-colors hover:text-primary"
+            data-testid="button-back-to-category"
+          >
             <ArrowLeft className="h-3.5 w-3.5" />
-            {t("product_detail.breadcrumb_home")}
+            Back to {categoryLabel}
           </button>
-          <span>/</span>
-          <span className="capitalize text-muted-foreground">{(product.categoryId || "").replace(/-/g, " ")}</span>
           <span>/</span>
           <span className="text-foreground font-medium truncate max-w-xs">{product.name}</span>
         </nav>
@@ -894,7 +910,7 @@ export default function ProductDetailPage() {
                 <div key={p.id} className="flex items-center gap-2 sm:gap-3">
                   <Plus className="h-3 w-3 sm:h-5 sm:w-5 text-muted-foreground" />
                   <button
-                    onClick={() => setLocation(`/products/${p.id}`)}
+                    onClick={() => setLocation(relatedProductUrl(p))}
                     className="flex flex-col items-center w-16 sm:w-32 hover:opacity-80 transition-opacity"
                     data-testid={`fbt-related-${i}`}
                   >
@@ -963,7 +979,7 @@ export default function ProductDetailPage() {
                 <motion.div
                   key={p.id}
                   whileHover={{ y: -2 }}
-                  onClick={() => setLocation(`/products/${p.id}`)}
+                  onClick={() => setLocation(relatedProductUrl(p))}
                   className="cursor-pointer flex-shrink-0 w-[120px] lg:w-auto"
                   data-testid={`rec-product-${p.id}`}
                 >
@@ -1325,7 +1341,7 @@ export default function ProductDetailPage() {
                       <motion.div
                         key={p.id}
                         whileHover={{ y: -3 }}
-                        onClick={() => setLocation(`/products/${p.id}`)}
+                        onClick={() => setLocation(relatedProductUrl(p))}
                         className="cursor-pointer"
                       >
                         <Card className="overflow-hidden border-border/50 hover:border-primary/30 hover:shadow-lg transition-all">

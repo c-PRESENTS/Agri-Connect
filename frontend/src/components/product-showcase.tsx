@@ -1,19 +1,18 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Star, Leaf, ShoppingCart, Package, Truck, Shield, Grid, List } from "lucide-react";
+import { MapPin, Star, Leaf, ShoppingCart, Package, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getShoppableCategories, getCategoryExamples } from "@/lib/categories";
-import { getSubSubcategories, SubSubItem } from "@/lib/sub-subcategories";
-import { motion, AnimatePresence } from "framer-motion";
+import { getShoppableCategories } from "@/lib/categories";
+import { getSubSubcategories } from "@/lib/sub-subcategories";
+import { motion } from "framer-motion";
 import type { Product } from "@shared/schema";
 import { SafeProductImage } from "./safe-product-image";
-import { resolveProductImage, resolveProductImageForProduct } from "@/lib/product-images";
+import { resolveProductImage } from "@/lib/product-images";
 import { FavoriteProductButton } from "./favorite-product-button";
 
 interface ProductShowcaseProps {
@@ -38,10 +37,13 @@ function displayNameForSubcategory(subcategoryId: string): string {
     .join(" ");
 }
 
-function getCategoryExamplesForSubcategory(subcategoryId: string): string[] {
-  const examples = getCategoryExamples(subcategoryId);
-  if (examples.length > 0) return examples.slice(0, 8);
-  return [displayNameForSubcategory(subcategoryId)];
+interface ProductSection {
+  title: string;
+  products: Product[];
+}
+
+function normalizeProductName(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 
 export function ProductShowcase({
@@ -68,32 +70,74 @@ export function ProductShowcase({
     queryKey: [queryString ? `/api/products?${queryString}` : "/api/products"],
   });
 
-  // Get content based on subcategoryId or fall back to category-based sections
-  const content = useMemo(() => {
+  // Taxonomy supplies section headings only. Every rendered card is built from
+  // one complete product returned by the catalog API.
+  const content = useMemo<ProductSection[]>(() => {
     if (subcategoryId) {
       const deepContent = getSubSubcategories(subcategoryId);
-      if (deepContent.length > 0) return deepContent;
-      return [{
-        title: displayNameForSubcategory(subcategoryId),
-        items: products.length > 0 ? products.map((p) => p.name) : [displayNameForSubcategory(subcategoryId)]
-      }];
+      if (deepContent.length === 0) {
+        return products.length > 0
+          ? [{ title: displayNameForSubcategory(subcategoryId), products }]
+          : [];
+      }
+
+      const assignedProductIds = new Set<string>();
+      const sections = deepContent.flatMap<ProductSection>((section) => {
+        const taxonomyNames = new Set(section.items.map(normalizeProductName));
+        const matchingProducts = products.filter((product) => {
+          if (assignedProductIds.has(product.id)) return false;
+          if (!taxonomyNames.has(normalizeProductName(product.name))) return false;
+          assignedProductIds.add(product.id);
+          return true;
+        });
+
+        return matchingProducts.length > 0
+          ? [{ title: section.title, products: matchingProducts }]
+          : [];
+      });
+      const remainingProducts = products.filter((product) => !assignedProductIds.has(product.id));
+
+      if (remainingProducts.length > 0) {
+        sections.push({
+          title: t("product_showcase.available_products", "Available Products"),
+          products: remainingProducts,
+        });
+      }
+
+      return sections;
     }
-    // If only categoryId, create sections from subcategories
+
     if (categoryId) {
       const cat = getShoppableCategories().find(c => c.id === categoryId);
       if (cat) {
-        return cat.subcategories.map(sub => ({
-          title: sub.name,
-          items: products
-            .filter(p => p.subcategoryId === sub.id)
-            .slice(0, 6)
-            .map(p => p.name)
-            .concat(products.some(p => p.subcategoryId === sub.id) ? [] : getCategoryExamplesForSubcategory(sub.id))
-        }));
+        const knownSubcategoryIds = new Set(cat.subcategories.map((subcategory) => subcategory.id));
+        const sections = cat.subcategories.flatMap<ProductSection>((subcategory) => {
+          const matchingProducts = products.filter(
+            (product) => product.subcategoryId === subcategory.id,
+          );
+          return matchingProducts.length > 0
+            ? [{ title: subcategory.name, products: matchingProducts }]
+            : [];
+        });
+        const remainingProducts = products.filter(
+          (product) => !knownSubcategoryIds.has(product.subcategoryId),
+        );
+
+        if (remainingProducts.length > 0) {
+          sections.push({
+            title: t("product_showcase.available_products", "Available Products"),
+            products: remainingProducts,
+          });
+        }
+
+        return sections;
       }
     }
-    return [];
-  }, [subcategoryId, categoryId, products]);
+
+    return products.length > 0
+      ? [{ title: t("product_showcase.available_products", "Available Products"), products }]
+      : [];
+  }, [subcategoryId, categoryId, products, t]);
 
   const displayName = useMemo(() => {
     if (subcategoryId) {
@@ -170,39 +214,6 @@ export function ProductShowcase({
     return () => clearTimeout(timer);
   }, [content, onSectionVisible]);
 
-  // Get matching products for an item
-  const getProductsForItem = useCallback((itemName: string): Product[] => {
-    return products.filter(p => 
-      p.name.toLowerCase().includes(itemName.toLowerCase()) ||
-      itemName.toLowerCase().includes(p.name.toLowerCase().split(' ')[0])
-    ).slice(0, 3);
-  }, [products]);
-
-  // Generate AgriConnect product for items without matches
-  const generateAgriConnectProduct = useCallback((itemName: string): Product => ({
-    id: `agri-${itemName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
-    name: itemName,
-    description: `Premium quality ${itemName} from AgriConnect certified farms. Fresh, organic, and delivered to your doorstep.`,
-    price: Math.floor(Math.random() * 200) + 50,
-    unit: "kg",
-    stock: Math.floor(Math.random() * 500) + 100,
-    categoryId: categoryId || "daily-needs",
-    subcategoryId: subcategoryId || "grains",
-    farmerId: "agriconnect-farms",
-    farmerName: "AgriConnect Farms",
-    farmerAvatar: "",
-    farmerLocation: "Multiple Locations",
-    farmerRating: 4.8,
-    farmerLatitude: 20.5937 + (Math.random() - 0.5) * 10,
-    farmerLongitude: 78.9629 + (Math.random() - 0.5) * 10,
-    isOrganic: Math.random() > 0.5,
-    isFeatured: false,
-    rating: 4.5 + Math.random() * 0.5,
-    reviewCount: Math.floor(Math.random() * 50) + 5,
-    images: [],
-    createdAt: new Date().toISOString()
-  }), [categoryId, subcategoryId]);
-
   // Show placeholder when no category selected
   if (!categoryId && !subcategoryId) {
     return (
@@ -265,10 +276,24 @@ export function ProductShowcase({
             <div>
               <h1 className="text-xl font-bold">{displayName}</h1>
               <p className="text-sm text-muted-foreground">
-                {content.length} categories | {content.reduce((acc, c) => acc + c.items.length, 0)} items
+                {content.length} categories | {content.reduce((acc, c) => acc + c.products.length, 0)} items
               </p>
             </div>
           </div>
+
+          {content.length === 0 && (
+            <div className="flex min-h-64 items-center justify-center rounded-lg border border-border/40 bg-muted/10 p-8">
+              <div className="max-w-sm text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <Package className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h2 className="font-semibold">{t("product_grid.no_products_title")}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t("product_showcase.no_products_available", "No catalog products are currently available in this category.")}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Product Sections by Category */}
           {content.map((section, sectionIdx) => (
@@ -288,49 +313,31 @@ export function ProductShowcase({
                 <div className="h-1 w-1 rounded-full bg-primary" />
                 <h2 className="text-[10px] font-bold uppercase tracking-tight">{section.title}</h2>
                 <div className="flex-1 h-px bg-border/30" />
-                <span className="text-[8px] text-muted-foreground uppercase font-bold">{section.items.length}</span>
+                <span className="text-[8px] text-muted-foreground uppercase font-bold">{section.products.length}</span>
               </div>
 
               {/* Product Grid */}
               <div data-product-grid="showcase" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                {section.items.map((item, itemIdx) => {
-                  const sectionSubcategoryId = getShoppableCategories()
-                    .find((category) => category.id === categoryId)
-                    ?.subcategories.find((subcategory) => subcategory.name === section.title)
-                    ?.id;
-                  const matchingProducts = getProductsForItem(item);
-                  // Prefer a matching real product. Otherwise substitute any
-                  // real product from the loaded list so click/add actions
-                  // hit a valid backend record. Only fall back to a fully
-                  // synthetic placeholder when the API returned nothing.
-                  const product =
-                    matchingProducts[0] ||
-                    products[(itemIdx + sectionIdx) % Math.max(products.length, 1)] ||
-                    generateAgriConnectProduct(item);
-                  // Resolve image per-item: try the item name (e.g. "tomato"),
-                  // then the product's own subcategory, then the URL subcategory,
-                  // then the parent category. Fixes "every card shows the parent
-                  // category image" bug.
+                {section.products.map((product, itemIdx) => {
                   const imageResolution = resolveProductImage({
                     id: product.id,
-                    name: item,
-                    categoryId: categoryId || product.categoryId,
-                    subcategoryId: subcategoryId || sectionSubcategoryId || product.subcategoryId,
+                    name: product.name,
+                    categoryId: product.categoryId,
+                    subcategoryId: product.subcategoryId,
                     images: product.images,
                   });
-                  const image = imageResolution.src;
-                  
+                   
                   return (
                     <motion.div
-                      key={`${item}-${itemIdx}`}
+                      key={product.id}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: sectionIdx * 0.02 + itemIdx * 0.01, duration: 0.15 }}
                     >
-                      <Card data-product-tile data-product-name={item.toLowerCase()} className="overflow-hidden group hover:shadow-sm border-border/40 transition-all duration-200 active:scale-[0.97] cursor-pointer scroll-mt-20" onClick={() => onProductClick?.(product)}>
+                      <Card data-product-tile data-product-name={product.name.toLowerCase()} className="overflow-hidden group hover:shadow-sm border-border/40 transition-all duration-200 active:scale-[0.97] cursor-pointer scroll-mt-20" onClick={() => onProductClick?.(product)}>
                         {/* Product Image */}
                         <div className="relative aspect-square bg-muted/20 overflow-hidden">
-                          <SafeProductImage src={imageResolution.src} fallbackSrc={imageResolution.fallbackSrc} alt={`${item} product image`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <SafeProductImage src={imageResolution.src} fallbackSrc={imageResolution.fallbackSrc} alt={`${product.name} product image`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           
                           {/* Badges */}
                           <div className="absolute top-1 left-1 flex flex-col gap-0.5">
@@ -344,8 +351,8 @@ export function ProductShowcase({
                           {/* Quick Add Button — always visible (Amazon-style) */}
                           <FavoriteProductButton
                             productId={product.id}
-                            productName={item}
-                            className="absolute right-1 top-1 h-7 w-7 border border-background/70 bg-background/90 shadow-md hover:bg-background"
+                            productName={product.name}
+                            className="!absolute right-1 top-1 h-7 w-7 border bg-background/95 shadow-md hover:bg-red-50"
                             data-testid={`button-showcase-favorite-${sectionIdx}-${itemIdx}`}
                           />
                           <Button
@@ -361,7 +368,7 @@ export function ProductShowcase({
 
                         {/* Product Info */}
                         <CardContent className="p-1.5">
-                          <h3 className="font-bold text-[9px] uppercase tracking-tight truncate mb-1">{item}</h3>
+                          <h3 className="font-bold text-[9px] uppercase tracking-tight truncate mb-1">{product.name}</h3>
                           
                           {/* Price & Rating */}
                           <div className="flex items-center justify-between">
@@ -393,94 +400,6 @@ export function ProductShowcase({
               </div>
             </motion.div>
           ))}
-
-          {/* Show all products if no subcategory sections available */}
-          {content.length === 0 && products.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {products.slice(0, 24).map((product, idx) => {
-                const image = resolveProductImageForProduct(product).src;
-                
-                return (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.01, duration: 0.15 }}
-                  >
-                    <Card data-product-tile data-product-name={product.name.toLowerCase()} className="overflow-hidden group hover:shadow-md transition-all duration-200 active:scale-[0.98] cursor-pointer scroll-mt-20" onClick={() => onProductClick?.(product)}>
-                      <div className="relative aspect-square bg-muted overflow-hidden">
-                        <SafeProductImage src={image} fallbackSrc={resolveProductImageForProduct(product).fallbackSrc} alt={`${product.name} product image`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                        
-                          {product.isOrganic && (
-                            <Badge className="absolute top-1.5 left-1.5 text-[8px] px-1.5 py-0 bg-green-600 hover:bg-green-600">
-                              <Leaf className="h-2 w-2 mr-0.5" />
-                              {t("product.organic")}
-                            </Badge>
-                          )}
-
-                        <FavoriteProductButton
-                          productId={product.id}
-                          productName={product.name}
-                          className="absolute right-1.5 top-1.5 h-8 w-8 border border-background/70 bg-background/90 shadow-md hover:bg-background"
-                          data-testid={`button-showcase-fallback-favorite-${product.id}`}
-                        />
-                        <Button
-                          size="icon"
-                          className="absolute bottom-1.5 right-1.5 h-8 w-8 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground border border-background"
-                          onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
-                          data-testid={`button-add-${product.id}`}
-                          title={t("product.add_to_cart")}
-                        >
-                          <ShoppingCart className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <CardContent className="p-2">
-                        <h3 className="font-medium text-xs truncate">{product.name}</h3>
-                        
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <Avatar className="h-4 w-4">
-                            <AvatarImage src={product.farmerAvatar} />
-                            <AvatarFallback className="text-[6px] bg-primary/20">
-                              {product.farmerName.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-[9px] text-muted-foreground truncate">{product.farmerName}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between mt-1.5">
-                          <span className="font-bold text-sm text-primary">
-                            {currencySymbol}{product.price}
-                            <span className="text-[9px] font-normal text-muted-foreground">/{product.unit}</span>
-                          </span>
-                          <div className="flex items-center gap-0.5">
-                            <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
-                            <span className="text-[9px]">{product.farmerRating.toFixed(1)}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1 mt-1">
-                          <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
-                          <span className="text-[8px] text-muted-foreground truncate">{product.farmerLocation}</span>
-                        </div>
-
-                        {/* Always-visible {t("product.add_to_cart")} button */}
-                        <Button
-                          size="sm"
-                          className="w-full mt-2 h-7 text-[10px] font-bold uppercase tracking-tight gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-                          onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
-                          data-testid={`button-tile-add-fallback-${product.id}`}
-                        >
-                          <ShoppingCart className="h-3 w-3" />
-                          {t("product.add_to_cart")}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
 
           {/* AgriConnect Featured Section */}
           <motion.div

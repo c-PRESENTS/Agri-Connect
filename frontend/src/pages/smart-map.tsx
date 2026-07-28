@@ -857,7 +857,7 @@ export default function SmartMapPage() {
                                 <FavoriteProductButton
                                   productId={product.id}
                                   productName={product.name}
-                                  className="absolute right-1.5 top-1/2 h-7 w-7 -translate-y-1/2 bg-background shadow-sm hover:bg-background"
+                                  className="!absolute right-1.5 top-1/2 h-7 w-7 -translate-y-1/2 bg-background shadow-md hover:bg-red-50"
                                   data-testid={`button-map-food-favorite-${product.id}`}
                                 />
                               </div>

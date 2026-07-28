@@ -1096,7 +1096,7 @@
     "review_title": "ஆர்டர் சுருக்கம்",
     "deliver_to": "இதற்கு டெலிவரி செய்யவும்",
     "ship_from": "இங்கிருந்து அனுப்பவும்",
-    "item_count": "{count} பொருள்(கள்)",
+    "item_count": "{{count}} பொருள்(கள்)",
     "subtotal": "உள்கூட்டுத்தொகை",
     "vat": "VAT (20%)",
     "total": "மொத்தம்",
@@ -1413,7 +1413,7 @@
     "subtotal": "உள்கூட்டுத்தொகை",
     "checkout_button": "காசோலைக்குச் செல்லவும்",
     "continue_shopping": "ஷாப்பிங் தொடரவும்",
-    "item_count": "{count} பொருள்(கள்)",
+    "item_count": "{{count}} பொருள்(கள்)",
     "remove_item": "பொருளை அகற்றவும்"
   },
   "category_carousel": {
@@ -1502,7 +1502,7 @@
   },
   "product_showcase": {
     "badge": "AgriConnect நேரடி",
-    "item_count": "{count} பொருட்கள்",
+    "item_count": "{{count}} பொருட்கள்",
     "farm_to_table": "பண்ணையிலிருந்து மேசைக்கு",
     "same_day_delivery": "அதே நாள் டெலிவரி",
     "verified_farmers": "சரிபார்க்கப்பட்ட விவசாயிகள்"

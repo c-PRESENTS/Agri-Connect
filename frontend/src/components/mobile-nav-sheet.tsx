@@ -108,12 +108,11 @@ export function MobileNavSheet() {
     };
   }, []);
 
-  // Keep the docked drawer open as the user navigates — the rail stays
-  // fixed on the left while the right side switches pages (Home, Map, etc.).
-  // Just collapse any open 3rd-level expansion for a clean state.
+  // Collapse only this drawer's nested UI when the route changes. Do not
+  // broadcast a category reset here: category return URLs also use the home
+  // route, and resetting them would turn a valid category view into Home.
   useEffect(() => {
     setExpandedSub(null);
-    window.dispatchEvent(new Event("agri-subcategory-close"));
   }, [location]);
 
   useEffect(() => {

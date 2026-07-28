@@ -75,7 +75,15 @@ const ALL_SERVICES = [
 
 type ServiceItem = typeof ALL_SERVICES[number];
 
-const COMING_SOON_SERVICE_IDS = new Set(["student-help", "agritech", "land", "share", "schemes"]);
+const COMING_SOON_SERVICE_IDS = new Set([
+  "student-help",
+  "agritech",
+  "land",
+  "share",
+  "ship",
+  "logistics",
+  "schemes",
+]);
 
 const LS_ORDER    = "agri-nav-order";
 const LS_HIDDEN   = "agri-nav-hidden";
