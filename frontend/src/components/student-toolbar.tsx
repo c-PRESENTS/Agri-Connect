@@ -3,10 +3,11 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/student/dashboard", label: "Dashboard", Icon: LayoutDashboard },
-  { href: "/student/resources", label: "Resources", Icon: BookOpen },
-  { href: "/student/support", label: "Request help", Icon: HelpCircle },
-  { href: "/student/requests", label: "My requests", Icon: ListChecks },
+  { href: "/farmers-help", label: "Knowledge Hub", Icon: BookOpen },
+  { href: "/farmers-help/student", label: "Dashboard", Icon: LayoutDashboard },
+  { href: "/farmers-help/student/resources", label: "Resources", Icon: BookOpen },
+  { href: "/farmers-help/student/support", label: "Request help", Icon: HelpCircle },
+  { href: "/farmers-help/student/requests", label: "My requests", Icon: ListChecks },
 ];
 
 export function StudentToolbar() {

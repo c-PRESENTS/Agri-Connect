@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Product } from "@shared/schema";
+import { FavoriteProductButton } from "@/components/favorite-product-button";
 
 interface MapViewProps {
   products: Product[];
@@ -747,9 +748,15 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
             {nearbyProducts.map((product) => (
               <div 
                 key={product.id}
-                className="flex-shrink-0 bg-background rounded-lg border p-2 min-w-[140px] hover:border-primary/40 transition-colors cursor-pointer"
+                className="relative flex-shrink-0 bg-background rounded-lg border p-2 pr-9 min-w-[140px] hover:border-primary/40 transition-colors cursor-pointer"
                 onClick={() => onFarmerClick?.(product.farmerId)}
               >
+                <FavoriteProductButton
+                  productId={product.id}
+                  productName={product.name}
+                  className="absolute right-1 top-1 h-7 w-7 bg-background/90 shadow-sm hover:bg-background"
+                  data-testid={`button-map-nearby-favorite-${product.id}`}
+                />
                 <div className="flex items-center gap-2 mb-1">
                   <img 
                     src={resolveProductImageForProduct(product).src}

@@ -7,6 +7,7 @@ export function usePaymentCheckout() {
       deliveryAddress: string;
       provider: CheckoutProvider;
       currency: "GBP" | "INR";
+      deliveryMethod: "standard" | "pickup";
       shippingChoices: Record<string, { partnerId: string; service: string }>;
       deliveryAddressStruct: {
         name: string; phone: string; email?: string; line1: string; line2?: string;
@@ -15,7 +16,7 @@ export function usePaymentCheckout() {
     }) => {
       const quote = await createCheckoutQuote({
         currency: input.currency,
-        deliveryMethod: "standard",
+        deliveryMethod: input.deliveryMethod,
         shippingChoices: input.shippingChoices,
         deliveryAddressStruct: input.deliveryAddressStruct,
       });

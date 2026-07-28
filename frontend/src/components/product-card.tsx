@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Star, MapPin, Heart, ShoppingCart, Leaf, Check, GitCompareArrows } from "lucide-react";
+import { Star, MapPin, ShoppingCart, Leaf, Check, GitCompareArrows } from "lucide-react";
 import { useCompare } from "@/hooks/use-compare";
-import { useFavorites } from "@/hooks/use-favorites";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { SafeProductImage } from "./safe-product-image";
 import { PublicSellerBadges } from "./verification-badges";
+import { FavoriteProductButton } from "./favorite-product-button";
 
 interface ProductCardProps {
   product: Product;
@@ -37,10 +37,8 @@ export function ProductCard({
   const [addedToCart, setAddedToCart] = useState(false);
   const { t, i18n } = useTranslation();
   const { ids: compareIds, toggle: toggleCompare, isFull } = useCompare();
-  const { isAuthenticated, isProductFavorite, toggleProduct } = useFavorites();
   const { toast: pcToast } = useToast();
   const isComparing = compareIds.includes(product.id);
-  const isWishlisted = isProductFavorite(product.id);
   const [autoTranslateOn, setAutoTranslateOn] = useState(() => localStorage.getItem("agriconnect-auto-translate") === "true");
   const baseLang = i18n.language.split("-")[0];
 
@@ -85,20 +83,6 @@ export function ProductCard({
     setTimeout(() => setAddedToCart(false), 1500);
   };
 
-  const handleWishlist = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const added = toggleProduct(product.id);
-    if (added === null) {
-      pcToast({
-        title: "Sign in to save favorites",
-        description: "Favorites are available for your signed-in account only.",
-      });
-      return;
-    }
-    onWishlist?.(product);
-    pcToast({ title: added ? "Added to favorites" : "Removed from favorites" });
-  };
-
   const imageResolution = resolveProductImageForProduct(product);
 
   return (
@@ -133,22 +117,14 @@ export function ProductCard({
             )}
           </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileHover={{ opacity: 1 }}
-            className="absolute top-2 right-2 flex flex-col gap-1.5"
-          >
-            <Button
-              size="icon"
-              variant="secondary"
-              className={`opacity-0 group-hover:opacity-100 transition-all bg-background/80 backdrop-blur-sm hover:bg-background shadow-md h-8 w-8 ${isWishlisted ? 'opacity-100 text-red-500' : ''}`}
-              onClick={handleWishlist}
+          <div className="absolute right-2 top-2 flex flex-col gap-1.5">
+            <FavoriteProductButton
+              productId={product.id}
+              productName={productName}
+              className="h-8 w-8 border border-background/70 bg-background/90 shadow-md backdrop-blur-sm hover:bg-background"
+              onToggle={() => onWishlist?.(product)}
               data-testid={`button-wishlist-${product.id}`}
-              aria-label={isWishlisted ? `Remove ${productName} from favorites` : `Add ${productName} to favorites`}
-              title={isAuthenticated ? (isWishlisted ? "Remove from favorites" : "Add to favorites") : "Sign in to save favorites"}
-            >
-              <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
-            </Button>
+            />
             <Button
               size="icon"
               variant="secondary"
@@ -171,7 +147,7 @@ export function ProductCard({
             >
               <GitCompareArrows className="h-4 w-4" />
             </Button>
-          </motion.div>
+          </div>
         </div>
 
         <CardContent className="p-2 sm:p-3">

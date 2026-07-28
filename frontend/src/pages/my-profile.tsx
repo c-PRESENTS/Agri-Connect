@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { LISTING_POLICY } from "@/lib/listing-policy";
 import type { Product } from "@shared/schema";
+import { FavoriteProductButton } from "@/components/favorite-product-button";
 
 function safePrice(product: Product) {
   return Number.isFinite(product.price) && product.price >= 0
@@ -55,7 +56,7 @@ export default function MyProfilePage() {
         </div>
 
         <div className="mb-6 rounded-lg border bg-muted/30 p-4" data-testid="my-profile-listing-policy">
-          <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">{LISTING_POLICY.title}</h2><p className="mt-1 text-sm text-muted-foreground">{LISTING_POLICY.zeroEntryMessage}</p><p className="mt-1 text-xs text-muted-foreground">{LISTING_POLICY.enforcementMessage}</p></div><Button variant="outline" size="sm" onClick={() => setLocation("/student-help-point")} data-testid="button-profile-student-help"><GraduationCap className="mr-2 h-4 w-4" />Student Help Point</Button></div>
+          <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">{LISTING_POLICY.title}</h2><p className="mt-1 text-sm text-muted-foreground">{LISTING_POLICY.zeroEntryMessage}</p><p className="mt-1 text-xs text-muted-foreground">{LISTING_POLICY.enforcementMessage}</p></div><Button variant="outline" size="sm" onClick={() => setLocation("/farmers-help/student")} data-testid="button-profile-student-help"><GraduationCap className="mr-2 h-4 w-4" />Student Help Point</Button></div>
         </div>
 
         <VerificationTiers profile={user} />
@@ -101,11 +102,17 @@ export default function MyProfilePage() {
                 return (
                   <Card key={product.id} data-testid={`my-profile-product-${product.id}`}>
                     <CardContent className="p-4">
-                      <div className="mb-3 aspect-[4/3] overflow-hidden rounded-md bg-muted">
+                      <div className="relative mb-3 aspect-[4/3] overflow-hidden rounded-md bg-muted">
                         <SafeProductImage
                           src={resolveProductImageForProduct(product, { imageOwnership: "seller" }).src}
                           alt={`${name} product image`}
                           className="h-full w-full object-cover"
+                        />
+                        <FavoriteProductButton
+                          productId={product.id}
+                          productName={name}
+                          className="absolute right-2 top-2 h-8 w-8 border border-background/70 bg-background/90 shadow-md hover:bg-background"
+                          data-testid={`button-profile-favorite-${product.id}`}
                         />
                       </div>
                       <div className="flex items-start justify-between gap-3">
@@ -121,7 +128,14 @@ export default function MyProfilePage() {
                       </div>
                       <div className="mt-4 flex items-center justify-between gap-2 border-t pt-3">
                         <Link href={`/products/${product.id}`} className="text-sm font-medium text-primary hover:underline">View listing</Link>
-                        <Button variant="outline" size="sm" disabled data-testid={`button-edit-listing-${product.id}`} title="Editing is coming soon">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled
+                          className="border-emerald-200 bg-emerald-50 text-emerald-800 disabled:opacity-100"
+                          data-testid={`button-edit-listing-${product.id}`}
+                          title="Editing is coming soon"
+                        >
                           <Edit3 className="mr-2 h-3.5 w-3.5" /> Edit soon
                         </Button>
                       </div>

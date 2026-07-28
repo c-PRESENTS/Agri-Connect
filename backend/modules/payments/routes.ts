@@ -16,7 +16,12 @@ import { paymentStateService } from "../../payments/payment-state-service";
 import { providerRegistry } from "../../payments/provider-registry";
 import type { Order, OrderItem } from "@shared/schema";
 import type { ShipServiceType } from "@shared/schema";
-import { calculateQuotesFromCoords, geocodePostcode, resolveSellerPickupCoordinates } from "../../shipping/quote-engine";
+import {
+  calculateQuotesFromCoords,
+  geocodePostcode,
+  resolveCheckoutFulfillmentQuote,
+  resolveSellerPickupCoordinates,
+} from "../../shipping/quote-engine";
 
 interface PaymentRouteDeps {
   getUserId(req: Request): string | undefined;
@@ -132,9 +137,10 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
               fragile: /egg|berry|tomato/.test(item.product.name.toLowerCase()),
             })),
           });
-          const selected = quotes.quotes.find(
-            (quote) => quote.partnerId === choice.partnerId && quote.service === choice.service,
-          );
+          const selected = resolveCheckoutFulfillmentQuote(quotes.quotes, {
+            partnerId: choice.partnerId,
+            service: choice.service as ShipServiceType,
+          });
           if (!selected) return res.status(409).json({ error: "Selected shipping option is no longer available" });
           shippingPence += Math.round(selected.price * 100);
         }

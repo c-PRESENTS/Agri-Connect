@@ -4,7 +4,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Star, MapPin, ShoppingCart, Heart, Share2, Truck, Shield,
+  Star, MapPin, ShoppingCart, Share2, Truck, Shield,
   Leaf, ChevronLeft, ChevronRight, Package, Clock, BadgeCheck,
   Plus, Minus, ThumbsUp, MessageSquare, Zap, BarChart3, Award,
   ArrowLeft, Check, ChevronDown, ChevronUp, Info, Loader2, CheckCircle, Lock,
@@ -26,6 +26,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Product, Review } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { getProductImage, resolveProductImageForProduct } from "@/lib/product-images";
+import { FavoriteProductButton } from "@/components/favorite-product-button";
 
 const REVIEWER_NAMES = [
   "Priya Sharma", "James O'Brien", "Mei Lin", "Tariq Hassan", "Sophie Adeyemi",
@@ -116,7 +117,6 @@ export default function ProductDetailPage() {
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [imageError, setImageError] = useState<Record<number, boolean>>({});
@@ -844,16 +844,15 @@ export default function ProductDetailPage() {
                 <Separator />
 
                 {/* Wishlist */}
-                <Button
+                <FavoriteProductButton
+                  productId={product.id}
+                  productName={product.name}
                   variant="outline"
                   size="sm"
-                  className={`w-full h-9 rounded-full text-sm gap-2 ${isWishlisted ? "border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" : ""}`}
-                  onClick={() => { setIsWishlisted(w => !w); toast({ title: isWishlisted ? t("compare.removed") : t("compare.added") }); }}
+                  showLabel
+                  className="h-9 w-full rounded-full text-sm"
                   data-testid="button-wishlist-detail"
-                >
-                  <Heart className={`h-3.5 w-3.5 ${isWishlisted ? "fill-current" : ""}`} />
-                  {isWishlisted ? t("compare.added") : t("compare.add_product_button")}
-                </Button>
+                />
               </div>
 
               {/* Delivery & policy info card */}

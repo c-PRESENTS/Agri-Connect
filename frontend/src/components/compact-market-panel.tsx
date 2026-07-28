@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getProductImage } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
+import { FavoriteProductButton } from "./favorite-product-button";
 
 const QUICK_CATS = [
   { catKey: "categoryId",    id: "fresh-produce", label: "Fresh",   emoji: "Fresh" },
@@ -97,12 +98,17 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                 <p className="text-[10px] text-muted-foreground text-center py-4">{t("market.no_products")}</p>
               ) : (
                 products.map(p => (
-                  <button
+                  <div
                     key={p.id}
                     onClick={() => navigate(`/products/${p.id}`)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") navigate(`/products/${p.id}`);
+                    }}
+                    role="link"
+                    tabIndex={0}
                     className="w-full text-left rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-all overflow-hidden group"
                   >
-                    <div className="w-full aspect-[3/2] overflow-hidden bg-muted">
+                    <div className="relative w-full aspect-[3/2] overflow-hidden bg-muted">
                       <img
                         src={getProductImage(p.name, p.categoryId, "sm")}
                         alt={p.name}
@@ -110,6 +116,12 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                         onError={e => {
                           (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=200&h=130&fit=crop";
                         }}
+                      />
+                      <FavoriteProductButton
+                        productId={p.id}
+                        productName={p.name}
+                        className="absolute right-1 top-1 h-7 w-7 border border-background/70 bg-background/90 shadow-sm hover:bg-background"
+                        data-testid={`button-quick-shop-favorite-${p.id}`}
                       />
                     </div>
                     <div className="p-1.5">
@@ -132,7 +144,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                         <span className="text-[9px] text-muted-foreground">/{p.unit}</span>
                       </div>
                     </div>
-                  </button>
+                  </div>
                 ))
               )}
             </div>
