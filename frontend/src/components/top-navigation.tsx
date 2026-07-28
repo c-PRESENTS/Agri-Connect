@@ -44,9 +44,10 @@ interface TopNavigationProps {
   cartItemCount?: number;
   onSearch?: (query: string) => void;
   onHome?: () => void;
+  onBack?: () => void;
 }
 
-export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigationProps) {
+export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNavigationProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
@@ -152,7 +153,13 @@ export function TopNavigation({ cartItemCount, onSearch, onHome }: TopNavigation
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => window.history.back()}
+            onClick={() => {
+              if (onBack) {
+                onBack();
+                return;
+              }
+              window.history.back();
+            }}
             className="h-8 w-8 hover:bg-primary/10 transition-colors"
             data-testid="button-nav-back"
             title={t("nav.go_back")}

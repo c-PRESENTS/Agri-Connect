@@ -754,7 +754,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                 <FavoriteProductButton
                   productId={product.id}
                   productName={product.name}
-                  className="absolute right-1 top-1 h-7 w-7 bg-background/90 shadow-sm hover:bg-background"
+                  className="!absolute right-1 top-1 h-7 w-7 bg-background/95 shadow-md hover:bg-red-50"
                   data-testid={`button-map-nearby-favorite-${product.id}`}
                 />
                 <div className="flex items-center gap-2 mb-1">

@@ -390,7 +390,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                     <FavoriteProductButton
                       productId={product.id}
                       productName={product.name || "Unnamed product"}
-                      className="absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 bg-background/90 shadow-sm hover:bg-background"
+                      className="!absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 bg-background/95 shadow-md hover:bg-red-50"
                       data-testid={`button-search-favorite-${product.id}`}
                     />
                   </div>

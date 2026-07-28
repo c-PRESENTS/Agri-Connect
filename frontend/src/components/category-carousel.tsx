@@ -2,15 +2,12 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useState, useRef } from "react";
-import { getShoppableCategories } from "@/lib/categories";
+import { categoryImages, getShoppableCategories } from "@/lib/categories";
 import { getCategoryIconComponent } from "@/lib/category-icons";
+import { MAIN_MARKETPLACE_CATEGORIES } from "@/lib/main-marketplace-categories";
 import type { Product } from "@shared/schema";
-
-import vegetablesImg from "@assets/AgriConnect Images/stock_images/fresh_vegetables.jpeg";
-import fruitsImg from "@assets/AgriConnect Images/stock_images/fresh_fruits.jpeg";
 
 interface CategoryCarouselProps {
   onCategorySelect: (categoryId: string, subcategoryId?: string) => void;
@@ -19,10 +16,11 @@ interface CategoryCarouselProps {
   onAddToCart: (product: Product) => void;
 }
 
-const categoryImages: Record<string, string> = {
-  "daily-needs": vegetablesImg,
-  "fresh-produce": fruitsImg,
-};
+const categoriesById = new Map(getShoppableCategories().map((category) => [category.id, category]));
+const carouselCategories = MAIN_MARKETPLACE_CATEGORIES.flatMap(({ id }) => {
+  const category = categoriesById.get(id);
+  return category ? [category] : [];
+});
 
 export function CategoryCarousel({ 
   onCategorySelect, 
@@ -92,7 +90,7 @@ export function CategoryCarousel({
           className="flex gap-3 sm:gap-5 md:gap-6 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide snap-x snap-mandatory -mx-3 px-3 sm:mx-0 sm:px-0"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {getShoppableCategories().slice(0, 8).map((category, index) => {
+          {carouselCategories.map((category, index) => {
             const IconComponent = getCategoryIconComponent(category.icon);
             const bgImage = categoryImages[category.id];
             

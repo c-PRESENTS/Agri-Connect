@@ -43,6 +43,18 @@ const DEFAULT_BOOKMARKS: Bookmark[] = [
   { id: "markets",   name: "Agri Markets",  url: "https://www.agrimarket.gov.in", color: "bg-amber-500"   },
 ];
 
+// These sites provide useful server-rendered HTML in AgriConnect's restricted
+// reading preview. Script-heavy or bot-protected sites must open in a real tab
+// so their JavaScript, cookies, redirects, and security checks can work.
+const INLINE_PREVIEW_HOSTS = new Set([
+  "gov.uk",
+  "www.gov.uk",
+  "agritech.tnau.ac.in",
+  "bbc.co.uk",
+  "www.bbc.co.uk",
+  "wttr.in",
+]);
+
 function readBookmarks(): Bookmark[] {
   try {
     const v = localStorage.getItem(LS_KEY);
@@ -74,6 +86,13 @@ function normalizeUrl(url: string) {
 }
 function isInternalPath(url: string) {
   return url.startsWith("/") && !url.startsWith("//");
+}
+function canUseInlinePreview(url: string) {
+  try {
+    return INLINE_PREVIEW_HOSTS.has(new URL(url).hostname.toLowerCase());
+  } catch {
+    return false;
+  }
 }
 function handleFaviconError(event: SyntheticEvent<HTMLImageElement>) {
   const image = event.currentTarget;
@@ -160,6 +179,23 @@ export function UserBookmarks() {
       setWouterLocation(b.url);
       return;
     }
+
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return;
+    }
+    if (parsed.origin === window.location.origin) {
+      setWouterLocation(`${parsed.pathname}${parsed.search}${parsed.hash}`);
+      return;
+    }
+
+    if (!canUseInlinePreview(url)) {
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     setPanel({ open: true, url, title: b.name, favicon: getFavicon(b.url) });
     setIframeKey(k => k + 1);
   };
@@ -172,15 +208,8 @@ export function UserBookmarks() {
   return (
     <>
       <div className="space-y-2">
-        <div className="flex items-center justify-between px-0.5">
+        <div className="flex items-center px-0.5">
           <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40">{t("home.my_sites")}</span>
-          <button
-            onClick={openAdd}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-bold text-white/50 hover:text-white/80 hover:bg-white/10 transition-all"
-            data-testid="bookmark-add-btn"
-          >
-            <Plus className="h-2.5 w-2.5" /> {t("home.add_site")}
-          </button>
         </div>
 
         <div className="flex gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar sm:flex-wrap">

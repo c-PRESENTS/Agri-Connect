@@ -701,10 +701,10 @@ export default function FarmersHelp() {
                     </div>
                     <div className="flex-1 min-w-[220px]">
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary" className="text-[10px] uppercase tracking-wider gap-1">
+                        <Badge className="gap-1 border border-emerald-200 bg-emerald-100 text-[10px] font-bold uppercase tracking-wider text-emerald-900 hover:bg-emerald-100">
                           <Globe className="h-3 w-3" /> Global
                         </Badge>
-                        <Badge variant="outline" className="text-[10px] uppercase tracking-wider gap-1">
+                        <Badge variant="outline" className="gap-1 border-emerald-300 bg-white/70 text-[10px] font-bold uppercase tracking-wider text-emerald-800">
                           <Sparkles className="h-3 w-3" /> AI-personalized
                         </Badge>
                       </div>
@@ -720,7 +720,7 @@ export default function FarmersHelp() {
                         onClick={() => setLocation("/farmers-help/student")}
                         size="sm"
                         variant="outline"
-                        className="gap-1.5"
+                        className="gap-1.5 border-emerald-600 bg-emerald-50 font-bold text-emerald-800 shadow-sm hover:bg-emerald-100 hover:text-emerald-950"
                         data-testid="button-student-help-point"
                       >
                         <GraduationCap className="h-3.5 w-3.5" />
@@ -730,8 +730,7 @@ export default function FarmersHelp() {
                         <Button
                           onClick={detectLocation}
                           size="sm"
-                          variant="default"
-                          className="gap-1.5"
+                          className="gap-1.5 bg-emerald-700 font-bold text-white shadow-sm hover:bg-emerald-800"
                           data-testid="button-personalize"
                         >
                           <MapPin className="h-3.5 w-3.5" />
@@ -779,7 +778,7 @@ export default function FarmersHelp() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="gap-1.5"
+                          className="gap-1.5 border-emerald-600 bg-emerald-50 font-bold text-emerald-800 shadow-sm hover:bg-emerald-100 hover:text-emerald-950"
                           onClick={() => locationData && analyzeLocationAndRecommend(locationData)}
                           disabled={isAnalyzing}
                           data-testid="button-refresh-ai"
@@ -834,6 +833,7 @@ export default function FarmersHelp() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="border-emerald-600 font-bold text-emerald-800 hover:bg-emerald-50 hover:text-emerald-950"
                             data-testid="button-watch-tutorial"
                             onClick={() => {
                               const q = encodeURIComponent(`${selectedTopic.title} agriculture tutorial`);
@@ -851,6 +851,7 @@ export default function FarmersHelp() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="border-emerald-600 font-bold text-emerald-800 hover:bg-emerald-50 hover:text-emerald-950"
                             data-testid="button-contact-expert"
                             onClick={() => {
                               toast({
@@ -928,7 +929,7 @@ export default function FarmersHelp() {
                           <p className="text-[11px] text-muted-foreground mt-1 line-clamp-3 leading-snug">
                             {category.description}
                           </p>
-                          <span className="text-[11px] text-primary font-medium mt-2 inline-flex items-center gap-0.5 group-hover:gap-1 transition-all">
+                          <span className="mt-2 inline-flex items-center gap-0.5 text-[11px] font-extrabold text-emerald-700 transition-all group-hover:gap-1 group-hover:text-emerald-900">
                             read more <ChevronRight className="h-3 w-3" />
                           </span>
                         </div>
@@ -1128,6 +1129,7 @@ export default function FarmersHelp() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="border-emerald-600 font-bold text-emerald-800 hover:bg-emerald-50 hover:text-emerald-950"
                             data-testid="button-article-watch"
                             onClick={() => {
                               const q = encodeURIComponent(`${openArticle.title} agriculture`);
@@ -1143,6 +1145,7 @@ export default function FarmersHelp() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="border-emerald-600 font-bold text-emerald-800 hover:bg-emerald-50 hover:text-emerald-950"
                             data-testid="button-article-expert"
                             onClick={() => {
                               toast({
@@ -1156,6 +1159,7 @@ export default function FarmersHelp() {
                           </Button>
                           <Button
                             size="sm"
+                            className="bg-emerald-700 font-bold text-white hover:bg-emerald-800"
                             data-testid="button-article-close"
                             onClick={() => setOpenArticle(null)}
                           >
@@ -1188,7 +1192,7 @@ function DirectoryColumn({
 }) {
   return (
     <div data-testid={`directory-col-${title.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
-      <h3 className="font-serif text-[13px] font-bold uppercase tracking-[0.16em] text-primary border-b border-primary/30 pb-1.5 mb-3">
+      <h3 className="mb-3 border-b border-emerald-300 pb-1.5 font-serif text-[13px] font-bold uppercase tracking-[0.16em] text-emerald-800">
         {title}
       </h3>
       <ul className="space-y-1.5">
@@ -1201,7 +1205,7 @@ function DirectoryColumn({
                 type="button"
                 onClick={() => onSelect(label, title)}
                 data-testid={`link-article-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-                className="text-left text-[13px] text-foreground/85 hover:text-primary hover:underline underline-offset-2 leading-snug inline-flex items-baseline gap-1.5"
+                className="inline-flex items-baseline gap-1.5 text-left text-[13px] font-medium leading-snug text-foreground/85 underline-offset-2 hover:text-emerald-700 hover:underline"
               >
                 <span>{label}</span>
                 {isNew && (

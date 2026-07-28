@@ -1103,7 +1103,7 @@
     "review_title": "ਆਰਡਰ ਦੀ ਸਮੀਖਿਆ",
     "deliver_to": "ਇੱਥੇ ਡਿਲੀਵਰ ਕਰੋ",
     "ship_from": "ਇੱਥੋਂ ਸ਼ਿਪ ਕਰੋ",
-    "item_count": "{count} ਚੀਜ਼(ਆਂ)",
+    "item_count": "{{count}} ਚੀਜ਼(ਆਂ)",
     "subtotal": "ਉਪ-ਕੁੱਲ",
     "vat": "VAT (20%)",
     "total": "ਕੁੱਲ",
@@ -1425,7 +1425,7 @@
     "subtotal": "ਉਪ-ਕੁੱਲ",
     "checkout_button": "ਚੈੱਕਆਉਟ ‘ਤੇ ਜਾਓ",
     "continue_shopping": "ਖਰੀਦਦਾਰੀ ਜਾਰੀ ਰੱਖੋ",
-    "item_count": "{count} ਚੀਜ਼(ਆਂ)",
+    "item_count": "{{count}} ਚੀਜ਼(ਆਂ)",
     "remove_item": "ਚੀਜ਼ ਹਟਾਓ"
   },
   "category_carousel": {
@@ -1514,7 +1514,7 @@
   },
   "product_showcase": {
     "badge": "AgriConnect ਵਿਸ਼ੇਸ਼",
-    "item_count": "{count} ਚੀਜ਼ਾਂ",
+    "item_count": "{{count}} ਚੀਜ਼ਾਂ",
     "farm_to_table": "ਖੇਤ ਤੋਂ ਟੇਬਲ",
     "same_day_delivery": "ਉਸੇ ਦਿਨ ਡਿਲੀਵਰੀ",
     "verified_farmers": "ਪ੍ਰਮਾਣਿਤ ਕਿਸਾਨ"

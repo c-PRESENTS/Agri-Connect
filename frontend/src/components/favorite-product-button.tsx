@@ -53,7 +53,7 @@ export function FavoriteProductButton({
       aria-label={isFavorite ? `Remove ${productName} from favorites` : `Add ${productName} to favorites`}
       title={isAuthenticated ? (isFavorite ? "Remove from favorites" : "Add to favorites") : "Sign in to save favorites"}
       className={cn(
-        "shrink-0 transition-colors",
+        "!z-20 shrink-0 border-red-200 bg-background text-red-500 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-red-900/70 dark:hover:bg-red-950/40",
         showLabel ? "gap-2" : "rounded-full",
         isFavorite && "border-red-300 text-red-600 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30",
         className,

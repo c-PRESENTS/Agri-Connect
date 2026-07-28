@@ -33,6 +33,9 @@ import { SplitMapLayout } from "@/components/split-map-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Landmark, FileText, Users, Award, ExternalLink, Calendar, CreditCard, Activity, MessageSquarePlus } from "lucide-react";
 
+const landTabClass =
+  "gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-extrabold text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-sm";
+
 const landTypeIcons: Record<string, typeof Wheat> = {
   agricultural: Wheat,
   irrigated: Droplets,
@@ -465,29 +468,29 @@ export default function LandLeasingPage() {
         )}
 
         <Tabs defaultValue="lease" className="space-y-4 mb-6">
-          <TabsList className="h-10 flex-wrap">
-            <TabsTrigger value="lease" data-testid="tab-lease">
-              <MapPin className="w-4 h-4 mr-1.5" />
+          <TabsList className="h-auto flex-wrap gap-1 border border-emerald-200 bg-emerald-50/80 p-1">
+            <TabsTrigger value="lease" className={landTabClass} data-testid="tab-lease">
+              <MapPin className="h-4 w-4" />
               Lease
             </TabsTrigger>
-            <TabsTrigger value="sale" data-testid="tab-sale">
-              <CreditCard className="w-4 h-4 mr-1.5" />
+            <TabsTrigger value="sale" className={landTabClass} data-testid="tab-sale">
+              <CreditCard className="h-4 w-4" />
               For Sale
             </TabsTrigger>
-            <TabsTrigger value="investment" data-testid="tab-investment">
-              <Activity className="w-4 h-4 mr-1.5" />
+            <TabsTrigger value="investment" className={landTabClass} data-testid="tab-investment">
+              <Activity className="h-4 w-4" />
               Investment
             </TabsTrigger>
-            <TabsTrigger value="community" data-testid="tab-community">
-              <Users className="w-4 h-4 mr-1.5" />
+            <TabsTrigger value="community" className={landTabClass} data-testid="tab-community">
+              <Users className="h-4 w-4" />
               Community
             </TabsTrigger>
-            <TabsTrigger value="government" data-testid="tab-government">
-              <Landmark className="w-4 h-4 mr-1.5" />
+            <TabsTrigger value="government" className={landTabClass} data-testid="tab-government">
+              <Landmark className="h-4 w-4" />
               Gov. Programs
             </TabsTrigger>
-            <TabsTrigger value="my-leases" data-testid="tab-my-leases">
-              <Calendar className="w-4 h-4 mr-1.5" />
+            <TabsTrigger value="my-leases" className={landTabClass} data-testid="tab-my-leases">
+              <Calendar className="h-4 w-4" />
               My Leases
             </TabsTrigger>
           </TabsList>

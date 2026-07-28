@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { authStorage } from "./auth/storage";
 import { commerceRepository } from "./repositories/commerce-repository";
+import { subSubcategoryData } from "@shared/sub-subcategories";
 import type {
   Product, 
   InsertProduct, 
@@ -300,7 +301,18 @@ const categoriesData: Category[] = [
 ];
 
 // Seed data for products - comprehensive list covering all categories
-const productSeedData = [
+interface CatalogSeedProduct {
+  id?: string;
+  name: string;
+  category: string;
+  subcategory: string;
+  unit: string;
+  basePrice: number;
+  isOrganic: boolean;
+  images?: string[];
+}
+
+const productSeedData: CatalogSeedProduct[] = [
   // Grains & Cereals
   { name: "Organic Tomatoes", category: "daily-needs", subcategory: "vegetables", unit: "kg", basePrice: 40, isOrganic: true, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
   { name: "Fresh Potatoes", category: "daily-needs", subcategory: "vegetables", unit: "kg", basePrice: 25, isOrganic: false, images: ["https://images.unsplash.com/photo-1596910547705-b75df20c3e12?w=400&h=300&fit=crop"] },
@@ -735,6 +747,72 @@ const productSeedData = [
   { name: "Variable Rate Fertilizer Controller", category: "modern-farming", subcategory: "precision-farming", unit: "piece", basePrice: 75000, isOrganic: false },
 ];
 
+function normalizeCatalogName(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLocaleLowerCase();
+}
+
+function catalogSeedNumber(value: string): number {
+  let hash = 0;
+  for (const char of value) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+  return hash;
+}
+
+function inferCatalogUnit(name: string): string {
+  const normalized = normalizeCatalogName(name);
+  if (/(oil|milk|juice|drink|beverage|solution|extract|latex)/.test(normalized)) return "liter";
+  if (/(machine|equipment|system|kit|tool|sprayer|pump|meter|sensor|controller|light|net|pipe|tower)/.test(normalized)) return "piece";
+  if (/(seedling|sapling|plant|tree|animal|bird|goat|sheep|cow|buffalo|fish)/.test(normalized)) return "piece";
+  if (/(flower|leaf|leaves|herb|bouquet|garland)/.test(normalized)) return "bunch";
+  return "kg";
+}
+
+const shoppableSubcategoryParents = new Map<string, string>();
+for (const category of categoriesData) {
+  if (!category.buyerVisible) continue;
+  for (const subcategory of category.subcategories) {
+    if (subcategory.buyerVisible === false) continue;
+    shoppableSubcategoryParents.set(subcategory.id, category.id);
+  }
+}
+
+const existingCatalogSeedKeys = new Set(
+  productSeedData.map((product) => `${product.subcategory}\u0000${normalizeCatalogName(product.name)}`),
+);
+
+const taxonomyProductSeedData = Object.entries(subSubcategoryData).flatMap(
+  ([subcategoryId, sections]) => {
+    const categoryId = shoppableSubcategoryParents.get(subcategoryId);
+    if (!categoryId) return [];
+
+    return sections.flatMap((section) =>
+      section.items.flatMap((name) => {
+        const key = `${subcategoryId}\u0000${normalizeCatalogName(name)}`;
+        if (existingCatalogSeedKeys.has(key)) return [];
+        existingCatalogSeedKeys.add(key);
+
+        const seed = catalogSeedNumber(`${categoryId}:${subcategoryId}:${name}`);
+        const slug = normalizeCatalogName(name)
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")
+          .slice(0, 48);
+        return [{
+          id: `catalog-${subcategoryId}-${slug}-${seed.toString(36)}`,
+          name,
+          category: categoryId,
+          subcategory: subcategoryId,
+          unit: inferCatalogUnit(name),
+          basePrice: 50 + (seed % 1951),
+          isOrganic: /\b(organic|natural|bio)\b/i.test(name),
+        }];
+      }),
+    );
+  },
+);
+
+const completeProductSeedData = [...productSeedData, ...taxonomyProductSeedData];
+
 const farmerNames = [
   "James Wilson", "Sarah Thompson", "Michael Brown", "Emma Davies", "Thomas Green",
   "Lucy Mitchell", "William Taylor", "Sophie Adams", "Oliver White", "Charlotte Evans"
@@ -1154,7 +1232,7 @@ export class MemStorage implements IStorage {
       { name: "Lincolnshire", lat: 53.2344, lng: -0.5383 },
     ];
     
-    productSeedData.forEach((item, index) => {
+    completeProductSeedData.forEach((item, index) => {
       const farmerIndex = index % farmerNames.length;
       const farmerName = farmerNames[farmerIndex];
       const ukLoc = ukLocations[farmerIndex % ukLocations.length];
@@ -1164,7 +1242,7 @@ export class MemStorage implements IStorage {
       const priceVariation = item.basePrice * (0.9 + Math.random() * 0.2);
       
       const product: Product = {
-        id: `product-${index + 1}`,
+        id: item.id ?? `product-${index + 1}`,
         name: item.name,
         description: `Fresh ${item.name.toLowerCase()} directly from the farm. High quality and farm fresh produce from ${ukLoc.name}.`,
         price: parseFloat((priceVariation / 25).toFixed(2)), // Convert ₹ base price to realistic GBP (÷25 ≈ UK farm price)

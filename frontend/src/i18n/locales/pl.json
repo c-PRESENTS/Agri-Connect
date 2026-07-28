@@ -1140,7 +1140,7 @@
     "review_title": "Podsumowanie Zamówienia",
     "deliver_to": "Dostarcz do",
     "ship_from": "Wysyłka z",
-    "item_count": "{count} szt.",
+    "item_count": "{{count}} szt.",
     "subtotal": "Suma częściowa",
     "vat": "VAT (20%)",
     "total": "Razem",
@@ -1462,7 +1462,7 @@
     "subtotal": "Suma częściowa",
     "checkout_button": "Przejdź do Kasy",
     "continue_shopping": "Kontynuuj Zakupy",
-    "item_count": "{count} szt.",
+    "item_count": "{{count}} szt.",
     "remove_item": "Usuń produkt"
   },
   "category_carousel": {
@@ -1551,7 +1551,7 @@
   },
   "product_showcase": {
     "badge": "AgriConnect Direct",
-    "item_count": "{count} szt.",
+    "item_count": "{{count}} szt.",
     "farm_to_table": "Z farmy na stół",
     "same_day_delivery": "Dostawa tego samego dnia",
     "verified_farmers": "Zweryfikowani rolnicy"

@@ -286,11 +286,11 @@ export default function SettingsPage() {
                   Select any country; your city and country are saved together.
                 </p>
               </div>
-              <div className="grid gap-4 border-t pt-2 sm:col-span-2 sm:grid-cols-3">
-                <div>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 border-t pt-2 sm:col-span-2">
+                <div className="min-w-0">
                   <Label className="text-muted-foreground">Email</Label>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-sm" data-testid="text-profile-email">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <p className="min-w-0 break-all text-sm font-medium" data-testid="text-profile-email">
                       {user?.email || "Not set"}
                     </p>
                     {user?.email && user.authMethod === "google" && (
@@ -298,16 +298,16 @@ export default function SettingsPage() {
                     )}
                   </div>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <Label className="text-muted-foreground">Phone status</Label>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm">{form.phone || "Not set"}</p>
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <p className="break-all text-sm font-medium">{form.phone || "Not set"}</p>
                     {form.phone && user?.authMethod === "otp" && (
                       <Badge className="text-[10px]">Verified</Badge>
                     )}
                   </div>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <Label className="text-muted-foreground">Account role</Label>
                   <p className="font-medium capitalize text-sm" data-testid="text-profile-role">{user?.role || "buyer"}</p>
                 </div>
