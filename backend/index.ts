@@ -10,6 +10,7 @@ import { paymentRuntimeConfig } from "./payments/config";
 import { capabilityMonitor } from "./payments/capability-monitor";
 import { providerActivationService } from "./payments/provider-activation-service";
 import { paymentMaintenanceService } from "./payments/maintenance-service";
+import { registerCurrencyRoutes } from "./currency/routes";
 
 const app = express();
 const httpServer = createServer(app);
@@ -40,11 +41,11 @@ const apiRateLimitWindowMs = Number(process.env.API_RATE_LIMIT_WINDOW_MS ?? (isP
 const apiRateLimitMax = Number(process.env.API_RATE_LIMIT_MAX ?? (isProd ? 100 : 5000));
 
 app.use(helmet({
-  // Google/PayPal popup SDKs need an opener relationship. Production keeps
-  // the popup-compatible isolation policy; development omits COOP because
-  // localhost HMR and third-party popup probes otherwise emit false-positive
-  // postMessage warnings.
-  crossOriginOpenerPolicy: isProd ? { policy: "same-origin-allow-popups" } : false,
+  // Google and payment-provider popup SDKs communicate with their opener by
+  // postMessage. Apply the popup-compatible policy consistently in development
+  // and production so localhost does not inherit the browser's stricter
+  // same-origin opener behavior.
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   // In development Vite injects inline scripts for HMR and React Fast Refresh.
   // Those are blocked by a strict CSP, which breaks the dev experience.
   // The built production output has no inline scripts, so the policy is safe
@@ -224,6 +225,7 @@ app.use((req, res, next) => {
   await setupAuth(app);
   registerAuthRoutes(app);
   registerOtpRoutes(app);
+  registerCurrencyRoutes(app);
 
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });

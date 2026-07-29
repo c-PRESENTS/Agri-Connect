@@ -1209,6 +1209,7 @@
     "tab_food_short": "Food",
     "tab_needs": "Live Needs",
     "tab_needs_short": "Need",
+    "tab_all": "All",
     "tab_post": "Post Need",
     "tab_post_short": "Post",
     "tab_parcels": "My Parcels",
@@ -1857,7 +1858,7 @@
   },
   "live_sellers": {
     "title": "Live Sellers Now",
-    "online_count": "{count} sellers online",
+    "online_count": "{{count}} sellers online",
     "live_status": "Live now",
     "visit_shop": "Visit Shop",
     "message_button": "Message",

@@ -18,10 +18,15 @@ export class PricingService {
     platformFeeBps: number,
   ): CheckoutPricing {
     const subtotalMinor = items.reduce(
-      (sum, item) => sum + BigInt(Math.round(item.product.price * 100)) * BigInt(item.quantity),
+      (sum, item) =>
+        sum +
+        BigInt(Math.round((item.unitPrice ?? item.product.price) * 100)) *
+          BigInt(item.quantity),
       BigInt(0),
     );
-    const taxMinor = (subtotalMinor * BigInt(2000)) / BigInt(10000);
+    // Lean MVP catalog prices are tax-inclusive. Do not add a blanket tax
+    // percentage across products with different tax treatment.
+    const taxMinor = BigInt(0);
     const platformFeeMinor = (subtotalMinor * BigInt(platformFeeBps)) / BigInt(10000);
     const totalMinor = subtotalMinor + taxMinor + shippingMinor + platformFeeMinor;
     const money = (amountMinor: bigint): Money => ({ currency, amountMinor: amountMinor.toString() });

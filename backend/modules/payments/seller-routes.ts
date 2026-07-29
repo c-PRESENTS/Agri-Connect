@@ -4,6 +4,7 @@ import { isAuthenticated } from "../../auth";
 import { authStorage } from "../../auth/storage";
 import { paymentProviderSchema } from "../../payments/config";
 import { sellerAccountService } from "../../payments/seller-account-service";
+import { paymentOperationsRepository } from "../../repositories/payment-operations-repository";
 
 interface SellerPaymentRouteDeps {
   getUserId(req: Request): string | undefined;
@@ -11,6 +12,10 @@ interface SellerPaymentRouteDeps {
 
 const onboardingSchema = z.object({
   country: z.string().length(2).transform((value) => value.toUpperCase()),
+});
+const cashPreferenceSchema = z.object({
+  acceptsCashAtPickup: z.boolean(),
+  acceptsCashOnFarmerDelivery: z.boolean(),
 });
 
 function returnBase(req: Request): string {
@@ -29,6 +34,37 @@ export function registerSellerPaymentRoutes(
       return res.status(403).json({ error: "Seller access is required" });
     }
     return res.json({ accounts: await sellerAccountService.list(userId) });
+  });
+
+  app.get("/api/payments/seller/cash-preferences", isAuthenticated, async (req, res) => {
+    const userId = deps.getUserId(req)!;
+    const user = await authStorage.getUser(userId);
+    if (!user || !["farmer", "admin"].includes(user.role)) {
+      return res.status(403).json({ error: "Seller access is required" });
+    }
+    const preference = await paymentOperationsRepository.getSellerCashPreference(userId);
+    return res.json({
+      acceptsCashAtPickup: preference?.acceptsCashAtPickup ?? false,
+      acceptsCashOnFarmerDelivery: preference?.acceptsCashOnFarmerDelivery ?? false,
+    });
+  });
+
+  app.patch("/api/payments/seller/cash-preferences", isAuthenticated, async (req, res) => {
+    try {
+      const userId = deps.getUserId(req)!;
+      const user = await authStorage.getUser(userId);
+      if (!user || !["farmer", "admin"].includes(user.role)) {
+        return res.status(403).json({ error: "Seller access is required" });
+      }
+      const input = cashPreferenceSchema.parse(req.body);
+      const preference = await paymentOperationsRepository.upsertSellerCashPreference({
+        sellerId: userId,
+        ...input,
+      });
+      return res.json(preference);
+    } catch {
+      return res.status(400).json({ error: "Unable to update cash preferences" });
+    }
   });
 
   app.post(

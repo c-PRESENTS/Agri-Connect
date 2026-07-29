@@ -48,7 +48,7 @@ export function ProfileWizard() {
         role,
         name: name || deriveDisplayName(user),
         phone: phone || null,
-        location: location || "Global",
+        location: location || null,
         avatar: avatar || fallbackAvatar,
         profileComplete: true,
       });
@@ -63,7 +63,7 @@ export function ProfileWizard() {
       await updateProfile.mutateAsync({
         role,
         name: name || deriveDisplayName(user),
-        location: location || "Global",
+        location: location || null,
         avatar: avatar || fallbackAvatar,
         profileComplete: true,
       });

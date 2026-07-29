@@ -969,6 +969,7 @@
     "tab_food_short": "Żywn",
     "tab_needs": "Potrzeby Na Żywo",
     "tab_needs_short": "Potrz",
+    "tab_all": "Wszystkie",
     "tab_post": "Opublikuj Potrzebę",
     "tab_post_short": "Dodaj",
     "tab_parcels": "Moje Działki",
@@ -1538,7 +1539,7 @@
   },
   "live_sellers": {
     "title": "Sprzedawcy Online Teraz",
-    "online_count": "{count} sprzedawców online",
+    "online_count": "{{count}} sprzedawców online",
     "live_status": "Online teraz",
     "visit_shop": "Odwiedź Sklep",
     "message_button": "Wiadomość",

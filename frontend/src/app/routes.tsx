@@ -5,6 +5,7 @@ import { StudentAccessRoute } from "@/components/student-access-route";
 
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Home = lazy(() => import("@/pages/home"));
+const CategoriesPage = lazy(() => import("@/pages/categories"));
 const AboutPage = lazy(() => import("@/pages/about"));
 const LogisticsPage = lazy(() => import("@/pages/logistics"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
@@ -26,6 +27,7 @@ const ProductDetailPage = lazy(() => import("@/pages/product-detail"));
 const ComparePage = lazy(() => import("@/pages/compare"));
 const SmartMapPage = lazy(() => import("@/pages/smart-map"));
 const CheckoutPage = lazy(() => import("@/pages/checkout"));
+const CheckoutPaymentPage = lazy(() => import("@/pages/checkout-payment"));
 const OrderConfirmationPage = lazy(() => import("@/pages/order-confirmation"));
 const OrdersPage = lazy(() => import("@/pages/orders"));
 const OrderDetailPage = lazy(() => import("@/pages/order-detail"));
@@ -52,6 +54,7 @@ export function AppRoutes() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/categories" component={CategoriesPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/dashboard">
         <ProtectedRoute><Dashboard /></ProtectedRoute>
@@ -115,6 +118,9 @@ export function AppRoutes() {
       <Route path="/map" component={SmartMapPage} />
       <Route path="/checkout">
         <ProtectedRoute><CheckoutPage /></ProtectedRoute>
+      </Route>
+      <Route path="/checkout/payment/:quoteId">
+        <ProtectedRoute><CheckoutPaymentPage /></ProtectedRoute>
       </Route>
       <Route path="/order-confirmation/:id">
         <ProtectedRoute><OrderConfirmationPage /></ProtectedRoute>

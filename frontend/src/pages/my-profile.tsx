@@ -34,6 +34,7 @@ import { SafeProductImage } from "@/components/safe-product-image";
 import { useAuth } from "@/hooks/use-auth";
 import { useFavorites } from "@/hooks/use-favorites";
 import { resolveProductImageForOrderItem, resolveProductImageForProduct } from "@/lib/product-images";
+import { useCurrency } from "@/contexts/currency-context";
 
 type SellerDashboardData = {
   products: Product[];
@@ -77,14 +78,6 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   refunded: "Refunded",
 };
 
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
@@ -103,9 +96,9 @@ function initials(value?: string | null) {
     .toUpperCase();
 }
 
-function safePrice(product: Product) {
+function safePrice(product: Product, format: ReturnType<typeof useCurrency>["format"]) {
   return Number.isFinite(product.price) && product.price >= 0
-    ? formatMoney(product.price)
+    ? format(product.price, { sourceCurrency: product.currency || "GBP", includeCode: true })
     : "Price not set";
 }
 
@@ -287,6 +280,7 @@ function AccountReadiness() {
 
 function BuyerProfile() {
   const [, navigate] = useLocation();
+  const { format } = useCurrency();
   const { productIds, sellerIds } = useFavorites();
   const { data: orders = [], isLoading, isError, refetch } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
@@ -371,7 +365,7 @@ function BuyerProfile() {
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
                       </div>
-                      <p className="hidden shrink-0 text-sm font-black sm:block">{formatMoney(order.total)}</p>
+                      <p className="hidden shrink-0 text-sm font-black sm:block">{format(order.total, { includeCode: true })}</p>
                       <ChevronRight className="h-4 w-4 shrink-0 text-emerald-700" />
                     </button>
                   );
@@ -399,6 +393,7 @@ function BuyerProfile() {
 
 function FarmerProfile() {
   const [, navigate] = useLocation();
+  const { format } = useCurrency();
   const { user } = useAuth();
   const { data, isLoading, isError, refetch } = useQuery<SellerDashboardData>({
     queryKey: ["/api/dashboard/seller"],
@@ -416,7 +411,7 @@ function FarmerProfile() {
   const metrics: SummaryMetric[] = [
     { label: "Listings", value: String(data?.summary.productCount ?? 0), detail: "Products in your storefront", icon: Package, tone: "bg-blue-50 text-blue-700" },
     { label: "Active orders", value: String(data?.summary.activeOrderCount ?? 0), detail: "Orders requiring fulfilment", icon: Truck, tone: "bg-amber-50 text-amber-700" },
-    { label: "Sales value", value: formatMoney(data?.summary.salesTotal ?? 0), detail: "Open and completed orders", icon: BadgePoundSterling, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "Sales value", value: format(data?.summary.salesTotal ?? 0, { includeCode: true }), detail: "Open and completed orders", icon: BadgePoundSterling, tone: "bg-emerald-50 text-emerald-700" },
     { label: "Product rating", value: averageRating ? averageRating.toFixed(1) : "—", detail: averageRating ? "Average listing rating" : "No ratings yet", icon: Star, tone: "bg-violet-50 text-violet-700" },
   ];
 
@@ -526,7 +521,7 @@ function FarmerProfile() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h3 className="truncate font-extrabold">{name}</h3>
-                        <p className="mt-1 text-sm font-bold text-emerald-700">{safePrice(product)} / {unit}</p>
+                        <p className="mt-1 text-sm font-bold text-emerald-700">{safePrice(product, format)} / {unit}</p>
                       </div>
                       <Badge variant="outline" className="max-w-28 truncate capitalize">{safeCategory(product)}</Badge>
                     </div>

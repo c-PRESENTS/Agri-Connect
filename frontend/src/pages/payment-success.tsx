@@ -8,9 +8,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TopNavigation } from "@/components/top-navigation";
 import { queryClient } from "@/lib/queryClient";
 import type { Order } from "@shared/schema";
+import { useCurrency } from "@/contexts/currency-context";
 
 export default function PaymentSuccessPage() {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const [, navigate] = useLocation();
 
   const sessionId = useMemo(() => {
@@ -78,7 +80,7 @@ export default function PaymentSuccessPage() {
                   {t("payment_success.order_number")} <span className="font-semibold text-foreground">{order.orderNumber}</span>
                 </p>
                 <p className="text-sm text-muted-foreground mb-6">
-                  {t("payment_success.total")} <span className="font-semibold text-foreground">£{order.total.toFixed(2)}</span>
+                  {t("payment_success.total")} <span className="font-semibold text-foreground">{format(order.total, { includeCode: true })}</span>
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2 justify-center">
                   <Button

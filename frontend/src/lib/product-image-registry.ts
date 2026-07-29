@@ -51,12 +51,15 @@ import maidaImage from "@assets/AgriConnect Images/daily_needs/food_grains & Cer
 import euOrganicCertifiedImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/eu organic certified.jpeg";
 import indiaOrganicImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/india organic.jpeg";
 import organicApplesImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/organic apples.jpeg";
+import organicBananasImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/Organic Banana.jpeg";
 import organicCarrotsImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/organic carrots.jpeg";
 import organicMangoesImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/organic mangoes.jpeg";
 import organicMilletsImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/organic millets.jpeg";
 import organicOrangesImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/organic oranges.jpeg";
 import organicPotatoesImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/organic potatos.jpeg";
 import organicRiceImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/organic rice.jpeg";
+import organicSpinachImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/Organic Spinach.jpeg";
+import organicTomatoesImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/Organic Tomatos.jpeg";
 import organicWheatImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/organic wheat.jpeg";
 import usdaOrganicImage from "@assets/AgriConnect Images/daily_needs/Organic Produce/usda organic.png";
 import biscuitsImage from "@assets/AgriConnect Images/daily_needs/Bakery & Bread/biscuits.jpeg";
@@ -105,6 +108,8 @@ import sesameOilImage from "@assets/AgriConnect Images/daily_needs/cooking oils/
 import soybeanOilImage from "@assets/AgriConnect Images/daily_needs/cooking oils/soybean oil.webp";
 import sunflowerOilImage from "@assets/AgriConnect Images/daily_needs/cooking oils/sunflower oil.jpeg";
 import tilOilImage from "@assets/AgriConnect Images/daily_needs/cooking oils/til oil.jpeg";
+import tilapiaImage from "@assets/AgriConnect Images/daily_needs/Fish & SeaFood/tilapia.png";
+import countryChickenImage from "@assets/AgriConnect Images/daily_needs/Meat & Poultry/country-chicken.png";
 import duckMeatImage from "@assets/AgriConnect Images/daily_needs/Meat & Poultry/Duck_Meat.png";
 import porkImage from "@assets/AgriConnect Images/daily_needs/Meat & Poultry/Pork.png";
 import sourdoughBreadImage from "@assets/AgriConnect Images/daily_needs/Bakery & Bread/Sourdough_Bread.png";
@@ -113,6 +118,10 @@ import handSprayerImage from "@assets/AgriConnect Images/Inputs & Tools/Farming 
 import hybridSeedsPackImage from "@assets/AgriConnect Images/Inputs & Tools/Seeds & Planting Materials/Hybrid_Seeds_Pack.png";
 import neemCakeImage from "@assets/AgriConnect Images/Inputs & Tools/Fertilizers/Neem_Cake.png";
 import organicFertilizerImage from "@assets/AgriConnect Images/Inputs & Tools/Fertilizers/Organic_Fertilizer.png";
+import poultryFeedImage from "@assets/AgriConnect Images/Other Agricultural/Poultry Feed.png";
+import chiaSeedsImage from "@assets/AgriConnect Images/Processed/17_chia_seeds.png";
+import vanillaImage from "@assets/AgriConnect Images/Processed/05_vanilla.png";
+import strawberriesImage from "@assets/AgriConnect Images/daily_needs/Fruits/strawberry.png";
 
 export interface ProductImageAttribution {
   source: "bundled" | "generated" | "licensed";
@@ -127,6 +136,7 @@ export interface ProductImageRegistryEntry {
   categoryId: string;
   subcategoryId: string;
   localAssetPath: string;
+  canonicalNameMatch?: boolean;
   attribution?: ProductImageAttribution;
 }
 
@@ -155,7 +165,7 @@ const bundled = (label: string): ProductImageAttribution => ({
  * path.
  */
 const localCuratedProductImages = import.meta.glob(
-  "../assets/AgriConnect Images/{Bio,Commercial & Industry Crops,daily_needs,Dietary,Fresh_Produce,Inputs & Tools,Market,Modern Farming,Other Agricultural,Processed,Specialty}/**/*.{avif,jpg,jpeg,png,webp}",
+  "../assets/AgriConnect Images/{Bio,Commercial & Industry Crops,daily_needs,Dietary,Fresh_Produce,Inputs & Tools,Livestock,Market,Modern Farming,Other Agricultural,Processed,Specialty}/**/*.{avif,jpg,jpeg,png,webp}",
   { eager: true, import: "default", query: "?url" },
 ) as Record<string, string>;
 
@@ -179,6 +189,7 @@ const categoryIdByTopLevelAssetFolder: Readonly<Record<string, string>> = {
   Dietary: "dietary",
   Fresh_Produce: "fresh-produce",
   "Inputs & Tools": "inputs-tools",
+  Livestock: "livestock",
   Specialty: "specialty",
   "Other Agricultural": "other-agri",
   Market: "supermarket",
@@ -254,6 +265,10 @@ const taxonomyByAssetFolder: Readonly<Record<string, { categoryId: string; subca
   "Inputs & Tools/Protective Gear": { categoryId: "inputs-tools", subcategoryId: "protective-gear" },
   "Inputs & Tools/Remote Sensing & Drones": { categoryId: "inputs-tools", subcategoryId: "remote-sensing" },
   "Inputs & Tools/Seeds & Planting Materials": { categoryId: "inputs-tools", subcategoryId: "seeds" },
+  "Livestock/Dairy Animals": { categoryId: "livestock", subcategoryId: "dairy-animals" },
+  "Livestock/Fish & Aquaculture": { categoryId: "livestock", subcategoryId: "aquaculture" },
+  "Livestock/Meat Animals": { categoryId: "livestock", subcategoryId: "meat-animals" },
+  "Livestock/Poultry Birds": { categoryId: "livestock", subcategoryId: "poultry" },
   "Market/Allied Products": { categoryId: "supermarket", subcategoryId: "allied-products" },
   "Market/Automotive": { categoryId: "supermarket", subcategoryId: "automotive" },
   "Market/Baby & kids": { categoryId: "supermarket", subcategoryId: "baby-kids" },
@@ -349,6 +364,9 @@ const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "fruits", name: "Mixed Fruits", aliases: ["Bulk Tropical Fruits Crate", "Bulk Exotic Fruit Box", "Seasonal Mixed Fruit Crate"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: categoryImages.fruits, attribution: bundled("AgriConnect fruit stock asset") },
   { slug: "organic-carrots", name: "Organic Carrots", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicCarrotsImage, attribution: bundled("AgriConnect organic carrots product asset") },
   { slug: "organic-potatoes", name: "Organic Potatoes", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicPotatoesImage, attribution: bundled("AgriConnect organic potatoes product asset") },
+  { slug: "organic-tomatoes", name: "Organic Tomatoes", aliases: ["Organic Tomatos"], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicTomatoesImage, attribution: bundled("AgriConnect organic tomatoes product asset") },
+  { slug: "organic-spinach", name: "Organic Spinach", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicSpinachImage, attribution: bundled("AgriConnect organic spinach product asset") },
+  { slug: "organic-bananas", name: "Organic Bananas", aliases: ["Organic Banana"], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicBananasImage, attribution: bundled("AgriConnect organic bananas product asset") },
   { slug: "organic-apples", name: "Organic Apples", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicApplesImage, attribution: bundled("AgriConnect organic apples product asset") },
   { slug: "organic-mangoes", name: "Organic Mangoes", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicMangoesImage, attribution: bundled("AgriConnect organic mangoes product asset") },
   { slug: "organic-oranges", name: "Organic Oranges", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicOrangesImage, attribution: bundled("AgriConnect organic oranges product asset") },
@@ -429,6 +447,8 @@ const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "duck-eggs", name: "Duck Eggs", aliases: [], categoryId: "daily-needs", subcategoryId: "dairy", localAssetPath: duckEggsImage, attribution: bundled("AgriConnect duck eggs asset") },
   { slug: "quail-eggs", name: "Quail Eggs", aliases: [], categoryId: "daily-needs", subcategoryId: "dairy", localAssetPath: quailEggsImage, attribution: bundled("AgriConnect quail eggs asset") },
   { slug: "omega-3-eggs", name: "Omega-3 Eggs", aliases: ["omega 3 eggs"], categoryId: "daily-needs", subcategoryId: "dairy", localAssetPath: omega3EggsImage, attribution: bundled("AgriConnect omega-3 eggs asset") },
+  { slug: "country-chicken", name: "Country Chicken", aliases: [], categoryId: "daily-needs", subcategoryId: "meat", localAssetPath: countryChickenImage, attribution: bundled("AgriConnect country chicken product asset") },
+  { slug: "tilapia", name: "Tilapia", aliases: [], categoryId: "daily-needs", subcategoryId: "fish", localAssetPath: tilapiaImage, attribution: bundled("AgriConnect tilapia product asset") },
   { slug: "poultry", name: "Poultry", aliases: ["Country Chicken", "Broiler Chicken", "Chicken Breast", "Chicken Legs", "Chicken Wings"], categoryId: "daily-needs", subcategoryId: "meat", localAssetPath: categoryImages.poultry, attribution: bundled("AgriConnect poultry stock asset") },
   { slug: "meat", name: "Meat", aliases: ["Goat Mutton", "Lamb Mutton", "Pork", "Rabbit Meat", "Duck Meat", "Quail Meat"], categoryId: "daily-needs", subcategoryId: "meat", localAssetPath: categoryImages.meat, attribution: bundled("AgriConnect meat stock asset") },
   { slug: "fish", name: "Fish", aliases: ["Rohu Fish", "Catla Fish", "Tilapia", "Pomfret", "Mackerel", "Sardines", "King Fish", "King Fish Surmai", "Dried Fish"], categoryId: "daily-needs", subcategoryId: "fish", localAssetPath: categoryImages.fish, attribution: bundled("AgriConnect fish stock asset") },
@@ -451,6 +471,14 @@ const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "hybrid-seeds-pack", name: "Hybrid Seeds Pack", aliases: [], categoryId: "inputs-tools", subcategoryId: "seeds", localAssetPath: hybridSeedsPackImage, attribution: bundled("AgriConnect hybrid seeds pack product asset") },
   { slug: "neem-cake", name: "Neem Cake", aliases: [], categoryId: "inputs-tools", subcategoryId: "fertilizers", localAssetPath: neemCakeImage, attribution: bundled("AgriConnect neem cake product asset") },
   { slug: "organic-fertilizer", name: "Organic Fertilizer", aliases: [], categoryId: "inputs-tools", subcategoryId: "fertilizers", localAssetPath: organicFertilizerImage, attribution: bundled("AgriConnect organic fertilizer product asset") },
+  { slug: "poultry-feed-starter", name: "Poultry Feed (Starter)", aliases: ["Poultry Feed"], categoryId: "other-agri", subcategoryId: "animal-feed", localAssetPath: poultryFeedImage, attribution: bundled("AgriConnect poultry feed product asset") },
+  { slug: "chia-seeds", name: "Chia Seeds", aliases: [], categoryId: "processed", subcategoryId: "health-foods", localAssetPath: chiaSeedsImage, canonicalNameMatch: true, attribution: bundled("AgriConnect chia seeds product asset") },
+  { slug: "vanilla", name: "Vanilla", aliases: [], categoryId: "processed", subcategoryId: "spice-powders", localAssetPath: vanillaImage, canonicalNameMatch: true, attribution: bundled("AgriConnect vanilla product asset") },
+  { slug: "strawberries", name: "Strawberries", aliases: [], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: strawberriesImage, canonicalNameMatch: true, attribution: bundled("AgriConnect strawberries product asset") },
+  { slug: "bypass-fat", name: "Bypass Fat", aliases: [], categoryId: "other-agri", subcategoryId: "animal-feed", localAssetPath: getUniqueLocalAsset("Bypass Fat", categoryImages["animal-feed"]), attribution: bundled("AgriConnect bypass fat product asset") },
+  { slug: "mineral-mixture", name: "Mineral Mixture", aliases: [], categoryId: "other-agri", subcategoryId: "animal-feed", localAssetPath: getUniqueLocalAsset("Mineral Mixture", categoryImages["animal-feed"]), attribution: bundled("AgriConnect mineral mixture product asset") },
+  { slug: "concentrates", name: "Concentrates", aliases: [], categoryId: "other-agri", subcategoryId: "animal-feed", localAssetPath: getUniqueLocalAsset("Concentrates", categoryImages["animal-feed"]), attribution: bundled("AgriConnect concentrates product asset") },
+  { slug: "supplements", name: "Supplements", aliases: [], categoryId: "other-agri", subcategoryId: "animal-feed", localAssetPath: getUniqueLocalAsset("Supplements", categoryImages["animal-feed"]), attribution: bundled("AgriConnect supplements product asset") },
 ];
 
 const explicitSlugs = new Set(entries.map((entry) => entry.slug));
@@ -493,12 +521,15 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   cloves: ["clove"],
   "cold-pressed-coconut-oil": ["cold-pressed-coconut"],
   "country-chicken-eggs": ["country-eggs"],
+  "curd-yogurt": ["curd"],
   "dap-fertilizer": ["dap"],
   "dried-fish": ["sundried-fish"],
   "farm-fresh-eggs": ["farm-eggs"],
   "fenugreek-leaves": ["fenugreek"],
   figs: ["fig"],
   "foxtail-millet": ["fox-tail-milet"],
+  "gf-cookies": ["gluten-free-cookies"],
+  "gf-crackers": ["gluten-free-crackers"],
   "fresh-butter": ["butter"],
   "fresh-curd": ["curd"],
   "green-fodder": ["green-fodder-napier"],
@@ -515,6 +546,7 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   oranges: ["orange"],
   pears: ["pear"],
   "poultry-feed": ["poultry-feed-starter"],
+  "poultry-feed-starter": ["poultry-feed"],
   "premium-basmati-rice": ["basmati-rice"],
   "pruning-shears": ["secateurs"],
   "pure-cow-ghee": ["ghee"],
@@ -534,6 +566,14 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "buffalo-milk-fresh": ["buffalo-milk"],
   "paneer-fresh": ["paneer"],
   "king-fish-surmai": ["king-fish"],
+  "children-s-books": ["childrens-books"],
+  "extra-virgin": ["extra-virgin-olive-oil"],
+  legumes: ["legumes-high-fiber"],
+  "mixed-fruit": ["mixed-fruit-pickle"],
+  "tiger-prawn": ["tiger-prawns"],
+  tractors: ["tractor"],
+  virgin: ["virgin-olive-oil"],
+  "whipping-cream": ["whipped-cream"],
   // Seed names that include a regional, plural, or specification qualifier.
   // Each target is an existing local asset; these are exact approved aliases,
   // never fuzzy matches.

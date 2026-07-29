@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { SafeProductImage } from "@/components/safe-product-image";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { FavoriteProductButton } from "@/components/favorite-product-button";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface SearchAutocompleteProps {
   value: string;
@@ -50,6 +51,7 @@ function clearRecentSearches() {
 }
 
 export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocompleteProps) {
+  const { format } = useCurrency();
   const [open, setOpen] = useState(false);
   const [inputVal, setInputVal] = useState(value);
   const [recentSearches, setRecentSearches] = useState<string[]>(getRecentSearches);
@@ -155,33 +157,97 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
     }
   };
 
-  const handleSelect = (query: string) => {
+  const closeSearch = () => {
+    setOpen(false);
+    inputRef.current?.blur();
+  };
+
+  const navigateToProductCategory = (product: Product) => {
+    const shoppableCategories = getShoppableCategories();
+    const category =
+      shoppableCategories.find((item) => item.id === product.categoryId) ??
+      shoppableCategories.find((item) =>
+        item.subcategories.some((subcategory) => subcategory.id === product.subcategoryId),
+      );
+
+    if (!category) return false;
+
+    const query = product.name.trim();
+    const params = new URLSearchParams({ category: category.id });
+    if (category.subcategories.some((subcategory) => subcategory.id === product.subcategoryId)) {
+      params.set("subcategory", product.subcategoryId);
+    }
+
+    setInputVal(query);
+    onChange(query);
+    onSearch(query);
+    addRecentSearch(query);
+    setRecentSearches(getRecentSearches());
+    setLocation(`/?${params.toString()}`);
+    window.dispatchEvent(new CustomEvent("agri-subcategory-open", { detail: category.id }));
+    closeSearch();
+    return true;
+  };
+
+  const handleProductSelect = (product: Product) => {
+    if (navigateToProductCategory(product)) return;
+    const query = product.name.trim();
+    setInputVal(query);
+    onChange(query);
+    onSearch(query);
+    addRecentSearch(query);
+    setRecentSearches(getRecentSearches());
+    closeSearch();
+  };
+
+  const handleSelect = async (query: string) => {
     if (query.startsWith("?category=")) {
       setInputVal("");
       onChange("");
       onSearch("");
       setLocation(`/${query}`);
-      setOpen(false);
-      inputRef.current?.blur();
+      closeSearch();
       return;
     }
 
-    setInputVal(query);
-    onChange(query);
-    addRecentSearch(query);
+    const trimmedQuery = query.trim();
+    const normalizedQuery = trimmedQuery.toLocaleLowerCase();
+    const localMatch =
+      suggestions.find((product) => product.name.trim().toLocaleLowerCase() === normalizedQuery) ??
+      suggestions.find((product) => product.name.trim().toLocaleLowerCase().startsWith(normalizedQuery)) ??
+      suggestions.find((product) => product.name.trim().toLocaleLowerCase().includes(normalizedQuery));
+
+    if (localMatch && navigateToProductCategory(localMatch)) return;
+
+    try {
+      const response = await fetch(`/api/products?search=${encodeURIComponent(trimmedQuery)}`, {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const matchingProducts = (await response.json()) as Product[];
+        const product =
+          matchingProducts.find((item) => item.name.trim().toLocaleLowerCase() === normalizedQuery) ??
+          matchingProducts.find((item) => item.name.trim().toLocaleLowerCase().startsWith(normalizedQuery)) ??
+          matchingProducts.find((item) => item.name.trim().toLocaleLowerCase().includes(normalizedQuery)) ??
+          matchingProducts[0];
+        if (product && navigateToProductCategory(product)) return;
+      }
+    } catch {
+      // Preserve ordinary text-search behavior when catalog resolution is unavailable.
+    }
+
+    setInputVal(trimmedQuery);
+    onChange(trimmedQuery);
+    addRecentSearch(trimmedQuery);
     setRecentSearches(getRecentSearches());
-    onSearch(query);
-    setOpen(false);
-    inputRef.current?.blur();
+    onSearch(trimmedQuery);
+    closeSearch();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputVal.trim()) {
-      addRecentSearch(inputVal.trim());
-      setRecentSearches(getRecentSearches());
-      onSearch(inputVal.trim());
-      setOpen(false);
+      void handleSelect(inputVal.trim());
     }
   };
 
@@ -299,7 +365,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                   {recentSearches.map((item) => (
                     <button
                       key={item}
-                      onClick={() => handleSelect(item)}
+                      onClick={() => void handleSelect(item)}
                       className="text-[11px] px-2 py-0.5 rounded-md bg-muted/40 hover:bg-primary/10 hover:text-primary border border-border/30 hover:border-primary/20 transition-all font-medium"
                     >
                       {item}
@@ -321,7 +387,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                   {getShoppableCategories().slice(0, 12).map((cat) => (
                     <button
                       key={cat.id}
-                      onClick={() => handleSelect(`?category=${cat.id}`)}
+                      onClick={() => void handleSelect(`?category=${cat.id}`)}
                       className="text-[11px] px-2 py-0.5 rounded-md bg-primary/8 hover:bg-primary/15 hover:text-primary border border-primary/20 transition-all font-medium"
                     >
                       {cat.name}
@@ -343,7 +409,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                   {TRENDING.map((item) => (
                     <button
                       key={item}
-                      onClick={() => handleSelect(item)}
+                      onClick={() => void handleSelect(item)}
                       className="text-[11px] px-2 py-0.5 rounded-md bg-muted/60 hover:bg-primary/10 hover:text-primary border border-border/40 hover:border-primary/20 transition-all font-medium"
                       data-testid={`search-trending-${item.replace(/\s+/g, "-").toLowerCase()}`}
                     >
@@ -372,7 +438,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                 {suggestions.map((product) => (
                   <div key={product.id} className="relative">
                     <button
-                      onClick={() => handleSelect(product.name)}
+                      onClick={() => handleProductSelect(product)}
                       className="group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 pr-12 text-left transition-colors hover:bg-muted/60"
                       data-testid={`search-result-${product.id}`}
                     >
@@ -385,7 +451,12 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                       </div>
                       <div className="text-[10px] text-muted-foreground truncate">{product.farmerName || "Seller not specified"}</div>
                     </div>
-                    <div className="text-[11px] font-bold text-primary shrink-0">£{product.price}</div>
+                    <div className="text-[11px] font-bold text-primary shrink-0">
+                      {format(product.price, {
+                        sourceCurrency: product.currency || "GBP",
+                        includeCode: true,
+                      })}
+                    </div>
                     </button>
                     <FavoriteProductButton
                       productId={product.id}

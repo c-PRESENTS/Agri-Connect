@@ -14,12 +14,12 @@ import type { Product } from "@shared/schema";
 import { SafeProductImage } from "./safe-product-image";
 import { resolveProductImage } from "@/lib/product-images";
 import { FavoriteProductButton } from "./favorite-product-button";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface ProductShowcaseProps {
   categoryId: string | null;
   subcategoryId: string | null;
   activeSection: string | null;
-  currencySymbol?: string;
   onAddToCart?: (product: Product) => void;
   onProductClick?: (product: Product) => void;
   onSectionVisible?: (sectionTitle: string) => void;
@@ -50,13 +50,13 @@ export function ProductShowcase({
   categoryId,
   subcategoryId,
   activeSection,
-  currencySymbol = "£",
   onAddToCart,
   onProductClick,
   onSectionVisible,
   onFarmerClick
 }: ProductShowcaseProps) {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const containerRef = useRef<HTMLDivElement>(null);
   const sectionRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
   const [visibleSection, setVisibleSection] = useState<string | null>(null);
@@ -373,7 +373,10 @@ export function ProductShowcase({
                           {/* Price & Rating */}
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-[10px] text-primary">
-                              {currencySymbol}{product.price}
+                              {format(product.price, {
+                                sourceCurrency: product.currency || "GBP",
+                                includeCode: true,
+                              })}
                               <span className="text-[8px] font-normal text-muted-foreground ml-0.5">/{product.unit}</span>
                             </span>
                             <div className="flex items-center gap-0.5">

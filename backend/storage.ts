@@ -56,6 +56,7 @@ const categoriesData: Category[] = [
       { id: "meat", name: "Meat & Poultry", parentId: "daily-needs", buyerVisible: true },
       { id: "fish", name: "Fish & Seafood", parentId: "daily-needs", buyerVisible: true },
       { id: "spices", name: "Spices & Condiments", parentId: "daily-needs", buyerVisible: true },
+      { id: "organic-produce", name: "Organic Produce", parentId: "daily-needs", buyerVisible: true },
       { id: "packaged", name: "Ready-to-Eat Foods", parentId: "daily-needs", buyerVisible: true },
       { id: "bakery", name: "Bakery & Breads", parentId: "daily-needs", buyerVisible: true },
     ],
@@ -1130,6 +1131,10 @@ export interface IStorage {
   updateCartItem(userId: string, itemId: string, quantity: number): Promise<CartItem | undefined>;
   removeFromCart(userId: string, itemId: string): Promise<boolean>;
   clearCart(userId: string): Promise<void>;
+  removePurchasedCartItems(
+    userId: string,
+    items: Array<{ productId: string; quantity: number }>,
+  ): Promise<void>;
   mergeGuestCart(guestKey: string, userId: string): Promise<void>;
   cancelStaleStripePendingOrders(userId: string, olderThanMs?: number): Promise<number>;
   
@@ -1437,6 +1442,9 @@ export class MemStorage implements IStorage {
     if (!product) {
       throw new Error("Product not found");
     }
+    if ((product.currency ?? "GBP") !== "GBP") {
+      throw new Error("The volunteer payment MVP currently supports GBP products only");
+    }
     if (product.stock <= 0) {
       throw new Error(`${product.name} is out of stock`);
     }
@@ -1510,6 +1518,31 @@ export class MemStorage implements IStorage {
 
   async clearCart(userId: string): Promise<void> {
     this.carts.set(userId, []);
+  }
+
+  async removePurchasedCartItems(
+    userId: string,
+    items: Array<{ productId: string; quantity: number }>,
+  ): Promise<void> {
+    if (items.length === 0) return;
+    const purchased = new Map<string, number>();
+    for (const item of items) {
+      purchased.set(
+        item.productId,
+        (purchased.get(item.productId) ?? 0) + item.quantity,
+      );
+    }
+    const cart = this.carts.get(userId) || [];
+    this.carts.set(
+      userId,
+      cart.flatMap((item) => {
+        const purchasedQuantity = purchased.get(item.productId) ?? 0;
+        const remainingQuantity = item.quantity - purchasedQuantity;
+        return remainingQuantity > 0
+          ? [{ ...item, quantity: remainingQuantity }]
+          : [];
+      }),
+    );
   }
 
   async mergeGuestCart(guestKey: string, userId: string): Promise<void> {
@@ -1623,11 +1656,11 @@ export class MemStorage implements IStorage {
         : subtotal > 0 && subtotal < 30
           ? 4.99
           : 0;
-    const tax = parseFloat((subtotal * 0.2).toFixed(2));
+    const tax = 0;
     const total = parseFloat((subtotal + deliveryFee + shippingTotal + tax).toFixed(2));
     const now = new Date().toISOString();
     
-    const isManualOrder = paymentMethod === "manual";
+    const isManualOrder = paymentMethod === "manual" || paymentMethod === "cod";
     const paymentProvider = ["stripe", "paypal", "razorpay"].includes(paymentMethod)
       ? paymentMethod as "stripe" | "paypal" | "razorpay"
       : undefined;
@@ -2380,6 +2413,9 @@ class PersistentCommerceStorage extends MemStorage {
     if (!Number.isInteger(quantity) || quantity <= 0) throw new Error("Quantity must be a positive integer");
     const product = await this.getProduct(productId);
     if (!product) throw new Error("Product not found");
+    if ((product.currency ?? "GBP") !== "GBP") {
+      throw new Error("The volunteer payment MVP currently supports GBP products only");
+    }
     const existing = (await this.getCart(userId)).find((item) => item.productId === productId);
     if ((existing?.quantity ?? 0) + quantity > product.stock) {
       throw new Error(`Only ${product.stock} ${product.unit} available for ${product.name}`);
@@ -2407,6 +2443,13 @@ class PersistentCommerceStorage extends MemStorage {
 
   override async clearCart(userId: string): Promise<void> {
     await commerceRepository.clearCart(userId);
+  }
+
+  override async removePurchasedCartItems(
+    userId: string,
+    items: Array<{ productId: string; quantity: number }>,
+  ): Promise<void> {
+    await commerceRepository.removePurchasedCartItems(userId, items);
   }
 
   override async mergeGuestCart(guestKey: string, userId: string): Promise<void> {
@@ -2451,10 +2494,10 @@ class PersistentCommerceStorage extends MemStorage {
     const subtotal = canonicalItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const shippingTotal = Number((extra?.shippingTotal ?? 0).toFixed(2));
     const deliveryFee = shippingTotal > 0 ? 0 : deliveryMethod === "express" ? 5.99 : subtotal > 0 && subtotal < 30 ? 4.99 : 0;
-    const tax = Number((subtotal * 0.2).toFixed(2));
+    const tax = 0;
     const total = Number((subtotal + deliveryFee + shippingTotal + tax).toFixed(2));
     const now = new Date().toISOString();
-    const isManual = paymentMethod === "manual";
+    const isManual = paymentMethod === "manual" || paymentMethod === "cod";
     const provider = ["stripe", "paypal", "razorpay"].includes(paymentMethod)
       ? paymentMethod as Order["paymentProvider"]
       : undefined;

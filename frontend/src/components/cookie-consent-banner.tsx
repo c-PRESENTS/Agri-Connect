@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
   type OptionalCookiePreferences,
+  COOKIE_CONSENT_VISIBILITY_EVENT,
   COOKIE_SETTINGS_HASH,
   readCookieConsent,
   saveCookieConsent,
@@ -27,6 +28,14 @@ export function CookieConsentBanner() {
   const { t } = useTranslation();
   const [view, setView] = useState<ConsentView>(null);
   const [preferences, setPreferences] = useState<OptionalCookiePreferences>(REJECT_NON_ESSENTIAL);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent(COOKIE_CONSENT_VISIBILITY_EVENT, {
+        detail: view !== null,
+      }),
+    );
+  }, [view]);
 
   useEffect(() => {
     const storedConsent = readCookieConsent();

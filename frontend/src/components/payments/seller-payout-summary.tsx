@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Clock, WalletCards } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface Balance {
   currency: "GBP" | "INR";
@@ -26,6 +27,7 @@ interface PayoutRow {
 }
 
 export function SellerPayoutSummary() {
+  const { format } = useCurrency();
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const { data: balanceData } = useQuery<{ balances: Balance[] }>({
@@ -62,12 +64,10 @@ export function SellerPayoutSummary() {
           <Card key={`${currency}-${label}`}>
             <CardContent className="p-3">
               <p className="text-xs text-muted-foreground">{label} · {currency}</p>
-              <p className="mt-1 font-bold">
-                {new Intl.NumberFormat("en-GB", {
-                  style: "currency",
-                  currency,
-                }).format(Number(amount) / 100)}
-              </p>
+              <p className="mt-1 font-bold">{format(Number(amount) / 100, {
+                sourceCurrency: currency,
+                includeCode: true,
+              })}</p>
             </CardContent>
           </Card>
         ))}
@@ -86,10 +86,10 @@ export function SellerPayoutSummary() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">Order {payout.order_id}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {new Intl.NumberFormat("en-GB", {
-                        style: "currency",
-                        currency: payout.currency,
-                      }).format((Number(payout.seller_net_minor) - Number(payout.refunded_minor)) / 100)}
+                      {format(
+                        (Number(payout.seller_net_minor) - Number(payout.refunded_minor)) / 100,
+                        { sourceCurrency: payout.currency, includeCode: true },
+                      )}
                       {payout.release_due_at
                         ? ` · release after ${new Date(payout.release_due_at).toLocaleString()}`
                         : " · awaiting delivery confirmation"}

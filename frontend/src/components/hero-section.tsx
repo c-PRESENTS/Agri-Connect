@@ -19,6 +19,8 @@ import { getProductImage } from "@/lib/product-images";
 import { categoryImages } from "@/lib/categories";
 import { MAIN_MARKETPLACE_CATEGORIES } from "@/lib/main-marketplace-categories";
 import { FavoriteProductButton } from "./favorite-product-button";
+import { buildCategoryBrowseUrl } from "@/lib/product-navigation";
+import { useCurrency } from "@/contexts/currency-context";
 
 type ShareCareItem = { id: string; name: string; unit: string; qty: number; donor: string; location: string; emoji: string; postedAgo: string; category: string };
 
@@ -46,6 +48,7 @@ const HERO_MAP_MODES: { id: HeroMapMode; label: string; emoji: string; overlays:
 ];
 
 export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: HeroSectionProps) {
+  const { format } = useCurrency();
   const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [heroMapMode, setHeroMapMode] = useState<HeroMapMode>("products");
@@ -134,6 +137,19 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
   const featuredProducts = products.filter(p => p.isFeatured);
   const farmerCount = new Set(products.map(p => p.farmerId)).size;
   const visibleListings = products.length + shareCareItems.length;
+  const openProductCategory = (product: Product) => {
+    navigate(
+      buildCategoryBrowseUrl({
+        categoryId: product.categoryId,
+        subcategoryId: product.subcategoryId,
+      }),
+    );
+    window.dispatchEvent(
+      new CustomEvent("agri-subcategory-open", {
+        detail: product.categoryId,
+      }),
+    );
+  };
   return (
     <section className="relative overflow-hidden">
 
@@ -427,16 +443,28 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                 className="flex-shrink-0 w-[88px] sm:w-[112px] group"
                 data-testid={`product-card-${product.id}`}
               >
-                <div onClick={onBrowse} className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border border-border/50 bg-muted mb-1 sm:mb-1.5 shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/30 group-hover:scale-[1.02]">
+                <div
+                  role="link"
+                  tabIndex={0}
+                  aria-label={`Browse ${product.name} in its category`}
+                  onClick={() => openProductCategory(product)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openProductCategory(product);
+                    }
+                  }}
+                  className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border border-border/50 bg-muted mb-1 sm:mb-1.5 shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/30 group-hover:scale-[1.02]"
+                >
                   <img
-                    src={getProductImage(product.name, product.categoryId, "sm")}
+                    src={getProductImage(product.name, product.categoryId, "sm", product.subcategoryId)}
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1540420828642-fca2c5c18abe?w=300&h=300&fit=crop`; }}
                   />
                   <div className="absolute top-1 right-1">
-                    <Badge className="bg-primary/95 border-none h-4 sm:h-5 px-1 sm:px-1.5 text-[8px] sm:text-[10px] font-bold shadow-sm">£{product.price}</Badge>
+                    <Badge className="bg-primary/95 border-none h-4 sm:h-5 px-1 sm:px-1.5 text-[8px] sm:text-[10px] font-bold shadow-sm">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</Badge>
                   </div>
                   <FavoriteProductButton
                     productId={product.id}
@@ -453,7 +481,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                 <h3 className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-primary transition-colors">{product.name}</h3>
                 <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-tight">{product.farmerName}</p>
                 <div className="flex items-center gap-0.5 mt-0.5">
-                  <span className="text-[11px] sm:text-[13px] font-black text-primary leading-none">£{product.price}</span>
+                  <span className="text-[11px] sm:text-[13px] font-black text-primary leading-none">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</span>
                   <span className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">/{product.unit}</span>
                 </div>
                 <Button
@@ -494,9 +522,21 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                   className="flex-shrink-0 w-[88px] sm:w-[122px] group"
                   data-testid={`featured-card-${product.id}`}
                 >
-                  <div onClick={onBrowse} className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 border-amber-200/60 dark:border-amber-700/40 bg-muted mb-1 sm:mb-1.5 shadow-md transition-all group-hover:shadow-lg group-hover:border-amber-400 group-hover:scale-[1.02]">
+                  <div
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Browse ${product.name} in its category`}
+                    onClick={() => openProductCategory(product)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openProductCategory(product);
+                      }
+                    }}
+                    className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 border-amber-200/60 dark:border-amber-700/40 bg-muted mb-1 sm:mb-1.5 shadow-md transition-all group-hover:shadow-lg group-hover:border-amber-400 group-hover:scale-[1.02]"
+                  >
                     <img
-                      src={getProductImage(product.name, product.categoryId, "sm")}
+                      src={getProductImage(product.name, product.categoryId, "sm", product.subcategoryId)}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
@@ -506,7 +546,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                       <Star className="h-2 w-2 sm:h-3 sm:w-3 text-white fill-white" />
                     </div>
                     <div className="absolute top-1 right-1">
-                      <Badge className="bg-background/90 border border-amber-300 text-amber-700 dark:text-amber-300 h-4 sm:h-5 px-1 sm:px-1.5 text-[8px] sm:text-[10px] font-bold">£{product.price}</Badge>
+                      <Badge className="bg-background/90 border border-amber-300 text-amber-700 dark:text-amber-300 h-4 sm:h-5 px-1 sm:px-1.5 text-[8px] sm:text-[10px] font-bold">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</Badge>
                     </div>
                     <FavoriteProductButton
                       productId={product.id}
@@ -518,7 +558,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                   <h3 className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-amber-600 transition-colors">{product.name}</h3>
                   <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-tight">{product.farmerName}</p>
                   <div className="flex items-center gap-0.5 mt-0.5">
-                    <span className="text-[11px] sm:text-[13px] font-black text-amber-600 dark:text-amber-400 leading-none">£{product.price}</span>
+                    <span className="text-[11px] sm:text-[13px] font-black text-amber-600 dark:text-amber-400 leading-none">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</span>
                     <span className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">/{product.unit}</span>
                   </div>
                   <Button

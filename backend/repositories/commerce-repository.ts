@@ -5,19 +5,36 @@ const toMinor = (value: number): string => Math.round(value * 100).toString();
 const fromMinor = (value: string | number): number => Number(value) / 100;
 
 function hydrateProduct(row: Record<string, any>): Product {
+  const stored = row.product_data as Product;
   return {
-    ...(row.product_data as Product),
+    ...stored,
     id: row.id,
     name: row.name,
     description: row.description,
     price: fromMinor(row.price_minor),
+    currency: row.currency,
     unit: row.unit,
     stock: row.stock,
     categoryId: row.category_id,
     subcategoryId: row.subcategory_id,
     farmerId: row.farmer_id,
+    farmerName: row.seller_name ?? stored.farmerName,
+    farmerAvatar: row.seller_avatar ?? stored.farmerAvatar,
+    farmerLocation: row.seller_location ?? stored.farmerLocation,
+    farmerLatitude: row.seller_latitude == null ? 0 : Number(row.seller_latitude),
+    farmerLongitude: row.seller_longitude == null ? 0 : Number(row.seller_longitude),
+    farmerRating:
+      row.seller_rating == null ? stored.farmerRating : Number(row.seller_rating),
   };
 }
+
+const SELLER_LOCATION_SELECT = `
+  COALESCE(NULLIF(u.name,''), NULLIF(concat_ws(' ',u.first_name,u.last_name),''), u.email) AS seller_name,
+  COALESCE(u.avatar,u.profile_image_url) AS seller_avatar,
+  u.location AS seller_location,
+  u.latitude AS seller_latitude,
+  u.longitude AS seller_longitude,
+  u.rating AS seller_rating`;
 
 function hydrateOrder(row: Record<string, any>): Order {
   const order = row.order_data as Order;
@@ -123,12 +140,23 @@ export class CommerceRepository {
   }
 
   async listProducts(): Promise<Product[]> {
-    const result = await pool.query("SELECT * FROM commerce_products ORDER BY created_at DESC, id");
+    const result = await pool.query(
+      `SELECT p.*, ${SELLER_LOCATION_SELECT}
+         FROM commerce_products p
+         LEFT JOIN users u ON u.id=p.farmer_id
+        ORDER BY p.created_at DESC, p.id`,
+    );
     return result.rows.map(hydrateProduct);
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
-    const result = await pool.query("SELECT * FROM commerce_products WHERE id = $1", [id]);
+    const result = await pool.query(
+      `SELECT p.*, ${SELLER_LOCATION_SELECT}
+         FROM commerce_products p
+         LEFT JOIN users u ON u.id=p.farmer_id
+        WHERE p.id=$1`,
+      [id],
+    );
     return result.rows[0] ? hydrateProduct(result.rows[0]) : undefined;
   }
 
@@ -178,12 +206,13 @@ export class CommerceRepository {
 
   async getCart(userId: string): Promise<CartItem[]> {
     const result = await pool.query(
-      `SELECT ci.*, p.*,
+      `SELECT ci.*, p.*, ${SELLER_LOCATION_SELECT},
               ci.id AS cart_item_id, ci.quantity AS cart_quantity,
               ci.unit_price_minor AS cart_unit_price_minor
        FROM commerce_carts c
        JOIN commerce_cart_items ci ON ci.cart_id=c.id
        JOIN commerce_products p ON p.id=ci.product_id
+       LEFT JOIN users u ON u.id=p.farmer_id
        WHERE c.user_id=$1
        ORDER BY ci.created_at`,
       [userId],
@@ -261,6 +290,46 @@ export class CommerceRepository {
        WHERE ci.cart_id=c.id AND c.user_id=$1`,
       [userId],
     );
+  }
+
+  async removePurchasedCartItems(
+    userId: string,
+    items: Array<{ productId: string; quantity: number }>,
+  ): Promise<void> {
+    if (items.length === 0) return;
+    const quantities = new Map<string, number>();
+    for (const item of items) {
+      quantities.set(
+        item.productId,
+        (quantities.get(item.productId) ?? 0) + item.quantity,
+      );
+    }
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      for (const [productId, quantity] of Array.from(quantities.entries())) {
+        await client.query(
+          `DELETE FROM commerce_cart_items ci USING commerce_carts c
+           WHERE ci.cart_id=c.id AND c.user_id=$1 AND ci.product_id=$2
+             AND ci.quantity<=$3`,
+          [userId, productId, quantity],
+        );
+        await client.query(
+          `UPDATE commerce_cart_items ci
+           SET quantity=ci.quantity-$3,updated_at=now()
+           FROM commerce_carts c
+           WHERE ci.cart_id=c.id AND c.user_id=$1 AND ci.product_id=$2
+             AND ci.quantity>$3`,
+          [userId, productId, quantity],
+        );
+      }
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async createOrder(order: Order): Promise<Order> {

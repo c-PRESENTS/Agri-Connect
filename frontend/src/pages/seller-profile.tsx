@@ -17,9 +17,11 @@ import { useGoBack } from "@/hooks/use-go-back";
 import { useFavorites } from "@/hooks/use-favorites";
 import { PublicSellerBadges } from "@/components/verification-badges";
 import type { Product } from "@shared/schema";
+import { useCurrency } from "@/contexts/currency-context";
 
 export default function SellerProfilePage() {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const params = useParams<{ id: string }>();
   const sellerId = params.id;
 
@@ -124,7 +126,7 @@ export default function SellerProfilePage() {
                 <span className="text-muted-foreground">·</span>
                 <span><span className="font-semibold">{categories}</span> {t("seller_profile.specialties_title")}</span>
                 <span className="text-muted-foreground">·</span>
-                <span>{t("seller_profile.rating_suffix")} <span className="font-semibold">£{avgPrice.toFixed(2)}</span></span>
+                <span>{t("seller_profile.rating_suffix")} <span className="font-semibold">{format(avgPrice, { includeCode: true })}</span></span>
               </div>
             </div>
             <Button

@@ -54,6 +54,7 @@ export interface ProviderCheckoutInput {
     platformFeeMinor: string;
   }>;
   returnBaseUrl: string;
+  customerEmail?: string;
   scenario?: ProviderScenario;
 }
 

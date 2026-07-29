@@ -22,16 +22,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TopNavigation } from "@/components/top-navigation";
 import { useTranslation } from "react-i18next";
-import { useSearch } from "wouter";
+import { useLocation, useSearch } from "wouter";
 
 import { getProductImage } from "@/lib/product-images";
+import { distanceKm, isWithinRadius } from "@/lib/nearby-distance";
 import { isSellerOnline } from "@/lib/seller-presence";
 import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product, LocalNeed } from "@shared/schema";
 import { FavoriteProductButton } from "@/components/favorite-product-button";
+import { useCurrency } from "@/contexts/currency-context";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -84,7 +87,8 @@ const IRRIGATION_ZONES = [
 ];
 
 type DrawMode = "none" | "polygon";
-type RightPanelType = "farmers" | "food" | "needs" | "post" | "shapes";
+type RightPanelType = "farmers" | "food" | "needs" | "all" | "post" | "shapes";
+type NearbyRadius = 10 | 25 | 50 | 100 | "all";
 
 function InvalidateSizeOnMount() {
   const map = useMap();
@@ -119,18 +123,6 @@ function MapCenterTracker({ onChange }: { onChange: (c: [number, number]) => voi
   return null;
 }
 
-/** Haversine distance in km. */
-function haversineKm(a: [number, number], b: [number, number]): number {
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const R = 6371;
-  const dLat = toRad(b[0] - a[0]);
-  const dLon = toRad(b[1] - a[1]);
-  const lat1 = toRad(a[0]);
-  const lat2 = toRad(b[0]);
-  const x = Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(x)));
-}
-
 function calcArea(coords: [number, number][]): number {
   if (coords.length < 3) return 0;
   let area = 0;
@@ -160,12 +152,16 @@ const RIGHT_PANEL_TABS: { id: RightPanelType; icon: any; labelKey: string; short
   { id: "farmers", icon: Users, labelKey: "map.tab_farmers", shortLabelKey: "map.tab_farmers_short", color: "text-green-600" },
   { id: "food", icon: Wheat, labelKey: "map.tab_food", shortLabelKey: "map.tab_food_short", color: "text-amber-600" },
   { id: "needs", icon: Radio, labelKey: "map.tab_needs", shortLabelKey: "map.tab_needs_short", color: "text-red-500" },
+  { id: "all", icon: Globe, labelKey: "map.tab_all", shortLabelKey: "map.tab_all", color: "text-emerald-600" },
   { id: "post", icon: Plus, labelKey: "map.tab_post", shortLabelKey: "map.tab_post_short", color: "text-blue-600" },
   { id: "shapes", icon: PenTool, labelKey: "map.tab_parcels", shortLabelKey: "map.tab_parcels_short", color: "text-purple-600" },
 ];
 
 export default function SmartMapPage() {
+  const { format } = useCurrency();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const routeSearch = useSearch();
   const { toast } = useToast();
   const [activeLayer, setActiveLayer] = useState<keyof typeof TILE_LAYERS>("standard");
@@ -188,6 +184,8 @@ export default function SmartMapPage() {
   const draggingRight = useRef<{ startX: number; startW: number } | null>(null);
   const rightPanelRef = useRef<HTMLDivElement | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [usingDeviceLocation, setUsingDeviceLocation] = useState(false);
+  const [nearbyRadius, setNearbyRadius] = useState<NearbyRadius>(50);
   const [mapCenter, setMapCenter] = useState<[number, number]>([52.3, -1.0]);
   const [flyTo, setFlyTo] = useState<[number, number] | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -196,6 +194,7 @@ export default function SmartMapPage() {
   const [expandedFarmer, setExpandedFarmer] = useState<string | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const lastFocusedFarmerId = useRef<string | null>(null);
+  const roleDefaultsApplied = useRef(false);
 
   // Toolbar group open state
   const [openGroup, setOpenGroup] = useState<string | null>(null);
@@ -210,6 +209,23 @@ export default function SmartMapPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!roleDefaultsApplied.current) {
+      setRightPanel(user.role === "farmer" ? "needs" : "farmers");
+      roleDefaultsApplied.current = true;
+    }
+    if (
+      !usingDeviceLocation &&
+      hasValidPublicCoordinates(user.latitude, user.longitude)
+    ) {
+      const savedLocation: [number, number] = [user.latitude, user.longitude!];
+      setUserLocation(savedLocation);
+      setMapCenter(savedLocation);
+      setFlyTo(savedLocation);
+    }
+  }, [user, usingDeviceLocation]);
 
   const startRightDrag = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -240,13 +256,14 @@ export default function SmartMapPage() {
 
   const [postForm, setPostForm] = useState({
     productName: "", quantity: "", unit: "kg", priceRange: "",
-    addressLine: "", city: "", postcode: "", location: "",
+    location: "",
     urgency: "medium" as "high" | "medium" | "low",
     buyerType: "individual" as any, description: "", deadline: "",
   });
 
   const { data: products = [] } = useQuery<Product[]>({ queryKey: ["/api/products"] });
   const { data: localNeeds = [], refetch: refetchNeeds } = useQuery<LocalNeed[]>({ queryKey: ["/api/local-needs"] });
+  const activeProducts = products.filter((product) => product.stock > 0);
 
   const postNeedMutation = useMutation({
     mutationFn: (data: typeof postForm) => apiRequest("POST", "/api/local-needs", data),
@@ -254,13 +271,13 @@ export default function SmartMapPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/local-needs"] });
       refetchNeeds();
       toast({ title: t("map.demand_posted"), description: t("map.demand_posted_desc") });
-      setPostForm({ productName: "", quantity: "", unit: "kg", priceRange: "", addressLine: "", city: "", postcode: "", location: "", urgency: "medium", buyerType: "individual", description: "", deadline: "" });
+      setPostForm({ productName: "", quantity: "", unit: "kg", priceRange: "", location: "", urgency: "medium", buyerType: "individual", description: "", deadline: "" });
       setRightPanel("needs");
     },
-    onError: () => toast({ title: t("map.demand_posted_failed"), variant: "destructive" }),
+    onError: (error: Error) => toast({ title: t("map.demand_posted_failed"), description: error.message, variant: "destructive" }),
   });
 
-  const farmerMarkers: FarmerMarker[] = products.reduce((acc, product) => {
+  const farmerMarkers: FarmerMarker[] = activeProducts.reduce((acc, product) => {
     if (!hasValidPublicCoordinates(product.farmerLatitude, product.farmerLongitude)) return acc;
     const existing = acc.find(m => m.id === product.farmerId);
     if (existing) {
@@ -289,13 +306,13 @@ export default function SmartMapPage() {
     return acc;
   }, [] as FarmerMarker[]);
 
-  const validProducts = products.filter((product) =>
+  const validProducts = activeProducts.filter((product) =>
     hasValidPublicCoordinates(product.farmerLatitude, product.farmerLongitude)
   );
   const validLocalNeeds = localNeeds.filter((need) =>
     hasValidPublicCoordinates(need.latitude, need.longitude)
   );
-  const unmappedFarmerCount = new Set(products.map((product) => product.farmerId)).size - farmerMarkers.length;
+  const unmappedFarmerCount = new Set(activeProducts.map((product) => product.farmerId)).size - farmerMarkers.length;
 
   // Reference point used to sort right-panel lists by proximity:
   // 1. user's GPS location if they clicked "My Location"
@@ -308,16 +325,42 @@ export default function SmartMapPage() {
       if (searchQuery && !n.productName.toLowerCase().includes(searchQuery.toLowerCase()) && !n.location.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
     })
-    .map(n => ({ ...n, _distanceKm: haversineKm(refPoint, [n.latitude, n.longitude]) }))
+    .map(n => ({ ...n, _distanceKm: distanceKm(refPoint, [n.latitude, n.longitude]) }))
+    .filter(n => isWithinRadius(n._distanceKm, nearbyRadius))
     .sort((a, b) => a._distanceKm - b._distanceKm);
 
   const sortedFarmerMarkers = [...farmerMarkers]
-    .map(f => ({ ...f, _distanceKm: haversineKm(refPoint, [f.latitude, f.longitude]) }))
+    .map(f => ({ ...f, _distanceKm: distanceKm(refPoint, [f.latitude, f.longitude]) }))
+    .filter(f => isWithinRadius(f._distanceKm, nearbyRadius))
     .sort((a, b) => a._distanceKm - b._distanceKm);
 
   const sortedProducts = [...validProducts]
-    .map(p => ({ ...p, _distanceKm: haversineKm(refPoint, [p.farmerLatitude, p.farmerLongitude]) }))
+    .map(p => ({ ...p, _distanceKm: distanceKm(refPoint, [p.farmerLatitude, p.farmerLongitude]) }))
+    .filter(p => isWithinRadius(p._distanceKm, nearbyRadius))
     .sort((a, b) => a._distanceKm - b._distanceKm);
+
+  const nearbyAll = [
+    ...sortedFarmerMarkers.map((farmer) => ({
+      id: `farmer-${farmer.id}`,
+      kind: "farmer" as const,
+      name: farmer.name,
+      location: farmer.location,
+      distanceKm: farmer._distanceKm,
+      latitude: farmer.latitude,
+      longitude: farmer.longitude,
+      detail: `${farmer.productCount} active product${farmer.productCount === 1 ? "" : "s"}`,
+    })),
+    ...filteredNeeds.map((need) => ({
+      id: `need-${need.id}`,
+      kind: "buyer" as const,
+      name: need.buyerName,
+      location: need.location,
+      distanceKm: need._distanceKm,
+      latitude: need.latitude,
+      longitude: need.longitude,
+      detail: `Needs ${need.quantity} ${need.unit} ${need.productName}`,
+    })),
+  ].sort((first, second) => first.distanceKm - second.distanceKm);
 
   useEffect(() => {
     const requestedFarmerId = new URLSearchParams(routeSearch).get("farmer");
@@ -339,7 +382,8 @@ export default function SmartMapPage() {
     navigator.geolocation.getCurrentPosition(
       pos => {
         const loc: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-        setUserLocation(loc); setFlyTo(loc); setIsLocating(false);
+        setUsingDeviceLocation(true);
+        setUserLocation(loc); setMapCenter(loc); setFlyTo(loc); setIsLocating(false);
         toast({ title: t("map.location_found") });
       },
       () => { setIsLocating(false); toast({ title: t("map.location_failed"), variant: "destructive" }); },
@@ -388,6 +432,11 @@ export default function SmartMapPage() {
 
   const currentArea = drawnPoints.length >= 3 ? calcArea(drawnPoints) : 0;
   const LayerIcon = TILE_LAYERS[activeLayer].icon;
+  const hasSavedProfileLocation =
+    !!user && hasValidPublicCoordinates(user.latitude, user.longitude);
+  const currentLocationLabel = usingDeviceLocation
+    ? "Current device location"
+    : user?.location || "Your location";
 
   const toggleGroup = (g: string) => setOpenGroup(prev => prev === g ? null : g);
 
@@ -517,19 +566,36 @@ export default function SmartMapPage() {
           <span>{t('map.my_location')}</span>
         </button>
 
+        <Select
+          value={String(nearbyRadius)}
+          onValueChange={(value) =>
+            setNearbyRadius(value === "all" ? "all" : Number(value) as Exclude<NearbyRadius, "all">)
+          }
+        >
+          <SelectTrigger className="h-7 w-[92px] flex-shrink-0 text-[10px] lg:h-8 lg:w-[112px] lg:text-xs" data-testid="select-nearby-radius">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[10, 25, 50, 100].map((radius) => (
+              <SelectItem key={radius} value={String(radius)}>{radius} km</SelectItem>
+            ))}
+            <SelectItem value="all">All</SelectItem>
+          </SelectContent>
+        </Select>
+
         {/* Live stats */}
         <div className="ml-auto flex-shrink-0 flex items-center gap-1 lg:gap-2 text-[10px] lg:text-xs text-muted-foreground">
           <div className="flex-shrink-0 flex items-center gap-1 lg:gap-1.5 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md lg:rounded-lg px-1.5 lg:px-2.5 py-0.5 lg:py-1 whitespace-nowrap">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            <span className="font-semibold text-green-700 dark:text-green-300">{farmerMarkers.filter(f => f.isOnline).length}</span>
+            <span className="font-semibold text-green-700 dark:text-green-300">{sortedFarmerMarkers.filter(f => f.isOnline).length}</span>
             <span className="text-green-600 dark:text-green-400">{t('map.on_label')}</span>
           </div>
           <div className="flex-shrink-0 flex items-center gap-1 bg-muted rounded-md lg:rounded-lg px-1.5 lg:px-2.5 py-0.5 lg:py-1 whitespace-nowrap">
-            <span className="font-semibold text-foreground">{products.length}</span><span className="hidden lg:inline">{t('map.products_count')}</span><span className="lg:hidden">{t('map.prod_short')}</span>
+            <span className="font-semibold text-foreground">{sortedProducts.length}</span><span className="hidden lg:inline">{t('map.products_count')}</span><span className="lg:hidden">{t('map.prod_short')}</span>
           </div>
           <div className="flex-shrink-0 flex items-center gap-1 bg-muted rounded-md lg:rounded-lg px-1.5 lg:px-2.5 py-0.5 lg:py-1 whitespace-nowrap">
             <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="font-semibold text-foreground">{localNeeds.length}</span><span>{t('map.need_count')}</span>
+            <span className="font-semibold text-foreground">{filteredNeeds.length}</span><span>{t('map.need_count')}</span>
           </div>
         </div>
       </div>
@@ -549,6 +615,23 @@ export default function SmartMapPage() {
 
         {/* MAP */}
         <div className="flex-1 relative" style={{ cursor: drawMode !== "none" ? "crosshair" : "grab" }}>
+          {user && !hasSavedProfileLocation && !usingDeviceLocation && (
+            <div className="absolute left-1/2 top-3 z-[1001] w-[min(92%,420px)] -translate-x-1/2 rounded-xl border border-amber-300 bg-background/95 p-3 shadow-xl backdrop-blur-sm" data-testid="map-profile-location-prompt">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold">Add your city to discover nearby marketplace activity</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Save a City, Country location or use device location for this session.</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button size="sm" className="h-7 text-xs" onClick={() => setLocation("/settings")}>Account Settings</Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleLocate} disabled={isLocating}>
+                      <Crosshair className="mr-1 h-3.5 w-3.5" />Use device location
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           <MapContainer center={[52.3, -1.0]} zoom={7} style={{ width: "100%", height: "100%" }} zoomControl={false} ref={mapRef as any} doubleClickZoom={false}>
             <TileLayer key={activeLayer} url={TILE_LAYERS[activeLayer].url} attribution={TILE_LAYERS[activeLayer].attribution} maxZoom={19} />
             <InvalidateSizeOnMount />
@@ -565,12 +648,14 @@ export default function SmartMapPage() {
 
             {userLocation && (
               <>
-                <Marker position={userLocation} icon={userIcon}><Popup><strong>Your Location</strong></Popup></Marker>
-                <Circle center={userLocation} radius={15000} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.05, weight: 1, dashArray: "4" }} />
+                <Marker position={userLocation} icon={userIcon}><Popup><strong>Your location</strong><div>{currentLocationLabel}</div></Popup></Marker>
+                {nearbyRadius !== "all" && (
+                  <Circle center={userLocation} radius={nearbyRadius * 1000} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.05, weight: 1, dashArray: "4" }} />
+                )}
               </>
             )}
 
-            {showFarmers && farmerMarkers.map(farmer => (
+            {showFarmers && sortedFarmerMarkers.map(farmer => (
               <Marker key={farmer.id} position={[farmer.latitude, farmer.longitude]} icon={farmerIcon(farmer.isOnline)}>
                 <Popup minWidth={220}>
                   <div className="p-1">
@@ -592,19 +677,20 @@ export default function SmartMapPage() {
                     </div>
                     <div className="text-xs text-gray-600 mb-2">📍 {farmer.location}</div>
                     <div className="text-xs text-gray-600 mb-2">🛒 {farmer.productCount} products · 📦 {farmer.totalStock} units stock</div>
+                    <div className="mb-1 text-xs font-semibold text-primary">{farmer._distanceKm.toFixed(1)} km away</div>
                     <div className="text-xs text-gray-500">{farmer.products.slice(0, 3).join(", ")}{farmer.products.length > 3 ? ` +${farmer.products.length - 3} more` : ""}</div>
                   </div>
                 </Popup>
               </Marker>
             ))}
 
-            {showHeatmap && farmerMarkers.map(farmer => {
+            {showHeatmap && sortedFarmerMarkers.map(farmer => {
               const intensity = Math.min(farmer.totalStock / 500, 1);
               const color = intensity > 0.6 ? "#22c55e" : intensity > 0.3 ? "#f59e0b" : "#ef4444";
               return <Circle key={`heat-${farmer.id}`} center={[farmer.latitude, farmer.longitude]} radius={3000 + farmer.totalStock * 5} pathOptions={{ color, fillColor: color, fillOpacity: 0.2, weight: 1 }} />;
             })}
 
-            {showDemand && validLocalNeeds.map(need => (
+            {showDemand && filteredNeeds.map(need => (
               <Marker key={need.id} position={[need.latitude, need.longitude]} icon={needIcon(need.urgency)}>
                 <Popup minWidth={240}>
                   <div className="p-1">
@@ -619,6 +705,7 @@ export default function SmartMapPage() {
                       <div>{BUYER_ICONS[need.buyerType]} {need.buyerName}</div>
                       {need.deadline && <div>⏰ Needed by {need.deadline}</div>}
                     </div>
+                    <div className="mt-1 text-xs font-semibold text-primary">{need._distanceKm.toFixed(1)} km away</div>
                     {need.description && <div className="text-xs text-gray-500 mt-1 border-t pt-1">{need.description}</div>}
                   </div>
                 </Popup>
@@ -697,7 +784,7 @@ export default function SmartMapPage() {
 
           {/* Vertical tab rail */}
           <div className="flex flex-col gap-0.5 lg:gap-1 p-0.5 lg:p-1.5 bg-background border-l border-border z-[500] flex-shrink-0">
-            {RIGHT_PANEL_TABS.map(tab => {
+            {RIGHT_PANEL_TABS.filter((tab) => tab.id !== "post" || user?.role === "buyer").map(tab => {
               const Icon = tab.icon;
               const active = rightPanel === tab.id;
               return (
@@ -722,6 +809,56 @@ export default function SmartMapPage() {
             className="h-full bg-background flex flex-col overflow-hidden flex-shrink-0"
             style={{ width: rightPanelWidth }}
           >
+            {rightPanel === "all" && (
+              <div className="flex h-full flex-col">
+                <div className="flex-shrink-0 border-b border-border/50 p-3 lg:p-4">
+                  <h2 className="flex items-center gap-2 text-sm font-bold lg:text-base">
+                    <Globe className="h-4 w-4 text-emerald-600" />
+                    Nearby marketplace
+                  </h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {nearbyAll.length} active farmer and buyer result{nearbyAll.length === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <ScrollArea className="flex-1">
+                  <div className="space-y-2 p-2 lg:p-3">
+                    {nearbyAll.map((item) => (
+                      <button
+                        key={item.id}
+                        className="w-full rounded-xl border border-border/60 p-3 text-left transition-colors hover:border-primary/30 hover:bg-muted/40"
+                        onClick={() => {
+                          setFlyTo([item.latitude, item.longitude]);
+                          mapRef.current?.flyTo([item.latitude, item.longitude], 12, { duration: 1 });
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <Badge variant="outline" className={item.kind === "farmer" ? "border-green-300 text-green-700" : "border-red-300 text-red-700"}>
+                                {item.kind === "farmer" ? "Farmer" : "Buyer"}
+                              </Badge>
+                              <span className="truncate text-sm font-semibold">{item.name}</span>
+                            </div>
+                            <p className="mt-1 truncate text-xs text-muted-foreground">{item.location}</p>
+                            <p className="mt-1 text-xs">{item.detail}</p>
+                          </div>
+                          <span className="whitespace-nowrap rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                            {item.distanceKm < 1 ? `${Math.round(item.distanceKm * 1000)} m` : `${item.distanceKm.toFixed(1)} km`}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                    {nearbyAll.length === 0 && (
+                      <div className="py-10 text-center text-muted-foreground">
+                        <Globe className="mx-auto mb-2 h-8 w-8 opacity-30" />
+                        <p className="text-sm font-medium">No marketplace activity within this radius</p>
+                        <Button size="sm" variant="outline" className="mt-3" onClick={() => setNearbyRadius("all")}>View all results</Button>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
             {/* ── FARMERS panel ── */}
             {rightPanel === "farmers" && (
               <div className="flex flex-col h-full">
@@ -730,14 +867,15 @@ export default function SmartMapPage() {
                     <Users className="h-3.5 w-3.5 lg:h-4 lg:w-4 text-green-600" />
                     {t("map.farmers_and_products")}
                   </h2>
-                  <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5">{farmerMarkers.filter(f => f.isOnline).length} {t("map.on_label")} · {farmerMarkers.length} {t("map.total")} · {t(userLocation ? "map.sorted_by_distance_you" : "map.sorted_by_distance_map")}</p>
+                  <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5">{sortedFarmerMarkers.filter(f => f.isOnline).length} {t("map.on_label")} · {sortedFarmerMarkers.length} {t("map.total")} · {t(userLocation ? "map.sorted_by_distance_you" : "map.sorted_by_distance_map")}</p>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-1.5 lg:p-3 space-y-1.5 lg:space-y-2">
                     {sortedFarmerMarkers.length === 0 && (
                       <div className="text-center py-10 text-muted-foreground">
                         <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">{t("map.loading_farmers")}</p>
+                        <p className="text-sm font-medium">No active farmers within this radius</p>
+                        <Button size="sm" variant="outline" className="mt-3" onClick={() => setNearbyRadius("all")}>View all farmers</Button>
                       </div>
                     )}
                     {sortedFarmerMarkers.map(farmer => (
@@ -784,7 +922,7 @@ export default function SmartMapPage() {
                                   />
                                   <div className="flex-1 min-w-0">
                                     <div className="text-xs font-medium truncate">{product.name}</div>
-                                    <div className="text-[10px] text-muted-foreground">£{product.price}/{product.unit} · {product.stock} in stock</div>
+                                    <div className="text-[10px] text-muted-foreground">{format(product.price, { sourceCurrency: product.currency || "GBP" })}/{product.unit} · {product.stock} in stock</div>
                                   </div>
                                   {product.price === 0 && <Badge className="text-[9px] bg-green-100 text-green-700 border-none">Free</Badge>}
                                   <FavoriteProductButton
@@ -816,7 +954,7 @@ export default function SmartMapPage() {
                     <Wheat className="h-4 w-4 text-amber-600" />
                     {t("map.available_food_with_farmers")}
                   </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("map.products_from_farmers", { count: products.length, farmers: farmerMarkers.length })}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("map.products_from_farmers", { count: sortedProducts.length, farmers: sortedFarmerMarkers.length })}</p>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-3 space-y-3">
@@ -849,7 +987,7 @@ export default function SmartMapPage() {
                                 <div className="min-w-0 flex-1">
                                   <div className="text-[11px] font-medium truncate leading-tight">{product.name}</div>
                                   <div className="text-[10px] text-muted-foreground">
-                                    {product.price === 0 ? <span className="text-green-600 font-semibold">Free</span> : `£${product.price}/${product.unit}`}
+                                    {product.price === 0 ? <span className="text-green-600 font-semibold">Free</span> : `${format(product.price, { sourceCurrency: product.currency || "GBP" })}/${product.unit}`}
                                   </div>
                                   <div className="text-[9px] text-muted-foreground truncate">{product.farmerName}</div>
                                 </div>
@@ -883,9 +1021,11 @@ export default function SmartMapPage() {
                       </h2>
                       <p className="text-xs text-muted-foreground mt-0.5">{t("map.realtime_buyer_demand")}</p>
                     </div>
-                    <Button size="sm" className="text-xs h-7" onClick={() => setRightPanel("post")}>
-                      <Plus className="h-3.5 w-3.5 mr-1" />{t("map.post_btn")}
-                    </Button>
+                    {user?.role === "buyer" && (
+                      <Button size="sm" className="text-xs h-7" onClick={() => setRightPanel("post")}>
+                        <Plus className="h-3.5 w-3.5 mr-1" />{t("map.post_btn")}
+                      </Button>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
@@ -941,7 +1081,8 @@ export default function SmartMapPage() {
                     {filteredNeeds.length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
                         <ShoppingBag className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">{t("map.no_needs_match")}</p>
+                        <p className="text-sm font-medium">{t("map.no_needs_match")}</p>
+                        <Button size="sm" variant="outline" className="mt-3" onClick={() => setNearbyRadius("all")}>View all buyer needs</Button>
                       </div>
                     )}
                   </div>
@@ -987,26 +1128,17 @@ export default function SmartMapPage() {
                       <Input placeholder={t("map.price_range_placeholder")} value={postForm.priceRange} onChange={e => setPostForm(p => ({ ...p, priceRange: e.target.value }))} className="h-9 text-sm" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs">{t("map.address_line")}</Label>
-                      <Input placeholder={t("map.address_placeholder")} value={postForm.addressLine} onChange={e => setPostForm(p => ({ ...p, addressLine: e.target.value }))} className="h-9 text-sm" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-2">
-                        <Label className="text-xs">{t("map.city_town")}</Label>
-                        <Input placeholder={t("map.city_placeholder")} value={postForm.city} onChange={e => {
-                          const city = e.target.value;
-                          const loc = [postForm.addressLine, city, postForm.postcode].filter(Boolean).join(", ");
-                          setPostForm(p => ({ ...p, city, location: loc || city }));
-                        }} className="h-9 text-sm" data-testid="input-city" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs">{t("map.postcode")}</Label>
-                        <Input placeholder={t("map.postcode_placeholder")} value={postForm.postcode} onChange={e => {
-                          const postcode = e.target.value;
-                          const loc = [postForm.addressLine, postForm.city, postcode].filter(Boolean).join(", ");
-                          setPostForm(p => ({ ...p, postcode, location: loc || postForm.city }));
-                        }} className="h-9 text-sm" data-testid="input-postcode" />
-                      </div>
+                      <Label className="text-xs">City, Country</Label>
+                      <Input
+                        placeholder={user?.location || "e.g. Mumbai, India"}
+                        value={postForm.location}
+                        onChange={e => setPostForm(p => ({ ...p, location: e.target.value }))}
+                        className="h-9 text-sm"
+                        data-testid="input-need-location"
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        Leave blank to use your saved profile location. Only the city-level location is published.
+                      </p>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-2">
@@ -1041,7 +1173,7 @@ export default function SmartMapPage() {
                       <Textarea placeholder={t("map.description_placeholder")} value={postForm.description} onChange={e => setPostForm(p => ({ ...p, description: e.target.value }))} className="text-sm resize-none" rows={3} />
                     </div>
                     <Button className="w-full" onClick={() => postNeedMutation.mutate(postForm)}
-                      disabled={!postForm.productName || !postForm.quantity || !postForm.city || postNeedMutation.isPending}>
+                      disabled={!postForm.productName || !postForm.quantity || (!postForm.location && !hasSavedProfileLocation) || postNeedMutation.isPending}>
                       {postNeedMutation.isPending ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
                       {t("map.post_to_live_feed")}
                     </Button>

@@ -4,14 +4,17 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { AppContent } from "@/app/app-content";
 import "@/i18n/index";
+import { CurrencyProvider } from "@/contexts/currency-context";
 
 function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="agriconnect-theme">
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <AppContent />
-        </TooltipProvider>
+        <CurrencyProvider>
+          <TooltipProvider>
+            <AppContent />
+          </TooltipProvider>
+        </CurrencyProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

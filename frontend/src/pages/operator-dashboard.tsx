@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { OperatorPayoutRecovery } from "@/components/payments/operator-payout-recovery";
 import { OperatorDisputeControls } from "@/components/payments/operator-dispute-controls";
 import { OperatorPaymentOperations } from "@/components/payments/operator-payment-operations";
+import { useCurrency } from "@/contexts/currency-context";
 
 type OperatorDashboard = {
   summary: {
@@ -19,6 +20,7 @@ type OperatorDashboard = {
 type Metric = { label: string; value: string | number; Icon: LucideIcon };
 
 export default function OperatorDashboardPage() {
+  const { format } = useCurrency();
   const { data, isLoading, isError, refetch } = useQuery<OperatorDashboard>({
     queryKey: ["/api/dashboard/operator"],
   });
@@ -28,7 +30,7 @@ export default function OperatorDashboardPage() {
         { label: "Products", value: summary.productCount, Icon: Package },
         { label: "Available products", value: summary.availableProductCount, Icon: Package },
         { label: "Orders", value: summary.orderCount, Icon: ShoppingCart },
-        { label: "Order value", value: `£${summary.completedSales.toFixed(2)}`, Icon: BarChart3 },
+        { label: "Order value", value: format(summary.completedSales, { includeCode: true }), Icon: BarChart3 },
       ]
     : [];
   return (

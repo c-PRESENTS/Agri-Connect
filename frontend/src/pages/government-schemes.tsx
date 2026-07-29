@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { TopNavigation } from "@/components/top-navigation";
+import { ComingSoonBadge } from "@/components/coming-soon-badge";
 import type { SchemeApplication } from "@shared/schema";
 
 interface Scheme {
@@ -292,9 +293,10 @@ export default function GovernmentSchemes() {
           </Button>
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+              <h1 className="text-3xl font-bold mb-2 flex flex-wrap items-center gap-2">
                 <Building2 className="h-8 w-8 text-blue-300" />
                 {t("gov_schemes.title", "Government Schemes Repository")}
+                <ComingSoonBadge />
               </h1>
               <p className="text-blue-100 max-w-xl">
                 {t("gov_schemes.subtitle", "Discover and apply for government subsidies, insurance schemes, training programs, and financial aid — all in one place.")}

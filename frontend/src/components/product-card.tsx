@@ -18,24 +18,24 @@ import { apiRequest } from "@/lib/queryClient";
 import { SafeProductImage } from "./safe-product-image";
 import { PublicSellerBadges } from "./verification-badges";
 import { FavoriteProductButton } from "./favorite-product-button";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface ProductCardProps {
   product: Product;
-  currencySymbol?: string;
   onAddToCart?: (product: Product) => void;
   onWishlist?: (product: Product) => void;
   onClick?: (product: Product) => void;
 }
 
-export function ProductCard({ 
-  product, 
-  currencySymbol = "£", 
-  onAddToCart, 
+export function ProductCard({
+  product,
+  onAddToCart,
   onWishlist,
   onClick 
 }: ProductCardProps) {
   const [addedToCart, setAddedToCart] = useState(false);
   const { t, i18n } = useTranslation();
+  const { format } = useCurrency();
   const { ids: compareIds, toggle: toggleCompare, isFull } = useCompare();
   const { toast: pcToast } = useToast();
   const isComparing = compareIds.includes(product.id);
@@ -57,6 +57,12 @@ export function ProductCard({
   const safeReviewCount = Number.isFinite(product.reviewCount) ? product.reviewCount : 0;
   const safeUnit = product.unit?.trim() || "unit";
   const descText = product.description || productName;
+  const formattedPrice = safePrice === null
+    ? "Price on request"
+    : format(safePrice, {
+        sourceCurrency: product.currency || "GBP",
+        includeCode: true,
+      });
 
   const { data: translatedDesc } = useQuery({
     queryKey: ["/api/ai/translate", descText, baseLang],
@@ -155,7 +161,7 @@ export function ProductCard({
             <h3 className="font-semibold text-[11px] sm:text-sm leading-tight line-clamp-2 flex-1 group-hover:text-primary transition-colors" data-testid={`text-product-name-${product.id}`}>
               {productName}
             </h3>
-            <TextToSpeech text={`${productName}. Price: ${safePrice === null ? "Price on request" : `${currencySymbol}${safePrice}`} per ${safeUnit}. Sold by ${sellerName}.`} />
+            <TextToSpeech text={`${productName}. Price: ${formattedPrice} per ${safeUnit}. Sold by ${sellerName}.`} />
           </div>
 
           {!shouldAutoTranslate && <TranslateButton text={descText} className="mb-1" />}
@@ -214,7 +220,7 @@ export function ProductCard({
           <div className="flex items-center justify-between mb-1.5 sm:mb-2">
             <div>
               <span className="text-sm sm:text-lg font-bold tracking-tight font-mono" data-testid={`text-product-price-${product.id}`}>
-                {safePrice === null ? "Price on request" : `${currencySymbol}${safePrice}`}
+                {formattedPrice}
               </span>
               {safePrice !== null && <span className="text-[9px] sm:text-[11px] text-muted-foreground">/{safeUnit}</span>}
             </div>

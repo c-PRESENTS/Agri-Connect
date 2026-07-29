@@ -1,5 +1,6 @@
 export const PUBLIC_ROUTE_LINKS = [
   { path: "/", seoKey: "home" },
+  { path: "/categories", seoKey: "home" },
   { path: "/login", seoKey: "login" },
   { path: "/dashboard", seoKey: "dashboard" },
   { path: "/dashboard/photo-sell", seoKey: "photoSell" },

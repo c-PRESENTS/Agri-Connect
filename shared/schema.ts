@@ -104,6 +104,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  currency?: "GBP" | "INR";
   unit: string;
   stock: number;
   categoryId: string;
@@ -129,6 +130,7 @@ export interface InsertProduct {
   name: string;
   description: string;
   price: number;
+  currency?: "GBP" | "INR";
   unit: string;
   stock: number;
   categoryId: string;
@@ -415,6 +417,8 @@ export interface LocalNeed {
   description?: string;
   deadline?: string;
   category?: string;
+  status: "active" | "closed";
+  createdAt: string;
 }
 
 export interface LocalNeedPost {
@@ -422,12 +426,25 @@ export interface LocalNeedPost {
   quantity: number;
   unit: string;
   priceRange: string;
-  location: string;
+  location?: string;
   urgency: "high" | "medium" | "low";
   buyerType: "restaurant" | "retailer" | "individual" | "processor" | "school" | "hospital";
   description?: string;
   deadline?: string;
 }
+
+export const localNeedPostSchema = z.object({
+  productName: z.string().trim().min(1).max(160),
+  quantity: z.coerce.number().positive().max(1_000_000),
+  unit: z.string().trim().min(1).max(40).default("kg"),
+  priceRange: z.string().trim().max(120).default("Negotiable"),
+  location: z.string().trim().max(200).optional(),
+  urgency: z.enum(["high", "medium", "low"]).default("medium"),
+  buyerType: z.enum(["restaurant", "retailer", "individual", "processor", "school", "hospital"]).default("individual"),
+  description: z.string().trim().max(2_000).optional(),
+  deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
+  category: z.string().trim().max(80).optional(),
+});
 
 export interface DrawnShape {
   id: string;

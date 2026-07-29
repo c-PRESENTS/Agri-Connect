@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { getProductImage } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
 import { FavoriteProductButton } from "./favorite-product-button";
+import { useCurrency } from "@/contexts/currency-context";
 
 const QUICK_CATS = [
   { catKey: "categoryId",    id: "fresh-produce", label: "Fresh",   emoji: "Fresh" },
@@ -30,6 +31,7 @@ interface CompactMarketPanelProps {
 
 export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelProps) {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const [, navigate] = useLocation();
   const [open, setOpen] = useState(defaultOpen);
   const [activeCat, setActiveCat] = useState(QUICK_CATS[0]);
@@ -128,7 +130,12 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                       <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{p.name}</p>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-[11px] font-bold text-primary">
-                          {p.price === 0 ? t("common.free") : `£${p.price}`}
+                          {p.price === 0
+                            ? t("common.free")
+                            : format(p.price, {
+                                sourceCurrency: p.currency || "GBP",
+                                includeCode: true,
+                              })}
                         </span>
                         <div className="flex items-center gap-0.5">
                           <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />

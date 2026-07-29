@@ -7,7 +7,7 @@ import { storage } from "../../storage";
 import { checkoutRepository } from "../../repositories/checkout-repository";
 import { paymentRepository } from "../../repositories/payment-repository";
 import { eligibilityService } from "../../payments/eligibility-service";
-import { paymentRuntimeConfig, paymentCurrencySchema } from "../../payments/config";
+import { paymentRuntimeConfig } from "../../payments/config";
 import { paymentService } from "../../payments/payment-service";
 import { pricingService } from "../../payments/pricing-service";
 import { reconciliationService } from "../../payments/reconciliation-service";
@@ -16,6 +16,7 @@ import { paymentStateService } from "../../payments/payment-state-service";
 import { providerRegistry } from "../../payments/provider-registry";
 import type { Order, OrderItem } from "@shared/schema";
 import type { ShipServiceType } from "@shared/schema";
+import { queueOrderConfirmation } from "../../notifications";
 import {
   calculateQuotesFromCoords,
   geocodePostcode,
@@ -28,12 +29,13 @@ interface PaymentRouteDeps {
 }
 
 const quoteSchema = z.object({
-  currency: paymentCurrencySchema.default("GBP"),
+  currency: z.literal("GBP").optional(),
   deliveryMethod: z.enum(["standard", "express", "pickup"]).default("standard"),
+  sellerIds: z.array(z.string().min(1)).min(1).max(100),
   shippingChoices: z.record(
     z.string(),
     z.object({ partnerId: z.string().min(1), service: z.string().min(1) }),
-  ).optional(),
+  ),
   deliveryAddressStruct: z.object({
     name: z.string().min(1),
     phone: z.string().min(1),
@@ -44,15 +46,25 @@ const quoteSchema = z.object({
     county: z.string().optional(),
     postcode: z.string().min(1),
     country: z.string().length(2),
-  }).optional(),
+  }),
 });
 
 const intentSchema = z.object({
   quoteId: z.string().uuid(),
-  provider: z.enum(["stripe", "paypal", "razorpay", "mock"]),
-  deliveryAddress: z.string().min(3).max(500),
+  provider: z.enum(["stripe", "mock"]),
+  simulatedMethod: z.enum(["card", "razorpay", "paypal"]).optional(),
+  deliveryAddress: z.string().min(3).max(500).optional(),
   scenario: z.enum(["success", "failure", "cancelled", "requires_action", "pending", "timeout"]).optional(),
+}).superRefine((input, context) => {
+  if (input.simulatedMethod && input.provider !== "mock") {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["simulatedMethod"],
+      message: "Simulated payment labels are available only with the mock provider",
+    });
+  }
 });
+const cashOrderSchema = z.object({ quoteId: z.string().uuid() });
 const clientConfirmationSchema = z.object({
   providerPaymentId: z.string().min(1).max(255),
   providerSessionId: z.string().min(1).max(255),
@@ -61,30 +73,168 @@ const clientConfirmationSchema = z.object({
 
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const orderNumber = () => `AGC${new Date().getFullYear().toString().slice(-2)}-${Math.floor(100000 + Math.random() * 900000)}`;
+const cartFingerprint = (cart: Awaited<ReturnType<typeof storage.getCart>>) =>
+  hash(
+    cart.map((item) => [
+      item.productId,
+      item.quantity,
+      item.unitPrice ?? item.product.price,
+      item.product.stock,
+    ]),
+  );
+
+type QuoteData = {
+  deliveryMethod?: Order["deliveryMethod"];
+  shippingChoices?: Order["shippingChoices"];
+  deliveryAddressStruct?: Order["deliveryAddressStruct"];
+  deliveryAddress?: string;
+  sellerIds?: string[];
+  itemCount?: number;
+  items?: Array<{
+    productId: string;
+    name: string;
+    image?: string;
+    quantity: number;
+    unitPrice: number;
+    farmerId: string;
+    farmerName: string;
+  }>;
+};
+
+function selectQuotedCart(
+  cart: Awaited<ReturnType<typeof storage.getCart>>,
+  data: QuoteData,
+) {
+  const sellerIds = new Set(data.sellerIds ?? []);
+  return cart.filter((item) => sellerIds.has(item.product.farmerId));
+}
+
+function serializeQuote(quote: Awaited<ReturnType<typeof paymentRepository.getQuote>>) {
+  if (!quote) return undefined;
+  const data = quote.quoteData as QuoteData;
+  return {
+    id: quote.id,
+    currency: quote.currency,
+    subtotalMinor: quote.subtotalMinor.toString(),
+    taxMinor: quote.taxMinor.toString(),
+    shippingMinor: quote.shippingMinor.toString(),
+    platformFeeMinor: quote.platformFeeMinor.toString(),
+    totalMinor: quote.totalMinor.toString(),
+    expiresAt: quote.expiresAt,
+    items: data.items ?? [],
+    deliveryAddress: data.deliveryAddress,
+    deliveryAddressStruct: data.deliveryAddressStruct,
+    deliveryMethod: data.deliveryMethod ?? "standard",
+    shippingChoices: data.shippingChoices ?? {},
+  };
+}
+
+async function cashEligibility(quote: NonNullable<Awaited<ReturnType<typeof paymentRepository.getQuote>>>) {
+  const data = quote.quoteData as QuoteData;
+  const sellerIds = data.sellerIds ?? [];
+  const choices = data.shippingChoices ?? {};
+  const preferences = await paymentOperationsRepository.getSellerCashPreferences(sellerIds);
+  const preferenceBySeller = new Map(preferences.map((preference) => [preference.sellerId, preference]));
+  for (const sellerId of sellerIds) {
+    const choice = choices[sellerId];
+    const preference = preferenceBySeller.get(sellerId);
+    if (!choice) return { available: false, reasonCode: "fulfillment_selection_required" };
+    if (choice.partnerId === "buyer-collection") {
+      if (!preference?.acceptsCashAtPickup) {
+        return { available: false, reasonCode: "seller_cash_pickup_unavailable" };
+      }
+      continue;
+    }
+    if (choice.partnerId === "farmer-delivery") {
+      if (!preference?.acceptsCashOnFarmerDelivery) {
+        return { available: false, reasonCode: "seller_cash_delivery_unavailable" };
+      }
+      continue;
+    }
+    return { available: false, reasonCode: "carrier_requires_prepayment" };
+  }
+  return {
+    available: sellerIds.length > 0,
+    reasonCode: sellerIds.length > 0 ? undefined : "cart_empty",
+  };
+}
 
 export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): void {
   app.get("/api/payments/methods", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    const cart = await storage.getCart(userId);
-    const sellerIds = Array.from(new Set(cart.map((item) => item.product.farmerId)));
-    const currency = paymentCurrencySchema.parse(req.query.currency ?? "GBP");
-    const methods = await Promise.all(
-      (["mock", "stripe", "paypal", "razorpay"] as const).map((provider) =>
-        eligibilityService.evaluate(
-          provider,
-          currency,
-          sellerIds,
-          sellerIds.length,
-          { allowUiPreview: true },
-        ),
-      ),
-    );
-    res.json({
-      currency,
-      protectionLabel: "Protected payment",
-      uiPreviewEnabled: paymentRuntimeConfig.uiPreviewEnabled,
-      methods,
-    });
+    try {
+      const userId = deps.getUserId(req)!;
+      const quoteId = z.string().uuid().parse(req.query.quoteId);
+      const quote = await paymentRepository.getQuote(quoteId);
+      if (!quote || quote.buyerId !== userId) {
+        return res.status(404).json({ error: "Checkout quote not found" });
+      }
+      if (quote.expiresAt <= new Date()) {
+        return res.status(409).json({ error: "Checkout quote expired", code: "quote_required" });
+      }
+      const usage = await checkoutRepository.getQuoteUsage(quote.id);
+      if (usage) {
+        return res.status(409).json({
+          error: "This checkout quote has already been used",
+          code: "quote_consumed",
+          orderId: usage.orderId,
+          attemptId: usage.attemptId,
+        });
+      }
+      const data = quote.quoteData as QuoteData;
+      const sellerIds = data.sellerIds ?? [];
+      const simulatedCard = paymentRuntimeConfig.mode === "mock";
+      const stripe = await eligibilityService.evaluate(
+        simulatedCard ? "mock" : "stripe",
+        "GBP",
+        sellerIds,
+        sellerIds.length,
+      );
+      const cash = await cashEligibility(quote);
+      return res.json({
+        currency: "GBP",
+        mode: paymentRuntimeConfig.mode,
+        methods: [
+          {
+            id: "stripe",
+            available: stripe.eligible,
+            reasonCode: stripe.eligible ? undefined : stripe.reasons[0] ?? "stripe_unavailable",
+            displayStatus: stripe.eligible ? "available" : "unavailable",
+            flow: simulatedCard ? "mock" : "redirect",
+          },
+          {
+            id: "cash",
+            available: cash.available,
+            reasonCode: cash.reasonCode,
+            displayStatus: cash.available ? "available" : "unavailable",
+            flow: "manual",
+          },
+          {
+            id: "razorpay",
+            available: simulatedCard && stripe.eligible,
+            reasonCode: simulatedCard
+              ? stripe.eligible
+                ? undefined
+                : stripe.reasons[0] ?? "mock_not_available"
+              : "coming_soon",
+            displayStatus: simulatedCard ? "available" : "coming_soon",
+            flow: simulatedCard ? "mock" : "disabled",
+          },
+          {
+            id: "paypal",
+            available: simulatedCard && stripe.eligible,
+            reasonCode: simulatedCard
+              ? stripe.eligible
+                ? undefined
+                : stripe.reasons[0] ?? "mock_not_available"
+              : "coming_soon",
+            displayStatus: simulatedCard ? "available" : "coming_soon",
+            flow: simulatedCard ? "mock" : "disabled",
+          },
+        ],
+      });
+    } catch {
+      return res.status(400).json({ error: "A valid checkout quote is required" });
+    }
   });
 
   app.post("/api/checkout/quotes", isAuthenticated, async (req, res) => {
@@ -93,31 +243,71 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       const input = quoteSchema.parse(req.body);
       const cart = await storage.getCart(userId);
       if (!cart.length) return res.status(400).json({ error: "Cart is empty" });
-      if (input.currency !== "GBP") {
-        return res.status(400).json({ error: "Existing catalog products are currently priced in GBP" });
+      const requestedSellerIds = Array.from(new Set(input.sellerIds));
+      const requestedSellerIdSet = new Set(requestedSellerIds);
+      const selectedCart = cart.filter((item) =>
+        requestedSellerIdSet.has(item.product.farmerId),
+      );
+      const selectedCartSellerIds = new Set(
+        selectedCart.map((item) => item.product.farmerId),
+      );
+      if (
+        selectedCart.length === 0 ||
+        requestedSellerIds.some((sellerId) => !selectedCartSellerIds.has(sellerId))
+      ) {
+        return res.status(400).json({ error: "Select at least one farmer from your cart" });
       }
-      const availability = await storage.validateCart(cart.map((item) => ({ productId: item.productId, quantity: item.quantity })));
+      const selectedShippingChoices = Object.fromEntries(
+        requestedSellerIds.flatMap((sellerId) => {
+          const choice = input.shippingChoices[sellerId];
+          return choice ? [[sellerId, choice] as const] : [];
+        }),
+      );
+      const missingChoiceSellerIds = requestedSellerIds.filter(
+        (sellerId) => !selectedShippingChoices[sellerId],
+      );
+      if (missingChoiceSellerIds.length > 0) {
+        return res.status(400).json({
+          error: "Shipping selection is required for each selected farmer",
+          code: "selected_fulfilment_required",
+          sellerIds: missingChoiceSellerIds,
+        });
+      }
+      if (selectedCart.some((item) => (item.product.currency ?? "GBP") !== "GBP")) {
+        return res.status(400).json({ error: "Online checkout currently supports GBP products only" });
+      }
+      const currency = "GBP" as const;
+      const availability = await storage.validateCart(selectedCart.map((item) => ({ productId: item.productId, quantity: item.quantity })));
       if (!availability.ok) return res.status(409).json({ error: "Cart availability changed", issues: availability.issues });
-      if (cart.some((item) => item.product.farmerId === userId)) {
+      if (selectedCart.some((item) => item.product.farmerId === userId)) {
         return res.status(400).json({ error: "You cannot order your own product" });
       }
-      const rawSubtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+      const rawSubtotal = selectedCart.reduce(
+        (sum, item) =>
+          sum + (item.unitPrice ?? item.product.price) * item.quantity,
+        0,
+      );
       let shippingMinor: bigint;
       if (input.shippingChoices && input.deliveryAddressStruct) {
         const drop = geocodePostcode({
           postcode: input.deliveryAddressStruct.postcode,
           country: input.deliveryAddressStruct.country,
         });
-        const bySeller = new Map<string, typeof cart>();
-        for (const item of cart) {
+        const bySeller = new Map<string, typeof selectedCart>();
+        for (const item of selectedCart) {
           const group = bySeller.get(item.product.farmerId) ?? [];
           group.push(item);
           bySeller.set(item.product.farmerId, group);
         }
         let shippingPence = 0;
         for (const [sellerId, sellerItems] of Array.from(bySeller.entries())) {
-          const choice = input.shippingChoices[sellerId];
-          if (!choice) return res.status(400).json({ error: "Shipping selection is required for every seller" });
+          const choice = selectedShippingChoices[sellerId];
+          if (!choice) {
+            return res.status(400).json({
+              error: "Shipping selection is required for each selected farmer",
+              code: "selected_fulfilment_required",
+            });
+          }
           const firstProduct = sellerItems[0].product;
           const pickup = resolveSellerPickupCoordinates({
             lat: firstProduct.farmerLatitude,
@@ -153,13 +343,24 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
               ? BigInt(0)
               : BigInt(499);
       }
-      const pricing = pricingService.quote(cart, input.currency, shippingMinor, paymentRuntimeConfig.platformFeeBps);
-      const sellerIds = Array.from(new Set(cart.map((item) => item.product.farmerId)));
-      const fingerprint = hash(cart.map((item) => [item.productId, item.quantity, item.product.price, item.product.stock]));
+      const pricing = pricingService.quote(selectedCart, currency, shippingMinor, paymentRuntimeConfig.platformFeeBps);
+      const sellerIds = requestedSellerIds;
+      const fingerprint = cartFingerprint(selectedCart);
       const expiresAt = new Date(Date.now() + paymentRuntimeConfig.quoteTtlMinutes * 60_000);
+      const deliveryAddress = input.deliveryAddressStruct
+        ? [
+            input.deliveryAddressStruct.name,
+            input.deliveryAddressStruct.line1,
+            input.deliveryAddressStruct.line2,
+            input.deliveryAddressStruct.city,
+            input.deliveryAddressStruct.county,
+            input.deliveryAddressStruct.postcode,
+            input.deliveryAddressStruct.country,
+          ].filter(Boolean).join(", ")
+        : undefined;
       const quote = await paymentRepository.createQuote({
         buyerId: userId,
-        currency: input.currency,
+        currency,
         subtotalMinor: BigInt(pricing.subtotal.amountMinor),
         taxMinor: BigInt(pricing.tax.amountMinor),
         shippingMinor: BigInt(pricing.shipping.amountMinor),
@@ -169,21 +370,177 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         quoteData: {
           deliveryMethod: input.deliveryMethod,
           sellerIds,
-          itemCount: cart.length,
-          shippingChoices: input.shippingChoices,
+          itemCount: selectedCart.length,
+          shippingChoices: selectedShippingChoices,
           deliveryAddressStruct: input.deliveryAddressStruct,
+          deliveryAddress,
+          items: selectedCart.map((item) => ({
+            productId: item.productId,
+            name: item.product.name,
+            image: item.product.images?.[0],
+            quantity: item.quantity,
+            unitPrice: item.unitPrice ?? item.product.price,
+            farmerId: item.product.farmerId,
+            farmerName: item.product.farmerName,
+          })),
         },
         expiresAt,
       });
       res.status(201).json({
-        id: quote.id,
-        currency: quote.currency,
+        ...serializeQuote(quote),
         pricing,
-        expiresAt: quote.expiresAt,
         sellerCount: sellerIds.length,
       });
     } catch (error) {
       res.status(400).json({ error: "Unable to create checkout quote" });
+    }
+  });
+
+  app.get("/api/checkout/quotes/:quoteId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = deps.getUserId(req)!;
+      const quoteId = z.string().uuid().parse(req.params.quoteId);
+      const quote = await paymentRepository.getQuote(quoteId);
+      if (!quote || quote.buyerId !== userId) {
+        return res.status(404).json({ error: "Checkout quote not found" });
+      }
+      if (quote.expiresAt <= new Date()) {
+        return res.status(409).json({ error: "Checkout quote expired", code: "quote_required" });
+      }
+      const usage = await checkoutRepository.getQuoteUsage(quote.id);
+      if (usage) {
+        return res.status(409).json({
+          error: "This checkout quote has already been used",
+          code: "quote_consumed",
+          orderId: usage.orderId,
+          attemptId: usage.attemptId,
+        });
+      }
+      return res.json(serializeQuote(quote));
+    } catch {
+      return res.status(400).json({ error: "A valid checkout quote is required" });
+    }
+  });
+
+  app.post("/api/checkout/cash-orders", isAuthenticated, async (req, res) => {
+    try {
+      const userId = deps.getUserId(req)!;
+      const idempotencyKey = req.get("Idempotency-Key")?.trim();
+      if (!idempotencyKey || idempotencyKey.length > 160) {
+        return res.status(400).json({ error: "A valid Idempotency-Key header is required" });
+      }
+      const input = cashOrderSchema.parse(req.body);
+      const existingCashOrder = await checkoutRepository.getCashOrderByIdempotency(
+        userId,
+        idempotencyKey,
+      );
+      if (existingCashOrder) {
+        if (existingCashOrder.quoteId !== input.quoteId) {
+          return res.status(409).json({
+            error: "Idempotency key was already used for another checkout",
+          });
+        }
+        if (existingCashOrder.orderId) {
+          return res.json({ orderId: existingCashOrder.orderId, replayed: true });
+        }
+        return res.status(409).json({ error: "Cash checkout is still being created" });
+      }
+      const quote = await paymentRepository.getQuote(input.quoteId);
+      if (!quote || quote.buyerId !== userId) {
+        return res.status(404).json({ error: "Checkout quote not found" });
+      }
+      if (quote.expiresAt <= new Date()) {
+        return res.status(409).json({ error: "Checkout quote expired", code: "quote_required" });
+      }
+      const usedQuote = await checkoutRepository.getQuoteUsage(quote.id);
+      if (usedQuote) {
+        return res.status(409).json({
+          error: "This checkout quote has already been used",
+          code: "quote_consumed",
+          orderId: usedQuote.orderId,
+          attemptId: usedQuote.attemptId,
+        });
+      }
+      if (quote.currency !== "GBP") {
+        return res.status(409).json({ error: "Cash checkout is available for GBP orders only" });
+      }
+      const data = quote.quoteData as QuoteData;
+      const cart = await storage.getCart(userId);
+      const selectedCart = selectQuotedCart(cart, data);
+      if (!selectedCart.length || cartFingerprint(selectedCart) !== quote.cartFingerprint) {
+        return res.status(409).json({ error: "Cart changed", code: "quote_required" });
+      }
+      if (selectedCart.some((item) => item.product.farmerId === userId)) {
+        return res.status(400).json({ error: "You cannot order your own product" });
+      }
+      const eligibility = await cashEligibility(quote);
+      if (!eligibility.available) {
+        return res.status(409).json({
+          error: "Cash payment is unavailable for this checkout",
+          reasonCode: eligibility.reasonCode,
+        });
+      }
+      if (!data.deliveryAddress || !data.deliveryAddressStruct || !data.shippingChoices) {
+        return res.status(409).json({ error: "Checkout quote is incomplete", code: "quote_required" });
+      }
+      const user = await authStorage.getUser(userId);
+      const now = new Date();
+      const order: Order = {
+        id: randomUUID(),
+        orderNumber: orderNumber(),
+        buyerId: userId,
+        buyerName: user?.name || user?.email || "Buyer",
+        buyerEmail: user?.email ?? undefined,
+        items: selectedCart.map((item) => ({
+          productId: item.productId,
+          productName: item.product.name,
+          productImage: item.product.images?.[0],
+          quantity: item.quantity,
+          price: item.unitPrice ?? item.product.price,
+          farmerId: item.product.farmerId,
+          farmerName: item.product.farmerName,
+        })),
+        status: "order_placed",
+        statusHistory: [{
+          status: "order_placed",
+          timestamp: now.toISOString(),
+          note: "Cash payment due at handover",
+        }],
+        subtotal: Number(quote.subtotalMinor) / 100,
+        tax: 0,
+        deliveryFee: 0,
+        shippingTotal: Number(quote.shippingMinor) / 100 || undefined,
+        total: Number(quote.totalMinor) / 100,
+        deliveryAddress: data.deliveryAddress,
+        deliveryMethod: data.deliveryMethod ?? "standard",
+        paymentMethod: "cod",
+        paymentStatus: "manual",
+        shippingChoices: data.shippingChoices,
+        deliveryAddressStruct: data.deliveryAddressStruct,
+        createdAt: now.toISOString(),
+      };
+      const result = await checkoutRepository.createCashOrder({
+        order,
+        quoteId: quote.id,
+        currency: "GBP",
+        idempotencyKey,
+        reservationExpiresAt: now,
+      });
+      const persisted = await storage.getOrder(result.orderId);
+      if (!persisted) throw new Error("Cash order was not persisted");
+      if (!result.replayed) {
+        queueOrderConfirmation(persisted, `${req.protocol}://${req.get("host")}`);
+      }
+      return res.status(result.replayed ? 200 : 201).json({
+        orderId: persisted.id,
+        replayed: result.replayed,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to place cash order";
+      if (/Idempotency|stock|Product/.test(message)) {
+        return res.status(409).json({ error: message });
+      }
+      return res.status(400).json({ error: "Unable to place cash order" });
     }
   });
 
@@ -208,25 +565,36 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       const quote = await paymentRepository.getQuote(input.quoteId);
       if (!quote || quote.buyerId !== userId) return res.status(404).json({ error: "Checkout quote not found" });
       if (quote.expiresAt <= new Date()) return res.status(409).json({ error: "Checkout quote expired", code: "quote_required" });
+      const usedQuote = await checkoutRepository.getQuoteUsage(quote.id);
+      if (usedQuote) {
+        return res.status(409).json({
+          error: "This checkout quote has already been used",
+          code: "quote_consumed",
+          orderId: usedQuote.orderId,
+          attemptId: usedQuote.attemptId,
+        });
+      }
+      const quoteData = quote.quoteData as QuoteData;
       const cart = await storage.getCart(userId);
-      const fingerprint = hash(cart.map((item) => [item.productId, item.quantity, item.product.price, item.product.stock]));
+      const selectedCart = selectQuotedCart(cart, quoteData);
+      const fingerprint = cartFingerprint(selectedCart);
+      if (!selectedCart.length) return res.status(409).json({ error: "Cart changed", code: "quote_required" });
       if (fingerprint !== quote.cartFingerprint) return res.status(409).json({ error: "Cart changed", code: "quote_required" });
-      const sellerIds = Array.from(new Set(cart.map((item) => item.product.farmerId)));
+      const sellerIds = quoteData.sellerIds ?? [];
       const eligibility = await eligibilityService.evaluate(input.provider, quote.currency as "GBP" | "INR", sellerIds, sellerIds.length);
       if (!eligibility.eligible) return res.status(409).json({ error: "Payment method unavailable", reasons: eligibility.reasons });
       const user = await authStorage.getUser(userId);
       const now = new Date();
-      const quoteData = quote.quoteData as {
-        deliveryMethod?: Order["deliveryMethod"];
-        shippingChoices?: Order["shippingChoices"];
-        deliveryAddressStruct?: Order["deliveryAddressStruct"];
-      };
-      const items: OrderItem[] = cart.map((item) => ({
+      const deliveryAddress = quoteData.deliveryAddress ?? input.deliveryAddress;
+      if (!deliveryAddress) {
+        return res.status(409).json({ error: "Checkout quote is incomplete", code: "quote_required" });
+      }
+      const items: OrderItem[] = selectedCart.map((item) => ({
         productId: item.productId,
         productName: item.product.name,
         productImage: item.product.images?.[0],
         quantity: item.quantity,
-        price: item.product.price,
+        price: item.unitPrice ?? item.product.price,
         farmerId: item.product.farmerId,
         farmerName: item.product.farmerName,
       }));
@@ -244,9 +612,12 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         deliveryFee: 0,
         shippingTotal: Number(quote.shippingMinor) / 100 || undefined,
         total: Number(quote.totalMinor) / 100,
-        deliveryAddress: input.deliveryAddress,
+        deliveryAddress,
         deliveryMethod: quoteData.deliveryMethod ?? "standard",
-        paymentMethod: input.provider === "mock" ? "card" : input.provider,
+        paymentMethod:
+          input.provider === "mock"
+            ? input.simulatedMethod ?? "card"
+            : input.provider,
         paymentStatus: "pending",
         shippingChoices: quoteData.shippingChoices,
         deliveryAddressStruct: quoteData.deliveryAddressStruct,
@@ -273,9 +644,13 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         sellerId,
         subtotalMinor: BigInt(
           Math.round(
-            cart
+            selectedCart
               .filter((item) => item.product.farmerId === sellerId)
-              .reduce((sum, item) => sum + item.product.price * item.quantity, 0) * 100,
+              .reduce(
+                (sum, item) =>
+                  sum + (item.unitPrice ?? item.product.price) * item.quantity,
+                0,
+              ) * 100,
           ),
         ),
       }));
@@ -316,6 +691,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
           allocationCount: sellerIds.length,
           allocations,
           returnBaseUrl: paymentRuntimeConfig.returnBaseUrl ?? `${req.protocol}://${req.get("host")}`,
+          customerEmail: user?.email ?? undefined,
           scenario: input.scenario,
         }, `http:${process.pid}`);
       } catch (error) {

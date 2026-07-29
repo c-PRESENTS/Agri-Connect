@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface OperatorDispute {
   id: string;
@@ -18,6 +19,7 @@ interface OperatorDispute {
 }
 
 export function OperatorDisputeControls() {
+  const { format } = useCurrency();
   const [splitAmounts, setSplitAmounts] = useState<Record<string, string>>({});
   const { data } = useQuery<{ items: OperatorDispute[] }>({
     queryKey: ["/api/payments/operator/disputes"],
@@ -56,10 +58,10 @@ export function OperatorDisputeControls() {
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {dispute.reason.replaceAll("_", " ")} · seller balance{" "}
-                  {new Intl.NumberFormat("en-GB", {
-                    style: "currency",
-                    currency: dispute.currency,
-                  }).format(Number(dispute.seller_net_minor) / 100)}
+                  {format(Number(dispute.seller_net_minor) / 100, {
+                    sourceCurrency: dispute.currency,
+                    includeCode: true,
+                  })}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {dispute.status !== "under_review" && (

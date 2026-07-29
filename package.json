@@ -5,7 +5,7 @@
   "packageManager": "npm@10.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "tsx --env-file=.env backend/index.ts",
+    "dev": "tsx watch --clear-screen=false --env-file=.env backend/index.ts",
     "build": "tsx scripts/build.ts",
     "start": "node --env-file=.env -e \"process.env.NODE_ENV='production';require('./dist/index.cjs')\"",
     "check": "tsc",
@@ -28,6 +28,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
+    "@openai/codex-security": "^0.1.1",
     "@radix-ui/react-accordion": "^1.2.4",
     "@radix-ui/react-alert-dialog": "^1.1.7",
     "@radix-ui/react-aspect-ratio": "^1.1.3",

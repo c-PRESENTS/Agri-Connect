@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { TopNavigation } from "@/components/top-navigation";
 import { SplitMapLayout } from "@/components/split-map-layout";
+import { ComingSoonBadge } from "@/components/coming-soon-badge";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface AgriTechProduct {
   id: string;
@@ -243,6 +245,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 export default function AgriTechPage() {
+  const { format } = useCurrency();
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [activeCategory, setActiveCategory] = useState("All");
@@ -279,9 +282,12 @@ export default function AgriTechPage() {
               <Badge className="bg-green-500/30 text-green-100 border-green-500/50 mb-3 sm:mb-4">
                 <Cpu className="h-3 w-3 mr-1" /> {t("agritech.precision_catalog_badge")}
               </Badge>
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 leading-tight">
-                {t("agritech.hero_title")}
-              </h1>
+              <div className="mb-3 flex flex-wrap items-center gap-3 sm:mb-4">
+                <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+                  {t("agritech.hero_title")}
+                </h1>
+                <ComingSoonBadge />
+              </div>
               <p className="text-green-100 text-sm sm:text-lg mb-4 sm:mb-6 leading-relaxed">
                 {t("agritech.hero_description")}
               </p>
@@ -305,7 +311,7 @@ export default function AgriTechPage() {
               {[
                 { value: "200+", label: t("agritech.stat_products"), icon: Cpu },
                 { value: "4,500+", label: t("agritech.stat_uk_farms"), icon: Sprout },
-                { value: "£2.8M", label: t("agritech.stat_farmer_savings"), icon: TrendingUp },
+                { value: format(2_800_000, { includeCode: true }), label: t("agritech.stat_farmer_savings"), icon: TrendingUp },
                 { value: "94%", label: t("agritech.stat_ai_accuracy"), icon: Bot },
               ].map(({ value, label, icon: Icon }) => (
                 <div key={label} className="bg-green-800/40 rounded-xl p-4 text-center border border-green-600/30">
@@ -415,7 +421,7 @@ export default function AgriTechPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-lg font-bold text-green-700 dark:text-green-400">
-                          £{product.price.toLocaleString()}
+                          {format(product.price, { includeCode: true })}
                         </div>
                         <div className="text-xs text-muted-foreground">per {product.unit}</div>
                       </div>
@@ -613,7 +619,7 @@ export default function AgriTechPage() {
                 </div>
                 <div className="bg-muted/50 rounded-lg p-3">
                   <div className="text-xs text-muted-foreground">Price</div>
-                  <div className="font-semibold text-green-600">£{selectedProduct.price.toLocaleString()}</div>
+                  <div className="font-semibold text-green-600">{format(selectedProduct.price, { includeCode: true })}</div>
                 </div>
               </div>
 
@@ -642,6 +648,7 @@ export default function AgriTechPage() {
 }
 
 function ROICalculator() {
+  const { format } = useCurrency();
   const { t } = useTranslation();
   const [farmSize, setFarmSize] = useState("200");
   const [cropType, setCropType] = useState("wheat");
@@ -708,7 +715,7 @@ function ROICalculator() {
               onClick={() => setTechBundle(key)}
               data-testid={`bundle-${key}`}
             >
-              {b.name} (£{(b.cost / 1000).toFixed(0)}k)
+              {b.name} ({format(b.cost, { includeCode: true })})
             </Button>
           ))}
         </div>
@@ -720,15 +727,15 @@ function ROICalculator() {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("agritech.roi_yield_increase")}</span>
-            <span className="font-semibold text-green-600">+£{extraRevenue.toLocaleString()}</span>
+            <span className="font-semibold text-green-600">+{format(extraRevenue, { includeCode: true })}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("agritech.roi_input_savings")}</span>
-            <span className="font-semibold text-green-600">+£{inputSaving.toLocaleString()}</span>
+            <span className="font-semibold text-green-600">+{format(inputSaving, { includeCode: true })}</span>
           </div>
           <div className="border-t pt-2 flex justify-between font-bold">
             <span>{t("agritech.roi_total_benefit")}</span>
-            <span className="text-green-700 dark:text-green-400">£{totalAnnualBenefit.toLocaleString()}</span>
+            <span className="text-green-700 dark:text-green-400">{format(totalAnnualBenefit, { includeCode: true })}</span>
           </div>
         </div>
 
@@ -738,7 +745,7 @@ function ROICalculator() {
             <div className="text-xs text-muted-foreground">{t("agritech.roi_payback_period")}</div>
           </div>
           <div className="bg-white dark:bg-gray-900/50 rounded-lg p-3 text-center">
-            <div className="text-xl font-bold text-green-600">£{(fiveYearReturn / 1000).toFixed(0)}k</div>
+            <div className="text-xl font-bold text-green-600">{format(fiveYearReturn, { includeCode: true })}</div>
             <div className="text-xs text-muted-foreground">{t("agritech.roi_net_profit")}</div>
           </div>
         </div>

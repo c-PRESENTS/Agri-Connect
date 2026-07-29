@@ -20,6 +20,7 @@ import type { Order, OrderStatus } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { resolveProductImageForOrderItem } from "@/lib/product-images";
 import { OrderDisputes } from "@/components/payments/order-disputes";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface PaymentRefund {
   id: string;
@@ -79,6 +80,7 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
 }
 
 export default function OrderDetailPage() {
+  const { format } = useCurrency();
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -307,10 +309,10 @@ export default function OrderDetailPage() {
                 {refundData!.refunds.map((refund) => (
                   <div key={refund.id} className="flex items-center justify-between gap-3 text-sm">
                     <span>
-                      {new Intl.NumberFormat("en-GB", {
-                        style: "currency",
-                        currency: refund.currency,
-                      }).format(Number(refund.amount_minor) / 100)}
+                      {format(Number(refund.amount_minor) / 100, {
+                        sourceCurrency: refund.currency,
+                        includeCode: true,
+                      })}
                     </span>
                     <Badge variant={refund.status === "succeeded" ? "default" : "secondary"}>
                       {refund.status}
@@ -500,10 +502,10 @@ export default function OrderDetailPage() {
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold truncate">{item.productName}</p>
                       <p className="text-xs text-muted-foreground">{item.farmerName}</p>
-                      <p className="text-xs text-muted-foreground">Qty: {item.quantity} · £{item.price.toFixed(2)} each</p>
+                      <p className="text-xs text-muted-foreground">Qty: {item.quantity} · {format(item.price, { includeCode: true })} each</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-bold">£{(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-bold">{format(item.price * item.quantity, { includeCode: true })}</p>
                       {order.status === "delivered" && !submittedReviews.has(item.productId) && (
                         <button
                           onClick={() => {
@@ -581,20 +583,21 @@ export default function OrderDetailPage() {
             <Separator className="my-4" />
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>{t("cart.subtotal")}</span><span>£{order.subtotal?.toFixed(2) ?? order.total.toFixed(2)}</span>
+                <span>{t("cart.subtotal")}</span><span>{format(order.subtotal ?? order.total, { includeCode: true })}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>{t("cart.delivery")}</span>
-                <span>{deliveryCharge === 0 ? <span className="text-green-600 font-medium">{t("cart.free_delivery")}</span> : `£${deliveryCharge.toFixed(2)}`}</span>
+                <span>{deliveryCharge === 0 ? <span className="text-green-600 font-medium">{t("cart.free_delivery")}</span> : format(deliveryCharge, { includeCode: true })}</span>
               </div>
               {order.tax !== undefined && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>{t("checkout.vat")}</span><span>£{order.tax.toFixed(2)}</span>
+                  <span>Taxes</span>
+                  <span>{order.tax > 0 ? format(order.tax, { includeCode: true }) : "Included where applicable"}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between font-bold text-base">
-                <span>{t("cart.total")}</span><span>£{order.total.toFixed(2)}</span>
+                <span>{t("cart.total")}</span><span>{format(order.total, { includeCode: true })}</span>
               </div>
             </div>
           </CardContent>

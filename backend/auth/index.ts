@@ -8,6 +8,12 @@ import { fromZodError } from "zod-validation-error";
 import { updateProfileSchema, type User } from "@shared/models/auth";
 import { authStorage } from "./storage";
 import { verifyGoogleToken } from "./google";
+import {
+  geocodeLocation,
+  GeocodingUnavailableError,
+  LocationNotFoundError,
+  normalizeLocationQuery,
+} from "../location/geocoder";
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -244,12 +250,36 @@ export function registerAuthRoutes(app: Express): void {
       const userId = getSessionUserId(req);
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
       const updates = updateProfileSchema.parse(req.body);
+      const current = await authStorage.getUser(userId);
       if (updates.role) {
-        const current = await authStorage.getUser(userId);
         // Only lock role once the profile has been completed — new users must
         // be free to choose farmer / buyer during onboarding.
         if (current?.role && current.role !== updates.role && current.profileComplete) {
           delete (updates as { role?: string }).role;
+        }
+      }
+      const locationWasSubmitted = Object.prototype.hasOwnProperty.call(req.body, "location");
+      // Public coordinates are derived from a city-level location by the
+      // server. Client-supplied coordinates are intentionally ignored.
+      delete (updates as { latitude?: number | null }).latitude;
+      delete (updates as { longitude?: number | null }).longitude;
+      if (locationWasSubmitted) {
+        const submittedLocation = normalizeLocationQuery(updates.location ?? "");
+        if (!submittedLocation) {
+          updates.location = null;
+          updates.latitude = null;
+          updates.longitude = null;
+        } else if (
+          submittedLocation !== normalizeLocationQuery(current?.location ?? "") ||
+          current?.latitude == null ||
+          current?.longitude == null
+        ) {
+          const resolved = await geocodeLocation(submittedLocation);
+          updates.location = resolved.label;
+          updates.latitude = resolved.latitude;
+          updates.longitude = resolved.longitude;
+        } else {
+          updates.location = current.location;
         }
       }
       const user = await authStorage.updateProfile(userId, updates);
@@ -257,6 +287,12 @@ export function registerAuthRoutes(app: Express): void {
       res.json(serializeUser(user));
     } catch (error) {
       if (handleAuthError(error, res)) return;
+      if (error instanceof LocationNotFoundError) {
+        return res.status(422).json({ message: error.message, field: "location" });
+      }
+      if (error instanceof GeocodingUnavailableError) {
+        return res.status(503).json({ message: error.message, field: "location" });
+      }
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
     }

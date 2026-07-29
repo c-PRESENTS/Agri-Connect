@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface Allocation {
   id: string;
@@ -36,6 +37,7 @@ interface Dispute {
 const activeStatuses = new Set(["open", "under_review", "resolution_pending", "needs_action"]);
 
 export function OrderDisputes({ orderId, paid }: { orderId: string; paid: boolean }) {
+  const { format } = useCurrency();
   const { toast } = useToast();
   const [allocationId, setAllocationId] = useState("");
   const [reason, setReason] = useState("not_as_described");
@@ -171,10 +173,10 @@ export function OrderDisputes({ orderId, paid }: { orderId: string; paid: boolea
               <SelectContent>
                 {available.map((allocation) => (
                   <SelectItem key={allocation.id} value={allocation.id}>
-                    {allocation.seller_id} · {new Intl.NumberFormat("en-GB", {
-                      style: "currency",
-                      currency: allocation.currency,
-                    }).format(Number(allocation.seller_net_minor) / 100)}
+                    {allocation.seller_id} · {format(Number(allocation.seller_net_minor) / 100, {
+                      sourceCurrency: allocation.currency,
+                      includeCode: true,
+                    })}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -56,7 +56,13 @@ export class PaymentStateService {
       }
       await storage.markOrderPaid(order.id, payment.providerPaymentId);
       await commerceRepository.consumeReservations(order.id);
-      await storage.clearCart(order.buyerId);
+      await storage.removePurchasedCartItems(
+        order.buyerId,
+        order.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+      );
       await protectedFundsService.ensureAllocations(attempt.id);
     } else if (payment.status === "failed" || payment.status === "cancelled") {
       await storage.markOrderPaymentFailed(order.id, `Verified provider status: ${payment.status}`);

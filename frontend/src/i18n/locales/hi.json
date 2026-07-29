@@ -1060,7 +1060,7 @@
   },
   "live_sellers": {
     "title": "लाइव विक्रेता",
-    "online_count": "{count} ऑनलाइन",
+    "online_count": "{{count}} ऑनलाइन",
     "live_status": "लाइव",
     "visit_shop": "दुकान देखें",
     "message_button": "संदेश",
@@ -1385,6 +1385,7 @@
     "tab_food_short": "भोजन",
     "tab_needs": "लाइव आवश्यकताएं",
     "tab_needs_short": "आवश्यक",
+    "tab_all": "सभी",
     "tab_post": "आवश्यकता पोस्ट करें",
     "tab_post_short": "पोस्ट",
     "tab_parcels": "मेरे पार्सल",

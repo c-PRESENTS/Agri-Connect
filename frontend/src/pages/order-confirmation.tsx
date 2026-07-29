@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import type { Order } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { resolveProductImageForOrderItem } from "@/lib/product-images";
+import { useCurrency } from "@/contexts/currency-context";
 
 function confirmationCopy(status: Order["status"]): { title: string; description: string } {
   switch (status) {
@@ -38,6 +39,7 @@ function confirmationCopy(status: Order["status"]): { title: string; description
 
 export default function OrderConfirmationPage() {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
 
@@ -79,6 +81,7 @@ export default function OrderConfirmationPage() {
     : "5–7 business days";
   const deliveryCharge = (order.deliveryFee ?? 0) + (order.shippingTotal ?? 0);
   const statusCopy = confirmationCopy(order.status);
+  const isCashOrder = order.paymentMethod === "cod";
 
   return (
     <div className="min-h-screen bg-background">
@@ -96,10 +99,12 @@ export default function OrderConfirmationPage() {
             <CheckCircle className="h-10 w-10 text-green-600" />
           </div>
           <h1 className="text-3xl font-black text-foreground mb-2">
-            {statusCopy.title}
+            {isCashOrder ? "Order placed!" : order.paymentStatus === "paid" ? "Payment confirmed!" : statusCopy.title}
           </h1>
           <p className="text-muted-foreground">
-            {statusCopy.description}
+            {isCashOrder
+              ? "Pay each farmer when collecting or receiving their part of the order."
+              : statusCopy.description}
           </p>
         </motion.div>
 
@@ -119,7 +124,11 @@ export default function OrderConfirmationPage() {
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">{t("order_detail.payment_status")}</p>
                   <p className="text-sm font-semibold">
-                    {order.paymentStatus === "manual" ? "Manual payment pending" : order.paymentStatus}
+                    {isCashOrder
+                      ? "Cash due at handover"
+                      : order.paymentStatus === "manual"
+                        ? "Manual payment pending"
+                        : order.paymentStatus}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(order.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
@@ -129,6 +138,17 @@ export default function OrderConfirmationPage() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {isCashOrder && (
+          <Card className="mb-4 border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
+            <CardContent className="p-5">
+              <h2 className="font-bold">Payment due at handover · {format(order.total, { includeCode: true })}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Cash orders are not protected by Stripe and do not support automatic online refunds.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Delivery info */}
         <motion.div
@@ -200,25 +220,26 @@ export default function OrderConfirmationPage() {
                       <p className="font-semibold text-sm truncate">{item.productName}</p>
                       <p className="text-xs text-muted-foreground">{item.farmerName} · Qty: {item.quantity}</p>
                     </div>
-                    <span className="font-bold text-sm">£{(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-bold text-sm">{format(item.price * item.quantity, { includeCode: true })}</span>
                   </div>
                 ))}
               </div>
               <Separator className="my-4" />
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>{t("cart.subtotal")}</span><span>£{order.subtotal?.toFixed(2) || "—"}</span>
+                  <span>{t("cart.subtotal")}</span><span>{order.subtotal == null ? "—" : format(order.subtotal, { includeCode: true })}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>{t("cart.delivery")}</span>
-                  <span>{deliveryCharge === 0 ? <span className="text-green-600">{t("cart.free_delivery")}</span> : `£${deliveryCharge.toFixed(2)}`}</span>
+                  <span>{deliveryCharge === 0 ? <span className="text-green-600">{t("cart.free_delivery")}</span> : format(deliveryCharge, { includeCode: true })}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>{t("checkout.vat")}</span><span>£{order.tax?.toFixed(2) || "—"}</span>
+                  <span>Taxes</span>
+                  <span>{order.tax > 0 ? format(order.tax, { includeCode: true }) : "Included where applicable"}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-base">
-                  <span>{t("cart.total")}</span><span>£{order.total.toFixed(2)}</span>
+                  <span>{t("cart.total")}</span><span>{format(order.total, { includeCode: true })}</span>
                 </div>
               </div>
             </CardContent>

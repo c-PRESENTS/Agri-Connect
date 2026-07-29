@@ -14,12 +14,12 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import type { CartItem } from "@shared/schema";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface CartSheetProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  currencySymbol?: string;
   onUpdateQuantity: (itemId: string, quantity: number) => void;
   onRemoveItem: (itemId: string) => void;
   onCheckout: () => void;
@@ -29,15 +29,14 @@ export function CartSheet({
   isOpen,
   onClose,
   items,
-  currencySymbol = "£",
   onUpdateQuantity,
   onRemoveItem,
   onCheckout,
 }: CartSheetProps) {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const subtotal = items.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  const deliveryFee = subtotal >= 30 || subtotal === 0 ? 0 : 4.99;
-  const total = subtotal + deliveryFee;
+  const total = subtotal;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -93,7 +92,10 @@ export function CartSheet({
                       </div>
                       <div className="flex items-center justify-between mt-2">
                         <span className="font-semibold text-sm">
-                          {currencySymbol}{item.product.price}/{item.product.unit}
+                          {format(item.product.price, {
+                            sourceCurrency: item.product.currency || "GBP",
+                            includeCode: true,
+                          })}/{item.product.unit}
                         </span>
                         <div className="flex items-center gap-1">
                           <Button
@@ -146,21 +148,20 @@ export function CartSheet({
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t("cart_sheet.subtotal")}</span>
-                  <span>{currencySymbol}{subtotal.toFixed(2)}</span>
+                  <span>{format(subtotal, { includeCode: true })}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t("cart.delivery")}</span>
-                  <span>{deliveryFee === 0 ? t("cart.free_delivery") : `${currencySymbol}${deliveryFee}`}</span>
+                  <span>Calculated at checkout</span>
                 </div>
-                {deliveryFee > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {t("cart.add_more_for_free", { amount: (30 - subtotal).toFixed(2) })}
-                  </p>
-                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Taxes</span>
+                  <span className="text-right text-xs">Included where applicable</span>
+                </div>
                 <Separator />
                 <div className="flex justify-between font-semibold text-base">
                   <span>{t("cart.total")}</span>
-                  <span>{currencySymbol}{total.toFixed(2)}</span>
+                  <span>{format(total, { includeCode: true })}</span>
                 </div>
               </div>
 
