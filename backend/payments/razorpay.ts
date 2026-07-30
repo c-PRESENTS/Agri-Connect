@@ -1,5 +1,16 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
+export function hasRazorpayTestCredentials(): boolean {
+  return (
+    process.env.RAZORPAY_KEY_ID?.trim().startsWith("rzp_test_") === true &&
+    Boolean(process.env.RAZORPAY_KEY_SECRET?.trim())
+  );
+}
+
+export function hasRazorpayWebhookSecret(): boolean {
+  return Boolean(process.env.RAZORPAY_WEBHOOK_SECRET?.trim());
+}
+
 export function getRazorpayCredentials() {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;

@@ -37,6 +37,7 @@ export type PaymentNextAction =
       providerSessionId: string;
       publicKey: string;
       amount: Money;
+      description: string;
     }
   | { type: "wait"; attemptId: string };
 
@@ -54,7 +55,9 @@ export interface ProviderCheckoutInput {
     platformFeeMinor: string;
   }>;
   returnBaseUrl: string;
+  cancelUrl?: string;
   customerEmail?: string;
+  checkoutDescription?: string;
   scenario?: ProviderScenario;
 }
 
@@ -182,6 +185,7 @@ export interface PaymentProviderAdapter {
     providerSessionId: string,
     idempotencyReference: string,
   ): Promise<VerifiedProviderPayment>;
+  cancelCheckout?(providerSessionId: string): Promise<boolean>;
   verifyClientConfirmation?(
     confirmation: ProviderClientConfirmation,
   ): Promise<VerifiedProviderPayment>;

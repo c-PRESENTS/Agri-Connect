@@ -14,6 +14,7 @@ import type { Order } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { resolveProductImageForOrderItem } from "@/lib/product-images";
 import { useCurrency } from "@/contexts/currency-context";
+import { CheckoutProgress } from "@/components/checkout-progress";
 
 function confirmationCopy(status: Order["status"]): { title: string; description: string } {
   switch (status) {
@@ -88,6 +89,10 @@ export default function OrderConfirmationPage() {
       <TopNavigation />
 
       <div className="max-w-2xl mx-auto px-4 py-10">
+        <div className="mb-8 rounded-2xl border bg-card px-3 py-4 shadow-sm sm:px-6">
+          <CheckoutProgress currentStep={4} />
+        </div>
+
         {/* Success header */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}

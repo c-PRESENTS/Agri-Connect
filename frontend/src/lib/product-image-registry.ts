@@ -479,6 +479,56 @@ const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "mineral-mixture", name: "Mineral Mixture", aliases: [], categoryId: "other-agri", subcategoryId: "animal-feed", localAssetPath: getUniqueLocalAsset("Mineral Mixture", categoryImages["animal-feed"]), attribution: bundled("AgriConnect mineral mixture product asset") },
   { slug: "concentrates", name: "Concentrates", aliases: [], categoryId: "other-agri", subcategoryId: "animal-feed", localAssetPath: getUniqueLocalAsset("Concentrates", categoryImages["animal-feed"]), attribution: bundled("AgriConnect concentrates product asset") },
   { slug: "supplements", name: "Supplements", aliases: [], categoryId: "other-agri", subcategoryId: "animal-feed", localAssetPath: getUniqueLocalAsset("Supplements", categoryImages["animal-feed"]), attribution: bundled("AgriConnect supplements product asset") },
+  {
+    slug: "livestock-dairy-breeds",
+    name: "Dairy Animal Breeds",
+    aliases: [
+      "Jersey", "Holstein Friesian", "Indigenous Breeds", "Crossbreeds", "Gir",
+      "Sahiwal", "Murrah", "Surti", "Jaffarabadi", "Nili Ravi", "Saanen",
+      "Alpine", "Jamunapari", "Beetal", "Milk Producing Breeds",
+    ],
+    categoryId: "livestock",
+    subcategoryId: "dairy-animals",
+    localAssetPath: categoryImages["dairy-animals"],
+    attribution: bundled("AgriConnect dairy livestock stock asset"),
+  },
+  {
+    slug: "livestock-meat-breeds",
+    name: "Meat Animal Breeds",
+    aliases: [
+      "Boer", "Black Bengal", "Sirohi", "Osmanabadi", "Mutton Breeds",
+      "Deccani", "Nellore", "Yorkshire", "Landrace", "Hampshire", "Large White",
+    ],
+    categoryId: "livestock",
+    subcategoryId: "meat-animals",
+    localAssetPath: categoryImages["meat-animals"],
+    attribution: bundled("AgriConnect meat livestock stock asset"),
+  },
+  {
+    slug: "livestock-poultry-breeds",
+    name: "Poultry Breeds",
+    aliases: [
+      "Broiler Chicks", "Layer Chicks", "Kadaknath", "Khaki Campbell",
+      "Indian Runner", "White Pekin", "Broad Breasted White", "Bronze Turkey",
+      "Japanese Quail", "Bobwhite Quail", "Guinea Fowl", "Emu", "Ostrich",
+    ],
+    categoryId: "livestock",
+    subcategoryId: "poultry",
+    localAssetPath: categoryImages.poultry,
+    attribution: bundled("AgriConnect poultry stock asset"),
+  },
+  {
+    slug: "livestock-aquaculture",
+    name: "Aquaculture Products",
+    aliases: [
+      "Vannamei", "Tiger Prawn", "Black Tiger", "Goldfish", "Koi", "Guppies",
+      "Mollies", "Angel Fish", "Nets", "Feed", "Aerators",
+    ],
+    categoryId: "livestock",
+    subcategoryId: "aquaculture",
+    localAssetPath: categoryImages.aquaculture,
+    attribution: bundled("AgriConnect aquaculture stock asset"),
+  },
 ];
 
 const explicitSlugs = new Set(entries.map((entry) => entry.slug));
@@ -556,6 +606,7 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "wheat-flour": ["wheat-flour-atta"],
   "wholesale-root-vegetables-sack": ["wholesale-root-vegetables"],
   "organic-seasonal-vegetable-box": ["organic-seasonal-vegetables"],
+  "organic-bananas": ["organic-banana"],
   "semolina-suji": ["semolina"],
   "ragi-finger-millet": ["ragi"],
   "bajra-pearl-millet": ["bajra"],
@@ -565,6 +616,7 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "cow-milk-fresh": ["cow-milk"],
   "buffalo-milk-fresh": ["buffalo-milk"],
   "paneer-fresh": ["paneer"],
+  "whipping-cream": ["whipped-cream"],
   "king-fish-surmai": ["king-fish"],
   "children-s-books": ["childrens-books"],
   "extra-virgin": ["extra-virgin-olive-oil"],
@@ -573,7 +625,6 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "tiger-prawn": ["tiger-prawns"],
   tractors: ["tractor"],
   virgin: ["virgin-olive-oil"],
-  "whipping-cream": ["whipped-cream"],
   // Seed names that include a regional, plural, or specification qualifier.
   // Each target is an existing local asset; these are exact approved aliases,
   // never fuzzy matches.

@@ -17,6 +17,7 @@ import { providerRegistry } from "../../payments/provider-registry";
 import type { Order, OrderItem } from "@shared/schema";
 import type { ShipServiceType } from "@shared/schema";
 import { queueOrderConfirmation } from "../../notifications";
+import { getExchangeRateSnapshot } from "../../currency/exchange-rate-service";
 import {
   calculateQuotesFromCoords,
   geocodePostcode,
@@ -29,7 +30,7 @@ interface PaymentRouteDeps {
 }
 
 const quoteSchema = z.object({
-  currency: z.literal("GBP").optional(),
+  currency: z.enum(["GBP", "INR"]).optional(),
   deliveryMethod: z.enum(["standard", "express", "pickup"]).default("standard"),
   sellerIds: z.array(z.string().min(1)).min(1).max(100),
   shippingChoices: z.record(
@@ -51,7 +52,7 @@ const quoteSchema = z.object({
 
 const intentSchema = z.object({
   quoteId: z.string().uuid(),
-  provider: z.enum(["stripe", "mock"]),
+  provider: z.enum(["stripe", "razorpay", "mock"]),
   simulatedMethod: z.enum(["card", "razorpay", "paypal"]).optional(),
   deliveryAddress: z.string().min(3).max(500).optional(),
   scenario: z.enum(["success", "failure", "cancelled", "requires_action", "pending", "timeout"]).optional(),
@@ -82,6 +83,18 @@ const cartFingerprint = (cart: Awaited<ReturnType<typeof storage.getCart>>) =>
       item.product.stock,
     ]),
   );
+
+function checkoutDescription(
+  orderNumber: string,
+  items: OrderItem[],
+): string {
+  const visibleItems = items
+    .slice(0, 3)
+    .map((item) => `${item.quantity}x ${item.productName}`);
+  const hiddenCount = Math.max(0, items.length - visibleItems.length);
+  const suffix = hiddenCount > 0 ? `, +${hiddenCount} more` : "";
+  return `Order ${orderNumber}: ${visibleItems.join(", ")}${suffix}`.slice(0, 255);
+}
 
 type QuoteData = {
   deliveryMethod?: Order["deliveryMethod"];
@@ -132,6 +145,12 @@ function serializeQuote(quote: Awaited<ReturnType<typeof paymentRepository.getQu
 async function cashEligibility(quote: NonNullable<Awaited<ReturnType<typeof paymentRepository.getQuote>>>) {
   const data = quote.quoteData as QuoteData;
   const sellerIds = data.sellerIds ?? [];
+  if (paymentRuntimeConfig.mode !== "live") {
+    return {
+      available: sellerIds.length > 0,
+      reasonCode: sellerIds.length > 0 ? undefined : "cart_empty",
+    };
+  }
   const choices = data.shippingChoices ?? {};
   const preferences = await paymentOperationsRepository.getSellerCashPreferences(sellerIds);
   const preferenceBySeller = new Map(preferences.map((preference) => [preference.sellerId, preference]));
@@ -183,15 +202,27 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       const data = quote.quoteData as QuoteData;
       const sellerIds = data.sellerIds ?? [];
       const simulatedCard = paymentRuntimeConfig.mode === "mock";
+      const currency = quote.currency as "GBP" | "INR";
       const stripe = await eligibilityService.evaluate(
         simulatedCard ? "mock" : "stripe",
-        "GBP",
+        currency,
         sellerIds,
         sellerIds.length,
       );
-      const cash = await cashEligibility(quote);
+      const razorpay = simulatedCard
+        ? stripe
+        : await eligibilityService.evaluate(
+            "razorpay",
+            currency,
+            sellerIds,
+            sellerIds.length,
+          );
+      const cash =
+        currency === "GBP"
+          ? await cashEligibility(quote)
+          : { available: false, reasonCode: "cash_gbp_only" };
       return res.json({
-        currency: "GBP",
+        currency,
         mode: paymentRuntimeConfig.mode,
         methods: [
           {
@@ -210,14 +241,12 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
           },
           {
             id: "razorpay",
-            available: simulatedCard && stripe.eligible,
-            reasonCode: simulatedCard
-              ? stripe.eligible
-                ? undefined
-                : stripe.reasons[0] ?? "mock_not_available"
-              : "coming_soon",
-            displayStatus: simulatedCard ? "available" : "coming_soon",
-            flow: simulatedCard ? "mock" : "disabled",
+            available: razorpay.eligible,
+            reasonCode: razorpay.eligible
+              ? undefined
+              : razorpay.reasons[0] ?? "razorpay_unavailable",
+            displayStatus: razorpay.eligible ? "available" : "unavailable",
+            flow: simulatedCard ? "mock" : "client_sdk",
           },
           {
             id: "paypal",
@@ -276,7 +305,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       if (selectedCart.some((item) => (item.product.currency ?? "GBP") !== "GBP")) {
         return res.status(400).json({ error: "Online checkout currently supports GBP products only" });
       }
-      const currency = "GBP" as const;
+      const currency = input.currency ?? paymentRuntimeConfig.defaultCurrency;
       const availability = await storage.validateCart(selectedCart.map((item) => ({ productId: item.productId, quantity: item.quantity })));
       if (!availability.ok) return res.status(409).json({ error: "Cart availability changed", issues: availability.issues });
       if (selectedCart.some((item) => item.product.farmerId === userId)) {
@@ -343,7 +372,41 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
               ? BigInt(0)
               : BigInt(499);
       }
-      const pricing = pricingService.quote(selectedCart, currency, shippingMinor, paymentRuntimeConfig.platformFeeBps);
+      const basePricing = pricingService.quote(
+        selectedCart,
+        "GBP",
+        shippingMinor,
+        paymentRuntimeConfig.platformFeeBps,
+      );
+      let pricing = basePricing;
+      if (currency === "INR") {
+        const snapshot = await getExchangeRateSnapshot();
+        const inrRate = snapshot.rates.INR;
+        if (!Number.isFinite(inrRate) || inrRate <= 0) {
+          return res.status(503).json({
+            error: "INR checkout is temporarily unavailable because the exchange rate could not be verified",
+          });
+        }
+        const convertMinor = (amountMinor: string) =>
+          BigInt(Math.round(Number(amountMinor) * inrRate));
+        const subtotalMinor = convertMinor(basePricing.subtotal.amountMinor);
+        const taxMinor = convertMinor(basePricing.tax.amountMinor);
+        const shippingInrMinor = convertMinor(basePricing.shipping.amountMinor);
+        const platformFeeMinor = convertMinor(basePricing.platformFee.amountMinor);
+        const totalMinor =
+          subtotalMinor + taxMinor + shippingInrMinor + platformFeeMinor;
+        const money = (amountMinor: bigint) => ({
+          currency: "INR" as const,
+          amountMinor: amountMinor.toString(),
+        });
+        pricing = {
+          subtotal: money(subtotalMinor),
+          tax: money(taxMinor),
+          shipping: money(shippingInrMinor),
+          platformFee: money(platformFeeMinor),
+          total: money(totalMinor),
+        };
+      }
       const sellerIds = requestedSellerIds;
       const fingerprint = cartFingerprint(selectedCart);
       const expiresAt = new Date(Date.now() + paymentRuntimeConfig.quoteTtlMinutes * 60_000);
@@ -680,6 +743,9 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
           platformFeeMinor: platformFeeMinor.toString(),
         };
       });
+      const returnBaseUrl = (
+        paymentRuntimeConfig.returnBaseUrl ?? `${req.protocol}://${req.get("host")}`
+      ).replace(/\/$/, "");
       let result;
       try {
         result = await paymentService.executeProviderCall(input.provider, {
@@ -690,8 +756,13 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
           sellerIds,
           allocationCount: sellerIds.length,
           allocations,
-          returnBaseUrl: paymentRuntimeConfig.returnBaseUrl ?? `${req.protocol}://${req.get("host")}`,
+          returnBaseUrl,
+          cancelUrl:
+            input.provider === "stripe"
+              ? `${returnBaseUrl}/api/payments/returns/stripe/cancel?attemptId=${encodeURIComponent(records.attemptId)}`
+              : undefined,
           customerEmail: user?.email ?? undefined,
+          checkoutDescription: checkoutDescription(order.orderNumber, items),
           scenario: input.scenario,
         }, `http:${process.pid}`);
       } catch (error) {
@@ -717,6 +788,61 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       res.status(400).json({ error: "Unable to create checkout intent" });
     }
   });
+
+  app.get(
+    "/api/payments/returns/stripe/cancel",
+    isAuthenticated,
+    async (req, res) => {
+      const returnBase = (
+        paymentRuntimeConfig.returnBaseUrl ?? `${req.protocol}://${req.get("host")}`
+      ).replace(/\/$/, "");
+      const attemptId = z.string().uuid().safeParse(req.query.attemptId);
+      if (!attemptId.success) return res.redirect(`${returnBase}/checkout`);
+      const userId = deps.getUserId(req)!;
+      const attempt = await paymentRepository.getAttempt(attemptId.data);
+      const order = attempt ? await storage.getOrder(attempt.orderId) : undefined;
+      const quoteId = attempt
+        ? await checkoutRepository.getQuoteIdForAttempt(attempt.id)
+        : undefined;
+      if (
+        !attempt ||
+        !order ||
+        order.buyerId !== userId ||
+        attempt.provider !== "stripe" ||
+        !attempt.providerSessionId ||
+        !quoteId
+      ) {
+        return res.redirect(`${returnBase}/checkout`);
+      }
+      try {
+        const adapter = providerRegistry.get("stripe");
+        const cancelled = await adapter.cancelCheckout?.(attempt.providerSessionId);
+        if (!cancelled) {
+          return res.redirect(
+            `${returnBase}/payment/${encodeURIComponent(attempt.id)}/processing`,
+          );
+        }
+        const cancelledAttempt =
+          await paymentRepository.cancelExpiredProviderAttempt(attempt.id);
+        if (cancelledAttempt) {
+          await storage.restoreStockForOrder(order);
+          await storage.updateOrderStatus(
+            order.id,
+            "cancelled",
+            "Stripe Checkout was closed by the buyer",
+          );
+        }
+        return res.redirect(
+          `${returnBase}/checkout/payment/${encodeURIComponent(quoteId)}`,
+        );
+      } catch {
+        await paymentRepository.markReconciliationPending(attempt.id);
+        return res.redirect(
+          `${returnBase}/payment/${encodeURIComponent(attempt.id)}/processing`,
+        );
+      }
+    },
+  );
 
   app.get("/api/payments/attempts/:attemptId", isAuthenticated, async (req, res) => {
     try {

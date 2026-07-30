@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { hasStripeTestPublishableKey } from "@/lib/stripe-config";
 
 export type CheckoutPaymentMethod = "mock" | "stripe" | "paypal" | "razorpay" | "manual";
 
@@ -31,6 +32,7 @@ export function PaymentMethodSelector({
   });
   const methods = new Map((data?.methods ?? []).map((method) => [method.provider, method]));
   const mockEnabled = methods.get("mock")?.eligible === true;
+  const stripePublishableKeyConfigured = hasStripeTestPublishableKey();
   return (
     <RadioGroup
       value={value}
@@ -59,7 +61,9 @@ export function PaymentMethodSelector({
         ["razorpay", "Razorpay"],
       ] as const).map(([provider, label]) => {
         const eligibility = methods.get(provider);
-        const enabled = eligibility?.eligible === true;
+        const enabled =
+          eligibility?.eligible === true &&
+          (provider !== "stripe" || stripePublishableKeyConfigured);
         return (
         <label
           key={provider}
@@ -76,6 +80,8 @@ export function PaymentMethodSelector({
                   : "Protected sandbox payment"
                 : eligibility?.reasons.includes("seller_payment_account_ineligible")
                   ? "One or more sellers have not completed provider onboarding"
+                  : provider === "stripe" && !stripePublishableKeyConfigured
+                    ? "Stripe checkout is not configured"
                   : "Not available for this checkout"}
             </span>
           </span>

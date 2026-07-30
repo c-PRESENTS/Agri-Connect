@@ -63,7 +63,7 @@ export function CategoryCarousel({
               className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 bg-gradient-to-r from-primary to-green-600 bg-clip-text text-sm sm:text-base md:text-lg font-semibold text-transparent hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm"
               data-testid="link-view-all-categories"
             >
-                {t("category.view_all_categories")}
+              {t("category.view_all_categories")}
               <ArrowRight className="h-4 w-4 text-green-600" aria-hidden="true" />
             </Link>
           </div>

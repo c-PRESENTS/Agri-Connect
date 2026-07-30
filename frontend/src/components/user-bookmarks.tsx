@@ -28,6 +28,11 @@ const LOCAL_BOOKMARK_ICONS: Record<string, string> = {
   "agrimarket.gov.in": LOCAL_BOOKMARK_FALLBACK_ICON,
   "www.agrimarket.gov.in": LOCAL_BOOKMARK_FALLBACK_ICON,
 };
+const AGRICONNECT_HOSTS = new Set([
+  "agriconnect.group",
+  "www.agriconnect.group",
+  "agri-connect-group-02we.onrender.com",
+]);
 
 const COLORS = [
   "bg-sky-500","bg-violet-500","bg-emerald-500","bg-amber-500",
@@ -66,6 +71,12 @@ function saveBookmarks(b: Bookmark[]) { localStorage.setItem(LS_KEY, JSON.string
 function getFavicon(url: string) {
   try {
     const u = new URL(normalizeUrl(url));
+    if (
+      AGRICONNECT_HOSTS.has(u.hostname.toLowerCase()) ||
+      u.hostname.toLowerCase() === window.location.hostname.toLowerCase()
+    ) {
+      return LOCAL_BOOKMARK_FALLBACK_ICON;
+    }
     return LOCAL_BOOKMARK_ICONS[u.hostname] ?? `${u.origin}/favicon.ico`;
   } catch { return ""; }
 }
@@ -90,6 +101,15 @@ function isInternalPath(url: string) {
 function canUseInlinePreview(url: string) {
   try {
     return INLINE_PREVIEW_HOSTS.has(new URL(url).hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+function isFirstPartyAgriConnectUrl(url: string) {
+  try {
+    const hostname = new URL(normalizeUrl(url)).hostname.toLowerCase();
+    return hostname === window.location.hostname.toLowerCase() || AGRICONNECT_HOSTS.has(hostname);
   } catch {
     return false;
   }
@@ -171,6 +191,8 @@ export function UserBookmarks() {
 
   const toProxyUrl = (raw: string) =>
     `/api/proxy?url=${encodeURIComponent(raw)}`;
+  const toEmbeddedUrl = (raw: string) =>
+    isFirstPartyAgriConnectUrl(raw) ? "/?embedded=1" : toProxyUrl(raw);
 
   const openPanel = (b: Bookmark) => {
     const url = normalizeUrl(b.url);
@@ -362,7 +384,7 @@ export function UserBookmarks() {
             <iframe
               key={iframeKey}
               ref={iframeRef}
-              src={toProxyUrl(panel.url)}
+              src={toEmbeddedUrl(panel.url)}
               title={panel.title}
               className="w-full flex-1 bg-white"
               style={{ border: "none", display: "block", minHeight: 0 }}

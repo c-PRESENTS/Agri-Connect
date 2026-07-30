@@ -51,6 +51,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
   const { format } = useCurrency();
   const { t } = useTranslation();
   const [, navigate] = useLocation();
+  const isEmbeddedView = new URLSearchParams(window.location.search).get("embedded") === "1";
   const [heroMapMode, setHeroMapMode] = useState<HeroMapMode>("products");
   const [heroLeftPct, setHeroLeftPct] = useState(42);
   const heroGridRef = useRef<HTMLDivElement | null>(null);
@@ -388,9 +389,11 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
         </div>
 
         {/* ─── MY SITES / BOOKMARKS ─── */}
-        <div className="px-3 sm:px-10 lg:px-12 pb-3 sm:pb-5 w-full overflow-hidden">
-          <UserBookmarks />
-        </div>
+        {!isEmbeddedView && (
+          <div className="px-3 sm:px-10 lg:px-12 pb-3 sm:pb-5 w-full overflow-hidden">
+            <UserBookmarks />
+          </div>
+        )}
       </div>
 
       {/* ─── BOTTOM CONTENT STRIP ─── */}

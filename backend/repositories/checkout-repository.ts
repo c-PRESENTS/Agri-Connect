@@ -40,6 +40,7 @@ export class CheckoutRepository {
        FROM checkout_intents ci
        JOIN payment_attempts pa ON pa.checkout_intent_id=ci.id
        WHERE ci.quote_id=$1
+         AND pa.payment_status NOT IN ('cancelled','failed')
        ORDER BY pa.created_at DESC
        LIMIT 1`,
       [quoteId],
@@ -62,6 +63,18 @@ export class CheckoutRepository {
     return cash.rows[0]
       ? { orderId: cash.rows[0].order_id, kind: "cash" }
       : undefined;
+  }
+
+  async getQuoteIdForAttempt(attemptId: string): Promise<string | undefined> {
+    const result = await pool.query(
+      `SELECT ci.quote_id
+       FROM payment_attempts pa
+       JOIN checkout_intents ci ON ci.id=pa.checkout_intent_id
+       WHERE pa.id=$1
+       LIMIT 1`,
+      [attemptId],
+    );
+    return result.rows[0]?.quote_id;
   }
 
   async getCashOrderByIdempotency(
