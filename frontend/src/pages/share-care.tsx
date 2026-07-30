@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { TopNavigation } from "@/components/top-navigation";
 import { SplitMapLayout } from "@/components/split-map-layout";
+import { ComingSoonBadge } from "@/components/coming-soon-badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,7 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-le
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect as useEffectMap } from "react";
+import { useCurrency } from "@/contexts/currency-context";
 
 function InvalidateSizeOnMount() {
   const map = useMap();
@@ -102,6 +104,7 @@ const URGENCY_BADGE: Record<string, string> = {
 };
 
 export default function ShareCarePage() {
+  const { currency, format } = useCurrency();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("marketplace");
   const { data: shareItems = [], isLoading: loadingShare } = useQuery<ShareItem[]>({
@@ -125,6 +128,7 @@ export default function ShareCarePage() {
               <HeartHandshake className="w-8 h-8 text-primary" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight">{t("share_care.title", "Share & Care")}</h1>
+            <ComingSoonBadge />
           </div>
           <p className="text-muted-foreground text-lg">
             {t("share_care.subtitle", "Community Food Rescue - Reducing waste, feeding the community.")}
@@ -325,7 +329,7 @@ export default function ShareCarePage() {
                       <div className="grid grid-cols-2 gap-4 mt-3">
                         <div>
                           <p className="text-xs text-muted-foreground">Saved</p>
-                          <p className="text-lg font-bold text-primary">£42.00</p>
+                          <p className="text-lg font-bold text-primary">{format(42, { includeCode: true })}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Prevented Waste</p>
@@ -404,7 +408,7 @@ export default function ShareCarePage() {
                   <div className="space-y-2">
                     <Label>Price</Label>
                     <div className="flex gap-2">
-                      <Input placeholder="£" className="flex-1" />
+                      <Input placeholder={currency} className="flex-1" />
                       <div className="flex items-center gap-2 border rounded-md px-3 bg-muted/30">
                         <Checkbox id="is-free" />
                         <Label htmlFor="is-free" className="text-xs">FREE</Label>
@@ -581,7 +585,7 @@ export default function ShareCarePage() {
                 { 
                   id: "sdg-1", 
                   title: "SDG 1: No Poverty", 
-                  metric: "£2,400", 
+                  metric: format(2_400, { includeCode: true }),
                   label: "Avg. Family Savings/Year", 
                   details: "125,000 low-income families supported",
                   progress: 65,

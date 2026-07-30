@@ -962,6 +962,7 @@
     "tab_food_short": "Bwyd",
     "tab_needs": "Anghenion Byw",
     "tab_needs_short": "Angen",
+    "tab_all": "Pob un",
     "tab_post": "Postio Angen",
     "tab_post_short": "Postio",
     "tab_parcels": "Fy Mharseli",
@@ -1531,7 +1532,7 @@
   },
   "live_sellers": {
     "title": "Gwerthwyr Byw Nawr",
-    "online_count": "{count} gwerthwr ar-lein",
+    "online_count": "{{count}} gwerthwr ar-lein",
     "live_status": "Yn fyw nawr",
     "visit_shop": "Ymwelwch â'r Siop",
     "message_button": "Neges",

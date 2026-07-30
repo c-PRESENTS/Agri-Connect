@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { regions } from "@/lib/categories";
 import type { Region } from "@shared/schema";
 import { useTranslation } from "react-i18next";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface RegionSwitcherProps {
   onRegionChange?: (region: Region) => void;
@@ -90,6 +91,7 @@ function detectRegionFromBrowser(): Region | undefined {
 
 export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
   const { t } = useTranslation();
+  const { region: globalRegion, setRegion } = useCurrency();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [detectedRegion, setDetectedRegion] = useState<Region | null>(null);
@@ -117,9 +119,14 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    setSelectedRegion(globalRegion);
+  }, [globalRegion]);
+
   const handleRegionChange = (region: Region) => {
     setSelectedRegion(region);
     localStorage.setItem(STORAGE_KEY, region.code);
+    setRegion(region);
     onRegionChange?.(region);
     setOpen(false);
     setSearchQuery("");
@@ -296,6 +303,14 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
           <p className="text-[10px] text-muted-foreground">
             {t("region.countries_supported", { count: regions.length })}
           </p>
+          <a
+            href="https://www.exchangerate-api.com"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[9px] text-muted-foreground underline-offset-2 hover:text-primary hover:underline"
+          >
+            Rates by ExchangeRate-API
+          </a>
         </div>
       </PopoverContent>
     </Popover>

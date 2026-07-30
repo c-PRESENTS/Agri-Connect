@@ -23,7 +23,7 @@ import {
   Home, Map, Sprout, Cpu, Landmark, Truck, HeartHandshake,
   FileText, ShoppingCart, LayoutDashboard, Camera, Settings,
   Pencil, X, Check, RotateCcw, ChevronsRight, ChevronsLeft, GripVertical,
-  ShoppingBasket, Wrench, Package, Award, Wheat, Store,
+  ShoppingBasket, Wrench, Package, Award, Wheat, Store, Beef,
   Salad, Factory, Leaf, Briefcase, Sparkles, Grid3X3, GraduationCap,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -47,6 +47,7 @@ const ALL_SERVICES = [
   // Shopping categories (merged from the old front sidebar) — link to home with ?category=
   { id: "cat-daily",    path: "/?category=daily-needs",     icon: ShoppingBasket, label: "Daily",      public: true, category: "daily-needs"     },
   { id: "cat-fresh",    path: "/?category=fresh-produce",    icon: Salad,          label: "Fresh",      public: true, category: "fresh-produce"    },
+  { id: "cat-livestock",path: "/?category=livestock",        icon: Beef,           label: "Livestock",  public: true, category: "livestock"        },
   { id: "cat-inputs",   path: "/?category=inputs-tools",    icon: Wrench,         label: "Inputs",     public: true, category: "inputs-tools"    },
   { id: "cat-processed",path: "/?category=processed",       icon: Package,        label: "Processed",  public: true, category: "processed"       },
   { id: "cat-specialty",path: "/?category=specialty",       icon: Award,          label: "Specialty",  public: true, category: "specialty"       },
@@ -75,6 +76,10 @@ const ALL_SERVICES = [
 
 type ServiceItem = typeof ALL_SERVICES[number];
 
+const SHOPPING_CATEGORY_IDS = new Set<string>(
+  ALL_SERVICES.filter((item) => "category" in item).map((item) => item.id),
+);
+
 const COMING_SOON_SERVICE_IDS = new Set([
   "student-help",
   "agritech",
@@ -93,15 +98,34 @@ function readOrder(): string[] | null {
   try { return JSON.parse(localStorage.getItem(LS_ORDER) || "null"); } catch { return null; }
 }
 function readHidden(): string[] {
-  try { return JSON.parse(localStorage.getItem(LS_HIDDEN) || "[]"); } catch { return []; }
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_HIDDEN) || "[]");
+    return Array.isArray(saved)
+      ? saved.filter((id): id is string => typeof id === "string" && !SHOPPING_CATEGORY_IDS.has(id))
+      : [];
+  } catch {
+    return [];
+  }
 }
 function readExpanded(): boolean {
   try { return localStorage.getItem(LS_EXPANDED) === "1"; } catch { return false; }
 }
 function persist(order: string[], hidden: Set<string>) {
   localStorage.setItem(LS_ORDER, JSON.stringify(order));
-  localStorage.setItem(LS_HIDDEN, JSON.stringify(Array.from(hidden)));
+  localStorage.setItem(
+    LS_HIDDEN,
+    JSON.stringify(Array.from(hidden).filter((id) => !SHOPPING_CATEGORY_IDS.has(id))),
+  );
   window.dispatchEvent(new Event("agri-nav-changed"));
+}
+
+function mergeAvailableOrder(saved: string[] | null, availableIds: string[]): string[] {
+  const available = new Set(availableIds);
+  const merged = (saved ?? []).filter((id) => available.has(id));
+  availableIds.forEach((id) => {
+    if (!merged.includes(id)) merged.push(id);
+  });
+  return merged;
 }
 function readEmojis(): Record<string, string> {
   try { return JSON.parse(localStorage.getItem("agri-nav-emojis") || "{}"); } catch { return {}; }
@@ -190,10 +214,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
 
   const [order, setOrder] = useState<string[]>(() => {
     const saved = readOrder();
-    if (!saved) return defaultIds;
-    const merged = [...saved];
-    defaultIds.forEach(id => { if (!merged.includes(id)) merged.push(id); });
-    return merged;
+    return mergeAvailableOrder(saved, defaultIds);
   });
   const [hidden, setHidden] = useState<Set<string>>(() => new Set(readHidden()));
   const [emojis, setEmojis] = useState<Record<string, string>>(() => readEmojis());
@@ -219,23 +240,16 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
   useEffect(() => {
     const sync = () => {
       const saved = readOrder();
-      if (saved) setOrder(saved);
+      setOrder(mergeAvailableOrder(saved, defaultIds));
       setHidden(new Set(readHidden()));
       setEmojis(readEmojis());
     };
     window.addEventListener("agri-nav-changed", sync);
     return () => window.removeEventListener("agri-nav-changed", sync);
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      const authIds = ALL_SERVICES.filter(s => !s.public && isBuyerVisibleItem(s)).map(s => s.id);
-      setOrder(prev => {
-        const merged = [...prev];
-        authIds.forEach(id => { if (!merged.includes(id)) merged.push(id); });
-        return merged;
-      });
-    }
+    setOrder((previous) => mergeAvailableOrder(previous, defaultIds));
   }, [isAuthenticated]);
 
   const visibleItems = order
@@ -245,6 +259,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
   const hiddenItems = ALL_SERVICES.filter(s => (s.public || isAuthenticated) && isBuyerVisibleItem(s) && hidden.has(s.id));
 
   const remove = (id: string) => setHidden(prev => {
+    if (SHOPPING_CATEGORY_IDS.has(id)) return prev;
     const next = new Set(Array.from(prev)); next.add(id); persist(order, next); return next;
   });
   const restore = (id: string) => setHidden(prev => {
@@ -404,7 +419,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                 )}
 
                 {/* Remove (X) when editing */}
-                {editMode && (
+                {editMode && !SHOPPING_CATEGORY_IDS.has(item.id) && (
                   <button
                     onClick={(e) => { e.stopPropagation(); remove(item.id); }}
                     className={`ml-auto h-5 w-5 rounded flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950 ${

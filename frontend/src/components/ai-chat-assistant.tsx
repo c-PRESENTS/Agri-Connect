@@ -111,7 +111,7 @@ export function AIChatAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 left-3 z-50 w-[380px] max-w-[calc(100vw-3rem)] bg-background border rounded-2xl shadow-2xl overflow-hidden md:left-20"
+            className="fixed bottom-[188px] right-3 z-[9999] w-[380px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border bg-background shadow-2xl md:bottom-[128px] md:right-4"
             data-testid="chat-dialog"
           >
             <div className="bg-gradient-to-r from-primary to-green-600 p-4 flex items-center justify-between">
@@ -227,7 +227,7 @@ export function AIChatAssistant() {
       </AnimatePresence>
 
       <motion.div
-        className="fixed bottom-20 left-3 z-50 md:bottom-6 md:left-20"
+        className="fixed bottom-[124px] right-3 z-[9999] md:bottom-[60px] md:right-4"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >

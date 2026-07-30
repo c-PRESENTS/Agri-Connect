@@ -153,6 +153,21 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
     };
   }
 
+  const canonicalExact = productImageRegistry[normalizedName];
+  if (canonicalExact?.canonicalNameMatch) {
+    return {
+      src: canonicalExact.localAssetPath,
+      source: "exact-product",
+      reason: "Matched the normalized product name to its canonical local asset",
+      normalizedName,
+      matchedSlug: canonicalExact.slug,
+      attribution: canonicalExact.attribution,
+      reviewRequired: false,
+      ambiguousMatches: [],
+      ignoredProvidedImage: systemProvided ? providedImage : undefined,
+    };
+  }
+
   const scopedLocalAsset = getScopedLocalProductImage(
     normalizedName,
     input.categoryId,

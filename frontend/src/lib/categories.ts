@@ -276,7 +276,7 @@ export const categoryImages: Record<string, string> = {
 // representative thumbnail from that exact folder so the navigation never
 // falls back to an unrelated stock photo.
 const categoryThumbnailAssets = import.meta.glob(
-  "../assets/AgriConnect Images/{Bio,Commercial & Industry Crops,daily_needs,Dietary,Fresh_Produce,Inputs & Tools,Market,Modern Farming,Other Agricultural,Processed,Specialty}/**/*.{avif,jpg,jpeg,png,webp}",
+  "../assets/AgriConnect Images/{Bio,Commercial & Industry Crops,daily_needs,Dietary,Fresh_Produce,Inputs & Tools,Livestock,Market,Modern Farming,Other Agricultural,Processed,Specialty}/**/*.{avif,jpg,jpeg,png,webp}",
   { eager: true, import: "default", query: "?url" },
 ) as Record<string, string>;
 
@@ -301,6 +301,11 @@ const thumbnailFolderByCategoryId: Readonly<Record<string, string>> = {
   "wholesale-veg": "Fresh_Produce/Vegetables-WholeSale",
   "wholesale-fruits": "Fresh_Produce/Fruits-WholeSale",
   flowers: "Fresh_Produce/Flowers & Decorative",
+  livestock: "Livestock/Dairy Animals",
+  "dairy-animals": "Livestock/Dairy Animals",
+  "meat-animals": "Livestock/Meat Animals",
+  poultry: "Livestock/Poultry Birds",
+  aquaculture: "Livestock/Fish & Aquaculture",
   seeds: "Inputs & Tools/Seeds & Planting Materials",
   fertilizers: "Inputs & Tools/Fertilizers",
   pesticides: "Inputs & Tools/Pesticides & Protection",

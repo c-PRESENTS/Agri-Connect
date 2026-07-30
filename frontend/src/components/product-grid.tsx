@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 
 interface ProductGridProps {
   products: Product[];
-  currencySymbol?: string;
   isLoading?: boolean;
   onAddToCart?: (product: Product) => void;
   onProductClick?: (product: Product) => void;
@@ -38,7 +37,6 @@ function ProductCardSkeleton() {
 
 export function ProductGrid({ 
   products, 
-  currencySymbol = "£",
   isLoading = false,
   onAddToCart,
   onProductClick 
@@ -108,7 +106,6 @@ export function ProductGrid({
         <motion.div key={product.id} variants={itemVariants}>
           <ProductCard
             product={product}
-            currencySymbol={currencySymbol}
             onAddToCart={onAddToCart}
             onClick={onProductClick}
           />

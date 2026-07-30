@@ -5,20 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { FarmerStats } from "@shared/schema";
 import { motion } from "framer-motion";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface FarmerStatsCardProps {
   stats: FarmerStats;
-  currencySymbol?: string;
   onWithdraw?: () => void;
   onArrangeDelivery?: () => void;
 }
 
 export function FarmerStatsCard({
   stats,
-  currencySymbol = "₹",
   onWithdraw,
   onArrangeDelivery,
 }: FarmerStatsCardProps) {
+  const { format } = useCurrency();
   const { t } = useTranslation();
   return (
     <div className="p-4 space-y-4">
@@ -32,7 +32,7 @@ export function FarmerStatsCard({
               <div>
                 <p className="text-primary-foreground/80 text-sm mb-1">{t("farmer_stats.earnings")}</p>
                 <h2 className="text-3xl sm:text-4xl font-bold" data-testid="text-total-earnings">
-                  {currencySymbol}{stats.totalEarnings.toLocaleString()}
+                  {format(stats.totalEarnings, { includeCode: true })}
                 </h2>
               </div>
               <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">

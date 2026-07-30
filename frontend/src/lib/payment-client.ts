@@ -19,9 +19,52 @@ export interface PaymentAttemptResponse {
   };
 }
 
-export async function createCheckoutQuote(input: {
-  currency: "GBP" | "INR";
+export interface CheckoutQuoteResponse {
+  id: string;
+  currency: "GBP";
+  subtotalMinor: string;
+  taxMinor: string;
+  shippingMinor: string;
+  platformFeeMinor: string;
+  totalMinor: string;
+  expiresAt: string;
+  deliveryAddress?: string;
+  deliveryAddressStruct?: {
+    name: string;
+    phone: string;
+    email?: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    county?: string;
+    postcode: string;
+    country: string;
+  };
   deliveryMethod: "standard" | "express" | "pickup";
+  shippingChoices: Record<string, { partnerId: string; service: string }>;
+  items: Array<{
+    productId: string;
+    name: string;
+    image?: string;
+    quantity: number;
+    unitPrice: number;
+    farmerId: string;
+    farmerName: string;
+  }>;
+}
+
+export interface CheckoutMethodResponse {
+  id: "stripe" | "cash" | "razorpay" | "paypal";
+  available: boolean;
+  reasonCode?: string;
+  displayStatus: "available" | "unavailable" | "coming_soon";
+  flow: "redirect" | "mock" | "manual" | "disabled";
+}
+
+export async function createCheckoutQuote(input: {
+  currency?: "GBP";
+  deliveryMethod: "standard" | "express" | "pickup";
+  sellerIds: string[];
   shippingChoices: Record<string, { partnerId: string; service: string }>;
   deliveryAddressStruct: {
     name: string;
@@ -36,10 +79,16 @@ export async function createCheckoutQuote(input: {
   };
 }) {
   const response = await apiRequest("POST", "/api/checkout/quotes", input);
-  return response.json() as Promise<{ id: string }>;
+  return response.json() as Promise<CheckoutQuoteResponse>;
 }
 
 export type CheckoutProvider = "mock" | "stripe" | "paypal" | "razorpay";
+
+export type PaymentClientError = Error & {
+  code?: string;
+  orderId?: string;
+  attemptId?: string;
+};
 
 export type CheckoutNextAction =
   | { type: "redirect"; url: string }
@@ -56,9 +105,9 @@ export type CheckoutNextAction =
 
 export async function createCheckoutIntent(
   quoteId: string,
-  deliveryAddress: string,
   idempotencyKey: string,
   provider: CheckoutProvider,
+  simulatedMethod?: "card" | "razorpay" | "paypal",
 ) {
   const response = await fetch("/api/checkout/intents", {
     method: "POST",
@@ -67,13 +116,81 @@ export async function createCheckoutIntent(
     body: JSON.stringify({
       quoteId,
       provider,
-      deliveryAddress,
-      ...(provider === "mock" ? { scenario: "success" } : {}),
+      ...(provider === "mock"
+        ? { scenario: "success", simulatedMethod: simulatedMethod ?? "card" }
+        : {}),
     }),
   });
   const body = await response.json();
-  if (!response.ok) throw new Error(body.error || "Could not start protected payment");
+  if (!response.ok) {
+    const error = new Error(
+      body.error || "Could not start protected payment",
+    ) as PaymentClientError;
+    error.code = body.code;
+    error.orderId = body.orderId;
+    error.attemptId = body.attemptId;
+    throw error;
+  }
   return body as { orderId: string; attemptId: string; nextAction: CheckoutNextAction };
+}
+
+export async function getCheckoutQuote(quoteId: string): Promise<CheckoutQuoteResponse> {
+  const response = await fetch(`/api/checkout/quotes/${encodeURIComponent(quoteId)}`, {
+    credentials: "include",
+  });
+  const body = await response.json();
+  if (!response.ok) {
+    const error = new Error(
+      body.error || "Could not load checkout quote",
+    ) as PaymentClientError;
+    error.code = body.code;
+    error.orderId = body.orderId;
+    error.attemptId = body.attemptId;
+    throw error;
+  }
+  return body;
+}
+
+export async function getCheckoutMethods(
+  quoteId: string,
+): Promise<{
+  currency: "GBP";
+  mode: "mock" | "sandbox" | "live";
+  methods: CheckoutMethodResponse[];
+}> {
+  const response = await fetch(
+    `/api/payments/methods?quoteId=${encodeURIComponent(quoteId)}`,
+    { credentials: "include" },
+  );
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.error || "Could not load payment methods");
+  return body;
+}
+
+export async function createCashOrder(
+  quoteId: string,
+  idempotencyKey: string,
+): Promise<{ orderId: string; replayed: boolean }> {
+  const response = await fetch("/api/checkout/cash-orders", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify({ quoteId }),
+  });
+  const body = await response.json();
+  if (!response.ok) {
+    const error = new Error(
+      body.error || "Could not place cash order",
+    ) as PaymentClientError;
+    error.code = body.code;
+    error.orderId = body.orderId;
+    error.attemptId = body.attemptId;
+    throw error;
+  }
+  return body;
 }
 
 function loadRazorpayCheckout(): Promise<void> {

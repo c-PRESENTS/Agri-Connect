@@ -17,6 +17,7 @@ import { isSellerOnline } from "@/lib/seller-presence";
 import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product, LocalNeed } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { useCurrency } from "@/contexts/currency-context";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -164,6 +165,7 @@ export function LeafletFarmerMap({
   selectedFarmerId,
 }: LeafletFarmerMapProps) {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const markersRef = useRef<Record<string, L.Marker>>({});
   const [activeLayer, setActiveLayer] = useState<LayerKey>(tileStyle);
   const layerLabel = (key: LayerKey) => t(`map.layer_${key}`);
@@ -480,7 +482,7 @@ export function LeafletFarmerMap({
                     <img src={getProductImage(farmer.topProduct.name, farmer.topProduct.categoryId, "sm")} alt={farmer.topProduct.name} className="w-full h-16 object-cover" />
                     <div className="px-2 py-1 flex items-center justify-between">
                       <span className="text-[11px] font-medium truncate">{farmer.topProduct.name}</span>
-                      <Badge className="text-[9px] bg-primary/10 text-primary border-none">£{farmer.topProduct.price}/{farmer.topProduct.unit}</Badge>
+                      <Badge className="text-[9px] bg-primary/10 text-primary border-none">{format(farmer.topProduct.price, { sourceCurrency: farmer.topProduct.currency || "GBP" })}/{farmer.topProduct.unit}</Badge>
                     </div>
                   </div>
                 )}

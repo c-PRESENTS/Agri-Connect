@@ -44,6 +44,22 @@ export const checkoutIntents = pgTable(
   (table) => [index("checkout_intents_buyer_idx").on(table.buyerId, table.createdAt)],
 );
 
+export const cashCheckoutRequests = pgTable(
+  "cash_checkout_requests",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    buyerId: varchar("buyer_id").notNull().references(() => users.id),
+    idempotencyKey: varchar("idempotency_key", { length: 160 }).notNull(),
+    quoteId: varchar("quote_id").notNull().references(() => checkoutQuotes.id),
+    orderId: varchar("order_id").references(() => commerceOrders.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("cash_checkout_buyer_key_idx").on(table.buyerId, table.idempotencyKey),
+  ],
+);
+
 export const paymentAttempts = pgTable(
   "payment_attempts",
   {

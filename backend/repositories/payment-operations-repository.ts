@@ -6,6 +6,7 @@ import {
   paymentJobs,
   paymentProviderCapabilities,
   paymentProviderConfigs,
+  sellerCashPreferences,
   sellerPaymentAccounts,
   type NewPaymentJob,
   type PaymentJob,
@@ -19,6 +20,40 @@ export interface LedgerEntryInput {
 }
 
 export class PaymentOperationsRepository {
+  async getSellerCashPreference(sellerId: string) {
+    const [preference] = await db
+      .select()
+      .from(sellerCashPreferences)
+      .where(eq(sellerCashPreferences.sellerId, sellerId));
+    return preference;
+  }
+
+  async getSellerCashPreferences(sellerIds: string[]) {
+    if (!sellerIds.length) return [];
+    return db
+      .select()
+      .from(sellerCashPreferences)
+      .where(inArray(sellerCashPreferences.sellerId, sellerIds));
+  }
+
+  async upsertSellerCashPreference(
+    input: typeof sellerCashPreferences.$inferInsert,
+  ) {
+    const [preference] = await db
+      .insert(sellerCashPreferences)
+      .values(input)
+      .onConflictDoUpdate({
+        target: sellerCashPreferences.sellerId,
+        set: {
+          acceptsCashAtPickup: input.acceptsCashAtPickup,
+          acceptsCashOnFarmerDelivery: input.acceptsCashOnFarmerDelivery,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return preference;
+  }
+
   async listSellerPaymentAccounts(sellerId: string) {
     return db
       .select()

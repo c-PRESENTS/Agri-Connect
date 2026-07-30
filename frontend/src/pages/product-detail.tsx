@@ -33,6 +33,7 @@ import {
   buildProductDetailUrl,
   getProductBrowseContext,
 } from "@/lib/product-navigation";
+import { useCurrency } from "@/contexts/currency-context";
 
 const REVIEWER_NAMES = [
   "Priya Sharma", "James O'Brien", "Mei Lin", "Tariq Hassan", "Sophie Adeyemi",
@@ -120,6 +121,7 @@ export default function ProductDetailPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const { toast } = useToast();
+  const { format } = useCurrency();
   const { user, isAuthenticated } = useAuth();
 
   const [selectedImage, setSelectedImage] = useState(0);
@@ -307,6 +309,11 @@ export default function ProductDetailPage() {
     browseContext.categoryId.replace(/-/g, " ");
   const relatedProductUrl = (relatedProduct: Product) =>
     buildProductDetailUrl(relatedProduct, browseContext);
+  const money = (amount: number, includeCode = false) =>
+    format(amount, {
+      sourceCurrency: product.currency || "GBP",
+      includeCode,
+    });
 
   return (
     <div className="min-h-screen bg-background">
@@ -486,16 +493,15 @@ export default function ProductDetailPage() {
             <div className="space-y-1">
               {originalPrice && (
                 <div className="text-xs text-muted-foreground">
-                  RRP: <span className="line-through">£{originalPrice}</span>
+                  RRP: <span className="line-through">{money(Number(originalPrice), true)}</span>
                 </div>
               )}
               <div className="flex items-baseline gap-2 flex-wrap">
                 {discount > 0 && (
                   <span className="text-xl font-medium text-red-600">-{discount}%</span>
                 )}
-                <span className="text-[15px] text-muted-foreground align-top">£</span>
                 <span className="text-xl sm:text-2xl lg:text-4xl font-medium tracking-tight text-foreground" data-testid="text-product-detail-price">
-                  {product.price.toFixed(2)}
+                  {money(product.price, true)}
                 </span>
                 <span className="text-sm text-muted-foreground">/{product.unit}</span>
               </div>
@@ -611,21 +617,20 @@ export default function ProductDetailPage() {
                 {/* Price summary */}
                 <div className="space-y-0.5">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-sm text-muted-foreground align-top">£</span>
-                    <span className="text-3xl font-medium tracking-tight" data-testid="text-effective-price">{effectiveUnitPrice.toFixed(2)}</span>
+                    <span className="text-3xl font-medium tracking-tight" data-testid="text-effective-price">{money(effectiveUnitPrice, true)}</span>
                     <span className="text-sm text-muted-foreground">/{product.unit}</span>
                   </div>
                   {effectiveUnitPrice < product.price && (
                     <div className="text-xs">
-                      <span className="line-through text-muted-foreground mr-1.5">£{product.price.toFixed(2)}</span>
+                      <span className="line-through text-muted-foreground mr-1.5">{money(product.price)}</span>
                       <span className="text-green-700 dark:text-green-400 font-semibold">
-                        Save £{(product.price - effectiveUnitPrice).toFixed(2)} ({Math.round((1 - effectiveUnitPrice / product.price) * 100)}%)
+                        Save {money(product.price - effectiveUnitPrice)} ({Math.round((1 - effectiveUnitPrice / product.price) * 100)}%)
                       </span>
                     </div>
                   )}
                   {originalPrice && effectiveUnitPrice >= product.price && (
                     <div className="text-xs text-muted-foreground">
-                      Was £{originalPrice} • Save £{(parseFloat(originalPrice) - product.price).toFixed(2)} ({discount}%)
+                      Was {money(Number(originalPrice))} • Save {money(parseFloat(originalPrice) - product.price)} ({discount}%)
                     </div>
                   )}
                 </div>
@@ -661,7 +666,7 @@ export default function ProductDetailPage() {
                             {tier.label} {product.unit}
                           </div>
                           <div className={`text-xs font-bold ${isActive ? "text-amber-900 dark:text-amber-100" : "text-foreground"}`}>
-                            £{tierPrice.toFixed(2)}
+                            {money(tierPrice)}
                           </div>
                           {tier.discountPct > 0 && (
                             <div className="text-[9px] text-green-700 dark:text-green-400 font-semibold">
@@ -745,7 +750,7 @@ export default function ProductDetailPage() {
                     </div>
                     <div className="flex-1">
                       <div className="text-sm font-semibold">{t("product_detail.buy_now")}</div>
-                      <div className="text-xs text-muted-foreground">£{bulkUnitPrice.toFixed(2)} / {product.unit}</div>
+                      <div className="text-xs text-muted-foreground">{money(bulkUnitPrice)} / {product.unit}</div>
                     </div>
                   </button>
                   <button
@@ -762,7 +767,7 @@ export default function ProductDetailPage() {
                         {t("product_detail.subscription_title")}
                         <Badge className="bg-green-600 text-white hover:bg-green-600 text-[10px] ml-1">−{SUBSCRIBE_DISCOUNT_PCT}%</Badge>
                       </div>
-                      <div className="text-xs text-muted-foreground">£{subUnitPrice.toFixed(2)} / {product.unit} • {t("common.cancel")}</div>
+                      <div className="text-xs text-muted-foreground">{money(subUnitPrice)} / {product.unit} • {t("common.cancel")}</div>
                     </div>
                   </button>
                   {purchaseMode === "subscribe" && (
@@ -792,9 +797,9 @@ export default function ProductDetailPage() {
                 <div className="flex items-baseline justify-between text-sm border-t border-border/40 pt-3">
                   <span className="text-muted-foreground">Order total ({quantity} {product.unit}):</span>
                   <div className="text-right">
-                    <div className="text-lg font-bold" data-testid="text-line-total">£{lineTotal.toFixed(2)}</div>
+                    <div className="text-lg font-bold" data-testid="text-line-total">{money(lineTotal, true)}</div>
                     {totalSaved > 0 && (
-                      <div className="text-[11px] text-green-700 dark:text-green-400 font-semibold">You save £{totalSaved.toFixed(2)}</div>
+                      <div className="text-[11px] text-green-700 dark:text-green-400 font-semibold">You save {money(totalSaved)}</div>
                     )}
                   </div>
                 </div>
@@ -903,7 +908,7 @@ export default function ProductDetailPage() {
                   <img src={getImg(0)} alt={product.name} className="w-full h-full object-cover" />
                 </div>
                 <p className="text-[9px] sm:text-[11px] text-center mt-1 sm:mt-1.5 line-clamp-2 font-medium leading-tight">{product.name}</p>
-                <p className="text-[10px] sm:text-xs font-bold text-primary">£{product.price.toFixed(2)}</p>
+                <p className="text-[10px] sm:text-xs font-bold text-primary">{money(product.price)}</p>
               </div>
 
               {relatedProducts.filter(p => p.id !== product.id).slice(0, 2).map((p, i) => (
@@ -922,7 +927,7 @@ export default function ProductDetailPage() {
                       />
                     </div>
                     <p className="text-[9px] sm:text-[11px] text-center mt-1 sm:mt-1.5 line-clamp-2 text-primary hover:underline leading-tight">{p.name}</p>
-                    <p className="text-[10px] sm:text-xs font-bold">£{p.price.toFixed(2)}</p>
+                    <p className="text-[10px] sm:text-xs font-bold">{format(p.price, { sourceCurrency: p.currency || "GBP" })}</p>
                   </button>
                 </div>
               ))}
@@ -931,7 +936,7 @@ export default function ProductDetailPage() {
               <div className="w-full sm:w-auto sm:ml-auto sm:pl-4 sm:border-l sm:border-border/50 space-y-1.5 sm:space-y-2 sm:min-w-[180px] mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
                 <div className="text-[10px] sm:text-xs text-muted-foreground">{t("product_detail.bulk_pricing_title")}:</div>
                 <div className="text-base sm:text-2xl font-bold text-foreground" data-testid="text-bundle-price">
-                  £{(product.price + relatedProducts.filter(p => p.id !== product.id).slice(0, 2).reduce((sum, p) => sum + p.price, 0)).toFixed(2)}
+                  {money(product.price + relatedProducts.filter(p => p.id !== product.id).slice(0, 2).reduce((sum, p) => sum + p.price, 0), true)}
                 </div>
                 <Button
                   size="sm"
@@ -995,7 +1000,7 @@ export default function ProductDetailPage() {
                     <CardContent className="p-2">
                       <p className="text-[11px] font-semibold line-clamp-2 mb-1 leading-tight">{p.name}</p>
                       <div className="flex items-center justify-between gap-1">
-                        <span className="text-xs font-bold text-primary truncate">£{p.price}<span className="text-[9px] font-normal text-muted-foreground">/{p.unit}</span></span>
+                        <span className="text-xs font-bold text-primary truncate">{format(p.price, { sourceCurrency: p.currency || "GBP" })}<span className="text-[9px] font-normal text-muted-foreground">/{p.unit}</span></span>
                         <div className="flex items-center gap-0.5 shrink-0">
                           <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
                           <span className="text-[10px] text-muted-foreground">{p.rating.toFixed(1)}</span>
@@ -1355,7 +1360,7 @@ export default function ProductDetailPage() {
                           <CardContent className="p-3">
                             <p className="text-xs font-semibold line-clamp-2 mb-1">{p.name}</p>
                             <div className="flex items-center justify-between">
-                              <span className="text-sm font-bold text-primary">£{p.price}/{p.unit}</span>
+                              <span className="text-sm font-bold text-primary">{format(p.price, { sourceCurrency: p.currency || "GBP" })}/{p.unit}</span>
                               <div className="flex items-center gap-0.5">
                                 <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                                 <span className="text-[11px] text-muted-foreground">{p.rating.toFixed(1)}</span>
@@ -1382,7 +1387,7 @@ export default function ProductDetailPage() {
       <div className="lg:hidden fixed bottom-16 left-0 right-0 z-[9998] bg-background/95 backdrop-blur-xl border-t border-border/60 px-4 py-2 flex items-center gap-3 shadow-lg">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold truncate leading-tight">{product.name}</p>
-          <p className="text-sm font-black text-primary">£{product.price.toFixed(2)}<span className="text-muted-foreground font-normal text-xs">/{product.unit}</span></p>
+          <p className="text-sm font-black text-primary">{money(product.price, true)}<span className="text-muted-foreground font-normal text-xs">/{product.unit}</span></p>
         </div>
         <div className="flex items-center border border-border rounded-lg overflow-hidden shrink-0">
           <button

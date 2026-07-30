@@ -6,8 +6,9 @@ export function usePaymentCheckout() {
     mutationFn: async (input: {
       deliveryAddress: string;
       provider: CheckoutProvider;
-      currency: "GBP" | "INR";
+      currency: "GBP";
       deliveryMethod: "standard" | "pickup";
+      sellerIds: string[];
       shippingChoices: Record<string, { partnerId: string; service: string }>;
       deliveryAddressStruct: {
         name: string; phone: string; email?: string; line1: string; line2?: string;
@@ -17,13 +18,13 @@ export function usePaymentCheckout() {
       const quote = await createCheckoutQuote({
         currency: input.currency,
         deliveryMethod: input.deliveryMethod,
+        sellerIds: input.sellerIds,
         shippingChoices: input.shippingChoices,
         deliveryAddressStruct: input.deliveryAddressStruct,
       });
       const idempotencyKey = crypto.randomUUID();
       return createCheckoutIntent(
         quote.id,
-        input.deliveryAddress,
         idempotencyKey,
         input.provider,
       );

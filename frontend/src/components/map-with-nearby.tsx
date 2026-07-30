@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapPin, Star, Store, Navigation, Layers } from "lucide-react";
 import { getProductImage } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
+import { useCurrency } from "@/contexts/currency-context";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -129,6 +130,7 @@ export function MapWithNearby({
   className = "",
 }: MapWithNearbyProps) {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const resolvedTitle = title || t("map.nearby_products");
   const resolvedSubtitle = subtitle || t("map.available_food_with_farmers");
   const effectiveMapHeight = mapHeight ?? (compact ? 220 : 320);
@@ -271,7 +273,7 @@ export function MapWithNearby({
                           <span className="text-muted-foreground">{s.productCount} {t("map.products_short")}</span>
                           <span className="text-muted-foreground">·</span>
                           <span className="font-semibold text-primary">
-                            from £{s.topProduct.price.toFixed(2)}
+                            from {format(s.topProduct.price, { sourceCurrency: s.topProduct.currency || "GBP" })}
                           </span>
                         </div>
                       </div>

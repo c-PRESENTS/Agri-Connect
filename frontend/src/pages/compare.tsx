@@ -13,9 +13,11 @@ import { useCompare } from "@/hooks/use-compare";
 import { useCart } from "@/hooks/use-cart";
 import { getProductImage } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
+import { useCurrency } from "@/contexts/currency-context";
 
 export default function ComparePage() {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const [, setLocation] = useLocation();
   const { ids, remove, clear } = useCompare();
   const { addItem } = useCart();
@@ -72,7 +74,7 @@ export default function ComparePage() {
     render: (p: Product) => React.ReactNode;
     isWinner?: (p: Product) => boolean;
   }> = [
-    { label: t("cart.subtotal"), render: p => `£${p.price.toFixed(2)} / ${p.unit}`, isWinner: p => p.price === lowestPrice },
+    { label: t("cart.subtotal"), render: p => `${format(p.price, { sourceCurrency: p.currency || "GBP", includeCode: true })} / ${p.unit}`, isWinner: p => p.price === lowestPrice },
     { label: t("filters.rating"), render: p => `${p.rating.toFixed(1)} ★ (${p.reviewCount.toLocaleString()})`, isWinner: p => p.rating === highestRating },
     { label: t("product.in_stock"), render: p => `${p.stock} ${p.unit}` },
     { label: t("filters.distance"), render: p => typeof p.distance === "number" ? `${p.distance.toFixed(1)} km` : "—", isWinner: p => closest !== null && p.id === closest.id },
@@ -200,7 +202,7 @@ export default function ComparePage() {
               <div className="bg-background/70 rounded-xl p-3 border border-border/40">
                 <div className="text-xs text-muted-foreground uppercase mb-1">{t("compare.best_value")}</div>
                 <div className="font-semibold">{items.find(p => p.price === lowestPrice)?.name}</div>
-                <div className="text-xs text-green-700 dark:text-green-400 mt-1">£{lowestPrice.toFixed(2)} — {t("compare.price_low_to_high")}</div>
+                <div className="text-xs text-green-700 dark:text-green-400 mt-1">{format(lowestPrice, { includeCode: true })} — {t("compare.price_low_to_high")}</div>
               </div>
               <div className="bg-background/70 rounded-xl p-3 border border-border/40">
                 <div className="text-xs text-muted-foreground uppercase mb-1">{t("compare.top_rated")}</div>

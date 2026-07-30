@@ -932,6 +932,7 @@
     "tab_food_short": "ਭੋਜਨ",
     "tab_needs": "ਸਥਾਨਕ ਲੋੜਾਂ",
     "tab_needs_short": "ਲੋੜ",
+    "tab_all": "ਸਭ",
     "tab_post": "ਲੋੜ ਪੋਸਟ ਕਰੋ",
     "tab_post_short": "ਪੋਸਟ",
     "tab_parcels": "ਜ਼ਮੀਨ ਪਾਰਸਲ",
@@ -1501,7 +1502,7 @@
   },
   "live_sellers": {
     "title": "ਲਾਈਵ ਵਿਕਰੇਤਾ",
-    "online_count": "{count} ਵਿਕਰੇਤਾ ਔਨਲਾਈਨ",
+    "online_count": "{{count}} ਵਿਕਰੇਤਾ ਔਨਲਾਈਨ",
     "live_status": "ਲਾਈਵ",
     "visit_shop": "ਦੁਕਾਨ ‘ਤੇ ਜਾਓ",
     "message_button": "ਸੁਨੇਹਾ",

@@ -26,6 +26,8 @@ import { logisticsPartners, milkRunRoutes, urgentOrders } from "@/lib/logistics-
 import type { LogisticsPartner } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { SplitMapLayout } from "@/components/split-map-layout";
+import { ComingSoonBadge } from "@/components/coming-soon-badge";
+import { useCurrency } from "@/contexts/currency-context";
 import { 
   AlertTriangle, 
   Phone, 
@@ -52,6 +54,7 @@ const typeColors: Record<string, string> = {
 };
 
 export default function LogisticsPage() {
+  const { format } = useCurrency();
   const { t } = useTranslation();
   const [selectedType, setSelectedType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,6 +65,14 @@ export default function LogisticsPage() {
     if (searchQuery && !partner.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  const formatPriceRange = (range: string) => {
+    if (range.includes("Custom")) return "Custom Quote";
+    return range
+      .split("-")
+      .map((value) => format(Number(value), { includeCode: true }))
+      .join(" – ");
+  };
 
   const renderPartnerCard = (partner: LogisticsPartner) => {
     const TypeIcon = typeIcons[partner.type] || Truck;
@@ -118,7 +129,7 @@ export default function LogisticsPage() {
               <span>{partner.deliveryTime}</span>
             </div>
             <span className="font-semibold text-primary">
-              {partner.priceRange.includes("Custom") ? "Custom Quote" : `£${partner.priceRange}`}
+              {formatPriceRange(partner.priceRange)}
             </span>
           </div>
         </CardContent>
@@ -195,7 +206,7 @@ export default function LogisticsPage() {
               <div className="p-3 bg-muted rounded-md">
                 <div className="text-sm text-muted-foreground mb-1">Price Range</div>
                 <div className="font-semibold text-primary">
-                  {selectedPartner.priceRange.includes("Custom") ? "Custom Quote" : `£${selectedPartner.priceRange}`}
+                  {formatPriceRange(selectedPartner.priceRange)}
                 </div>
               </div>
             </div>
@@ -236,7 +247,10 @@ export default function LogisticsPage() {
       <SplitMapLayout mapProps={{ title: "Sellers along your routes", subtitle: "Tap a pin to view seller listings" }}>
       <div className="p-4 max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold" data-testid="text-logistics-heading">{t("logistics.title", "Logistics & Delivery")}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-bold" data-testid="text-logistics-heading">{t("logistics.title", "Logistics & Delivery")}</h1>
+            <ComingSoonBadge />
+          </div>
           <p className="text-muted-foreground">
             {t("logistics.subtitle", "Choose from trusted logistics partners or join efficient milk run routes")}
           </p>
@@ -340,7 +354,7 @@ export default function LogisticsPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-primary">+£{order.revenue}</span>
+                        <span className="text-sm font-semibold text-primary">+{format(order.revenue, { includeCode: true })}</span>
                         <Button size="sm" data-testid={`button-accept-${order.id}`}>Accept</Button>
                       </div>
                     </div>
@@ -371,7 +385,7 @@ export default function LogisticsPage() {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-4 gap-2 text-center">
                       <div className="p-2 bg-muted rounded-md">
-                        <div className="text-lg font-bold text-primary">£{route.costPerFarmer}</div>
+                        <div className="text-lg font-bold text-primary">{format(route.costPerFarmer, { includeCode: true })}</div>
                         <div className="text-xs text-muted-foreground">Per Farmer</div>
                       </div>
                       <div className="p-2 bg-green-50 dark:bg-green-950 rounded-md">
@@ -540,10 +554,10 @@ export default function LogisticsPage() {
                     </div>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-muted rounded-md">
-                    <span>Total: £285.00</span>
+                    <span>Total: {format(285, { includeCode: true })}</span>
                     <Badge variant="secondary" className="text-green-600">
                       <TrendingDown className="w-3 h-3 mr-1" />
-                      Saved £34
+                      Saved {format(34, { includeCode: true })}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-md text-sm">

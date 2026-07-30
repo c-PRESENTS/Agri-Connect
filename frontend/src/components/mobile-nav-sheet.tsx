@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import {
   Home, Map, Sprout, Cpu, Landmark, Truck, HeartHandshake,
   FileText, ShoppingCart, LayoutDashboard, Camera, Settings,
-  ShoppingBasket, Wrench, Package, Award, Wheat, Store,
+  ShoppingBasket, Wrench, Package, Award, Wheat, Store, Beef,
   Salad, Factory, Leaf, Briefcase, Sparkles, X, ChevronDown, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +26,7 @@ const ITEMS: RailItem[] = [
   { id: "home",          path: "/",                          icon: Home,            label: "Home",       public: true },
   { id: "cat-daily",     path: "/?category=daily-needs",     icon: ShoppingBasket,  label: "Daily",      public: true, category: "daily-needs"      },
   { id: "cat-fresh",     path: "/?category=fresh-produce",   icon: Salad,           label: "Fresh",      public: true, category: "fresh-produce"    },
+  { id: "cat-livestock", path: "/?category=livestock",       icon: Beef,            label: "Livestock",  public: true, category: "livestock"        },
   { id: "cat-inputs",    path: "/?category=inputs-tools",    icon: Wrench,          label: "Inputs",     public: true, category: "inputs-tools"     },
   { id: "cat-processed", path: "/?category=processed",       icon: Package,         label: "Process",    public: true, category: "processed"        },
   { id: "cat-specialty", path: "/?category=specialty",       icon: Award,           label: "Special",    public: true, category: "specialty"        },

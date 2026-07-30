@@ -16,6 +16,7 @@ import type { Order, OrderStatus } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
 import { resolveProductImageForOrderItem } from "@/lib/product-images";
 import { BuyerTransactionHistory } from "@/components/payments/buyer-transaction-history";
+import { useCurrency } from "@/contexts/currency-context";
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: typeof Package }> = {
   pending:            { label: "Pending",            color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",     icon: Clock },
@@ -45,6 +46,7 @@ const statusKeyMap: Record<string, string> = {
 
 export default function OrdersPage() {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -179,7 +181,7 @@ export default function OrdersPage() {
                           </p>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <p className="font-black text-lg">£{order.total.toFixed(2)}</p>
+                          <p className="font-black text-lg">{format(order.total, { includeCode: true })}</p>
                           <p className="text-xs text-muted-foreground">{order.items.length} item{order.items.length !== 1 ? "s" : ""}</p>
                         </div>
                       </div>

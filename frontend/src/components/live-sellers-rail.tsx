@@ -15,6 +15,7 @@ import { getProductImage } from "@/lib/product-images";
 import { isSellerOnline } from "@/lib/seller-presence";
 import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product } from "@shared/schema";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface SellerEntry {
   id: string;
@@ -76,6 +77,7 @@ export function LiveSellersRail({
   layout = "stacked",
 }: LiveSellersRailProps) {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const { data: fetched = [], dataUpdatedAt, isFetching } = useQuery<Product[]>({
     queryKey: ["/api/products"],
     enabled: !providedProducts,
@@ -279,7 +281,7 @@ export function LiveSellersRail({
                           {!isActive && top && (
                             <>
                               <span className="text-muted-foreground">·</span>
-                              <span className="font-semibold text-primary">from £{top.price.toFixed(2)}</span>
+                              <span className="font-semibold text-primary">from {format(top.price, { sourceCurrency: top.currency || "GBP" })}</span>
                             </>
                           )}
                         </div>
@@ -315,7 +317,7 @@ export function LiveSellersRail({
                                 </div>
                                 <div className="p-1">
                                   <p className="text-[10px] font-medium truncate">{p.name}</p>
-                                  <p className="text-[10px] font-bold text-primary">£{p.price.toFixed(2)}</p>
+                                  <p className="text-[10px] font-bold text-primary">{format(p.price, { sourceCurrency: p.currency || "GBP" })}</p>
                                 </div>
                               </Link>
                             ))}

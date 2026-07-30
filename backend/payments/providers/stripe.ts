@@ -119,6 +119,7 @@ export class StripePaymentAdapter implements PaymentProviderAdapter {
     const session = await stripe.checkout.sessions.create(
       {
         mode: "payment",
+        customer_email: input.customerEmail,
         client_reference_id: input.attemptId,
         success_url: `${input.returnBaseUrl}/payment/${encodeURIComponent(input.attemptId)}/processing`,
         cancel_url: `${input.returnBaseUrl}/payment/${encodeURIComponent(input.attemptId)}/cancelled`,

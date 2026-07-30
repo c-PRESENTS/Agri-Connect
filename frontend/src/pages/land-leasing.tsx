@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ComingSoonBadge } from "@/components/coming-soon-badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
@@ -32,6 +33,7 @@ import { TopNavigation } from "@/components/top-navigation";
 import { SplitMapLayout } from "@/components/split-map-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Landmark, FileText, Users, Award, ExternalLink, Calendar, CreditCard, Activity, MessageSquarePlus } from "lucide-react";
+import { useCurrency } from "@/contexts/currency-context";
 
 const landTabClass =
   "gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-extrabold text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-sm";
@@ -78,6 +80,7 @@ const communityPlots = [
 ];
 
 export default function LandLeasingPage() {
+  const { currency, format } = useCurrency();
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -167,7 +170,7 @@ export default function LandLeasingPage() {
           <div className="flex items-center justify-between">
             <div>
               <span className="text-lg font-bold text-primary">
-                £{land.rentPerMonth}
+                {format(land.rentPerMonth, { includeCode: true })}
               </span>
               <span className="text-xs text-muted-foreground">/month/acre</span>
             </div>
@@ -231,11 +234,11 @@ export default function LandLeasingPage() {
                   <div className="text-xs text-muted-foreground">{selectedLand.areaUnit}</div>
                 </div>
                 <div className="p-3 bg-muted rounded-md text-center">
-                  <div className="text-2xl font-bold text-primary">£{selectedLand.rentPerMonth}</div>
+                  <div className="text-2xl font-bold text-primary">{format(selectedLand.rentPerMonth, { includeCode: true })}</div>
                   <div className="text-xs text-muted-foreground">per month/acre</div>
                 </div>
                 <div className="p-3 bg-muted rounded-md text-center">
-                  <div className="text-2xl font-bold">£{selectedLand.deposit}</div>
+                  <div className="text-2xl font-bold">{format(selectedLand.deposit, { includeCode: true })}</div>
                   <div className="text-xs text-muted-foreground">deposit</div>
                 </div>
                 <div className="p-3 bg-muted rounded-md text-center">
@@ -340,7 +343,10 @@ export default function LandLeasingPage() {
       <div className="p-4 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">{t("land_leasing.title", "Land Leasing Marketplace")}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold">{t("land_leasing.title", "Land Leasing Marketplace")}</h1>
+              <ComingSoonBadge />
+            </div>
             <p className="text-muted-foreground">{t("land_leasing.subtitle", "Find and lease agricultural land across the UK")}</p>
           </div>
           <Button disabled title="Land posting is not available yet" data-testid="button-post-land">
@@ -388,7 +394,7 @@ export default function LandLeasingPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">
-                    Price Range (£/month)
+                    Price Range ({currency}/month)
                   </label>
                   <Slider
                     value={priceRange}
@@ -398,8 +404,8 @@ export default function LandLeasingPage() {
                     className="mt-2"
                   />
                   <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>£{priceRange[0]}</span>
-                    <span>£{priceRange[1]}</span>
+                    <span>{format(priceRange[0])}</span>
+                    <span>{format(priceRange[1])}</span>
                   </div>
                 </div>
                 <div>
@@ -539,7 +545,7 @@ export default function LandLeasingPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-lg font-bold text-primary">£{plot.price.toLocaleString()}</span>
+                        <span className="text-lg font-bold text-primary">{format(plot.price, { includeCode: true })}</span>
                         <span className="text-xs text-muted-foreground ml-1">total</span>
                       </div>
                       <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border-0">For Sale</Badge>
@@ -575,7 +581,7 @@ export default function LandLeasingPage() {
                     <div className="grid grid-cols-2 gap-2 text-xs mb-3">
                       <div className="bg-muted rounded p-2">
                         <div className="text-muted-foreground">Min. Investment</div>
-                        <div className="font-semibold">£{opp.minInvestment.toLocaleString()}</div>
+                        <div className="font-semibold">{format(opp.minInvestment, { includeCode: true })}</div>
                       </div>
                       <div className="bg-muted rounded p-2">
                         <div className="text-muted-foreground">Duration</div>
@@ -609,7 +615,7 @@ export default function LandLeasingPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold text-primary">
-                          {plot.feePerMonth === 0 ? "Free" : `£${plot.feePerMonth}/mo`}
+                          {plot.feePerMonth === 0 ? "Free" : `${format(plot.feePerMonth, { includeCode: true })}/mo`}
                         </div>
                         <div className="text-xs text-muted-foreground">{plot.plotSize}</div>
                       </div>
@@ -676,7 +682,7 @@ export default function LandLeasingPage() {
                       </div>
                       <div className="p-2 bg-green-50 dark:bg-green-950 rounded-md text-center">
                         <div className="text-lg font-bold text-green-600">
-                          £{program.subsidizedRent}/acre
+                          {format(program.subsidizedRent, { includeCode: true })}/acre
                         </div>
                         <div className="text-xs text-muted-foreground">Subsidized Rent</div>
                       </div>
@@ -785,11 +791,11 @@ export default function LandLeasingPage() {
                             <CreditCard className="w-3 h-3" />
                             Monthly Rent
                           </div>
-                          <div className="text-sm font-semibold text-primary">£{lease.monthlyRent}/month</div>
+                          <div className="text-sm font-semibold text-primary">{format(lease.monthlyRent, { includeCode: true })}/month</div>
                         </div>
                         <div className="p-3 bg-muted rounded-md">
                           <div className="text-sm text-muted-foreground mb-1">Deposit Paid</div>
-                          <div className="text-sm font-medium">£{lease.depositPaid}</div>
+                          <div className="text-sm font-medium">{format(lease.depositPaid, { includeCode: true })}</div>
                         </div>
                         <div className="p-3 bg-muted rounded-md">
                           <div className="text-sm text-muted-foreground mb-1">Lessee</div>
@@ -807,7 +813,7 @@ export default function LandLeasingPage() {
                             <div key={payment.id} className="flex items-center justify-between p-2 bg-muted rounded-md">
                               <span className="text-sm">{payment.month}</span>
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">£{payment.amount}</span>
+                                <span className="text-sm font-medium">{format(payment.amount, { includeCode: true })}</span>
                                 <Badge 
                                   variant={payment.status === "paid" ? "default" : payment.status === "overdue" ? "destructive" : "secondary"}
                                   className="text-xs"

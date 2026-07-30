@@ -15,8 +15,8 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCart } from "@/hooks/use-cart";
 import { useTranslation } from "react-i18next";
-import type { Product, ProductFilters as Filters, Region } from "@shared/schema";
-import { getShoppableCategories, regions } from "@/lib/categories";
+import type { Product, ProductFilters as Filters } from "@shared/schema";
+import { getShoppableCategories } from "@/lib/categories";
 import { buildProductDetailUrl } from "@/lib/product-navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -33,9 +33,6 @@ export default function Home() {
   const [filters, setFilters] = useState<Filters>({});
   const { items: cartItems, itemCount: cartCount, addItem, updateItem, removeItem } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [currentRegion, setCurrentRegion] = useState<Region>(
-    regions.find(r => r.code === "GB") || regions[0]
-  );
   const [searchQuery, setSearchQuery] = useState("");
   const [activeDietaryFilter, setActiveDietaryFilter] = useState<string | null>(null);
 
@@ -337,7 +334,6 @@ export default function Home() {
                     <CategoryCarousel 
                       onCategorySelect={handleCategorySelect}
                       products={products}
-                      currencySymbol={currentRegion.currencySymbol}
                       onAddToCart={handleAddToCart}
                     />
                     <FeatureShowcase />
@@ -371,7 +367,6 @@ export default function Home() {
                         categoryId={selectedCategory || null}
                         subcategoryId={effectiveSubcategory || null}
                         activeSection={activeSection}
-                        currencySymbol={currentRegion.currencySymbol}
                         onAddToCart={handleAddToCart}
                         onProductClick={handleProductClick}
                         onSectionVisible={handleSectionVisible}
@@ -391,7 +386,6 @@ export default function Home() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
-        currencySymbol={currentRegion.currencySymbol}
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
         onCheckout={handleCheckout}

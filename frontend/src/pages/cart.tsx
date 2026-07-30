@@ -12,18 +12,18 @@ import { useAuth } from "@/hooks/use-auth";
 import { getLoginPath } from "@/lib/auth-utils";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCurrency } from "@/contexts/currency-context";
 
 export default function CartPage() {
   const [, setLocation] = useLocation();
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const { isAuthenticated } = useAuth();
   const { items, total: subtotal, isLoading, isError, refetch, updateItem, removeItem } = useCart();
 
-  const FREE_DELIVERY_THRESHOLD = 30;
-  const STANDARD_FEE = 4.99;
-  const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD || subtotal === 0 ? 0 : STANDARD_FEE;
-  const tax = parseFloat((subtotal * 0.2).toFixed(2));
-  const total = subtotal + deliveryFee + tax;
+  // Fulfilment is selected per farmer during checkout. Catalog prices are
+  // tax-inclusive for the volunteer MVP, so the cart does not invent fees.
+  const total = subtotal;
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
@@ -92,7 +92,7 @@ export default function CartPage() {
       <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border/40 px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex flex-col">
           <span className="text-xs text-muted-foreground">{t("cart.total", "Total")}</span>
-          <span className="font-bold text-base" data-testid="text-total-mobile">£{total.toFixed(2)}</span>
+          <span className="font-bold text-base" data-testid="text-total-mobile">{format(total, { includeCode: true })}</span>
         </div>
         <Button
           className="flex-1 gap-2 h-11 text-sm font-semibold"
@@ -160,7 +160,10 @@ export default function CartPage() {
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex flex-col">
                             <span className="font-semibold text-sm" data-testid={`text-cart-unit-price-${item.id}`}>
-                              £{item.product.price.toFixed(2)}/{item.product.unit}
+                              {format(item.product.price, {
+                                sourceCurrency: item.product.currency || "GBP",
+                                includeCode: true,
+                              })}/{item.product.unit}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
@@ -210,7 +213,10 @@ export default function CartPage() {
                         <p className="text-xs text-muted-foreground mt-1">
                           {t("cart.line_total", "Line total")}:{" "}
                           <span className="font-semibold text-foreground" data-testid={`text-cart-line-total-${item.id}`}>
-                            £{(item.product.price * item.quantity).toFixed(2)}
+                            {format(item.product.price * item.quantity, {
+                              sourceCurrency: item.product.currency || "GBP",
+                              includeCode: true,
+                            })}
                           </span>
                         </p>
                         {item.purchaseMode === "subscribe" && (
@@ -248,27 +254,20 @@ export default function CartPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("cart.subtotal", "Subtotal")}</span>
-                <span data-testid="text-subtotal">£{subtotal.toFixed(2)}</span>
+                <span data-testid="text-subtotal">{format(subtotal, { includeCode: true })}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("cart.delivery", "Delivery")}</span>
-                <span data-testid="text-delivery-fee">
-                  {deliveryFee === 0 ? t("cart.free_delivery", "Free") : `£${deliveryFee.toFixed(2)}`}
-                </span>
+                <span data-testid="text-delivery-fee">Calculated at checkout</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("checkout.vat", "VAT")}</span>
-                <span data-testid="text-cart-tax">£{tax.toFixed(2)}</span>
+                <span className="text-muted-foreground">Taxes</span>
+                <span data-testid="text-cart-tax">Included where applicable</span>
               </div>
-              {deliveryFee > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {t("cart.add_more_for_free", { amount: (FREE_DELIVERY_THRESHOLD - subtotal).toFixed(2) })}
-                </p>
-              )}
               <Separator />
               <div className="flex justify-between font-semibold text-base">
                 <span>{t("cart.total", "Total")}</span>
-                <span data-testid="text-total">£{total.toFixed(2)}</span>
+                <span data-testid="text-total">{format(total, { includeCode: true })}</span>
               </div>
             </div>
 
@@ -279,7 +278,7 @@ export default function CartPage() {
               data-testid="button-checkout"
             >
               {isAuthenticated
-                ? `${t("cart.checkout", "Proceed to Checkout")} • £${total.toFixed(2)}`
+                ? `${t("cart.checkout", "Proceed to Checkout")} • ${format(total, { includeCode: true })}`
                 : t("cart.login_to_checkout", "Sign in to checkout")}
               <ArrowRight className="h-4 w-4" />
             </Button>

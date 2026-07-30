@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Product } from "@shared/schema";
+import { useCurrency } from "@/contexts/currency-context";
 import { FavoriteProductButton } from "@/components/favorite-product-button";
 
 interface MapViewProps {
@@ -65,6 +66,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 export function MapView({ products, onFarmerClick, autoLocate = true, compact = false }: MapViewProps) {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([51.7356, 0.4685]); // Chelmsford, UK default
   const [zoom, setZoom] = useState(9);
@@ -769,7 +771,7 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-primary">£{product.price}/{product.unit}</span>
+                  <span className="text-[11px] font-bold text-primary">{format(product.price, { sourceCurrency: product.currency || "GBP" })}/{product.unit}</span>
                   <Badge variant="outline" className="text-[8px] px-1 py-0">{product.farmerName.split(' ')[0]}</Badge>
                 </div>
               </div>

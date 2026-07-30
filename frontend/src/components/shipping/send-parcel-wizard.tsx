@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { QuoteCards } from "./quote-cards";
 import { COUNTRIES } from "@/lib/countries";
 import type { ShipQuote, Shipment } from "@shared/schema";
+import { useCurrency } from "@/contexts/currency-context";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -34,6 +35,7 @@ const blankItem: ItemForm = { name: "", quantity: 1, weightKg: 1, coldChain: fal
 
 export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, trackUrl: string) => void }) {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const { toast } = useToast();
   const [step, setStep] = useState<Step>(1);
   const [items, setItems] = useState<ItemForm[]>([{ ...blankItem }]);
@@ -111,7 +113,7 @@ export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, tr
         </Card>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div><p className="text-xs text-muted-foreground">{t("send_parcel.carrier")}</p><p className="font-medium">{booked.shipment.partnerName}</p></div>
-          <div><p className="text-xs text-muted-foreground">{t("send_parcel.total")}</p><p className="font-medium">£{booked.shipment.price.toFixed(2)}</p></div>
+          <div><p className="text-xs text-muted-foreground">{t("send_parcel.total")}</p><p className="font-medium">{format(booked.shipment.price, { sourceCurrency: booked.shipment.currency || "GBP", includeCode: true })}</p></div>
           <div><p className="text-xs text-muted-foreground">{t("send_parcel.distance")}</p><p className="font-medium">{booked.shipment.distanceKm} km</p></div>
           <div><p className="text-xs text-muted-foreground">{t("send_parcel.weight")}</p><p className="font-medium">{booked.shipment.weightKg.toFixed(1)} kg</p></div>
         </div>
@@ -217,7 +219,7 @@ export function SendParcelWizard({ onComplete }: { onComplete?: (s: Shipment, tr
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => setStep(2)} data-testid="button-back-step3"><ArrowLeft className="h-4 w-4 mr-1" />{t("send_parcel.back_button")}</Button>
             <Button className="flex-1" disabled={!selected || bookMut.isPending} onClick={() => bookMut.mutate()} data-testid="button-confirm-booking">
-              {bookMut.isPending ? t("send_parcel.booking") : t("send_parcel.book_button", { price: `£${selected?.price.toFixed(2) ?? "0.00"}` })}
+              {bookMut.isPending ? t("send_parcel.booking") : t("send_parcel.book_button", { price: selected ? format(selected.price, { sourceCurrency: selected.currency || "GBP", includeCode: true }) : format(0, { includeCode: true }) })}
             </Button>
           </div>
         </div>

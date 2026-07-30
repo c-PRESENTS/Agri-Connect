@@ -37,6 +37,14 @@ export const sellerPaymentAccounts = pgTable(
   (table) => [uniqueIndex("seller_payment_provider_idx").on(table.sellerId, table.provider)],
 );
 
+export const sellerCashPreferences = pgTable("seller_cash_preferences", {
+  sellerId: varchar("seller_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  acceptsCashAtPickup: boolean("accepts_cash_at_pickup").notNull().default(false),
+  acceptsCashOnFarmerDelivery: boolean("accepts_cash_on_farmer_delivery").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const protectedAllocations = pgTable(
   "protected_allocations",
   {

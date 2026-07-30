@@ -37,6 +37,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { useFavorites } from "@/hooks/use-favorites";
 import { resolveProductImageForOrderItem } from "@/lib/product-images";
+import { useCurrency } from "@/contexts/currency-context";
 
 type SellerDashboardData = {
   products: Product[];
@@ -87,15 +88,6 @@ const STATUS_META: Record<OrderStatus, { label: string; className: string }> = {
   cancelled: { label: "Cancelled", className: "bg-red-100 text-red-800 border-red-200" },
   refunded: { label: "Refunded", className: "bg-slate-100 text-slate-700 border-slate-200" },
 };
-
-function formatMoney(amount: number, currency: string) {
-  const supportedCurrency = currency === "INR" ? "INR" : "GBP";
-  return new Intl.NumberFormat(supportedCurrency === "INR" ? "en-IN" : "en-GB", {
-    style: "currency",
-    currency: supportedCurrency,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-GB", {
@@ -231,6 +223,7 @@ function EmptyState({
 
 function BuyerDashboard() {
   const [, navigate] = useLocation();
+  const { format } = useCurrency();
   const { user } = useAuth();
   const { productIds, sellerIds } = useFavorites();
   const { data: orders = [], isLoading, isError, refetch } = useQuery<Order[]>({
@@ -244,7 +237,6 @@ function BuyerDashboard() {
   const activeOrders = orders.filter((order) => ACTIVE_ORDER_STATUSES.includes(order.status));
   const deliveredOrders = orders.filter((order) => order.status === "delivered");
   const favoriteCount = productIds.length + sellerIds.length;
-  const currency = "GBP";
   const displayName = user?.firstName || user?.name?.split(" ")[0] || "there";
   const recentOrders = sortedOrders.slice(0, 3);
   const profileFields = [user?.name || user?.firstName, user?.email, user?.phone, user?.location];
@@ -350,7 +342,7 @@ function BuyerDashboard() {
                           <p className="mt-1 text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
                         </div>
                         <div className="hidden shrink-0 text-right sm:block">
-                          <p className="text-sm font-black">{formatMoney(order.total, currency)}</p>
+                           <p className="text-sm font-black">{format(order.total, { includeCode: true })}</p>
                           <p className="mt-1 text-xs text-primary">View details</p>
                         </div>
                         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -408,6 +400,7 @@ function BuyerDashboard() {
 
 function FarmerDashboard() {
   const [, navigate] = useLocation();
+  const { format } = useCurrency();
   const { user } = useAuth();
   const { data, isLoading, isError, refetch } = useQuery<SellerDashboardData>({
     queryKey: ["/api/dashboard/seller"],
@@ -422,13 +415,12 @@ function FarmerDashboard() {
   const averageRating = products.length
     ? products.reduce((total, product) => total + (product.rating || 0), 0) / products.length
     : 0;
-  const currency = "GBP";
   const displayName = user?.firstName || user?.name?.split(" ")[0] || "Farmer";
 
   if (isLoading) return <DashboardLoading />;
 
   const metrics: Metric[] = [
-    { label: "Sales value", value: formatMoney(data?.summary.salesTotal ?? 0, currency), detail: "Open and completed orders", icon: BadgePoundSterling, tone: "bg-emerald-50 text-emerald-700" },
+    { label: "Sales value", value: format(data?.summary.salesTotal ?? 0, { includeCode: true }), detail: "Open and completed orders", icon: BadgePoundSterling, tone: "bg-emerald-50 text-emerald-700" },
     { label: "Orders to action", value: String(actionOrders.length), detail: "Need fulfilment updates", icon: Clock3, tone: "bg-amber-50 text-amber-700" },
     { label: "Active listings", value: String(data?.summary.productCount ?? 0), detail: `${lowStockProducts.length} low in stock`, icon: Box, tone: "bg-blue-50 text-blue-700" },
     { label: "Product rating", value: averageRating ? averageRating.toFixed(1) : "—", detail: averageRating ? "Average across listings" : "No ratings yet", icon: Star, tone: "bg-violet-50 text-violet-700" },
@@ -535,7 +527,7 @@ function FarmerDashboard() {
                           {order.items.length} item{order.items.length === 1 ? "" : "s"} · {formatDate(order.createdAt)}
                         </p>
                       </div>
-                      <p className="hidden shrink-0 text-sm font-black sm:block">{formatMoney(order.total, currency)}</p>
+                      <p className="hidden shrink-0 text-sm font-black sm:block">{format(order.total, { includeCode: true })}</p>
                       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                     </button>
                   ))}

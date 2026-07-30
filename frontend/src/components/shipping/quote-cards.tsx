@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Snowflake, Zap, Leaf, Truck, Clock, Star, CheckCircle2 } from "lucide-react";
 import type { ShipQuote, ShipServiceType } from "@shared/schema";
+import { useCurrency } from "@/contexts/currency-context";
 
 const serviceIcon: Record<ShipServiceType, typeof Truck> = {
   standard: Truck,
@@ -36,6 +37,7 @@ interface Props {
 
 export function QuoteCards({ quotes, selectedId, onSelect, loading }: Props) {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const getServiceLabel = (s: ShipServiceType) => {
     const key: Record<ShipServiceType, string> = {
       standard: "shipping_quote_cards.service_standard",
@@ -93,7 +95,7 @@ export function QuoteCards({ quotes, selectedId, onSelect, loading }: Props) {
                       <p className="text-[11px] text-muted-foreground">{getServiceLabel(q.service)} · {q.notes}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-base" data-testid={`text-price-${q.partnerId}`}>£{q.price.toFixed(2)}</p>
+                      <p className="font-bold text-base" data-testid={`text-price-${q.partnerId}`}>{format(q.price, { sourceCurrency: q.currency || "GBP", includeCode: true })}</p>
                       <p className="text-[11px] text-muted-foreground">{t("shipping_quote_cards.incl_fees")}</p>
                     </div>
                   </div>

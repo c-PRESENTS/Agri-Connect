@@ -3,6 +3,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Sprout, Globe, Truck, ShieldCheck, Users, Leaf } from "lucide-react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
+import { useEffect } from "react";
+
+function preloadAboutDestinations() {
+  void Promise.allSettled([
+    import("@/pages/support"),
+    import("@/pages/farmers-help"),
+    import("@/pages/government-schemes"),
+    import("@/pages/logistics"),
+  ]);
+}
 
 export default function AboutPage() {
   const { t } = useTranslation();
@@ -15,6 +25,14 @@ export default function AboutPage() {
     { icon: Sprout, title: "knowledge_support", text: "knowledge_support_desc" },
   ];
   const values = ["fairness", "access", "transparency", "resilience"];
+
+  useEffect(() => {
+    // These routes are the primary calls to action at the bottom of this page.
+    // Warm their lazy chunks while the user reads About so navigation does not
+    // sit behind the route-level loading boundary.
+    const preloadTimer = window.setTimeout(preloadAboutDestinations, 0);
+    return () => window.clearTimeout(preloadTimer);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">

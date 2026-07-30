@@ -6,6 +6,7 @@ import { usePageTranslation } from "@/hooks/use-page-translation";
 import { SeoManager } from "@/components/seo-manager";
 import { AppRoutes } from "@/app/routes";
 import { AppShell } from "@/app/shell";
+import { Loader2 } from "lucide-react";
 
 const AIChatAssistant = lazy(() => import("@/components/ai-chat-assistant").then((module) => ({ default: module.AIChatAssistant })));
 const ProfileWizard = lazy(() => import("@/components/profile-wizard").then((module) => ({ default: module.ProfileWizard })));
@@ -17,7 +18,19 @@ const InstallPrompt = lazy(() => import("@/components/install-prompt").then((mod
 const RTL_LANGS = new Set(["ar", "ur", "fa", "he"]);
 
 function RouteFallback() {
-  return <div className="min-h-screen bg-background" aria-busy="true" />;
+  return (
+    <div
+      className="flex min-h-screen items-center justify-center bg-background"
+      aria-busy="true"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-3 text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" aria-hidden="true" />
+        <p className="text-sm font-semibold text-emerald-800">Loading page…</p>
+      </div>
+    </div>
+  );
 }
 
 function ShellFallback() {

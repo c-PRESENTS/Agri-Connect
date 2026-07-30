@@ -26,11 +26,14 @@ export default function PaymentResultPage() {
   });
   const status = query.data?.attempt.paymentStatus ?? "processing";
   useEffect(() => {
-    if (status === "succeeded") {
+    if (status === "succeeded" && query.data) {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      queryClient.removeQueries({ queryKey: ["/api/checkout/quotes"] });
+      queryClient.removeQueries({ queryKey: ["/api/payments/methods"] });
+      navigate(`/order-confirmation/${query.data.order.id}`, { replace: true });
     }
-  }, [status]);
+  }, [navigate, query.data, status]);
   return (
     <div className="min-h-screen bg-background">
       <TopNavigation />
@@ -39,14 +42,12 @@ export default function PaymentResultPage() {
           <CardContent className="p-8">
             <PaymentStatePanel status={query.isError ? "unavailable" : status} />
             <div className="flex gap-2 justify-center mt-6">
-              {status === "succeeded" && query.data ? (
-                <Button onClick={() => navigate(`/orders/${query.data.order.id}`)}>View order</Button>
-              ) : (
+              {status !== "succeeded" && (
                 <Button variant="outline" onClick={() => query.refetch()}>Check again</Button>
               )}
-              <Button variant="outline" onClick={() => navigate(status === "succeeded" ? "/" : "/checkout")}>
-                {status === "succeeded" ? "Continue shopping" : "Return to checkout"}
-              </Button>
+              {status !== "succeeded" && (
+                <Button onClick={() => navigate("/checkout")}>Choose another payment method</Button>
+              )}
             </div>
           </CardContent>
         </Card>

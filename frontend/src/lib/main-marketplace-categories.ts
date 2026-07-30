@@ -1,6 +1,7 @@
 export const MAIN_MARKETPLACE_CATEGORIES = [
   { id: "daily-needs", label: "Daily" },
   { id: "fresh-produce", label: "Fresh" },
+  { id: "livestock", label: "Livestock" },
   { id: "inputs-tools", label: "Inputs" },
   { id: "processed", label: "Processed" },
   { id: "specialty", label: "Specialty" },

@@ -4,6 +4,7 @@ import { CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface BuyerTransaction {
   id: string;
@@ -19,6 +20,7 @@ interface BuyerTransaction {
 }
 
 export function BuyerTransactionHistory() {
+  const { format } = useCurrency();
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const { data, isLoading } = useQuery<{ items: BuyerTransaction[]; total: number }>({
@@ -57,10 +59,10 @@ export function BuyerTransactionHistory() {
                     {(Number(transaction.refunded_minor) > 0 || transaction.dispute_count > 0) && (
                       <p className="mt-1 text-xs text-muted-foreground">
                         {Number(transaction.refunded_minor) > 0
-                          ? `Refunded ${new Intl.NumberFormat("en-GB", {
-                              style: "currency",
-                              currency: transaction.currency,
-                            }).format(Number(transaction.refunded_minor) / 100)}`
+                          ? `Refunded ${format(Number(transaction.refunded_minor) / 100, {
+                              sourceCurrency: transaction.currency,
+                              includeCode: true,
+                            })}`
                           : ""}
                         {transaction.dispute_count > 0
                           ? ` · ${transaction.dispute_count} dispute${transaction.dispute_count === 1 ? "" : "s"}`
@@ -70,10 +72,10 @@ export function BuyerTransactionHistory() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold">
-                      {new Intl.NumberFormat("en-GB", {
-                        style: "currency",
-                        currency: transaction.currency,
-                      }).format(Number(transaction.amount_minor) / 100)}
+                      {format(Number(transaction.amount_minor) / 100, {
+                        sourceCurrency: transaction.currency,
+                        includeCode: true,
+                      })}
                     </p>
                     <Badge variant={transaction.payment_status === "succeeded" ? "default" : "secondary"}>
                       {transaction.payment_status}

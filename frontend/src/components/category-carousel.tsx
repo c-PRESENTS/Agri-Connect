@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useState, useRef } from "react";
+import { Link } from "wouter";
 import { categoryImages, getShoppableCategories } from "@/lib/categories";
 import { getCategoryIconComponent } from "@/lib/category-icons";
 import { MAIN_MARKETPLACE_CATEGORIES } from "@/lib/main-marketplace-categories";
@@ -12,7 +13,6 @@ import type { Product } from "@shared/schema";
 interface CategoryCarouselProps {
   onCategorySelect: (categoryId: string, subcategoryId?: string) => void;
   products: Product[];
-  currencySymbol: string;
   onAddToCart: (product: Product) => void;
 }
 
@@ -25,7 +25,6 @@ const carouselCategories = MAIN_MARKETPLACE_CATEGORIES.flatMap(({ id }) => {
 export function CategoryCarousel({ 
   onCategorySelect, 
   products,
-  currencySymbol,
   onAddToCart
 }: CategoryCarouselProps) {
   const { t } = useTranslation();
@@ -58,10 +57,15 @@ export function CategoryCarousel({
             </span>
             <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold mt-0.5 sm:mt-1 md:mt-2 leading-tight">
               {t("category.explore_description")}
-              <span className="bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent ml-2">
-                {t("category.view_all_categories")}
-              </span>
             </h2>
+            <Link
+              href="/categories"
+              className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 bg-gradient-to-r from-primary to-green-600 bg-clip-text text-sm sm:text-base md:text-lg font-semibold text-transparent hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm"
+              data-testid="link-view-all-categories"
+            >
+                {t("category.view_all_categories")}
+              <ArrowRight className="h-4 w-4 text-green-600" aria-hidden="true" />
+            </Link>
           </div>
           <div className="hidden md:flex gap-2">
             <Button 

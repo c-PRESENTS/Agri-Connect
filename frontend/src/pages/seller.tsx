@@ -26,6 +26,7 @@ import { resolveProductImageForOrderItem } from "@/lib/product-images";
 import { SellerPaymentAccounts } from "@/components/payments/seller-payment-accounts";
 import { SellerPayoutSummary } from "@/components/payments/seller-payout-summary";
 import { SellerDisputes } from "@/components/payments/seller-disputes";
+import { useCurrency } from "@/contexts/currency-context";
 
 type SellerDashboard = {
   products: Product[];
@@ -68,6 +69,7 @@ const tips = [
 type TabId = "overview" | "orders";
 
 export default function SellerPage() {
+  const { format } = useCurrency();
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
@@ -196,7 +198,7 @@ export default function SellerPage() {
             {[
               { label: t("seller.total_products"),    value: myProducts.length || "0",          icon: Package,    color: "text-emerald-400" },
               { label: t("seller.pending_orders"), value: pendingOrders || "—",              icon: Clock,      color: "text-amber-400" },
-              { label: t("seller.total_revenue"),        value: totalRevenue > 0 ? `£${totalRevenue.toFixed(0)}` : "—", icon: DollarSign, color: "text-sky-400" },
+              { label: t("seller.total_revenue"),        value: totalRevenue > 0 ? format(totalRevenue, { includeCode: true }) : "—", icon: DollarSign, color: "text-sky-400" },
             ].map((s) => (
               <div key={s.label} className="bg-white/10 border border-white/15 rounded-xl px-3 py-2.5 flex items-center gap-2">
                 <s.icon className={`h-5 w-5 ${s.color} flex-shrink-0`} />
@@ -402,7 +404,7 @@ export default function SellerPage() {
                               </Badge>
                             </div>
                             <div className="text-right">
-                              <p className="font-bold text-sm">£{myTotal.toFixed(2)}</p>
+                              <p className="font-bold text-sm">{format(myTotal, { includeCode: true })}</p>
                               <p className="text-[10px] text-muted-foreground">
                                 {new Date(order.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                               </p>

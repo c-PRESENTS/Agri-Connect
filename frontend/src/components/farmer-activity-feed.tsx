@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { DemandAlert } from "@shared/schema";
 import { motion } from "framer-motion";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface Activity {
   id: string;
@@ -19,7 +20,6 @@ interface Activity {
 interface FarmerActivityFeedProps {
   activities: Activity[];
   demandAlerts: DemandAlert[];
-  currencySymbol?: string;
   onAcceptDemand?: (alertId: string) => void;
 }
 
@@ -46,9 +46,9 @@ const buyerIcons: Record<string, React.ReactNode> = {
 export function FarmerActivityFeed({
   activities,
   demandAlerts,
-  currencySymbol = "₹",
   onAcceptDemand,
 }: FarmerActivityFeedProps) {
+  const { format } = useCurrency();
   const { t } = useTranslation();
   return (
     <div className="space-y-4 p-4">
@@ -87,7 +87,7 @@ export function FarmerActivityFeed({
                       <span className="text-xs text-muted-foreground">{activity.time}</span>
                     </div>
                     <div className="text-right">
-                      <span className="font-bold">{currencySymbol}{activity.amount.toLocaleString()}</span>
+                      <span className="font-bold">{format(activity.amount, { includeCode: true })}</span>
                       <Badge variant="outline" className={`ml-2 ${status.color}`}>
                         {t(status.label)}
                       </Badge>

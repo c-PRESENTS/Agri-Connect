@@ -12,9 +12,9 @@ export function PaymentStatePanel({ status }: { status: string }) {
       <h1 className="text-2xl font-black capitalize" data-testid="payment-state">{status.replaceAll("_", " ")}</h1>
       <p className="text-sm text-muted-foreground mt-2">
         {succeeded
-          ? "Payment was verified by the server."
+          ? "Payment was verified by the server. Opening your order confirmation…"
           : failed
-            ? "No successful payment was confirmed."
+            ? "Stripe did not confirm a successful payment. AgriConnect has not marked this order as paid."
             : unavailable
               ? "AgriConnect cannot reach the payment service. Your payment has not been marked as failed."
               : "AgriConnect is checking the provider result."}

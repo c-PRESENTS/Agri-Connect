@@ -11,7 +11,9 @@ import { Truck, Package, Send, Calendar, Building2, Search, MapPin, Clock, Chevr
 import { SendParcelWizard } from "@/components/shipping/send-parcel-wizard";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ComingSoonBadge } from "@/components/coming-soon-badge";
 import type { Shipment, ShipmentStatus } from "@shared/schema";
+import { useCurrency } from "@/contexts/currency-context";
 
 const statusColor: Record<ShipmentStatus, string> = {
   quote_pending: "bg-muted text-foreground",
@@ -41,6 +43,7 @@ const shipTabClass =
   "flex-col gap-1 rounded-md py-2 text-[10px] font-extrabold text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 sm:text-xs data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-sm";
 
 export default function ShipPage() {
+  const { format } = useCurrency();
   const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [trackInput, setTrackInput] = useState("");
@@ -76,6 +79,7 @@ export default function ShipPage() {
           <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
             <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             {t("ship.title")}
+            <ComingSoonBadge />
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">{t("ship.description")}</p>
         </div>
@@ -152,7 +156,7 @@ export default function ShipPage() {
                       )}
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-sm">£{s.price.toFixed(2)}</p>
+                      <p className="font-bold text-sm">{format(s.price, { sourceCurrency: s.currency || "GBP", includeCode: true })}</p>
                       <Button size="sm" variant="outline" className="h-7 text-[11px] mt-1" onClick={() => navigate(`/ship/track/${s.trackingId}`)} data-testid={`button-track-${s.id}`}>
                         {t("ship.track_parcel_button")}
                       </Button>
@@ -210,7 +214,7 @@ export default function ShipPage() {
                       )}
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-sm">£{s.price.toFixed(2)}</p>
+                      <p className="font-bold text-sm">{format(s.price, { sourceCurrency: s.currency || "GBP", includeCode: true })}</p>
                     </div>
                   </div>
                   <div className="flex gap-2 pt-1">
@@ -254,9 +258,9 @@ export default function ShipPage() {
             </CardContent>
           </Card>
           {[
-            { id: "mr-1", name: "Devon → Bristol → Cardiff", days: "Mon · Wed · Fri", time: "06:00", capacity: "240 / 500 kg", price: "from £4.50" },
-            { id: "mr-2", name: "Norfolk → Cambridge → London", days: "Tue · Thu · Sat", time: "05:30", capacity: "120 / 400 kg", price: "from £5.20" },
-            { id: "mr-3", name: "Yorkshire → Manchester → Liverpool", days: "Daily", time: "07:00", capacity: "320 / 600 kg", price: "from £4.80" },
+            { id: "mr-1", name: "Devon → Bristol → Cardiff", days: "Mon · Wed · Fri", time: "06:00", capacity: "240 / 500 kg", price: 4.5 },
+            { id: "mr-2", name: "Norfolk → Cambridge → London", days: "Tue · Thu · Sat", time: "05:30", capacity: "120 / 400 kg", price: 5.2 },
+            { id: "mr-3", name: "Yorkshire → Manchester → Liverpool", days: "Daily", time: "07:00", capacity: "320 / 600 kg", price: 4.8 },
           ].map((r) => (
             <Card key={r.id} className="hover:border-primary/50 transition-colors" data-testid={`card-milkrun-${r.id}`}>
               <CardContent className="p-3 sm:p-4">
@@ -269,7 +273,7 @@ export default function ShipPage() {
                     <p className="text-[11px] text-muted-foreground mt-1">Capacity: {r.capacity}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-sm">{r.price}</p>
+                    <p className="font-bold text-sm">from {format(r.price, { includeCode: true })}</p>
                     <Button size="sm" variant="outline" className="h-7 text-[11px] mt-1" onClick={() => setTab("send")} data-testid={`button-join-${r.id}`}>Join run</Button>
                   </div>
                 </div>
@@ -304,15 +308,15 @@ export default function ShipPage() {
           <div>
             <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Building2 className="h-4 w-4" />{t("ship.parcels_tab")}</h3>
             {[
-              { name: "Royal Mail", icon: Truck, color: "text-red-600", svc: "UK · Tracked 24/48", from: "from £4.99" },
-              { name: "Evri", icon: Truck, color: "text-blue-600", svc: "UK · cheapest courier", from: "from £3.95" },
-              { name: "DPD Local", icon: Zap, color: "text-orange-500", svc: "UK + Europe · next-day", from: "from £9.99" },
-              { name: "Stuart Same-Day", icon: Zap, color: "text-amber-500", svc: "UK · same-day local", from: "from £14.99" },
-              { name: "AgriConnect Cold-Chain Network", icon: Snowflake, color: "text-blue-500", svc: "Europe · refrigerated 2–8°C", from: "from £18.00" },
-              { name: "Farmer Milk Run", icon: Leaf, color: "text-green-600", svc: "UK · shared route · lowest CO₂", from: "from £6.99" },
-              { name: "UPS", icon: Truck, color: "text-amber-700", svc: "Worldwide · tracked next-day", from: "from £12.50" },
-              { name: "FedEx International Priority", icon: Globe, color: "text-purple-600", svc: "Worldwide · 1–3 day air", from: "from £25.00" },
-              { name: "DHL Express Worldwide", icon: Globe, color: "text-yellow-600", svc: "Worldwide · cold-chain capable", from: "from £28.00" },
+              { name: "Royal Mail", icon: Truck, color: "text-red-600", svc: "UK · Tracked 24/48", from: 4.99 },
+              { name: "Evri", icon: Truck, color: "text-blue-600", svc: "UK · cheapest courier", from: 3.95 },
+              { name: "DPD Local", icon: Zap, color: "text-orange-500", svc: "UK + Europe · next-day", from: 9.99 },
+              { name: "Stuart Same-Day", icon: Zap, color: "text-amber-500", svc: "UK · same-day local", from: 14.99 },
+              { name: "AgriConnect Cold-Chain Network", icon: Snowflake, color: "text-blue-500", svc: "Europe · refrigerated 2–8°C", from: 18 },
+              { name: "Farmer Milk Run", icon: Leaf, color: "text-green-600", svc: "UK · shared route · lowest CO₂", from: 6.99 },
+              { name: "UPS", icon: Truck, color: "text-amber-700", svc: "Worldwide · tracked next-day", from: 12.5 },
+              { name: "FedEx International Priority", icon: Globe, color: "text-purple-600", svc: "Worldwide · 1–3 day air", from: 25 },
+              { name: "DHL Express Worldwide", icon: Globe, color: "text-yellow-600", svc: "Worldwide · cold-chain capable", from: 28 },
             ].map((p) => {
               const Icon = p.icon;
               return (
@@ -324,7 +328,7 @@ export default function ShipPage() {
                       <p className="text-[11px] text-muted-foreground truncate">{p.svc}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-xs font-semibold">{p.from}</p>
+                      <p className="text-xs font-semibold">from {format(p.from, { includeCode: true })}</p>
                       <Badge variant="secondary" className="text-[10px] h-4">{t("common.live")}</Badge>
                     </div>
                   </CardContent>

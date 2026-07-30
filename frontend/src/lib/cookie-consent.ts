@@ -1,6 +1,7 @@
 export const COOKIE_CONSENT_STORAGE_KEY = "agriconnect_cookie_consent";
 export const COOKIE_CONSENT_VERSION = "1.0";
 export const COOKIE_SETTINGS_HASH = "#cookie-settings";
+export const COOKIE_CONSENT_VISIBILITY_EVENT = "agriconnect:cookie-consent-visibility";
 
 export type CookieConsentCategory = "essential" | "analytics" | "marketing" | "preferences";
 
@@ -53,6 +54,9 @@ export function hasCookieConsent(category: CookieConsentCategory): boolean {
 }
 
 export function openCookieSettings() {
+  window.dispatchEvent(
+    new CustomEvent(COOKIE_CONSENT_VISIBILITY_EVENT, { detail: true }),
+  );
   if (window.location.hash !== COOKIE_SETTINGS_HASH) {
     window.location.hash = COOKIE_SETTINGS_HASH;
   }
