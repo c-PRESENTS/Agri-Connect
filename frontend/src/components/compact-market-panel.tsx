@@ -6,7 +6,7 @@ import { ChevronRight, ChevronLeft, ShoppingCart, Star, Leaf } from "lucide-reac
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
 import { FavoriteProductButton } from "./favorite-product-button";
 import { useCurrency } from "@/contexts/currency-context";
@@ -112,7 +112,7 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
                   >
                     <div className="relative w-full aspect-[3/2] overflow-hidden bg-muted">
                       <img
-                        src={getProductImage(p.name, p.categoryId, "sm")}
+                        src={resolveProductImageForProduct(p).src}
                         alt={p.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={e => {

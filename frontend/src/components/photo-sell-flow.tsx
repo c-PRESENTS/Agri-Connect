@@ -19,9 +19,10 @@ import { getSellerTaxonomy } from "@/lib/categories";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface PhotoSellFlowProps {
-  onComplete?: (data: AIDetectionResult & { image: string }) => void;
+  onComplete?: (data: AIDetectionResult & { image: string }) => void | Promise<void>;
   onCancel?: () => void;
   onManualListing?: () => void;
+  onViewListing?: (data: AIDetectionResult) => void;
 }
 
 type Step = "capture" | "analyzing" | "results" | "success";
@@ -54,13 +55,15 @@ const mockDetect = (): AIDetectionResult => {
   };
 };
 
-export function PhotoSellFlow({ onComplete, onCancel, onManualListing }: PhotoSellFlowProps) {
+export function PhotoSellFlow({ onComplete, onCancel, onManualListing, onViewListing }: PhotoSellFlowProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>("capture");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [detection, setDetection] = useState<AIDetectionResult | null>(null);
   const [editedDetection, setEditedDetection] = useState<AIDetectionResult | null>(null);
   const [analyzeProgress, setAnalyzeProgress] = useState(0);
+  const [listingError, setListingError] = useState<string | null>(null);
+  const [isCreatingListing, setIsCreatingListing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sellerTaxonomy = getSellerTaxonomy();
   const selectedCategory = sellerTaxonomy.find((category) => category.id === editedDetection?.suggestedCategory);
@@ -100,13 +103,19 @@ export function PhotoSellFlow({ onComplete, onCancel, onManualListing }: PhotoSe
     }, 200);
   };
 
-  const handleAccept = () => {
-    setStep("success");
-    setTimeout(() => {
-      if (editedDetection && capturedImage) {
-        onComplete?.({ ...editedDetection, image: capturedImage });
-      }
-    }, 2000);
+  const handleAccept = async () => {
+    if (!editedDetection || !capturedImage || isCreatingListing) return;
+
+    setListingError(null);
+    setIsCreatingListing(true);
+    try {
+      await onComplete?.({ ...editedDetection, image: capturedImage });
+      setStep("success");
+    } catch (error) {
+      setListingError(error instanceof Error ? error.message.replace(/^\d+:\s*/, "") : "Unable to create this listing.");
+    } finally {
+      setIsCreatingListing(false);
+    }
   };
 
   const handleEdit = (field: keyof AIDetectionResult, value: string | number) => {
@@ -328,8 +337,9 @@ export function PhotoSellFlow({ onComplete, onCancel, onManualListing }: PhotoSe
             </Card>
 
             <div className="space-y-3">
-              <Button className="w-full gap-2" size="lg" onClick={handleAccept} data-testid="button-accept-list">
-                <Check className="h-5 w-5" />
+              {listingError && <p className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" data-testid="photo-sell-listing-error">{listingError}</p>}
+              <Button className="w-full gap-2" size="lg" onClick={handleAccept} disabled={isCreatingListing} data-testid="button-accept-list">
+                {isCreatingListing ? <Sparkles className="h-5 w-5 animate-pulse" /> : <Check className="h-5 w-5" />}
                 {t("photo_sell.accept_list")}
               </Button>
               <Button variant="outline" className="w-full gap-2" size="lg" data-testid="button-start-auction">
@@ -373,7 +383,11 @@ export function PhotoSellFlow({ onComplete, onCancel, onManualListing }: PhotoSe
             </p>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={onCancel} data-testid="button-view-listing">
+              <Button
+                variant="outline"
+                onClick={() => editedDetection && onViewListing?.(editedDetection)}
+                data-testid="button-view-listing"
+              >
                 {t("photo_sell.view_listing")}
               </Button>
               <Button

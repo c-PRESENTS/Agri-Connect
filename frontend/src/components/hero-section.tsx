@@ -15,8 +15,8 @@ import { LeafletFarmerMap } from "./leaflet-farmer-map";
 import { HeroServiceGrid } from "./hero-service-grid";
 import { UserBookmarks } from "./user-bookmarks";
 import type { Product } from "@shared/schema";
-import { getProductImage } from "@/lib/product-images";
-import { categoryImages } from "@/lib/categories";
+import { resolveProductImageForProduct } from "@/lib/product-images";
+import { categoryImages, getShoppableCategories } from "@/lib/categories";
 import { MAIN_MARKETPLACE_CATEGORIES } from "@/lib/main-marketplace-categories";
 import { FavoriteProductButton } from "./favorite-product-button";
 import { buildCategoryBrowseUrl } from "@/lib/product-navigation";
@@ -37,6 +37,42 @@ const TRUST_BADGES = [
   { icon: Leaf, label: "home.natural", color: "text-emerald-300" },
   { icon: Globe, label: "home.regions", color: "text-purple-300" },
 ];
+
+type HomeCategoryTile = {
+  id: string;
+  label: string;
+  categoryId: string;
+  subcategoryId?: string;
+  imageId: string;
+  isSubcategory: boolean;
+};
+
+const shoppableCategoriesById = new Map(
+  getShoppableCategories().map((category) => [category.id, category]),
+);
+
+const HOME_CATEGORY_TILES: HomeCategoryTile[] = MAIN_MARKETPLACE_CATEGORIES.flatMap(({ id, label }) => {
+  const category = shoppableCategoriesById.get(id);
+  if (!category) return [];
+
+  return [
+    {
+      id: category.id,
+      label,
+      categoryId: category.id,
+      imageId: category.id,
+      isSubcategory: false,
+    },
+    ...category.subcategories.map((subcategory) => ({
+      id: `${category.id}-${subcategory.id}`,
+      label: subcategory.name,
+      categoryId: category.id,
+      subcategoryId: subcategory.id,
+      imageId: subcategory.id,
+      isSubcategory: true,
+    })),
+  ];
+});
 
 type HeroMapMode = "products" | "live-needs" | "farms-nearby" | "land-lots";
 
@@ -148,6 +184,17 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
     window.dispatchEvent(
       new CustomEvent("agri-subcategory-open", {
         detail: product.categoryId,
+      }),
+    );
+  };
+  const openHomeCategoryTile = (tile: HomeCategoryTile) => {
+    const params = new URLSearchParams({ category: tile.categoryId });
+    if (tile.subcategoryId) params.set("subcategory", tile.subcategoryId);
+
+    navigate(`/?${params.toString()}`);
+    window.dispatchEvent(
+      new CustomEvent("agri-subcategory-open", {
+        detail: tile.categoryId,
       }),
     );
   };
@@ -460,7 +507,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                   className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border border-border/50 bg-muted mb-1 sm:mb-1.5 shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/30 group-hover:scale-[1.02]"
                 >
                   <img
-                    src={getProductImage(product.name, product.categoryId, "sm", product.subcategoryId)}
+                    src={resolveProductImageForProduct(product).src}
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     loading="lazy"
@@ -539,7 +586,7 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                     className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 border-amber-200/60 dark:border-amber-700/40 bg-muted mb-1 sm:mb-1.5 shadow-md transition-all group-hover:shadow-lg group-hover:border-amber-400 group-hover:scale-[1.02]"
                   >
                     <img
-                      src={getProductImage(product.name, product.categoryId, "sm", product.subcategoryId)}
+                      src={resolveProductImageForProduct(product).src}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
@@ -629,21 +676,23 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
               <div className="h-1.5 w-1.5 sm:h-2.5 sm:w-2.5 rounded-full bg-primary flex-shrink-0" />
               <h2 className="text-[11px] sm:text-base font-black uppercase tracking-[0.12em] text-foreground">{t("home.all_categories")}</h2>
               <span className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold">
-                ({MAIN_MARKETPLACE_CATEGORIES.length})
+                ({HOME_CATEGORY_TILES.length})
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-11">
-              {MAIN_MARKETPLACE_CATEGORIES.map(({ id, label }) => {
-                const image = categoryImages[id];
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11">
+              {HOME_CATEGORY_TILES.map((tile) => {
+                const image = categoryImages[tile.imageId] || categoryImages[tile.categoryId];
                 return (
                   <button
-                    key={id}
+                    key={tile.id}
                     type="button"
-                    onClick={() => navigate(`/?category=${id}`)}
-                    data-testid={`main-category-${id}`}
-                    aria-label={`Open ${label} category`}
-                    className="group relative aspect-[4/3] min-w-0 overflow-hidden rounded-xl border border-border/60 bg-muted text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0"
+                    onClick={() => openHomeCategoryTile(tile)}
+                    data-testid={`${tile.isSubcategory ? "subcategory" : "main-category"}-${tile.id}`}
+                    aria-label={`Open ${tile.label} ${tile.isSubcategory ? "subcategory" : "category"}`}
+                    className={`group relative aspect-[4/3] min-w-0 overflow-hidden rounded-xl border bg-muted text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0 ${
+                      tile.isSubcategory ? "border-border/45" : "border-primary/60"
+                    }`}
                   >
                     {image ? (
                       <img
@@ -654,9 +703,16 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/50 to-primary/15" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent transition-colors group-hover:from-primary/90" />
-                    <span className="absolute inset-x-1.5 bottom-1.5 truncate text-center text-[9px] font-black text-white drop-shadow sm:text-[11px]">
-                      {label}
+                    <div className={`absolute inset-0 bg-gradient-to-t via-black/20 to-transparent transition-colors group-hover:from-primary/90 ${
+                      tile.isSubcategory ? "from-black/80" : "from-black/90"
+                    }`} />
+                    {tile.isSubcategory && (
+                      <span className="absolute left-1.5 top-1.5 rounded-full bg-white/85 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wide text-primary shadow-sm">
+                        Sub
+                      </span>
+                    )}
+                    <span className="absolute inset-x-1.5 bottom-1.5 line-clamp-2 text-center text-[8px] font-black leading-tight text-white drop-shadow sm:text-[10px]">
+                      {tile.label}
                     </span>
                   </button>
                 );

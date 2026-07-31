@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GitCompareArrows, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCompare } from "@/hooks/use-compare";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import { useTranslation } from "react-i18next";
 import type { Product } from "@shared/schema";
 
@@ -42,7 +42,7 @@ export function CompareBar() {
               <div key={p.id} className="relative group" data-testid={`compare-item-${p.id}`}>
                 <div className="w-11 h-11 rounded-lg overflow-hidden border border-border bg-muted">
                   <img
-                    src={getProductImage(p.name, p.categoryId, "sm")}
+                    src={resolveProductImageForProduct(p).src}
                     alt={p.name}
                     className="w-full h-full object-cover"
                   />

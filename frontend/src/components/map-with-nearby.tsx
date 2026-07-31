@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapPin, Star, Store, Navigation, Layers } from "lucide-react";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
 import { useCurrency } from "@/contexts/currency-context";
 
@@ -237,7 +237,7 @@ export function MapWithNearby({
               </div>
             ) : (
               visibleSellers.map((s) => {
-                const img = getProductImage(s.topProduct.name, s.topProduct.categoryId, "sm");
+                const img = resolveProductImageForProduct(s.topProduct).src;
                 return (
                   <Link
                     key={s.id}
