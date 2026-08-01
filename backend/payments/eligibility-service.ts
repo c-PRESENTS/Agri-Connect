@@ -2,6 +2,8 @@ import { paymentRuntimeConfig, type PaymentCurrency } from "./config";
 import { paymentOperationsRepository } from "../repositories/payment-operations-repository";
 import { providerRegistry } from "./provider-registry";
 import type { ProviderName, VerifiedProviderCapabilities } from "./types";
+import { hasStripeTestSecretKey, hasStripeWebhookSecret } from "./stripe";
+import { hasRazorpayTestCredentials, hasRazorpayWebhookSecret } from "./razorpay";
 
 export interface PaymentEligibility {
   provider: ProviderName;
@@ -31,6 +33,64 @@ export class EligibilityService {
     }
     if (provider === "mock" && (process.env.NODE_ENV === "production" || paymentRuntimeConfig.mode === "live")) {
       reasons.push("mock_not_available");
+    }
+    if (provider === "razorpay" && paymentRuntimeConfig.mode === "sandbox") {
+      if (!hasRazorpayTestCredentials()) reasons.push("razorpay_test_credentials_missing");
+      if (!hasRazorpayWebhookSecret()) reasons.push("razorpay_webhook_secret_missing");
+    }
+    const stripeDevelopmentCheckout =
+      provider === "stripe" &&
+      process.env.NODE_ENV !== "production" &&
+      paymentRuntimeConfig.mode === "sandbox" &&
+      paymentRuntimeConfig.requestedProviders.includes("stripe") &&
+      hasStripeTestSecretKey() &&
+      hasStripeWebhookSecret();
+    if (stripeDevelopmentCheckout && reasons.length === 0) {
+      const now = new Date();
+      return {
+        provider,
+        eligible: true,
+        reasons: [],
+        capabilities: {
+          maximumSellersPerCheckout: 25,
+          maximumAllocationsPerPayment: 100,
+          supportsPartialSellerRefund: true,
+          supportsIndependentSellerRelease: true,
+          supportsIdempotentPaymentCreation: true,
+          supportsLookupByMerchantReference: true,
+          verifiedAt: now,
+          expiresAt: new Date(now.getTime() + 60 * 60 * 1000),
+          source: "approved_configuration",
+          sourceReference: "stripe-sandbox-checkout",
+        },
+      };
+    }
+    const razorpaySandboxCheckout =
+      provider === "razorpay" &&
+      currency === "INR" &&
+      paymentRuntimeConfig.mode === "sandbox" &&
+      paymentRuntimeConfig.requestedProviders.includes("razorpay") &&
+      hasRazorpayTestCredentials() &&
+      hasRazorpayWebhookSecret();
+    if (razorpaySandboxCheckout && reasons.length === 0) {
+      const now = new Date();
+      return {
+        provider,
+        eligible: true,
+        reasons: [],
+        capabilities: {
+          maximumSellersPerCheckout: 25,
+          maximumAllocationsPerPayment: 100,
+          supportsPartialSellerRefund: true,
+          supportsIndependentSellerRelease: false,
+          supportsIdempotentPaymentCreation: true,
+          supportsLookupByMerchantReference: false,
+          verifiedAt: now,
+          expiresAt: new Date(now.getTime() + 60 * 60 * 1000),
+          source: "approved_configuration",
+          sourceReference: "razorpay-sandbox-checkout",
+        },
+      };
     }
     if (provider !== "mock") {
       if (paymentRuntimeConfig.mode === "mock") reasons.push("real_provider_requires_sandbox_or_live_mode");

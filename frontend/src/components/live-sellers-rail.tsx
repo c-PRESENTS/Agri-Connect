@@ -11,7 +11,7 @@ import {
   Star, MapPin, Wifi, Activity, RefreshCw, X, Package,
   Phone, MessageCircle, ShoppingBag, ChevronRight,
 } from "lucide-react";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import { isSellerOnline } from "@/lib/seller-presence";
 import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product } from "@shared/schema";
@@ -202,7 +202,7 @@ export function LiveSellersRail({
             ) : (
               sellers.map((s) => {
                 const top = s.topProducts[0];
-                const thumb = top ? getProductImage(top.name, top.categoryId, "sm") : s.avatar;
+                const thumb = top ? resolveProductImageForProduct(top).src : s.avatar;
                 const isActive = selectedId === s.id;
 
                 return (
@@ -309,7 +309,7 @@ export function LiveSellersRail({
                               >
                                 <div className="aspect-square bg-muted overflow-hidden">
                                   <img
-                                    src={getProductImage(p.name, p.categoryId, "sm")}
+                                    src={resolveProductImageForProduct(p).src}
                                     alt={p.name}
                                     loading="lazy"
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"

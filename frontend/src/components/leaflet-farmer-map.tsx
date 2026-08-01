@@ -12,7 +12,7 @@ import {
   BarChart3, Flame, Clock, Phone, CheckCircle2, AlertCircle,
   Locate, AlertTriangle
 } from "lucide-react";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import { isSellerOnline } from "@/lib/seller-presence";
 import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product, LocalNeed } from "@shared/schema";
@@ -479,7 +479,7 @@ export function LeafletFarmerMap({
                 </div>
                 {farmer.topProduct && (
                   <div className="mb-2 rounded-lg overflow-hidden border bg-muted/20">
-                    <img src={getProductImage(farmer.topProduct.name, farmer.topProduct.categoryId, "sm")} alt={farmer.topProduct.name} className="w-full h-16 object-cover" />
+                    <img src={resolveProductImageForProduct(farmer.topProduct).src} alt={farmer.topProduct.name} className="w-full h-16 object-cover" />
                     <div className="px-2 py-1 flex items-center justify-between">
                       <span className="text-[11px] font-medium truncate">{farmer.topProduct.name}</span>
                       <Badge className="text-[9px] bg-primary/10 text-primary border-none">{format(farmer.topProduct.price, { sourceCurrency: farmer.topProduct.currency || "GBP" })}/{farmer.topProduct.unit}</Badge>

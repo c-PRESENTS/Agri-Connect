@@ -3,6 +3,10 @@ import { paymentRuntimeConfig, type PaymentProvider } from "./config";
 import { paymentMetrics } from "./observability";
 import { providerRegistry } from "./provider-registry";
 import { logPaymentFailure, paymentErrorCode } from "./security";
+import {
+  getConfiguredStripeSecretKey,
+  hasStripeWebhookSecret,
+} from "./stripe";
 
 export interface ProviderReadiness {
   provider: PaymentProvider;
@@ -24,7 +28,9 @@ function configured(...names: string[]): boolean {
 }
 
 function credentialsConfigured(provider: PaymentProvider): boolean {
-  if (provider === "stripe") return configured("STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET");
+  if (provider === "stripe") {
+    return Boolean(getConfiguredStripeSecretKey() && hasStripeWebhookSecret());
+  }
   if (provider === "paypal") {
     return configured(
       "PAYPAL_CLIENT_ID",
@@ -40,7 +46,11 @@ function credentialsConfigured(provider: PaymentProvider): boolean {
 function credentialModeMatches(provider: PaymentProvider): boolean {
   const live = paymentRuntimeConfig.mode === "live";
   if (provider === "stripe") {
-    return process.env.STRIPE_SECRET_KEY?.startsWith(live ? "sk_live_" : "sk_test_") ?? false;
+    return (
+      getConfiguredStripeSecretKey()?.startsWith(
+        live ? "sk_live_" : "sk_test_",
+      ) ?? false
+    );
   }
   if (provider === "paypal") {
     return (process.env.PAYPAL_ENV === "live") === live;

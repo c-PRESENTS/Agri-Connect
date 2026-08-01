@@ -59,6 +59,25 @@ function inferSearchExpansion(query: string): { expandedQuery: string; category:
   return { expandedQuery: joined || query, category, intent };
 }
 
+function localVoiceFallback(transcript: string, language: string) {
+  const prompts: Record<string, string> = {
+    en: `Searching for ${transcript}`,
+    hi: `${transcript} खोज रहा हूं`,
+    pa: `${transcript} ਦੀ ਖੋਜ ਕਰ ਰਿਹਾ ਹਾਂ`,
+    ta: `${transcript} என்பதைத் தேடுகிறேன்`,
+    cy: `Yn chwilio am ${transcript}`,
+    pl: `Szukam: ${transcript}`,
+  };
+  const lang = normalizeLang(language);
+  return {
+    response: prompts[lang] ?? prompts.en,
+    action: "search",
+    query: transcript,
+    provider: "local-fallback",
+    degraded: true,
+  };
+}
+
 export function registerAIRoutes(app: Express, deps: AIRouteDeps): void {
   const { aiRateLimit } = deps;
   // AI Chat Assistant — auth-gated and rate-limited to bound OpenAI cost
@@ -194,11 +213,10 @@ GUIDELINES:
       const parsed = await ai.interpretVoice(transcript, lang, `${context}${historySnippet}`);
       res.json(parsed);
     } catch (error) {
-      console.error("Voice AI error:", error);
-      res.status(503).json({
-        error: "AI voice provider is not configured or unavailable",
-        code: "AI_VOICE_UNAVAILABLE",
-      });
+      console.warn("Voice AI provider unavailable; using local search fallback:", error);
+      const transcript = typeof req.body?.transcript === "string" ? req.body.transcript.trim() : "";
+      const language = typeof req.body?.language === "string" ? req.body.language : "en";
+      res.json(localVoiceFallback(transcript, language));
     }
   });
 

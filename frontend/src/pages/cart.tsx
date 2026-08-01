@@ -13,6 +13,7 @@ import { getLoginPath } from "@/lib/auth-utils";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCurrency } from "@/contexts/currency-context";
+import { CheckoutProgress } from "@/components/checkout-progress";
 
 export default function CartPage() {
   const [, setLocation] = useLocation();
@@ -105,6 +106,9 @@ export default function CartPage() {
       </div>
 
       <div className="max-w-4xl mx-auto p-4 pb-32 md:pb-8 space-y-4">
+        <div className="mb-6 rounded-2xl border bg-card px-3 py-4 shadow-sm sm:px-6">
+          <CheckoutProgress currentStep={1} />
+        </div>
         <h1 className="text-2xl font-bold" data-testid="text-cart-heading">
           {t("cart.title", "Your Cart")}{" "}
           <span className="text-muted-foreground text-base font-normal">({items.length})</span>

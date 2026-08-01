@@ -51,7 +51,9 @@ export default function ProductListingPage() {
       return response.json() as Promise<Product>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({
+        predicate: (query) => String(query.queryKey[0] ?? "").startsWith("/api/products"),
+      });
       setLocation("/dashboard");
     },
     onError: (reason) => setError(reason instanceof Error ? reason.message.replace(/^\d+:\s*/, "") : "Unable to create listing."),

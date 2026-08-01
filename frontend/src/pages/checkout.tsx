@@ -29,6 +29,7 @@ import { resolveProductImageForProduct } from "@/lib/product-images";
 import { createCheckoutQuote } from "@/lib/payment-client";
 import type { Cart, ShipQuote, ShipServiceType } from "@shared/schema";
 import { useCurrency } from "@/contexts/currency-context";
+import { CheckoutProgress } from "@/components/checkout-progress";
 
 interface CartShippingGroup {
   farmerId: string;
@@ -180,7 +181,7 @@ export default function CheckoutPage() {
           ? "pickup"
           : "standard";
       return createCheckoutQuote({
-        currency: "GBP",
+        currency: currency === "INR" ? "INR" : "GBP",
         deliveryMethod,
         sellerIds: selectedFarmerIds,
         shippingChoices,
@@ -311,6 +312,10 @@ export default function CheckoutPage() {
           {step === 2 ? "Back to delivery details" : "Back to cart"}
         </button>
 
+        <div className="mb-7 rounded-2xl border bg-card px-3 py-4 shadow-sm sm:px-6">
+          <CheckoutProgress currentStep={2} />
+        </div>
+
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-black">Checkout</h1>
@@ -320,7 +325,9 @@ export default function CheckoutPage() {
                 : "Select the farmers you want to check out"}
             </p>
           </div>
-          <span className="text-sm font-semibold text-muted-foreground">Step {step} of 2</span>
+          <span className="text-sm font-semibold text-muted-foreground">
+            Delivery step {step} of 2
+          </span>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -400,7 +407,7 @@ export default function CheckoutPage() {
                 <CardContent className="p-4 sm:p-6">
                   <div className="mb-2 flex items-center gap-2">
                     <Truck className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg font-bold">Fulfilment</h2>
+                    <h2 className="text-lg font-bold">Order Fulfillment Dashboard</h2>
                   </div>
                   <p className="mb-5 text-sm text-muted-foreground">
                     Select one or more farmers, then choose fulfilment for each selected farmer.

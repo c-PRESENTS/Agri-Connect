@@ -28,6 +28,7 @@ import {
 } from "@/lib/payment-client";
 import { useCurrency } from "@/contexts/currency-context";
 import { queryClient } from "@/lib/queryClient";
+import { CheckoutProgress } from "@/components/checkout-progress";
 
 type FunctionalMethod = "stripe" | "cash" | "razorpay" | "paypal";
 type OnlineMethod = Exclude<FunctionalMethod, "cash">;
@@ -36,6 +37,11 @@ const reasonMessages: Record<string, string> = {
   provider_not_enabled: "Card payments are currently unavailable.",
   provider_not_activated: "Card payment setup is not complete.",
   provider_webhook_unverified: "Card payment verification is not complete.",
+  razorpay_inr_only: "Razorpay is available for INR checkout only.",
+  razorpay_unavailable: "Razorpay test checkout is not configured.",
+  razorpay_test_credentials_missing: "Razorpay test credentials are not configured.",
+  razorpay_webhook_secret_missing: "Razorpay webhook verification is not configured.",
+  cash_gbp_only: "Cash checkout is available for GBP orders only.",
   seller_payment_account_ineligible:
     "One or more farmers cannot currently accept online payments.",
   stripe_platform_responsibilities_unverified:
@@ -83,8 +89,8 @@ function MethodRow({
         <span className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-base font-bold">{title}</span>
           {(badge || method?.displayStatus === "coming_soon") && (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-              {badge ?? "Unavailable"}
+            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+              {badge ?? "Coming soon"}
             </span>
           )}
         </span>
@@ -254,7 +260,10 @@ export default function CheckoutPaymentPage() {
 
   const quote = quoteQuery.data;
   const money = (amountMinor: string) =>
-    format(Number(amountMinor) / 100, { includeCode: true });
+    format(Number(amountMinor) / 100, {
+      sourceCurrency: quote.currency,
+      includeCode: true,
+    });
   const cashSelected = selectedMethod === "cash";
   const selectedOnlineMethod =
     selectedMethod && selectedMethod !== "cash" ? selectedMethod : undefined;
@@ -270,6 +279,10 @@ export default function CheckoutPaymentPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to delivery
         </button>
+
+        <div className="mb-8 rounded-2xl border bg-card px-3 py-4 shadow-sm sm:px-6">
+          <CheckoutProgress currentStep={3} />
+        </div>
 
         <div className="mb-8">
           <div>
@@ -418,11 +431,16 @@ export default function CheckoutPaymentPage() {
                     <span>{money(quote.totalMinor)}</span>
                   </div>
                 </div>
-                {currency !== "GBP" && (
+                {currency !== quote.currency && (
                   <div className="mt-5 rounded-xl border border-amber-300/70 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
                     <p className="font-bold">Estimated {money(quote.totalMinor)}</p>
                     <p className="mt-1">
-                      You will be charged £{(Number(quote.totalMinor) / 100).toFixed(2)} GBP.
+                      You will be charged{" "}
+                      {new Intl.NumberFormat(undefined, {
+                        style: "currency",
+                        currency: quote.currency,
+                        currencyDisplay: "code",
+                      }).format(Number(quote.totalMinor) / 100)}.
                     </p>
                   </div>
                 )}

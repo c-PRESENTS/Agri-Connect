@@ -315,6 +315,25 @@ export class PaymentRepository {
     return attempt;
   }
 
+  async cancelExpiredProviderAttempt(id: string): Promise<PaymentAttempt | undefined> {
+    const [attempt] = await db
+      .update(paymentAttempts)
+      .set({
+        paymentStatus: "cancelled",
+        reconciliationStatus: "resolved",
+        updatedAt: new Date(),
+        version: sql`${paymentAttempts.version} + 1`,
+      })
+      .where(
+        and(
+          eq(paymentAttempts.id, id),
+          sql`${paymentAttempts.paymentStatus} IN ('created','processing','requires_action')`,
+        ),
+      )
+      .returning();
+    return attempt;
+  }
+
   async recordWebhookEvent(
     input: typeof providerWebhookEvents.$inferInsert,
   ): Promise<"inserted" | "retry" | "duplicate" | "conflict"> {

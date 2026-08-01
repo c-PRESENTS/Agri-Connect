@@ -125,6 +125,7 @@ export class RazorpayPaymentAdapter implements PaymentProviderAdapter {
           orderId: input.orderId,
           attemptId: input.attemptId,
           idempotencyReference: input.idempotencyReference,
+          summary: input.checkoutDescription ?? "AgriConnect order",
         },
       }),
     });
@@ -145,6 +146,7 @@ export class RazorpayPaymentAdapter implements PaymentProviderAdapter {
         providerSessionId: order.id,
         publicKey: keyId,
         amount: input.amount,
+        description: input.checkoutDescription ?? "AgriConnect order",
       },
     };
   }

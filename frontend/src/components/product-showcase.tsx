@@ -12,7 +12,8 @@ import { getSubSubcategories } from "@/lib/sub-subcategories";
 import { motion } from "framer-motion";
 import type { Product } from "@shared/schema";
 import { SafeProductImage } from "./safe-product-image";
-import { resolveProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
+import { normalizeProductImageKey } from "@/lib/product-image-registry";
 import { FavoriteProductButton } from "./favorite-product-button";
 import { useCurrency } from "@/contexts/currency-context";
 
@@ -42,10 +43,6 @@ interface ProductSection {
   products: Product[];
 }
 
-function normalizeProductName(name: string): string {
-  return name.trim().replace(/\s+/g, " ").toLocaleLowerCase();
-}
-
 export function ProductShowcase({
   categoryId,
   subcategoryId,
@@ -70,8 +67,8 @@ export function ProductShowcase({
     queryKey: [queryString ? `/api/products?${queryString}` : "/api/products"],
   });
 
-  // Taxonomy supplies section headings only. Every rendered card is built from
-  // one complete product returned by the catalog API.
+  // Every section contains complete canonical API products. Taxonomy labels
+  // without a matching backend product never become clickable commerce cards.
   const content = useMemo<ProductSection[]>(() => {
     if (subcategoryId) {
       const deepContent = getSubSubcategories(subcategoryId);
@@ -81,21 +78,20 @@ export function ProductShowcase({
           : [];
       }
 
-      const assignedProductIds = new Set<string>();
+      const remaining = new Map(products.map((product) => [product.id, product]));
       const sections = deepContent.flatMap<ProductSection>((section) => {
-        const taxonomyNames = new Set(section.items.map(normalizeProductName));
-        const matchingProducts = products.filter((product) => {
-          if (assignedProductIds.has(product.id)) return false;
-          if (!taxonomyNames.has(normalizeProductName(product.name))) return false;
-          assignedProductIds.add(product.id);
-          return true;
-        });
-
+        const normalizedNames = new Set(section.items.map(normalizeProductImageKey));
+        const matchingProducts = products.filter(
+          (product) =>
+            remaining.has(product.id) &&
+            normalizedNames.has(normalizeProductImageKey(product.name)),
+        );
+        matchingProducts.forEach((product) => remaining.delete(product.id));
         return matchingProducts.length > 0
           ? [{ title: section.title, products: matchingProducts }]
           : [];
       });
-      const remainingProducts = products.filter((product) => !assignedProductIds.has(product.id));
+      const remainingProducts = Array.from(remaining.values());
 
       if (remainingProducts.length > 0) {
         sections.push({
@@ -108,7 +104,7 @@ export function ProductShowcase({
     }
 
     if (categoryId) {
-      const cat = getShoppableCategories().find(c => c.id === categoryId);
+      const cat = getShoppableCategories().find((item) => item.id === categoryId);
       if (cat) {
         const knownSubcategoryIds = new Set(cat.subcategories.map((subcategory) => subcategory.id));
         const sections = cat.subcategories.flatMap<ProductSection>((subcategory) => {
@@ -252,7 +248,9 @@ export function ProductShowcase({
           <div className="flex items-center gap-3 text-[10px]">
             <div className="flex items-center gap-1">
               <Package className="h-4 w-4 text-primary" />
-              <span className="font-bold">{t("product_showcase.item_count", { count: products.length })}</span>
+              <span className="font-bold">
+                {products.length} {products.length === 1 ? "item" : "items"}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -319,14 +317,7 @@ export function ProductShowcase({
               {/* Product Grid */}
               <div data-product-grid="showcase" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {section.products.map((product, itemIdx) => {
-                  const imageResolution = resolveProductImage({
-                    id: product.id,
-                    name: product.name,
-                    categoryId: product.categoryId,
-                    subcategoryId: product.subcategoryId,
-                    images: product.images,
-                  });
-                   
+                  const imageResolution = resolveProductImageForProduct(product);
                   return (
                     <motion.div
                       key={product.id}

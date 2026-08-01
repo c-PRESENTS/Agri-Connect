@@ -122,7 +122,9 @@ export class StripePaymentAdapter implements PaymentProviderAdapter {
         customer_email: input.customerEmail,
         client_reference_id: input.attemptId,
         success_url: `${input.returnBaseUrl}/payment/${encodeURIComponent(input.attemptId)}/processing`,
-        cancel_url: `${input.returnBaseUrl}/payment/${encodeURIComponent(input.attemptId)}/cancelled`,
+        cancel_url:
+          input.cancelUrl ??
+          `${input.returnBaseUrl}/payment/${encodeURIComponent(input.attemptId)}/cancelled`,
         line_items: [
           {
             quantity: 1,
@@ -160,6 +162,16 @@ export class StripePaymentAdapter implements PaymentProviderAdapter {
       }),
       nextAction: { type: "redirect", url: session.url },
     };
+  }
+
+  async cancelCheckout(providerSessionId: string): Promise<boolean> {
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.retrieve(providerSessionId);
+    if (session.status === "complete") return false;
+    if (session.status === "open") {
+      await stripe.checkout.sessions.expire(providerSessionId);
+    }
+    return true;
   }
 
   async retrievePayment(reference: string): Promise<VerifiedProviderPayment | undefined> {

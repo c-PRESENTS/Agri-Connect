@@ -67,6 +67,7 @@ const COUNTRY_ALIASES: Record<string, string> = {
 const CITY_COUNTRY_ALIASES: Record<string, string> = {
   dubai: "AE",
   "abu dhabi": "AE",
+  mumbai: "IN",
 };
 
 function resolveCountryCode(value: string) {
@@ -80,9 +81,10 @@ function parseLocation(location: string) {
   const countryCode = resolveCountryCode(countryCandidate);
 
   if (countryCode) {
+    const city = parts.slice(0, -1).join(", ");
     return {
-      city: parts.slice(0, -1).join(", "),
-      countryCode,
+      city,
+      countryCode: CITY_COUNTRY_ALIASES[city.toLowerCase()] ?? countryCode,
     };
   }
 
@@ -126,13 +128,28 @@ export default function SettingsPage() {
         countryCode: parsedLocation.countryCode,
       };
       setForm(nextForm);
-      setSavedForm(nextForm);
+      const canonicalLocation = formatLocation(nextForm.city, nextForm.countryCode);
+      setSavedForm(
+        canonicalLocation === (user.location ?? "").trim()
+          ? nextForm
+          : { ...nextForm, countryCode: "" },
+      );
     }
   }, [user]);
 
   const updateField = (field: keyof ProfileForm, value: string) => {
     setShowSavedStatus(false);
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      if (field === "city") {
+        const inferredCountryCode = CITY_COUNTRY_ALIASES[value.trim().toLowerCase()];
+        return {
+          ...current,
+          city: value,
+          ...(inferredCountryCode ? { countryCode: inferredCountryCode } : {}),
+        };
+      }
+      return { ...current, [field]: value };
+    });
   };
 
   const isDirty = Object.keys(form).some(

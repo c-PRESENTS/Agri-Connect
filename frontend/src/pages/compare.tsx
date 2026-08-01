@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { TopNavigation } from "@/components/top-navigation";
 import { useCompare } from "@/hooks/use-compare";
 import { useCart } from "@/hooks/use-cart";
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
 import { useCurrency } from "@/contexts/currency-context";
 
@@ -144,7 +144,7 @@ export default function ComparePage() {
                     className="block w-full aspect-square rounded-xl overflow-hidden bg-muted hover:opacity-90 transition-opacity"
                   >
                     <img
-                      src={getProductImage(p.name, p.categoryId, "md")}
+                      src={resolveProductImageForProduct(p).src}
                       alt={p.name}
                       className="w-full h-full object-cover"
                     />

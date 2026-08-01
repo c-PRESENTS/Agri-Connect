@@ -244,7 +244,9 @@ export function resolveProductImageForProduct(
 /**
  * Resolves an order thumbnail using the same rules as live products. System
  * product IDs deliberately ignore a persisted remote seed URL; seller product
- * IDs retain their uploaded image and receive a local fallback if it fails.
+ * Seller-created IDs retain their uploaded image and receive a local fallback
+ * if it fails. Seeded `product-*` and generated `catalog-*` records use the
+ * curated local image whose filename and taxonomy match the card name.
  */
 export function resolveProductImageForOrderItem(
   item: OrderItemImageLike,

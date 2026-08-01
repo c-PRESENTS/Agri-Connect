@@ -21,7 +21,7 @@ export interface PaymentAttemptResponse {
 
 export interface CheckoutQuoteResponse {
   id: string;
-  currency: "GBP";
+  currency: "GBP" | "INR";
   subtotalMinor: string;
   taxMinor: string;
   shippingMinor: string;
@@ -58,11 +58,11 @@ export interface CheckoutMethodResponse {
   available: boolean;
   reasonCode?: string;
   displayStatus: "available" | "unavailable" | "coming_soon";
-  flow: "redirect" | "mock" | "manual" | "disabled";
+  flow: "redirect" | "client_sdk" | "mock" | "manual" | "disabled";
 }
 
 export async function createCheckoutQuote(input: {
-  currency?: "GBP";
+  currency?: "GBP" | "INR";
   deliveryMethod: "standard" | "express" | "pickup";
   sellerIds: string[];
   shippingChoices: Record<string, { partnerId: string; service: string }>;
@@ -101,6 +101,7 @@ export type CheckoutNextAction =
       providerSessionId: string;
       publicKey: string;
       amount: { currency: string; amountMinor: string };
+      description: string;
     };
 
 export async function createCheckoutIntent(
@@ -154,7 +155,7 @@ export async function getCheckoutQuote(quoteId: string): Promise<CheckoutQuoteRe
 export async function getCheckoutMethods(
   quoteId: string,
 ): Promise<{
-  currency: "GBP";
+  currency: "GBP" | "INR";
   mode: "mock" | "sandbox" | "live";
   methods: CheckoutMethodResponse[];
 }> {
@@ -226,7 +227,7 @@ export async function followCheckoutNextAction(
       currency: action.amount.currency,
       order_id: action.providerSessionId,
       name: "AgriConnect",
-      description: "Protected payment",
+      description: action.description,
       handler: async (response: {
         razorpay_payment_id: string;
         razorpay_order_id: string;

@@ -69,11 +69,13 @@ export default function Home() {
 
   useEffect(() => {
     const subcat = urlParams.get("subcategory") || urlParams.get("subcategoryId");
+    const searchFromUrl = urlParams.get("search") || "";
     const cat =
       urlParams.get("category") ||
       urlParams.get("categoryId") ||
       findCategoryForSubcategory(subcat);
     const section = urlParams.get("section");
+    setSearchQuery(searchFromUrl);
     if (cat) {
       setSelectedCategory(cat);
       setSelectedSubcategory(subcat || undefined);
@@ -85,7 +87,6 @@ export default function Home() {
       setSelectedSubcategory(undefined);
       setActiveSubcategory(null);
       setExpandedCategory(null);
-      setSearchQuery("");
       setFilters({});
     }
     if (section) {
