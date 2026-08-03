@@ -3,8 +3,30 @@ import { paymentOperationsRepository } from "../repositories/payment-operations-
 import { providerRegistry } from "./provider-registry";
 import { paymentErrorCode } from "./security";
 import type { PaymentProvider } from "./config";
+import { paymentRuntimeConfig } from "./config";
 
 const providers: PaymentProvider[] = ["stripe", "paypal", "razorpay"];
+const DEFAULT_DEMO_CURRENCIES: Record<PaymentProvider, string[]> = {
+  stripe: ["GBP", "INR"],
+  paypal: ["GBP"],
+  razorpay: ["INR"],
+};
+
+function isSellerPreviewMode() {
+  return paymentRuntimeConfig.uiPreviewEnabled;
+}
+
+function demoReviewWindow(at = new Date()) {
+  return {
+    verifiedAt: at,
+    nextReviewAt: new Date(at.getTime() + 7 * 24 * 60 * 60 * 1000),
+    expiresAt: new Date(at.getTime() + 30 * 24 * 60 * 60 * 1000),
+  };
+}
+
+function storedCurrencies(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
 
 function publicAccount(
   provider: PaymentProvider,
@@ -40,7 +62,8 @@ export class SellerAccountService {
       publicAccount(
         provider,
         accountByProvider.get(provider),
-        configByProvider.get(provider)?.status ?? "unavailable",
+        configByProvider.get(provider)?.status ??
+          (isSellerPreviewMode() ? "sandbox_ready" : "unavailable"),
       ),
     );
   }
@@ -53,10 +76,40 @@ export class SellerAccountService {
   ) {
     const config = await paymentOperationsRepository.getProviderConfig(provider);
     if (!config || !["sandbox_ready", "active"].includes(config.status)) {
-      throw new Error("This payment provider is not available for seller onboarding");
+      if (!isSellerPreviewMode()) {
+        throw new Error("This payment provider is not available for seller onboarding");
+      }
     }
     if (provider === "razorpay" && country !== "IN") {
       throw new Error("Razorpay Route seller accounts must be based in India");
+    }
+    if (isSellerPreviewMode()) {
+      const review = demoReviewWindow();
+      const account = await paymentOperationsRepository.upsertSellerPaymentAccount({
+        sellerId: seller.id,
+        provider,
+        providerAccountId: `demo:${provider}:${seller.id}`,
+        status: "active",
+        country,
+        currencies: DEFAULT_DEMO_CURRENCIES[provider],
+        capabilities: {
+          demo: true,
+          chargesEnabled: true,
+          payoutsEnabled: true,
+          onboardingComplete: true,
+          protectedPaymentPreview: true,
+        },
+        kycVerifiedAt: review.verifiedAt,
+        lastVerifiedAt: review.verifiedAt,
+        nextReviewAt: review.nextReviewAt,
+        expiresAt: review.expiresAt,
+        suspensionReason: null,
+      });
+      return {
+        providerAccountId: account.providerAccountId ?? `demo:${provider}:${seller.id}`,
+        redirectUrl: `${returnBaseUrl}/seller?paymentOnboarding=demo&provider=${provider}`,
+        expiresAt: account.expiresAt ?? review.expiresAt,
+      };
     }
     const adapter = providerRegistry.get(provider);
     if (!adapter.createSellerOnboarding) {
@@ -113,6 +166,41 @@ export class SellerAccountService {
     const account = await paymentOperationsRepository.getSellerPaymentAccount(sellerId, provider);
     if (!account?.providerAccountId || account.providerAccountId.startsWith("pending:")) {
       throw new Error("Provider account identifier is not available yet");
+    }
+    if (isSellerPreviewMode() && account.providerAccountId.startsWith("demo:")) {
+      const review = demoReviewWindow();
+      const refreshed = await paymentOperationsRepository.upsertSellerPaymentAccount({
+        ...account,
+        status: "active",
+        currencies: storedCurrencies(account.currencies).length
+          ? storedCurrencies(account.currencies)
+          : DEFAULT_DEMO_CURRENCIES[provider],
+        capabilities: {
+          ...(account.capabilities && typeof account.capabilities === "object" ? account.capabilities : {}),
+          demo: true,
+          chargesEnabled: true,
+          payoutsEnabled: true,
+          onboardingComplete: true,
+          protectedPaymentPreview: true,
+        },
+        kycVerifiedAt: review.verifiedAt,
+        lastVerifiedAt: review.verifiedAt,
+        nextReviewAt: review.nextReviewAt,
+        expiresAt: review.expiresAt,
+        suspensionReason: null,
+      });
+      return {
+        provider,
+        providerAccountId: refreshed.providerAccountId ?? account.providerAccountId,
+        status: "active" as const,
+        country: refreshed.country ?? account.country ?? undefined,
+        currencies: storedCurrencies(refreshed.currencies),
+        capabilities: refreshed.capabilities as Record<string, unknown>,
+        kycComplete: true,
+        verifiedAt: review.verifiedAt,
+        expiresAt: review.expiresAt,
+        remediation: [],
+      };
     }
     const adapter = providerRegistry.get(provider);
     if (!adapter.refreshSellerAccount) {

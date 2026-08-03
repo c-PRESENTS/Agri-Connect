@@ -59,6 +59,10 @@ export interface OrderItemImageLike {
 // platform-owned records. Their persisted seed URL is only legacy metadata;
 // the curated local registry must remain authoritative for every UI surface.
 const SYSTEM_PRODUCT_ID = /^(?:product-\d+|catalog-[a-z0-9-]+)$/;
+const REPLACEABLE_LEGACY_IMAGE_SIGNATURES = [
+  "photo-1540420828642-fca2c5c18abe",
+  "photo-1560493676-04071c5f467b",
+] as const;
 
 function firstUsableImage(input: ProductImageResolverInput): string | undefined {
   const candidates = [input.providedImage, ...(input.images ?? [])];
@@ -71,6 +75,13 @@ function isSystemProvided(input: ProductImageResolverInput): boolean {
   if (input.imageOwnership === "system") return true;
   if (input.imageOwnership === "seller") return false;
   return Boolean(input.id && SYSTEM_PRODUCT_ID.test(input.id));
+}
+
+function isReplaceableLegacyImage(imageUrl?: string): boolean {
+  return Boolean(
+    imageUrl &&
+      REPLACEABLE_LEGACY_IMAGE_SIGNATURES.some((signature) => imageUrl.includes(signature)),
+  );
 }
 
 function taxonomyFallback(
@@ -134,8 +145,10 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
   const normalizedName = normalizeProductImageKey(input.name || "unnamed-product");
   const providedImage = firstUsableImage(input);
   const systemProvided = isSystemProvided(input);
+  const replaceableLegacyImage = isReplaceableLegacyImage(providedImage);
+  const ignoredProvidedImage = systemProvided || replaceableLegacyImage ? providedImage : undefined;
 
-  if (providedImage && !systemProvided) {
+  if (providedImage && !systemProvided && !replaceableLegacyImage) {
     const approvedFallback = resolveProductImage({
       ...input,
       images: [],
@@ -164,7 +177,7 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
       attribution: canonicalExact.attribution,
       reviewRequired: false,
       ambiguousMatches: [],
-      ignoredProvidedImage: systemProvided ? providedImage : undefined,
+      ignoredProvidedImage,
     };
   }
 
@@ -183,7 +196,7 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
       attribution: scopedLocalAsset.attribution,
       reviewRequired: false,
       ambiguousMatches: [],
-      ignoredProvidedImage: systemProvided ? providedImage : undefined,
+      ignoredProvidedImage,
     };
   }
 
@@ -198,7 +211,7 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
       attribution: exact.attribution,
       reviewRequired: false,
       ambiguousMatches: [],
-      ignoredProvidedImage: systemProvided ? providedImage : undefined,
+      ignoredProvidedImage,
     };
   }
 
@@ -214,7 +227,7 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
       attribution: match.attribution,
       reviewRequired: false,
       ambiguousMatches: [],
-      ignoredProvidedImage: systemProvided ? providedImage : undefined,
+      ignoredProvidedImage,
     };
   }
 
@@ -222,7 +235,7 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
     input,
     normalizedName,
     aliasMatches,
-    systemProvided ? providedImage : undefined,
+    ignoredProvidedImage,
   );
 }
 
