@@ -62,6 +62,7 @@ app.use(helmet({
             "https://www.paypal.com",
             "https://www.paypalobjects.com",
             "https://checkout.razorpay.com",
+            "https://cdn.razorpay.com",
           ],
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "https://fonts.gstatic.com"],
@@ -77,6 +78,7 @@ app.use(helmet({
             "https://api-m.paypal.com",
             "https://api-m.sandbox.paypal.com",
             "https://api.razorpay.com",
+            "https://lumberjack.razorpay.com",
           ],
           frameSrc: [
             "https://accounts.google.com",

@@ -38,14 +38,20 @@ export class EligibilityService {
       if (!hasRazorpayTestCredentials()) reasons.push("razorpay_test_credentials_missing");
       if (!hasRazorpayWebhookSecret()) reasons.push("razorpay_webhook_secret_missing");
     }
-    const stripeDevelopmentCheckout =
+    if (provider === "stripe" && paymentRuntimeConfig.mode === "sandbox") {
+      if (!hasStripeTestSecretKey()) reasons.push("provider_not_activated");
+      if (!hasStripeWebhookSecret()) reasons.push("provider_webhook_unverified");
+    }
+    // Render and other hosted test deployments run with NODE_ENV=production.
+    // Sandbox eligibility must therefore be keyed to the payment mode and
+    // verified test credentials, not the JavaScript build environment.
+    const stripeSandboxCheckout =
       provider === "stripe" &&
-      process.env.NODE_ENV !== "production" &&
       paymentRuntimeConfig.mode === "sandbox" &&
       paymentRuntimeConfig.requestedProviders.includes("stripe") &&
       hasStripeTestSecretKey() &&
       hasStripeWebhookSecret();
-    if (stripeDevelopmentCheckout && reasons.length === 0) {
+    if (stripeSandboxCheckout && reasons.length === 0) {
       const now = new Date();
       return {
         provider,
