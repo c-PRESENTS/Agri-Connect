@@ -150,6 +150,7 @@ export function SellerPaymentAccounts() {
           {(data?.accounts ?? []).map((account) => {
             const active = account.status === "active";
             const platformAvailable = ["sandbox_ready", "active"].includes(account.platformStatus);
+            const demoAvailable = platformAvailable && account.platformStatus === "sandbox_ready";
             return (
               <Card key={account.provider}>
                 <CardContent className="p-4">
@@ -173,6 +174,8 @@ export function SellerPaymentAccounts() {
                       </span>
                     ) : !platformAvailable ? (
                       "Platform approval is not complete for this provider."
+                    ) : demoAvailable ? (
+                      "MVP testing mode is enabled. You can preview seller onboarding locally."
                     ) : (
                       "Onboarding or provider review is still required."
                     )}

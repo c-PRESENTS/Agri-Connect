@@ -25,7 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Product, Review } from "@shared/schema";
 import { TopNavigation } from "@/components/top-navigation";
-import { getProductImage, resolveProductImageForProduct } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import { FavoriteProductButton } from "@/components/favorite-product-button";
 import { getShoppableCategories } from "@/lib/categories";
 import {
@@ -921,7 +921,7 @@ export default function ProductDetailPage() {
                   >
                     <div className="w-14 h-14 sm:w-28 sm:h-28 rounded-lg sm:rounded-xl overflow-hidden border border-border bg-muted">
                       <img
-                        src={getProductImage(p.name, p.categoryId, "sm")}
+                        src={resolveProductImageForProduct(p).src}
                         alt={p.name}
                         className="w-full h-full object-cover"
                       />
@@ -991,7 +991,7 @@ export default function ProductDetailPage() {
                   <Card className="overflow-hidden border-border/50 hover:border-primary/40 hover:shadow-md transition-all">
                     <div className="aspect-square overflow-hidden bg-muted">
                       <img
-                        src={getProductImage(p.name, p.categoryId, "md")}
+                        src={resolveProductImageForProduct(p).src}
                         alt={p.name}
                         loading="lazy"
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
@@ -1352,7 +1352,7 @@ export default function ProductDetailPage() {
                         <Card className="overflow-hidden border-border/50 hover:border-primary/30 hover:shadow-lg transition-all">
                           <div className="aspect-square overflow-hidden bg-muted">
                             <img
-                        src={getProductImage(p.name, p.categoryId, "md")}
+                        src={resolveProductImageForProduct(p).src}
                               alt={p.name}
                               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                             />

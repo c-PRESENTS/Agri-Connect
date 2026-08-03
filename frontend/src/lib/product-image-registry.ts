@@ -122,6 +122,12 @@ import poultryFeedImage from "@assets/AgriConnect Images/Other Agricultural/Poul
 import chiaSeedsImage from "@assets/AgriConnect Images/Processed/17_chia_seeds.png";
 import vanillaImage from "@assets/AgriConnect Images/Processed/05_vanilla.png";
 import strawberriesImage from "@assets/AgriConnect Images/daily_needs/Fruits/strawberry.png";
+import matarImage from "@assets/AgriConnect Images/daily_needs/matar.jpg";
+import marketRiceImage from "@assets/AgriConnect Images/Market/Foods & Beverages/rice.png";
+import marketWheatImage from "@assets/AgriConnect Images/Market/Foods & Beverages/wheat.png";
+import onionImage from "@assets/AgriConnect Images/daily_needs/Vegetables/onion.png";
+import potatoImage from "@assets/AgriConnect Images/daily_needs/Vegetables/potato.png";
+import tomatoImage from "@assets/AgriConnect Images/daily_needs/Vegetables/tomato.png";
 
 export interface ProductImageAttribution {
   source: "bundled" | "generated" | "licensed";
@@ -350,9 +356,10 @@ const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "millet-flour", name: "Millet Flour", aliases: [], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: milletFlourImage, attribution: bundled("AgriConnect millet flour stock asset") },
   { slug: "maida", name: "Maida", aliases: ["Refined Flour"], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: maidaImage, attribution: bundled("AgriConnect maida product asset") },
   { slug: "daliya", name: "Daliya", aliases: ["Broken Wheat"], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: daliyaImage, attribution: bundled("AgriConnect daliya product asset") },
-  { slug: "tomato", name: "Tomato", aliases: ["Tomatoes", "Organic Tomatoes", "Fresh Tomatoes", "Cherry Tomato"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("tomato", categoryImages.tomato), attribution: bundled("AgriConnect tomato stock asset") },
-  { slug: "potato", name: "Potato", aliases: ["Potatoes", "Fresh Potatoes", "Sweet Potato"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("potato", categoryImages.potato), attribution: bundled("AgriConnect potato stock asset") },
-  { slug: "onion", name: "Onion", aliases: ["Onions", "Red Onions", "Spring Onion", "Shallots", "Garlic"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("onion", categoryImages.onion), attribution: bundled("AgriConnect onion stock asset") },
+  { slug: "matar", name: "Matar", aliases: ["Green Peas", "Peas"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: matarImage, canonicalNameMatch: true, attribution: bundled("AgriConnect matar product asset") },
+  { slug: "tomato", name: "Tomato", aliases: ["Tomatoes", "Organic Tomatoes", "Fresh Tomatoes", "Cherry Tomato"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: tomatoImage, canonicalNameMatch: true, attribution: bundled("AgriConnect tomato stock asset") },
+  { slug: "potato", name: "Potato", aliases: ["Potatoes", "Fresh Potatoes", "Sweet Potato"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: potatoImage, canonicalNameMatch: true, attribution: bundled("AgriConnect potato stock asset") },
+  { slug: "onion", name: "Onion", aliases: ["Onions", "Red Onions", "Spring Onion", "Shallots", "Garlic"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: onionImage, canonicalNameMatch: true, attribution: bundled("AgriConnect onion stock asset") },
   { slug: "carrot", name: "Carrot", aliases: ["Carrots", "Beetroot", "Radish", "Turnip"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("carrot", categoryImages.carrot), attribution: bundled("AgriConnect root vegetable stock asset") },
   { slug: "spinach", name: "Spinach", aliases: ["Coriander Leaves", "Mint Leaves", "Curry Leaves", "Lettuce", "Amaranth Leaves", "Fenugreek Leaves", "Moringa Leaves", "Leafy Greens"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("spinach", categoryImages.spinach), attribution: bundled("AgriConnect leafy greens stock asset") },
   { slug: "vegetables", name: "Mixed Vegetables", aliases: ["Organic Vegetables Mix", "Bulk Mixed Vegetables Crate", "Organic Seasonal Vegetable Box", "Wholesale Gourd Selection", "Wholesale Root Vegetables Sack"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: categoryImages.vegetables, attribution: bundled("AgriConnect vegetable stock asset") },
@@ -376,8 +383,8 @@ const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "usda-organic", name: "USDA Organic", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: usdaOrganicImage, attribution: bundled("AgriConnect USDA Organic certification asset") },
   { slug: "india-organic", name: "India Organic", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: indiaOrganicImage, attribution: bundled("AgriConnect India Organic certification asset") },
   { slug: "eu-organic-certified", name: "EU Organic Certified", aliases: ["EU Organic"], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: euOrganicCertifiedImage, attribution: bundled("AgriConnect EU Organic certification asset") },
-  { slug: "rice", name: "Rice", aliases: ["White Rice", "Brown Rice", "Red Rice", "Parboiled Rice", "Premium Basmati Rice", "Basmati Rice"], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: categoryImages.rice, attribution: bundled("AgriConnect rice stock asset") },
-  { slug: "wheat", name: "Wheat", aliases: ["Whole Wheat", "Wheat Flour", "Semolina", "Semolina Suji", "Barley", "Oats", "Maize"], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: categoryImages.wheat, attribution: bundled("AgriConnect wheat stock asset") },
+  { slug: "rice", name: "Rice", aliases: ["White Rice", "Brown Rice", "Red Rice", "Parboiled Rice", "Premium Basmati Rice", "Basmati Rice"], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: marketRiceImage, canonicalNameMatch: true, attribution: bundled("AgriConnect rice stock asset") },
+  { slug: "wheat", name: "Wheat", aliases: ["Whole Wheat", "Wheat Flour", "Semolina", "Semolina Suji", "Barley", "Oats", "Maize"], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: marketWheatImage, canonicalNameMatch: true, attribution: bundled("AgriConnect wheat stock asset") },
   { slug: "millets", name: "Millets", aliases: ["Ragi", "Ragi Finger Millet", "Bajra", "Bajra Pearl Millet", "Jowar", "Jowar Sorghum", "Foxtail Millet", "Little Millet", "Quinoa"], categoryId: "daily-needs", subcategoryId: "grains", localAssetPath: categoryImages.millets, attribution: bundled("AgriConnect millet stock asset") },
   { slug: "chickpea", name: "Chickpea", aliases: ["chickpeas", "kabuli chana", "chickpeas kabuli chana"], categoryId: "daily-needs", subcategoryId: "pulses", localAssetPath: chickpeaPulseImage, attribution: bundled("AgriConnect chickpea stock asset") },
   { slug: "pigeon-pea", name: "Pigeon Pea", aliases: ["pigeonpea", "toor", "toor dal", "tur dal"], categoryId: "daily-needs", subcategoryId: "pulses", localAssetPath: pigeonPeaPulseImage, attribution: bundled("AgriConnect pigeon pea stock asset") },

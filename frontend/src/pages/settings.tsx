@@ -65,14 +65,70 @@ const COUNTRY_ALIASES: Record<string, string> = {
   emirates: "AE",
 };
 const CITY_COUNTRY_ALIASES: Record<string, string> = {
-  dubai: "AE",
+  amritsar: "IN",
+  amsterdam: "NL",
   "abu dhabi": "AE",
+  ahmedabad: "IN",
+  auckland: "NZ",
+  bangalore: "IN",
+  bengaluru: "IN",
+  berlin: "DE",
+  birmingham: "GB",
+  bristol: "GB",
+  brisbane: "AU",
+  cardiff: "GB",
+  chennai: "IN",
+  chicago: "US",
+  delhi: "IN",
+  dubai: "AE",
+  dublin: "IE",
+  edinburgh: "GB",
+  glasgow: "GB",
+  gurugram: "IN",
+  gurgaon: "IN",
+  hyderabad: "IN",
+  jaipur: "IN",
+  kolkata: "IN",
+  london: "GB",
+  "los angeles": "US",
+  manchester: "GB",
+  melbourne: "AU",
+  montreal: "CA",
   mumbai: "IN",
+  "new delhi": "IN",
+  "new york": "US",
+  noida: "IN",
+  ottawa: "CA",
+  pune: "IN",
+  "san francisco": "US",
+  singapore: "SG",
+  sydney: "AU",
+  toronto: "CA",
+  vancouver: "CA",
+  washington: "US",
+  "washington dc": "US",
+  "washington d.c.": "US",
 };
 
 function resolveCountryCode(value: string) {
   const normalizedValue = value.trim().toLowerCase();
   return COUNTRY_ALIASES[normalizedValue] ?? getCode(value.trim()) ?? "";
+}
+
+function normalizeCityLookupKey(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, "")
+    .replace(/\b(city|district|county|state|province|region)\b/g, "")
+    .replace(/[.,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function inferCountryCodeFromCity(value: string) {
+  const normalizedCity = normalizeCityLookupKey(value);
+  return CITY_COUNTRY_ALIASES[normalizedCity] ?? "";
 }
 
 function parseLocation(location: string) {
@@ -84,13 +140,13 @@ function parseLocation(location: string) {
     const city = parts.slice(0, -1).join(", ");
     return {
       city,
-      countryCode: CITY_COUNTRY_ALIASES[city.toLowerCase()] ?? countryCode,
+      countryCode: inferCountryCodeFromCity(city) || countryCode,
     };
   }
 
   return {
     city: location.trim(),
-    countryCode: CITY_COUNTRY_ALIASES[location.trim().toLowerCase()] ?? "",
+    countryCode: inferCountryCodeFromCity(location),
   };
 }
 
@@ -141,7 +197,7 @@ export default function SettingsPage() {
     setShowSavedStatus(false);
     setForm((current) => {
       if (field === "city") {
-        const inferredCountryCode = CITY_COUNTRY_ALIASES[value.trim().toLowerCase()];
+        const inferredCountryCode = inferCountryCodeFromCity(value);
         return {
           ...current,
           city: value,
@@ -300,7 +356,7 @@ export default function SettingsPage() {
                 </div>
                 <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                   <MapPin className="h-3 w-3" />
-                  Select any country; your city and country are saved together.
+                  Country updates for common cities; you can still override it.
                 </p>
               </div>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 border-t pt-2 sm:col-span-2">

@@ -28,7 +28,7 @@ import { TopNavigation } from "@/components/top-navigation";
 import { useTranslation } from "react-i18next";
 import { useLocation, useSearch } from "wouter";
 
-import { getProductImage } from "@/lib/product-images";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import { distanceKm, isWithinRadius } from "@/lib/nearby-distance";
 import { isSellerOnline } from "@/lib/seller-presence";
 import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
@@ -915,7 +915,7 @@ export default function SmartMapPage() {
                               {farmer.productItems.slice(0, 6).map(product => (
                                 <div key={product.id} className="flex items-center gap-2 p-1.5 rounded-lg bg-background border border-border/40">
                                   <img
-                                    src={getProductImage(product.name, product.categoryId)}
+                                    src={resolveProductImageForProduct(product).src}
                                     alt={product.name}
                                     className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
                                     onError={e => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1518977676405-d4e4e7c23d14?w=64&q=75`; }}
@@ -979,7 +979,7 @@ export default function SmartMapPage() {
                                   data-testid={`food-product-${product.id}`}
                                 >
                                 <img
-                                  src={getProductImage(product.name, product.categoryId)}
+                                  src={resolveProductImageForProduct(product).src}
                                   alt={product.name}
                                   className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
                                   onError={e => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1518977676405-d4e4e7c23d14?w=64&q=75`; }}
