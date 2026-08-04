@@ -104,8 +104,7 @@ export function registerLocalNeedsRoutes(app: Express): void {
 }
 
 export function registerShareCareRoutes(app: Express): void {
-  app.get("/api/share-care", (_req, res) => {
-    const items = [
+  const items = [
       { id: "sc-1", name: "Heritage Tomatoes", unit: "kg", qty: 4, donor: "Rachel Green", location: "Chelmsford, Essex", latitude: 51.7356, longitude: 0.4685, emoji: "🍅", postedAgo: "2m ago", category: "vegetables", urgency: "urgent", expiresIn: "45 mins" },
       { id: "sc-2", name: "Fresh Kale Bundles", unit: "bundle", qty: 6, donor: "Tom Hart", location: "Norwich, Norfolk", latitude: 52.6309, longitude: 1.2974, emoji: "🥬", postedAgo: "8m ago", category: "vegetables", urgency: "medium", expiresIn: "2 hours" },
       { id: "sc-3", name: "Duck Eggs (free-range)", unit: "dozen", qty: 2, donor: "Anna Bell", location: "Bath, Somerset", latitude: 51.3811, longitude: -2.359, emoji: "🥚", postedAgo: "15m ago", category: "dairy", urgency: "safe", expiresIn: "5 hours" },
@@ -121,7 +120,32 @@ export function registerShareCareRoutes(app: Express): void {
       { id: "sc-13", name: "Sourdough Loaves", unit: "loaf", qty: 6, donor: "Holt Bakery", location: "Brighton, East Sussex", latitude: 50.8225, longitude: -0.1372, emoji: "🍞", postedAgo: "20m ago", category: "bakery", urgency: "urgent", expiresIn: "40 mins" },
       { id: "sc-14", name: "Beef Mince (frozen)", unit: "kg", qty: 4, donor: "Hartley Farm", location: "Reading, Berkshire", latitude: 51.4543, longitude: -0.9781, emoji: "🥩", postedAgo: "30m ago", category: "meat", urgency: "safe", expiresIn: "30 days" },
       { id: "sc-15", name: "Surplus Yoghurt Pots", unit: "pack", qty: 12, donor: "Dales Dairy", location: "Manchester", latitude: 53.4808, longitude: -2.2426, emoji: "🥣", postedAgo: "1h ago", category: "dairy", urgency: "medium", expiresIn: "1.5 hours" },
-    ];
+  ];
+
+  app.get("/api/share-care", (_req, res) => {
     res.json(items);
+  });
+
+  app.get("/api/platform/stats", async (_req, res) => {
+    try {
+      const products = await storage.getProducts();
+      const services = products.filter((product) => product.categoryId === "services").length;
+      const productListings = products.length - services;
+
+      res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
+      res.json({
+        farmers: 1284,
+        products: productListings,
+        freeItems: items.length,
+        buyers: 3642,
+        students: 876,
+        services,
+        demoFields: ["farmers", "buyers", "students"],
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Failed to calculate platform statistics:", error);
+      res.status(500).json({ error: "Failed to fetch platform statistics" });
+    }
   });
 }
