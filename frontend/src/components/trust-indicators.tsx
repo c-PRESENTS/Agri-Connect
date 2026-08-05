@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,50 +48,47 @@ const trustBadges = [
   },
 ];
 
-export function TrustIndicators() {
+export const TrustIndicators = memo(function TrustIndicators() {
   const { t } = useTranslation();
-  const certifications = [
-    "Farmer help point",
-    "Government schemes",
-    "Logistics visibility",
-    "Share & Care",
+  const communityLinks = [
+    { label: "Farmer help point", href: "/farmers-help", testId: "link-community-farmer-help" },
+    { label: "Government schemes", href: "/government-schemes", testId: "link-community-government-schemes" },
+    { label: "Logistics visibility", href: "/logistics", testId: "link-community-logistics" },
+    { label: "Share & Care", href: "/share-care", testId: "link-community-share-care" },
   ];
   return (
     <>
-      <section className="py-5 sm:py-10 md:py-14 px-4 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
+      <section
+        className="py-5 sm:py-10 md:py-14 px-4 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "360px" }}
+      >
         <div className="container mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {trustBadges.map((badge, index) => (
-              <motion.div
+            {trustBadges.map((badge) => (
+              <div
                 key={badge.title}
                 className="text-center"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
               >
-                <motion.div
-                  className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-4"
-                  whileHover={{ scale: 1.1, rotate: 5 }}
+                <div
+                  className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-4 transition-transform duration-200 hover:scale-105"
                 >
                   <badge.icon className="h-8 w-8 text-primary" />
-                </motion.div>
+                </div>
                 <h3 className="font-semibold mb-1">{t(badge.title, { defaultValue: badge.titleFallback })}</h3>
                 <p className="text-sm text-muted-foreground">{t(badge.description, { defaultValue: badge.descriptionFallback })}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-6 sm:py-14 md:py-20 px-4 bg-gradient-to-br from-primary via-green-600 to-emerald-700 text-white">
+      <section
+        className="py-6 sm:py-14 md:py-20 px-4 bg-gradient-to-br from-primary via-green-600 to-emerald-700 text-white"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "520px" }}
+      >
         <div className="container mx-auto">
           <div className="grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
+            <div>
               <span className="text-white/80 font-semibold text-xs sm:text-sm uppercase tracking-wider">
                 Join Our Community
               </span>
@@ -126,34 +123,33 @@ export function TrustIndicators() {
                   </Link>
                 </Button>
               </div>
-            </motion.div>
+            </div>
             
-            <motion.div
+            <div
               className="grid grid-cols-2 gap-4"
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
             >
-              {certifications.map((cert, index) => (
-                <motion.div
-                  key={cert}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3 border border-white/20"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
+              {communityLinks.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  data-testid={item.testId}
+                  aria-label={`Open ${item.label}`}
+                  className="group flex items-center gap-3 rounded-xl border border-white/20 bg-white/15 p-4 text-white transition-all duration-200 hover:-translate-y-0.5 hover:border-white/45 hover:bg-white/25 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-700 active:translate-y-0"
                 >
                   <CheckCircle className="h-5 w-5 text-green-300 flex-shrink-0" />
-                  <span className="text-sm font-medium">{cert}</span>
-                </motion.div>
+                  <span className="min-w-0 flex-1 text-sm font-semibold">{item.label}</span>
+                  <ArrowRight className="h-4 w-4 flex-shrink-0 text-white/70 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-white" aria-hidden="true" />
+                </Link>
               ))}
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
-      <footer className="py-5 sm:py-10 md:py-14 px-4 bg-card border-t">
+      <footer
+        className="py-5 sm:py-10 md:py-14 px-4 bg-card border-t"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "480px" }}
+      >
         <div className="container mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10 mb-8 sm:mb-12">
             <div className="col-span-2 md:col-span-1">
@@ -240,4 +236,4 @@ export function TrustIndicators() {
       </footer>
     </>
   );
-}
+});
