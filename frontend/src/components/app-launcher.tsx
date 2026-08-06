@@ -78,6 +78,17 @@ export function AppLauncher({ open, onClose, railWidth }: AppLauncherProps) {
 
   const launcherLeft = railWidth + 12;
 
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose, open]);
+
+  const launcherLeft = railWidth + 12;
+
   return (
     <AnimatePresence>
       {open && (
