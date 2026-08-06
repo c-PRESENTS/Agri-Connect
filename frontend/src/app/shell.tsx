@@ -66,7 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div id="main-content" tabIndex={-1} className={`flex-1 min-w-0 ${isFullScreen ? "overflow-hidden" : "overflow-y-auto"} ${showMobileNav ? "pb-16 md:pb-0" : ""}`}>
             {children}
           </div>
-          <div className="hidden lg:block">
+          <div className="hidden h-full min-h-0 lg:block">
             <Suspense fallback={<ShellFallback />}>
               <CompactMarketPanel defaultOpen={true} />
             </Suspense>

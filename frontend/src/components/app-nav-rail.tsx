@@ -285,13 +285,13 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
     });
   };
 
-  // Collapsed rail shows icon + small label under it for clarity (request A.2).
-  const W_COLLAPSED = 96;
-  const W_EXPANDED  = editMode ? 240 : 220;
+  // Collapsed rail shows icon + label, expanded rail expanded to 270px for full non-truncated labels.
+  const W_COLLAPSED = 108;
+  const W_EXPANDED  = editMode ? 290 : 270;
 
   return (
     <aside
-      className="hidden lg:flex flex-col bg-sidebar/95 backdrop-blur-xl border-r border-border/40 shrink-0 overflow-hidden z-50"
+      className="hidden lg:flex flex-col bg-sidebar border-r border-border/40 shrink-0 overflow-hidden z-50"
       style={{
         width: expanded ? W_EXPANDED : W_COLLAPSED,
         transition: "width 160ms cubic-bezier(0.23,1,0.32,1)",
@@ -299,10 +299,13 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
       data-testid="app-nav-rail"
     >
       {/* Header: manual expand/collapse toggle */}
-      <div className="flex items-center justify-end px-2 pt-2">
+      <div className="flex items-center justify-between px-3 pt-2.5 pb-1">
+        {expanded && (
+          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Menu</span>
+        )}
         <button
           onClick={() => setExpanded(v => !v)}
-          className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors ml-auto border border-border/40"
           title={expanded ? t("nav.collapse_menu") : t("nav.expand_menu")}
           data-testid="nav-rail-toggle"
         >
@@ -311,7 +314,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
       </div>
 
       {/* Scrollable nav items */}
-      <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden py-2 gap-1.5 px-2">
+      <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden py-2 gap-1.5 px-2.5">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={visibleItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
             {visibleItems.map((item) => {
@@ -348,25 +351,25 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                 title={isComingSoon ? `${getItemLabel(item)} — Coming soon` : getItemLabel(item)}
                 className={`w-full relative flex rounded-xl transition-all duration-150 overflow-hidden ${
                   expanded
-                    ? "items-center gap-3 py-2 px-2.5"
-                    : "flex-col items-center justify-center gap-1 py-2 px-1"
+                    ? "items-center gap-3 py-2.5 px-3"
+                    : "flex-col items-center justify-center gap-1.5 py-2.5 px-1.5"
                 } ${
                   isComingSoon && !editMode
-                    ? "bg-emerald-50/80 text-emerald-800 ring-1 ring-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-300 dark:ring-emerald-800/60 dark:hover:bg-emerald-950/35"
+                    ? "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-700 dark:hover:bg-emerald-950/60 shadow-2xs"
                     : isActive && !editMode
-                    ? "bg-gradient-to-r from-primary/25 via-primary/15 to-primary/5 text-primary font-semibold shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.35)] ring-1 ring-primary/30"
+                    ? "bg-gradient-to-r from-primary/30 via-primary/20 to-primary/10 text-primary font-black shadow-[inset_0_0_0_1.5px_hsl(var(--primary)/0.5)] ring-1 ring-primary/40"
                     : editMode
                       ? "bg-muted/40 text-muted-foreground cursor-grab active:cursor-grabbing"
-                      : "text-muted-foreground/90 hover:bg-muted/70 hover:text-foreground"
+                      : "text-foreground/90 hover:bg-muted/80 hover:text-foreground font-extrabold"
                 }`}
                 data-testid={`nav-rail-${item.id}`}
               >
                 {isActive && !editMode && (
                   <>
                     {/* Big visible left bar that extends well past the rail edge */}
-                    <span className="absolute -left-1 top-1 bottom-1 w-1.5 rounded-r-full bg-primary shadow-[0_0_12px_hsl(var(--primary)/0.6)]" />
+                    <span className="absolute -left-1 top-1 bottom-1 w-2 rounded-r-full bg-primary shadow-[0_0_12px_hsl(var(--primary)/0.7)]" />
                     {/* Soft glow extending leftward for stronger visual cue */}
-                    <span className="absolute -left-2 top-1/2 -translate-y-1/2 h-8 w-2 rounded-full bg-primary/40 blur-[6px]" />
+                    <span className="absolute -left-2 top-1/2 -translate-y-1/2 h-9 w-2.5 rounded-full bg-primary/50 blur-[6px]" />
                   </>
                 )}
                 {/* Drag handle visible on left when editing + expanded */}
@@ -377,7 +380,7 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                 {/* Icon — use category image for shopping categories, Lucide for app routes */}
                 <span className="flex-shrink-0 flex items-center justify-center relative">
                   {emojis[item.id] ? (
-                    <span className={expanded ? "text-[26px] leading-none" : "text-[32px] leading-none"}>
+                    <span className={expanded ? "text-[28px] leading-none" : "text-[34px] leading-none"}>
                       {emojis[item.id]}
                     </span>
                   ) : itemCat && getCategoryImage(itemCat) ? (
@@ -385,15 +388,15 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                       src={getCategoryImage(itemCat)}
                       alt={getItemLabel(item)}
                       loading="lazy"
-                      className={`object-cover rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10 ${
-                        expanded ? "h-9 w-9" : "h-12 w-12"
-                      } ${isActive && !editMode ? "ring-2 ring-white/40" : ""}`}
+                      className={`object-cover rounded-xl shadow-sm ring-1 ring-black/10 dark:ring-white/15 ${
+                        expanded ? "h-10 w-10" : "h-13 w-13"
+                      } ${isActive && !editMode ? "ring-2 ring-primary" : ""}`}
                     />
                   ) : (
-                    <Icon className="h-[30px] w-[30px]" strokeWidth={2} />
+                    <Icon className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={2.2} />
                   )}
                   {(item.id as string) === "cart" && cartCount > 0 && !editMode && (
-                    <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-primary text-[9px] font-bold text-primary-foreground flex items-center justify-center leading-none">
+                    <span className="absolute -top-1.5 -right-1.5 h-5 min-w-5 px-1 rounded-full bg-primary text-xs font-black text-primary-foreground flex items-center justify-center leading-none shadow-sm">
                       {cartCount > 9 ? "9+" : cartCount}
                     </span>
                   )}
@@ -401,18 +404,18 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
 
                 {/* Label — under icon when collapsed, inline when expanded */}
                 {expanded ? (
-                  <span className="text-[15px] font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis flex-1 text-left">
+                  <span className="text-base sm:text-lg font-black leading-tight whitespace-nowrap overflow-hidden text-ellipsis flex-1 text-left text-foreground">
                     {getItemLabel(item)}
                   </span>
                 ) : (
-                  <span className="text-[10px] font-semibold leading-tight text-center w-full whitespace-nowrap overflow-hidden text-ellipsis">
+                  <span className="text-xs sm:text-sm font-black leading-tight text-center w-full whitespace-nowrap overflow-hidden text-ellipsis text-foreground">
                     {getItemLabel(item)}
                   </span>
                 )}
                 {isComingSoon && !editMode && (
                   <span className={expanded
-                    ? "shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white"
-                    : "absolute right-0.5 top-0.5 rounded-full bg-emerald-600 px-1 py-0.5 text-[7px] font-black uppercase leading-none text-white"
+                    ? "shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-black uppercase tracking-wide text-white shadow-xs"
+                    : "absolute right-1 top-1 rounded-full bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none text-white shadow-xs"
                   }>
                     Soon
                   </span>
@@ -504,7 +507,11 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
           </span>
         </button>
       </div>
-      <AppLauncher open={appLauncherOpen} onClose={() => setAppLauncherOpen(false)} />
+      <AppLauncher
+        open={appLauncherOpen}
+        onClose={() => setAppLauncherOpen(false)}
+        railWidth={expanded ? W_EXPANDED : W_COLLAPSED}
+      />
     </aside>
   );
 }

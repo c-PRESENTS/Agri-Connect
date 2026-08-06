@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,9 +44,10 @@ const ALL_APPS: AppItem[] = [
 interface AppLauncherProps {
   open: boolean;
   onClose: () => void;
+  railWidth: number;
 }
 
-export function AppLauncher({ open, onClose }: AppLauncherProps) {
+export function AppLauncher({ open, onClose, railWidth }: AppLauncherProps) {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
@@ -62,6 +63,17 @@ export function AppLauncher({ open, onClose }: AppLauncherProps) {
 
   const visible = ALL_APPS.filter(a => a.public || isAuthenticated);
 
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose, open]);
+
+  const launcherLeft = railWidth + 12;
+
   return (
     <AnimatePresence>
       {open && (
@@ -74,19 +86,27 @@ export function AppLauncher({ open, onClose }: AppLauncherProps) {
             onClick={onClose}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.97, x: -10, y: 10 }}
+            animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, x: -10, y: 10 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] w-[90vw] max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-border/60 bg-background/95 backdrop-blur-2xl shadow-2xl p-5"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="app-launcher-title"
+            className="fixed bottom-3 z-[110] max-h-[calc(100vh-1.5rem)] origin-bottom-left overflow-y-auto rounded-2xl border border-border/60 bg-background/95 p-5 shadow-2xl backdrop-blur-2xl"
+            style={{
+              left: launcherLeft,
+              width: `min(560px, calc(100vw - ${launcherLeft + 12}px))`,
+            }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Grid3X3 className="h-5 w-5 text-primary" />
-                <h2 className="text-base font-bold">{t("nav.all_apps")}</h2>
+                <h2 id="app-launcher-title" className="text-base font-bold">{t("nav.all_apps")}</h2>
               </div>
               <button
                 onClick={onClose}
+                aria-label={t("common.close", { defaultValue: "Close apps launcher" })}
                 className="h-7 w-7 rounded-lg flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-colors"
               >
                 <X className="h-4 w-4" />
