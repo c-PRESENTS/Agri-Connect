@@ -1,5 +1,5 @@
 import "leaflet/dist/leaflet.css";
-import { useEffect, useLayoutEffect, useState, useRef } from "react";
+import { useEffect, useLayoutEffect, useState, useRef, memo } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -7,8 +7,8 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowRight, Star, Users, Leaf, TrendingUp,
-  ShieldCheck, Truck, Sprout, Globe, Activity, Zap, Satellite,
+  ArrowRight, Star, Users, Leaf,
+  ShieldCheck, Truck, Sprout, Globe, Activity, Satellite,
   ShoppingCart,
 } from "lucide-react";
 import { LeafletFarmerMap } from "./leaflet-farmer-map";
@@ -83,7 +83,7 @@ const HERO_MAP_MODES: { id: HeroMapMode; label: string; emoji: string; overlays:
   { id: "land-lots", label: "Land & Lots", emoji: "🗺️", overlays: { farmers: false, needs: false, heatmap: false } },
 ];
 
-export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: HeroSectionProps) {
+export const HeroSection = memo(function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: HeroSectionProps) {
   const { format } = useCurrency();
   const { t } = useTranslation();
   const [, navigate] = useLocation();
@@ -173,7 +173,6 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
   );
   const featuredProducts = products.filter(p => p.isFeatured);
   const farmerCount = new Set(products.map(p => p.farmerId)).size;
-  const visibleListings = products.length + shareCareItems.length;
   const openProductCategory = (product: Product) => {
     navigate(
       buildCategoryBrowseUrl({
@@ -239,22 +238,22 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
               </p>
             </div>
 
-            {/* CTAs — side by side, compact */}
-            <div className="flex gap-2">
+            {/* CTAs — side by side */}
+            <div className="flex gap-3 mt-1">
               <Button
                 onClick={onBrowse}
                 data-testid="button-mobile-shop-now"
-                className="flex-1 h-9 bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] font-bold rounded-lg shadow-sm gap-1 px-3"
+                className="flex-1 h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base font-black uppercase tracking-wider rounded-xl shadow-md gap-2 px-4"
               >
-                {t("home.shop_now")}<ArrowRight className="h-3.5 w-3.5" />
+                {t("home.shop_now")}<ArrowRight className="h-4.5 w-4.5" />
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/map")}
                 data-testid="button-mobile-live-map"
-                className="flex-1 h-9 border-white/25 text-white hover:bg-white/10 bg-white/5 text-[12px] font-bold rounded-lg gap-1 px-3"
+                className="flex-1 h-12 border-2 border-white/30 text-white hover:bg-white/15 bg-white/10 text-sm sm:text-base font-black uppercase tracking-wider rounded-xl gap-2 px-4"
               >
-                <Satellite className="h-3.5 w-3.5 text-green-400" />{t("home.live_map")}
+                <Satellite className="h-4.5 w-4.5 text-green-400" />{t("home.live_map")}
               </Button>
             </div>
           </div>
@@ -262,13 +261,13 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
           {/* ──────── DESKTOP HERO — Text & CTAs (≥lg only) ──────── */}
           <div ref={heroLeftRef} className="hidden lg:flex flex-col justify-center px-10 lg:px-12 py-8 w-full overflow-hidden min-w-0">
 
-            <div className="flex items-center gap-2 flex-wrap mb-3">
-              <Badge className="bg-primary/20 text-primary border-primary/30 px-2 py-0.5 text-[9px] font-bold tracking-[0.1em] uppercase rounded-full">
-                <Leaf className="h-2.5 w-2.5 mr-0.5" />{t("home.farm_to_table")}
+            <div className="flex items-center gap-2 flex-wrap mb-4">
+              <Badge className="bg-primary/25 text-primary border-2 border-primary/40 px-3 py-1 text-xs font-black tracking-[0.12em] uppercase rounded-full shadow-xs">
+                <Leaf className="h-3.5 w-3.5 mr-1" />{t("home.farm_to_table")}
               </Badge>
-              <div className="flex items-center gap-1 bg-white/10 border border-white/20 rounded-full px-1.5 py-0.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[9px] font-bold text-green-300">{farmerCount} {t("home.farmers")}</span>
+              <div className="flex items-center gap-1.5 bg-white/15 border-2 border-white/25 rounded-full px-3 py-1 shadow-xs">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-xs font-black text-green-300">{farmerCount} {t("home.farmers")}</span>
               </div>
             </div>
 
@@ -277,40 +276,40 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
               <span className="gradient-text block whitespace-nowrap">{t("home.direct_to_you")}</span>
             </h1>
 
-            <p className="text-sm text-white/70 mb-4 leading-snug max-w-md">
+            <p className="text-base sm:text-lg font-bold text-white/90 mb-6 leading-relaxed max-w-lg">
               {t("home.hero_description")}
             </p>
 
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
               {[
-                { value: `${farmerCount}`, label: t("home.farmers"), icon: Users, color: "text-primary bg-primary/20" },
-                { value: `${products.length}`, label: t("home.products"), icon: Sprout, color: "text-emerald-400 bg-emerald-900/40" },
-                { value: `${shareCareItems.length}`, label: t("home.free_items"), icon: Activity, color: "text-amber-400 bg-amber-900/40" },
+                { value: `${farmerCount}`, label: t("home.farmers"), icon: Users, color: "text-primary bg-primary/25" },
+                { value: `${products.length}`, label: t("home.products"), icon: Sprout, color: "text-emerald-400 bg-emerald-900/60" },
+                { value: `${shareCareItems.length}`, label: t("home.free_items"), icon: Activity, color: "text-amber-400 bg-amber-900/60" },
               ].map(({ value, label, icon: Icon, color }) => (
-                <div key={label} className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-lg p-2.5 flex flex-col items-center text-center">
-                  <div className={`w-7 h-7 rounded-md flex items-center justify-center mx-auto mb-1 ${color}`}>
-                    <Icon className="h-3.5 w-3.5" />
+                <div key={label} className="bg-white/15 backdrop-blur-md border-2 border-white/25 rounded-2xl p-4 sm:p-5 flex flex-col items-center text-center shadow-lg hover:bg-white/20 transition-all">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 ${color}`}>
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-black text-white leading-none">{value}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-white/50">{label}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-white leading-none my-1">{value}</span>
+                  <span className="text-xs sm:text-sm font-black uppercase tracking-[0.14em] text-white/80">{label}</span>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <Button onClick={onBrowse} className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 h-10 text-sm font-bold rounded-lg shadow-lg shadow-primary/20 gap-1">
-                {t("home.shop_now")}<ArrowRight className="h-4 w-4" />
+            <div className="flex items-center gap-4 mb-6 flex-wrap">
+              <Button onClick={onBrowse} className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 h-14 text-base sm:text-lg font-black uppercase tracking-wider rounded-2xl shadow-xl shadow-primary/30 gap-2.5">
+                {t("home.shop_now")}<ArrowRight className="h-5.5 w-5.5" />
               </Button>
-              <Button variant="outline" className="border-green-400/60 text-white hover:bg-green-500/30 px-6 h-10 text-sm font-bold rounded-lg gap-1 bg-green-500/20" onClick={() => navigate("/map")}>
-                <Satellite className="h-4 w-4" />{t("home.live_map")}
+              <Button variant="outline" className="border-2 border-green-400/80 text-white hover:bg-green-500/30 px-8 h-14 text-base sm:text-lg font-black uppercase tracking-wider rounded-2xl gap-2.5 bg-green-500/25 shadow-lg" onClick={() => navigate("/map")}>
+                <Satellite className="h-5.5 w-5.5 text-green-300" />{t("home.live_map")}
               </Button>
             </div>
 
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-5 sm:gap-6 flex-wrap items-center">
               {TRUST_BADGES.map(({ icon: Icon, label, color }) => (
-                <div key={label} className="flex items-center gap-1 text-[11px] text-white/60 font-medium">
-                  <Icon className={`h-3 w-3 ${color}`} />
-                  {t(label)}
+                <div key={label} className="flex items-center gap-2 text-sm sm:text-base text-white font-black drop-shadow-md">
+                  <Icon className={`h-5 w-5 shrink-0 ${color}`} />
+                  <span>{t(label)}</span>
                 </div>
               ))}
             </div>
@@ -445,30 +444,6 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
 
       {/* ─── BOTTOM CONTENT STRIP ─── */}
       <div className="relative z-10 bg-background border-t border-border/50">
-
-        {/* Stats strip — horizontal scroll on mobile, grid on desktop */}
-        <div className="border-b border-border/40 bg-muted/20">
-          <div className="px-3 sm:container sm:mx-auto sm:px-4 py-2 sm:py-3">
-            <div className="flex sm:grid sm:grid-cols-4 gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar">
-              {[
-                { icon: Users, label: t("home.farmers"), value: `${farmerCount}`, border: "border-green-200/60 dark:border-green-800/40", bg: "bg-green-50/80 dark:bg-green-950/30", iconColor: "text-green-600 dark:text-green-400", textColor: "text-green-700 dark:text-green-300" },
-                { icon: Star, label: t("home.free_items"), value: `${shareCareItems.length}`, border: "border-amber-200/60 dark:border-amber-800/40", bg: "bg-amber-50/80 dark:bg-amber-950/30", iconColor: "text-amber-600 dark:text-amber-400", textColor: "text-amber-700 dark:text-amber-300" },
-                { icon: TrendingUp, label: t("home.products"), value: `${products.length}`, border: "border-blue-200/60 dark:border-blue-800/40", bg: "bg-blue-50/80 dark:bg-blue-950/30", iconColor: "text-blue-600 dark:text-blue-400", textColor: "text-blue-700 dark:text-blue-300" },
-                { icon: Zap, label: t("home.listings", { defaultValue: "Listings" }), value: visibleListings.toLocaleString(), border: "border-purple-200/60 dark:border-purple-800/40", bg: "bg-purple-50/80 dark:bg-purple-950/30", iconColor: "text-purple-600 dark:text-purple-400", textColor: "text-purple-700 dark:text-purple-300" },
-              ].map(({ icon: Icon, label, value, border, bg, iconColor, textColor }) => (
-                <div key={label} className={`flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl border shrink-0 ${border} ${bg}`}>
-                  <div className={`h-6 w-6 sm:h-8 sm:w-8 rounded-md sm:rounded-lg bg-background/80 border ${border} flex items-center justify-center flex-shrink-0`}>
-                    <Icon className={`h-3 w-3 sm:h-4 sm:w-4 ${iconColor}`} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{label}</div>
-                    <div className={`text-[11px] sm:text-sm font-black ${textColor} leading-none`}>{value}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
 
         {/* ─── FRESH PICKS CAROUSEL ─── */}
         <div className="px-3 sm:container sm:mx-auto sm:px-4 py-2 sm:py-4">
@@ -672,15 +647,15 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
         <div className="border-t border-border/30 bg-background">
           <div className="px-3 sm:container sm:mx-auto sm:px-4 pt-2 sm:pt-5 pb-3 sm:pb-6">
 
-            <div className="flex items-center gap-1.5 sm:gap-3 mb-1.5 sm:mb-4 flex-wrap">
-              <div className="h-1.5 w-1.5 sm:h-2.5 sm:w-2.5 rounded-full bg-primary flex-shrink-0" />
-              <h2 className="text-[11px] sm:text-base font-black uppercase tracking-[0.12em] text-foreground">{t("home.all_categories")}</h2>
-              <span className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-5 flex-wrap">
+              <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-primary flex-shrink-0" />
+              <h2 className="text-sm sm:text-base md:text-lg font-black uppercase tracking-[0.12em] text-foreground">{t("home.all_categories")}</h2>
+              <span className="text-xs sm:text-sm text-muted-foreground font-black">
                 ({HOME_CATEGORY_TILES.length})
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11">
               {HOME_CATEGORY_TILES.map((tile) => {
                 const image = categoryImages[tile.imageId] || categoryImages[tile.categoryId];
                 return (
@@ -690,8 +665,8 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                     onClick={() => openHomeCategoryTile(tile)}
                     data-testid={`${tile.isSubcategory ? "subcategory" : "main-category"}-${tile.id}`}
                     aria-label={`Open ${tile.label} ${tile.isSubcategory ? "subcategory" : "category"}`}
-                    className={`group relative aspect-[4/3] min-w-0 overflow-hidden rounded-xl border bg-muted text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0 ${
-                      tile.isSubcategory ? "border-border/45" : "border-primary/60"
+                    className={`group relative aspect-[4/3] min-w-0 overflow-hidden rounded-2xl border-2 bg-muted text-left shadow-md transition-all duration-200 hover:-translate-y-1 hover:border-primary/80 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0 ${
+                      tile.isSubcategory ? "border-border/80" : "border-primary"
                     }`}
                   >
                     {image ? (
@@ -703,15 +678,15 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/50 to-primary/15" />
                     )}
-                    <div className={`absolute inset-0 bg-gradient-to-t via-black/20 to-transparent transition-colors group-hover:from-primary/90 ${
-                      tile.isSubcategory ? "from-black/80" : "from-black/90"
+                    <div className={`absolute inset-0 bg-gradient-to-t via-black/30 to-transparent transition-colors group-hover:from-primary/95 ${
+                      tile.isSubcategory ? "from-black/85" : "from-black/95"
                     }`} />
                     {tile.isSubcategory && (
-                      <span className="absolute left-1.5 top-1.5 rounded-full bg-white/85 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wide text-primary shadow-sm">
+                      <span className="absolute left-2 top-2 rounded-lg bg-amber-400 text-black px-2 py-0.5 text-[9px] sm:text-xs font-black uppercase tracking-wider shadow-sm">
                         Sub
                       </span>
                     )}
-                    <span className="absolute inset-x-1.5 bottom-1.5 line-clamp-2 text-center text-[8px] font-black leading-tight text-white drop-shadow sm:text-[10px]">
+                    <span className="absolute inset-x-2 bottom-2 line-clamp-2 text-center text-xs sm:text-sm font-black leading-tight text-white drop-shadow-md uppercase tracking-tight">
                       {tile.label}
                     </span>
                   </button>
@@ -724,4 +699,4 @@ export function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: 
       </div>
     </section>
   );
-}
+});
