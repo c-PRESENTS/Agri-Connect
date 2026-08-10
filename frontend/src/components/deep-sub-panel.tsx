@@ -71,13 +71,13 @@ export function DeepSubPanel({ subId, onClose, onItemSelect }: DeepSubPanelProps
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: sectionIdx * 0.05, duration: 0.15 }}
                 >
-                  <div className="flex items-center gap-1.5 mb-1.5 px-1">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    <h4 className="text-[10px] uppercase tracking-wider font-bold text-foreground">
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <div className="h-2 w-2 rounded-full bg-primary" />
+                    <h4 className="text-xs font-black uppercase tracking-wide text-foreground">
                       {section.title}
                     </h4>
                   </div>
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {section.items.map((item, itemIdx) => (
                       <motion.button
                         key={item}
@@ -85,11 +85,11 @@ export function DeepSubPanel({ subId, onClose, onItemSelect }: DeepSubPanelProps
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: sectionIdx * 0.05 + itemIdx * 0.02, duration: 0.1 }}
                         onClick={() => onItemSelect?.(item)}
-                        className="flex items-center justify-center p-2 rounded-lg min-h-[44px] bg-muted/40 hover:bg-primary/10 active:bg-primary/15 active:scale-95 transition-all duration-150 ease-out group"
+                        className="flex items-center justify-center p-2.5 rounded-lg min-h-[46px] bg-background border border-border/60 hover:bg-primary/10 hover:border-primary/40 active:bg-primary/15 active:scale-95 transition-all duration-150 ease-out group shadow-2xs"
                         style={{ touchAction: 'manipulation' }}
                         data-testid={`button-item-${item.toLowerCase().replace(/\s+/g, '-')}`}
                       >
-                        <span className="text-[9px] font-medium text-center leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                        <span className="text-xs font-black uppercase tracking-wide text-center leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
                           {item}
                         </span>
                       </motion.button>

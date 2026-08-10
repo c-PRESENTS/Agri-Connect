@@ -1,4 +1,4 @@
-﻿{
+{
   "nav": {
     "help": "सहायता",
     "land": "भूमि",
@@ -1075,7 +1075,7 @@
     "badge": "AgriConnect डायरेक्ट",
     "item_count": "{{count}} आइटम",
     "farm_to_table": "खेत से थाली",
-    "same_day_delivery": "उसी दिन डिलीवरी",
+    "same_day_delivery": "3-5 दिन में डिलीवरी",
     "verified_farmers": "सत्यापित किसान"
   },
   "shipping_quote": {

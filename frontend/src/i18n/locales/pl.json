@@ -1554,7 +1554,7 @@
     "badge": "AgriConnect Direct",
     "item_count": "{{count}} szt.",
     "farm_to_table": "Z farmy na stół",
-    "same_day_delivery": "Dostawa tego samego dnia",
+    "same_day_delivery": "Dostawa w 3-5 dni",
     "verified_farmers": "Zweryfikowani rolnicy"
   },
   "shipping_quote": {

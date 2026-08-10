@@ -29,6 +29,8 @@ import {
 import { useCurrency } from "@/contexts/currency-context";
 import { queryClient } from "@/lib/queryClient";
 import { CheckoutProgress } from "@/components/checkout-progress";
+import { SafeProductImage } from "@/components/safe-product-image";
+import { resolveProductImageForOrderItem } from "@/lib/product-images";
 
 type FunctionalMethod = "stripe" | "cash" | "razorpay" | "paypal";
 type OnlineMethod = Exclude<FunctionalMethod, "cash">;
@@ -271,40 +273,38 @@ export default function CheckoutPaymentPage() {
   return (
     <div className="min-h-screen bg-background">
       <TopNavigation />
-      <main className="mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
+      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 space-y-6">
         <button
           type="button"
           onClick={() => navigate("/checkout")}
-          className="mb-7 flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+          className="mb-6 flex items-center gap-2 text-sm sm:text-base font-black uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to delivery
+          <ArrowLeft className="h-5 w-5 stroke-[2.5]" /> Back to delivery
         </button>
 
-        <div className="mb-8 rounded-2xl border bg-card px-3 py-4 shadow-sm sm:px-6">
+        <div className="mb-8 rounded-3xl border-2 border-border/80 bg-card px-4 py-6 shadow-md sm:px-8">
           <CheckoutProgress currentStep={3} />
         </div>
 
-        <div className="mb-8">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
-              Secure payment
-            </h1>
-            <p className="mt-2 text-base text-muted-foreground">
-              Choose how you want to pay.
-            </p>
-          </div>
+        <div className="mb-8 border-b border-border/60 pb-6">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
+            Secure payment
+          </h1>
+          <p className="mt-2 text-base sm:text-lg font-bold text-foreground/85">
+            Choose how you want to pay.
+          </p>
         </div>
 
-        <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1.8fr)_minmax(340px,0.8fr)] xl:gap-9">
-          <section className="min-w-0">
-            <Card className="rounded-2xl shadow-sm">
-              <CardContent className="p-5 sm:p-7 xl:p-8">
+        <div className="grid items-start gap-8 lg:grid-cols-3">
+          <section className="lg:col-span-2">
+            <Card className="rounded-3xl border-2 border-border/80 shadow-md p-2">
+              <CardContent className="p-6 sm:p-8">
                 <RadioGroup
                   value={selectedMethod}
                   onValueChange={(method) =>
                     setSelectedMethod(method as FunctionalMethod)
                   }
-                  className="space-y-4"
+                  className="space-y-5"
                 >
                   <MethodRow
                     method={methods.get("stripe")}
@@ -337,20 +337,20 @@ export default function CheckoutPaymentPage() {
                 </RadioGroup>
 
                 {cashSelected && (
-                  <div className="mt-4 flex gap-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="mt-6 flex gap-3 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm sm:text-base font-bold text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
                     Cash orders are not protected by Stripe and do not support automatic online refunds.
                   </div>
                 )}
                 <Button
-                  className="mt-6 h-12 w-full text-base font-bold sm:h-14"
+                  className="mt-8 h-14 sm:h-16 w-full text-base sm:text-lg font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg transition-transform hover:scale-[1.01]"
                   size="lg"
                   disabled={!selectedMethod || paymentMutation.isPending}
                   onClick={() => paymentMutation.mutate()}
                 >
                   {paymentMutation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       {selectedMethod === "cash"
                         ? "Placing order…"
                         : "Processing payment…"}
@@ -372,69 +372,73 @@ export default function CheckoutPaymentPage() {
           </section>
 
           <aside className="min-w-0">
-            <Card className="rounded-2xl shadow-sm lg:sticky lg:top-6">
-              <CardContent className="p-5 sm:p-6 xl:p-7">
-                <h2 className="text-xl font-black">Order summary</h2>
-                <p className="mt-1.5 text-sm text-muted-foreground">
+            <Card className="rounded-3xl border-2 border-border/80 shadow-md lg:sticky lg:top-6 p-2">
+              <CardContent className="p-6 space-y-5">
+                <h2 className="text-xl sm:text-2xl font-black uppercase tracking-wider text-foreground">Order summary</h2>
+                <p className="text-xs sm:text-sm font-bold text-muted-foreground">
                   Quote expires {new Date(quote.expiresAt).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
                 </p>
-                <div className="mt-6 max-h-72 space-y-4 overflow-y-auto pr-1">
-                  {quote.items.map((item) => (
-                    <div key={item.productId} className="flex items-center gap-3">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt=""
-                          className="h-12 w-12 shrink-0 rounded-xl object-cover"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 shrink-0 rounded-xl bg-muted" />
-                      )}
+                <div className="max-h-64 space-y-4 overflow-y-auto pr-1">
+                  {quote.items.map((item) => {
+                    const imageResolution = resolveProductImageForOrderItem({
+                      productId: item.productId,
+                      productName: item.name,
+                      productImage: item.image,
+                    });
+                    return (
+                    <div key={item.productId} className="flex items-center gap-3 p-2 rounded-xl bg-muted/30 border">
+                      <SafeProductImage
+                        src={imageResolution.src}
+                        fallbackSrc={imageResolution.fallbackSrc}
+                        alt=""
+                        className="h-12 w-12 shrink-0 rounded-xl object-cover border"
+                      />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{item.name}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
+                        <p className="truncate text-sm font-black text-foreground">{item.name}</p>
+                        <p className="text-xs font-bold text-muted-foreground">
                           Qty {item.quantity} · {item.farmerName}
                         </p>
                       </div>
-                      <span className="text-sm font-bold">
+                      <span className="text-sm font-black text-foreground">
                         {format(item.unitPrice * item.quantity, { includeCode: true })}
                       </span>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
-                <Separator className="my-6" />
-                <div className="space-y-3 text-sm sm:text-base">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>{money(quote.subtotalMinor)}</span>
+                <Separator className="my-4 h-0.5" />
+                <div className="space-y-3 text-base">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-muted-foreground">Subtotal</span>
+                    <span className="font-black text-foreground">{money(quote.subtotalMinor)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Delivery</span>
-                    <span>{money(quote.shippingMinor)}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-muted-foreground">Delivery</span>
+                    <span className="font-black text-foreground">{money(quote.shippingMinor)}</span>
                   </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">Taxes</span>
-                    <span className="text-right text-xs">Included where applicable</span>
+                  <div className="flex justify-between items-center gap-4">
+                    <span className="font-bold text-muted-foreground">Taxes</span>
+                    <span className="text-right text-xs font-bold text-muted-foreground">Included where applicable</span>
                   </div>
                   {Number(quote.platformFeeMinor) > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Platform fee</span>
-                      <span>{money(quote.platformFeeMinor)}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-muted-foreground">Platform fee</span>
+                      <span className="font-black text-foreground">{money(quote.platformFeeMinor)}</span>
                     </div>
                   )}
-                  <Separator />
-                  <div className="flex justify-between pt-1 text-lg font-black">
-                    <span>Total</span>
-                    <span>{money(quote.totalMinor)}</span>
+                  <Separator className="my-2 h-0.5" />
+                  <div className="flex justify-between items-center">
+                    <span className="font-black text-lg sm:text-xl uppercase tracking-wider text-foreground">Total</span>
+                    <span className="font-black text-2xl text-primary">{money(quote.totalMinor)}</span>
                   </div>
                 </div>
                 {currency !== quote.currency && (
-                  <div className="mt-5 rounded-xl border border-amber-300/70 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-                    <p className="font-bold">Estimated {money(quote.totalMinor)}</p>
-                    <p className="mt-1">
+                  <div className="mt-4 rounded-xl border-2 border-amber-300/80 bg-amber-50 p-4 text-xs sm:text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+                    <p className="font-black text-sm sm:text-base">Estimated {money(quote.totalMinor)}</p>
+                    <p className="mt-1 font-bold">
                       You will be charged{" "}
                       {new Intl.NumberFormat(undefined, {
                         style: "currency",
@@ -444,8 +448,8 @@ export default function CheckoutPaymentPage() {
                     </p>
                   </div>
                 )}
-                <div className="mt-5 flex gap-3 rounded-xl bg-muted/50 p-4 text-sm leading-5 text-muted-foreground">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                <div className="mt-4 flex gap-3 rounded-xl bg-muted/60 p-4 text-xs sm:text-sm font-bold text-foreground/80 border">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
                   Online orders are confirmed only after server verification.
                 </div>
               </CardContent>

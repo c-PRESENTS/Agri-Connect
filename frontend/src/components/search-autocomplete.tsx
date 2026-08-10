@@ -274,7 +274,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   return (
     <div ref={containerRef} className="relative w-full">
       <form onSubmit={handleSubmit} className="relative group w-full">
-        <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
         <Input
           ref={inputRef}
           type="search"
@@ -282,17 +282,17 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
           value={inputVal}
           onChange={handleChange}
           onFocus={() => setOpen(true)}
-          className="pl-8 pr-8 h-8 text-sm bg-muted/40 border-border/50 focus:bg-background focus:border-primary/30 focus:ring-1 focus:ring-primary/20 transition-all rounded-lg w-full"
+          className="pl-10 pr-10 h-11 text-base font-bold bg-muted/40 border-2 border-border/50 focus:bg-background focus:border-primary/30 focus:ring-2 focus:ring-primary/20 transition-all rounded-xl w-full"
           data-testid="input-search"
         />
         {inputVal && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             data-testid="button-search-clear"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-5 w-5" />
           </button>
         )}
       </form>
@@ -304,20 +304,20 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full left-0 right-0 mt-1.5 z-50 rounded-xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-xl shadow-black/8 overflow-hidden"
+            className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border-2 border-border/60 bg-background/95 backdrop-blur-xl shadow-2xl shadow-black/10 overflow-hidden"
             data-testid="dropdown-search-results"
           >
             {/* AI Search Toggle */}
             {open && inputVal.length > 0 && (
-              <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-border/30 bg-muted/20">
-                <div className="flex items-center gap-1.5">
-                  <Sparkles className="h-3 w-3 text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("search.ai_search")}</span>
+              <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border/30 bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">{t("search.ai_search")}</span>
                 </div>
                 <Switch
                   checked={aiSearchEnabled}
                   onCheckedChange={toggleAiSearch}
-                  className="scale-75"
+                  className="scale-90"
                   data-testid="toggle-ai-search"
                 />
               </div>
@@ -325,11 +325,11 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
 
             {/* AI Expanded Query Indicator */}
             {aiSearchEnabled && aiExpandedQuery && aiExpandedQuery !== inputVal && inputVal.length >= 2 && (
-              <div className="px-3 py-1.5 border-b border-border/30 bg-primary/5">
-                <div className="text-[10px] text-muted-foreground">
-                  <span className="font-semibold">{t("search.expanded")}</span> {aiExpandedQuery}
+              <div className="px-4 py-2.5 border-b border-border/30 bg-primary/5">
+                <div className="text-xs font-bold text-muted-foreground">
+                  <span className="font-black">{t("search.expanded")}</span> {aiExpandedQuery}
                   {aiCategoryHint && (
-                    <Badge variant="secondary" className="ml-1.5 text-[8px] py-0">
+                    <Badge variant="secondary" className="ml-2 text-xs py-0.5 px-2">
                       {categories.find(c => c.id === aiCategoryHint)?.name || aiCategoryHint}
                     </Badge>
                   )}
@@ -339,34 +339,34 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
 
             {/* Loading indicator */}
             {showLoading && (
-              <div className="flex items-center justify-center gap-2 px-3 py-3">
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                <span className="text-[11px] text-muted-foreground">{aiLoading ? t("search.ai_searching") : "Searching public listings..."}</span>
+              <div className="flex items-center justify-center gap-2.5 px-4 py-4">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-sm font-bold text-muted-foreground">{aiLoading ? t("search.ai_searching") : "Searching public listings..."}</span>
               </div>
             )}
 
             {showRecent && (
-              <div className="p-2 border-b border-border/30">
-                <div className="flex items-center justify-between gap-1.5 px-2 py-1 mb-1">
-                  <div className="flex items-center gap-1.5">
-                    <History className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <div className="p-3 border-b border-border/30">
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5 mb-2">
+                  <div className="flex items-center gap-2">
+                    <History className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                       {t("search.recent")}
                     </span>
                   </div>
                   <button
                     onClick={handleClearRecent}
-                    className="text-[9px] font-semibold text-muted-foreground hover:text-destructive flex items-center gap-0.5"
+                    className="text-xs font-bold text-muted-foreground hover:text-destructive flex items-center gap-1"
                   >
-                    <RotateCcw className="h-2.5 w-2.5" /> {t("search.clear")}
+                    <RotateCcw className="h-3.5 w-3.5" /> {t("search.clear")}
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-1.5 px-2">
+                <div className="flex flex-wrap gap-2 px-2">
                   {recentSearches.map((item) => (
                     <button
                       key={item}
                       onClick={() => void handleSelect(item)}
-                      className="text-[11px] px-2 py-0.5 rounded-md bg-muted/40 hover:bg-primary/10 hover:text-primary border border-border/30 hover:border-primary/20 transition-all font-medium"
+                      className="text-sm px-3 py-1.5 rounded-lg bg-muted/40 hover:bg-primary/10 hover:text-primary border border-border/30 hover:border-primary/20 transition-all font-bold"
                     >
                       {item}
                     </button>
@@ -376,19 +376,19 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             )}
 
             {showCategories && (
-              <div className="p-2 border-b border-border/30">
-                <div className="flex items-center gap-1.5 px-2 py-1 mb-1">
-                  <Package className="h-3 w-3 text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <div className="p-3 border-b border-border/30">
+                <div className="flex items-center gap-2 px-2 py-1.5 mb-2">
+                  <Package className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                     {t("search.browse_categories")}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-1.5 px-2">
+                <div className="flex flex-wrap gap-2 px-2">
                   {getShoppableCategories().slice(0, 12).map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => void handleSelect(`?category=${cat.id}`)}
-                      className="text-[11px] px-2 py-0.5 rounded-md bg-primary/8 hover:bg-primary/15 hover:text-primary border border-primary/20 transition-all font-medium"
+                      className="text-sm px-3 py-1.5 rounded-lg bg-primary/8 hover:bg-primary/15 hover:text-primary border border-primary/20 transition-all font-bold"
                     >
                       {cat.name}
                     </button>
@@ -398,19 +398,19 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             )}
 
             {showTrending && (
-              <div className="p-2">
-                <div className="flex items-center gap-1.5 px-2 py-1 mb-1">
-                  <TrendingUp className="h-3 w-3 text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <div className="p-3">
+                <div className="flex items-center gap-2 px-2 py-1.5 mb-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                     {t("search.trending", "Trending")}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-1.5 px-2">
+                <div className="flex flex-wrap gap-2 px-2">
                   {TRENDING.map((item) => (
                     <button
                       key={item}
                       onClick={() => void handleSelect(item)}
-                      className="text-[11px] px-2 py-0.5 rounded-md bg-muted/60 hover:bg-primary/10 hover:text-primary border border-border/40 hover:border-primary/20 transition-all font-medium"
+                      className="text-sm px-3 py-1.5 rounded-lg bg-muted/60 hover:bg-primary/10 hover:text-primary border border-border/40 hover:border-primary/20 transition-all font-bold"
                       data-testid={`search-trending-${item.replace(/\s+/g, "-").toLowerCase()}`}
                     >
                       {item}
@@ -421,37 +421,42 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             )}
 
             {showSuggestions && !aiLoading && (
-              <div className="p-1.5">
-                <div className="flex items-center gap-1.5 px-2 py-1 mb-0.5">
+              <div className="p-2.5">
+                <div className="flex items-center gap-2 px-2.5 py-1.5 mb-1">
                   {aiSearchEnabled ? (
-                    <Sparkles className="h-3 w-3 text-primary" />
+                    <Sparkles className="h-4 w-4 text-primary" />
                   ) : (
-                    <Package className="h-3 w-3 text-primary" />
+                    <Package className="h-4 w-4 text-primary" />
                   )}
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                     {aiSearchEnabled ? t("search.ai_results") : t("search.products")}
                   </span>
                   {aiSearchEnabled && suggestions.length > 0 && (
-                    <Badge variant="secondary" className="text-[8px] py-0 ml-auto">{t("search.found_count", { count: suggestions.length })}</Badge>
+                    <Badge variant="secondary" className="text-xs py-0.5 px-2 ml-auto font-bold">{t("search.found_count", { count: suggestions.length })}</Badge>
                   )}
                 </div>
                 {suggestions.map((product) => (
                   <div key={product.id} className="relative">
                     <button
                       onClick={() => handleProductSelect(product)}
-                      className="group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 pr-12 text-left transition-colors hover:bg-muted/60"
+                      className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 pr-14 text-left transition-colors hover:bg-muted/60"
                       data-testid={`search-result-${product.id}`}
                     >
-                    <div className="h-8 w-8 rounded-md overflow-hidden bg-muted shrink-0">
-                      <SafeProductImage src={resolveProductImageForProduct(product).src} alt={`${product.name || "Product"} product image`} className="w-full h-full object-cover" />
+                    <div className="h-10 w-10 rounded-lg overflow-hidden bg-muted shrink-0">
+                      <SafeProductImage
+                        src={resolveProductImageForProduct(product).src}
+                        fallbackSrc={resolveProductImageForProduct(product).fallbackSrc}
+                        alt={`${product.name || "Product"} product image`}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[12px] font-semibold truncate group-hover:text-primary transition-colors">
+                      <div className="text-sm font-black truncate group-hover:text-primary transition-colors">
                         {product.name || "Unnamed product"}
                       </div>
-                      <div className="text-[10px] text-muted-foreground truncate">{product.farmerName || "Seller not specified"}</div>
+                      <div className="text-xs font-bold text-muted-foreground truncate">{product.farmerName || "Seller not specified"}</div>
                     </div>
-                    <div className="text-[11px] font-bold text-primary shrink-0">
+                    <div className="text-sm font-black text-primary shrink-0">
                       {format(product.price, {
                         sourceCurrency: product.currency || "GBP",
                         includeCode: true,
@@ -461,7 +466,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                     <FavoriteProductButton
                       productId={product.id}
                       productName={product.name || "Unnamed product"}
-                      className="!absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 bg-background/95 shadow-md hover:bg-red-50"
+                      className="!absolute right-2.5 top-1/2 h-8 w-8 -translate-y-1/2 bg-background/95 shadow-md hover:bg-red-50"
                       data-testid={`button-search-favorite-${product.id}`}
                     />
                   </div>
@@ -470,22 +475,22 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             )}
 
             {showFarmerResults && (
-              <div className="p-1.5 border-t border-border/30">
-                <div className="flex items-center gap-1.5 px-2 py-1 mb-0.5">
-                  <Store className="h-3 w-3 text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Farmers & sellers</span>
+              <div className="p-2.5 border-t border-border/30">
+                <div className="flex items-center gap-2 px-2.5 py-1.5 mb-1">
+                  <Store className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Farmers & sellers</span>
                 </div>
                 {farmers.slice(0, 6).map((farmer) => (
                   <button
                     key={farmer.id}
                     onClick={() => { setLocation(`/map?farmer=${encodeURIComponent(farmer.id)}`); setOpen(false); inputRef.current?.blur(); }}
-                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg hover:bg-muted/60 text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/60 text-left"
                     data-testid={`search-farmer-${farmer.id}`}
                   >
-                    <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center"><Store className="h-4 w-4" /></div>
+                    <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center"><Store className="h-5 w-5" /></div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[12px] font-semibold truncate">{farmer.name}</div>
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground truncate"><MapPin className="h-3 w-3" />{farmer.location}</div>
+                      <div className="text-sm font-black truncate">{farmer.name}</div>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground truncate"><MapPin className="h-3.5 w-3.5" />{farmer.location}</div>
                     </div>
                   </button>
                 ))}
@@ -493,9 +498,9 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
             )}
 
             {showNoResults && (
-              <div className="px-3 py-4 text-center">
-                <p className="text-[11px] text-muted-foreground">{t("search.no_results", { query: inputVal })}</p>
-                <p className="text-[10px] text-muted-foreground/60 mt-0.5">{t("search.no_results_hint")}</p>
+              <div className="px-4 py-6 text-center">
+                <p className="text-sm font-bold text-muted-foreground">{t("search.no_results", { query: inputVal })}</p>
+                <p className="text-xs font-bold text-muted-foreground/60 mt-1">{t("search.no_results_hint")}</p>
               </div>
             )}
           </motion.div>

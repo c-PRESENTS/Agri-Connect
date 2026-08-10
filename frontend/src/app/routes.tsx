@@ -2,6 +2,7 @@ import { lazy } from "react";
 import { Route, Switch } from "wouter";
 import { ProtectedRoute } from "@/components/protected-route";
 import { StudentAccessRoute } from "@/components/student-access-route";
+import { AdminAccessRoute } from "@/components/admin-access-route";
 
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Home = lazy(() => import("@/pages/home"));
@@ -112,7 +113,7 @@ export function AppRoutes() {
         <ProtectedRoute><FulfillmentPage /></ProtectedRoute>
       </Route>
       <Route path="/operator">
-        <ProtectedRoute><OperatorDashboardPage /></ProtectedRoute>
+        <AdminAccessRoute permission="dashboard.view"><OperatorDashboardPage /></AdminAccessRoute>
       </Route>
       <Route path="/sellers/:id" component={SellerProfilePage} />
       <Route path="/map" component={SmartMapPage} />

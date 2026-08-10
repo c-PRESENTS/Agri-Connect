@@ -357,7 +357,7 @@ const thumbnailFolderByCategoryId: Readonly<Record<string, string>> = {
   "herbal-pharma": "Bio/Herbal & Pharma Products",
   "food-beverages": "Market/Foods & Beverages",
   "personal-care": "Market/Personal Care & Hygiene",
-  "home-kitchen": "Market/Home  & Kitchen",
+  "home-kitchen": "Market/Home & Kitchen",
   household: "Market/HouseHold Items",
   clothing: "Market/Clothing & Accessories",
   "health-wellness": "Market/Health & Wellness",

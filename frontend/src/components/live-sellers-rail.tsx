@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SafeProductImage } from "@/components/safe-product-image";
 import {
   Star, MapPin, Wifi, Activity, RefreshCw, X, Package,
   Phone, MessageCircle, ShoppingBag, ChevronRight,
@@ -143,22 +144,22 @@ export function LiveSellersRail({
       {/* === MAP COLUMN === */}
       <div className="flex flex-col gap-3 min-w-0">
         {/* Header */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 p-1">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-              <span className="relative inline-flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            <p className="text-sm sm:text-base font-black uppercase tracking-wide text-amber-600 dark:text-amber-400 flex items-center gap-2">
+              <span className="relative inline-flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500" />
               </span>
               {t("live_sellers.title")}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate" data-testid="text-live-status">
+            <p className="text-xs sm:text-sm font-bold text-foreground/80 truncate mt-1" data-testid="text-live-status">
               {onlineCount} of {sellers.length} sellers online · Updated <UpdatedAgo since={dataUpdatedAt} />
             </p>
           </div>
-          <Badge variant="secondary" className="text-[10px] gap-1 shrink-0">
-            {isFetching ? <RefreshCw className="w-2.5 h-2.5 animate-spin" /> : <Activity className="w-2.5 h-2.5" />}
-            {sellers.length}
+          <Badge variant="secondary" className="text-sm font-black gap-2 px-3.5 py-1.5 bg-muted border border-border/80 text-foreground shrink-0 shadow-2xs" data-testid="badge-seller-activity">
+            {isFetching ? <RefreshCw className="w-4 h-4 animate-spin text-primary" /> : <Activity className="w-4 h-4 text-primary" />}
+            <span className="font-black text-sm sm:text-base">{sellers.length}</span>
           </Badge>
         </div>
 
@@ -180,14 +181,14 @@ export function LiveSellersRail({
       </div>
 
       {/* === LIST COLUMN === */}
-      <Card className="flex flex-col overflow-hidden min-w-0">
-        <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
-          <p className="text-sm font-semibold flex items-center gap-1.5">
-            <Wifi className="w-3.5 h-3.5 text-green-600" />
+      <Card className="flex flex-col overflow-hidden min-w-0 border-2 rounded-2xl shadow-md">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/40">
+          <p className="text-base font-black flex items-center gap-2">
+            <Wifi className="w-4 h-4 text-green-600" />
             {t("live_sellers.title")}
           </p>
-          <Badge variant="outline" className="text-[10px]" data-testid="badge-online-count">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1 animate-pulse" />
+          <Badge variant="outline" className="text-xs font-black px-2.5 py-1 rounded-lg" data-testid="badge-online-count">
+            <span className="w-2 h-2 rounded-full bg-green-500 mr-1.5 animate-pulse" />
             {t("live_sellers.online_count", { count: onlineCount })}
           </Badge>
         </div>
@@ -195,14 +196,14 @@ export function LiveSellersRail({
         <ScrollArea style={{ height: listHeight }}>
           <div className="divide-y">
             {sellers.length === 0 ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                <MapPin className="w-6 h-6 mx-auto mb-2 opacity-50" />
-                {t("product_grid.no_products_title")}
+              <div className="p-8 sm:p-12 text-center text-base font-bold text-muted-foreground space-y-2">
+                <MapPin className="w-8 h-8 mx-auto mb-3 opacity-40" />
+                <p>{t("product_grid.no_products_title")}</p>
               </div>
             ) : (
               sellers.map((s) => {
                 const top = s.topProducts[0];
-                const thumb = top ? resolveProductImageForProduct(top).src : s.avatar;
+                const thumb = top ? resolveProductImageForProduct(top) : null;
                 const isActive = selectedId === s.id;
 
                 return (
@@ -227,14 +228,21 @@ export function LiveSellersRail({
                       aria-expanded={isActive}
                     >
                       <div className="relative shrink-0">
-                        <img
-                          src={isActive ? s.avatar : thumb}
-                          alt={s.name}
-                          className={`object-cover bg-muted transition-all ${
-                            isActive ? "w-14 h-14 rounded-full ring-2 ring-background shadow-md" : "w-12 h-12 rounded-md"
-                          }`}
-                          loading="lazy"
-                        />
+                        {isActive || !thumb ? (
+                          <img
+                            src={s.avatar}
+                            alt={s.name}
+                            className="h-14 w-14 rounded-full object-cover bg-muted shadow-md ring-2 ring-background transition-all"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <SafeProductImage
+                            src={thumb.src}
+                            fallbackSrc={thumb.fallbackSrc}
+                            alt={top?.name ?? s.name}
+                            className="h-12 w-12 rounded-md object-cover bg-muted transition-all"
+                          />
+                        )}
                         {s.isOnline && (
                           <span className="absolute -top-0.5 -right-0.5 inline-flex h-3 w-3">
                             <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
@@ -244,36 +252,36 @@ export function LiveSellersRail({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className={`truncate ${isActive ? "text-base font-bold" : "text-sm font-semibold"}`}>
+                          <p className={`truncate ${isActive ? "text-base sm:text-lg font-black text-foreground" : "text-base font-black text-foreground"}`}>
                             {s.name}
                           </p>
                           <span
-                            className={`text-[10px] font-medium shrink-0 ${
+                            className={`text-xs font-black shrink-0 ${
                               s.isOnline ? "text-green-600 dark:text-green-400" : "text-muted-foreground"
                             }`}
                           >
                             {s.isOnline ? t("live_sellers.live_status") : t("map.offline_status")}
                           </span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
-                          <MapPin className="w-3 h-3 shrink-0" />
+                        <p className="text-xs sm:text-sm font-bold text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                          <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
                           {s.location}
                         </p>
-                        <div className="flex items-center gap-2 text-[11px] mt-0.5 flex-wrap">
-                          <span className="flex items-center gap-0.5 font-medium">
-                            <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                        <div className="flex items-center gap-2 text-xs sm:text-sm font-bold mt-1 flex-wrap">
+                          <span className="flex items-center gap-1 font-black">
+                            <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
                             {s.rating.toFixed(1)}
                           </span>
                           <span className="text-muted-foreground">·</span>
-                          <span className="text-muted-foreground flex items-center gap-0.5">
-                            <Package className="w-3 h-3" />
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Package className="w-3.5 h-3.5" />
                             {s.productCount} listings
                           </span>
                           {isActive && (
                             <>
                               <span className="text-muted-foreground">·</span>
-                              <span className="text-muted-foreground flex items-center gap-0.5">
-                                <ShoppingBag className="w-3 h-3" />
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                <ShoppingBag className="w-3.5 h-3.5" />
                                 {s.totalStock} in stock
                               </span>
                             </>
@@ -281,13 +289,13 @@ export function LiveSellersRail({
                           {!isActive && top && (
                             <>
                               <span className="text-muted-foreground">·</span>
-                              <span className="font-semibold text-primary">from {format(top.price, { sourceCurrency: top.currency || "GBP" })}</span>
+                              <span className="font-black text-primary">from {format(top.price, { sourceCurrency: top.currency || "GBP" })}</span>
                             </>
                           )}
                         </div>
                       </div>
                       <ChevronRight
-                        className={`w-4 h-4 mt-1 shrink-0 text-muted-foreground transition-transform ${
+                        className={`w-5 h-5 mt-1 shrink-0 text-muted-foreground transition-transform ${
                           isActive ? "rotate-90 text-primary" : ""
                         }`}
                       />
@@ -308,10 +316,10 @@ export function LiveSellersRail({
                                 data-testid={`thumb-expanded-product-${p.id}`}
                               >
                                 <div className="aspect-square bg-muted overflow-hidden">
-                                  <img
+                                  <SafeProductImage
                                     src={resolveProductImageForProduct(p).src}
+                                    fallbackSrc={resolveProductImageForProduct(p).fallbackSrc}
                                     alt={p.name}
-                                    loading="lazy"
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                   />
                                 </div>
@@ -324,40 +332,40 @@ export function LiveSellersRail({
                           </div>
                         )}
 
-                        <div className="flex gap-1.5">
+                        <div className="flex gap-2">
                           <Button
                             asChild
-                            size="sm"
-                            className="flex-1 h-8 text-xs"
+                            size="default"
+                            className="flex-1 h-11 text-sm font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-md rounded-xl"
                             data-testid={`button-visit-shop-${s.id}`}
                           >
                             <Link href={`/sellers/${s.id}`} onClick={(e) => e.stopPropagation()}>
                               {t("live_sellers.visit_shop")}
-                              <ChevronRight className="w-3 h-3 ml-0.5" />
+                              <ChevronRight className="w-4 h-4 ml-1" />
                             </Link>
                           </Button>
                           <Button
-                            size="sm"
+                            size="default"
                             variant="outline"
-                            className="h-8 px-2"
+                            className="h-11 px-3.5 border-2 rounded-xl"
                             onClick={(e) => e.stopPropagation()}
                             data-testid={`button-message-${s.id}`}
                           >
-                            <MessageCircle className="w-3.5 h-3.5" />
+                            <MessageCircle className="w-4 h-4" />
                           </Button>
                           <Button
-                            size="sm"
+                            size="default"
                             variant="outline"
-                            className="h-8 px-2"
+                            className="h-11 px-3.5 border-2 rounded-xl"
                             onClick={(e) => e.stopPropagation()}
                             data-testid={`button-call-${s.id}`}
                           >
-                            <Phone className="w-3.5 h-3.5" />
+                            <Phone className="w-4 h-4" />
                           </Button>
                           <Button
-                            size="sm"
+                            size="default"
                             variant="ghost"
-                            className="h-8 px-2"
+                            className="h-11 px-3.5 rounded-xl"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedId(null);
@@ -365,7 +373,7 @@ export function LiveSellersRail({
                             data-testid={`button-collapse-${s.id}`}
                             title="Collapse"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>

@@ -11,6 +11,7 @@ import { capabilityMonitor } from "./payments/capability-monitor";
 import { providerActivationService } from "./payments/provider-activation-service";
 import { paymentMaintenanceService } from "./payments/maintenance-service";
 import { registerCurrencyRoutes } from "./currency/routes";
+import { ensureBootstrapSuperAdmins } from "./organisations/repository";
 
 const app = express();
 const httpServer = createServer(app);
@@ -134,6 +135,7 @@ if (enableApiRateLimit) {
     "/api/orders",
     "/api/dashboard",
     "/api/logistics",
+    "/api/admin",
   ], apiLimiter);
 }
 
@@ -225,6 +227,20 @@ app.use((req, res, next) => {
 (async () => {
   // Auth must be set up before routes are registered.
   await setupAuth(app);
+  try {
+    const bootstrap = await ensureBootstrapSuperAdmins();
+    if (bootstrap.configured > 0) {
+      log(
+        `organisation admin bootstrap activated ${bootstrap.activated}/${bootstrap.configured} configured accounts` +
+          (bootstrap.missing.length ? `; ${bootstrap.missing.length} account(s) must register first` : ""),
+        "security",
+      );
+    }
+  } catch (error: any) {
+    console.error("[security] organisation RBAC bootstrap unavailable; apply migration 0019", {
+      errorCode: typeof error?.code === "string" ? error.code : "bootstrap_failed",
+    });
+  }
   registerAuthRoutes(app);
   registerOtpRoutes(app);
   registerCurrencyRoutes(app);

@@ -18,7 +18,7 @@ interface SubcategoryPanelProps {
   onClose: () => void;
   onSubcategorySelect?: (categoryId: string, subcategoryId: string) => void;
   onSubcategoryClick?: (subId: string | null) => void;
-  onSectionClick?: (sectionTitle: string) => void;
+  onSectionClick?: (sectionTitle: string, subcategoryId?: string) => void;
 }
 
 function getCategoryImage(categoryId: string, subcategoryId?: string): string | undefined {
@@ -85,15 +85,16 @@ export function SubcategoryPanel({
     if (category) {
       const hasDeepContent = getSubSubcategories(subcategory.id).length > 0;
       
+      // Always notify parent and update URL to navigate main view to that subcategory slide/page!
+      onSubcategorySelect?.(category.id, subcategory.id);
+      setLocation(`/?category=${category.id}&subcategory=${subcategory.id}`);
+
       if (hasDeepContent) {
         if (activeSubcategory === subcategory.id) {
           onSubcategoryClick?.(null);
         } else {
           onSubcategoryClick?.(subcategory.id);
         }
-      } else {
-        onSubcategorySelect?.(category.id, subcategory.id);
-        setLocation(`/?category=${category.id}&subcategory=${subcategory.id}`);
       }
     }
   };
@@ -118,31 +119,31 @@ export function SubcategoryPanel({
           />
         <motion.div
           initial={{ opacity: 0, x: -20, scale: 0.98 }}
-          animate={{ opacity: 1, x: 0, scale: 1, width: 220 }}
+          animate={{ opacity: 1, x: 0, scale: 1, width: 320 }}
           exit={{ opacity: 0, x: -20, scale: 0.98, width: 0 }}
           transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-          className="max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:top-[48px] h-full border-r border-border/40 bg-sidebar/95 backdrop-blur-xl overflow-hidden flex-shrink-0 z-[200] shadow-2xl relative"
+          className="max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:top-[48px] h-full border-r border-border/60 bg-sidebar overflow-hidden flex-shrink-0 z-[200] shadow-2xl relative"
           style={{ 
             willChange: "transform, width, opacity",
             marginLeft: "0"
           }}
         >
-          <div className="h-full flex flex-col w-[220px] relative">
-            <div className="flex items-center gap-2 p-2 border-b border-border/40 bg-muted/20 backdrop-blur-md sticky top-0 z-10">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-primary/20 to-green-600/20 text-primary">
-                <IconComponent className="h-4 w-4" />
+          <div className="h-full flex flex-col w-[320px] relative">
+            <div className="flex items-center gap-3 p-3.5 border-b border-border/60 bg-muted/30 sticky top-0 z-10">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold shrink-0 border border-emerald-500/25 shadow-2xs">
+                <IconComponent className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-[10px] truncate uppercase tracking-widest text-primary/90">{category.name}</h3>
+                <h3 className="font-black text-sm sm:text-base uppercase tracking-wide text-foreground truncate">{category.name}</h3>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="h-6 w-6 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
+                className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
                 data-testid="button-close-subcategory-panel"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4.5 w-4.5" />
               </Button>
             </div>
 
@@ -151,51 +152,53 @@ export function SubcategoryPanel({
               className="flex-1"
               onScrollCapture={handleScroll}
             >
-              <div className="p-1.5">
-                <div className="flex flex-col gap-0.5">
+              <div className="p-2.5">
+                <div className="flex flex-col gap-1.5">
                   {category.subcategories.map((subcategory) => {
                     const subImage = getCategoryImage(category.id, subcategory.id);
                     const isSelected = selectedSubcategory === subcategory.id;
                     const isActive = activeSubcategory === subcategory.id;
                     const deepContent = getSubSubcategories(subcategory.id);
                     const hasDeepContent = deepContent.length > 0;
-                    
+
                     return (
-                      <div key={subcategory.id} className="flex flex-col gap-0.5">
+                      <div key={subcategory.id} className="flex flex-col gap-1">
                         <button
                           onClick={() => handleSubcategoryTap(subcategory)}
-                          className={`flex items-center gap-2 p-1.5 rounded-lg text-left transition-all duration-200 active:scale-[0.98] border border-transparent ${
-                            isActive 
-                              ? 'bg-primary/10 text-primary border-primary/20 shadow-sm' 
-                              : isSelected 
-                              ? 'bg-primary/5 text-primary' 
-                              : 'hover:bg-muted/50 active:bg-muted/80'
+                          className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-left transition-all duration-150 active:scale-[0.98] border ${
+                            isActive
+                              ? 'bg-primary text-primary-foreground border-primary shadow-md font-black'
+                              : isSelected
+                              ? 'bg-primary/15 text-primary border-primary/40 font-extrabold shadow-2xs'
+                              : 'bg-background hover:bg-muted/80 text-foreground border-border/60 hover:border-primary/50'
                           }`}
                           style={{ touchAction: 'manipulation' }}
                           data-testid={`button-subcategory-${subcategory.id}`}
                         >
-                          <div className="relative rounded-md overflow-hidden shadow-sm flex-shrink-0">
+                          <div className="relative rounded-lg overflow-hidden shadow-2xs flex-shrink-0">
                             {subImage ? (
-                              <img 
-                                src={subImage} 
-                                alt={subcategory.name} 
-                                className="w-6 h-6 object-cover" 
-                                loading="lazy" 
+                              <img
+                                src={subImage}
+                                alt={subcategory.name}
+                                className="w-9 h-9 object-cover border border-border/40"
+                                loading="lazy"
                               />
                             ) : (
-                              <div className={`w-7 h-7 flex items-center justify-center ${
-                                isActive || isSelected ? 'bg-primary text-white' : 'bg-background border border-border/40'
+                              <div className={`w-9 h-9 flex items-center justify-center rounded-lg ${
+                                isActive ? 'bg-white/20 text-white' : isSelected ? 'bg-primary text-white' : 'bg-muted text-foreground border border-border/40'
                               }`}>
-                                <IconComponent className="h-4 w-4" />
+                                <IconComponent className="h-5 w-5" />
                               </div>
                             )}
                           </div>
-                          <span className="text-[9px] font-bold uppercase tracking-tight truncate flex-1">
+                          <span className={`text-sm sm:text-base font-black uppercase tracking-wide flex-1 truncate ${
+                            isActive ? 'text-primary-foreground' : isSelected ? 'text-primary' : 'text-foreground'
+                          }`}>
                             {subcategory.name}
                           </span>
                           {hasDeepContent && (
-                            <div className={`flex items-center justify-center w-4 h-4 rounded-full transition-colors ${isActive ? 'bg-primary/20' : ''}`}>
-                              {isActive ? <ChevronDown className="h-4 w-4 text-primary" /> : <ChevronRight className="h-4 w-4 text-muted-foreground/30" />}
+                            <div className={`flex items-center justify-center w-5 h-5 rounded-full transition-colors ${isActive ? 'bg-white/20' : ''}`}>
+                              {isActive ? <ChevronDown className="h-4.5 w-4.5 text-white" /> : <ChevronRight className="h-4.5 w-4.5 text-foreground/60" />}
                             </div>
                           )}
                         </button>
@@ -206,8 +209,8 @@ export function SubcategoryPanel({
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
-                              className="overflow-hidden bg-muted/20 rounded-lg mx-1 border border-border/20"
+                              transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
+                              className="overflow-hidden bg-muted/30 rounded-xl mx-1 border border-border/30"
                             >
                               <div className="py-1 flex flex-col">
                                 {deepContent.map((section) => {
@@ -215,18 +218,20 @@ export function SubcategoryPanel({
                                   return (
                                     <button
                                       key={section.title}
-                                      onClick={() => onSectionClick?.(section.title)}
-                                      className={`w-full flex items-center justify-between px-3 py-1.5 text-left transition-all duration-200 group ${
+                                      onClick={() => {
+                                        onSectionClick?.(section.title, subcategory.id);
+                                      }}
+                                      className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-all duration-150 group rounded-lg ${
                                         isSectionActive
-                                          ? 'text-primary font-bold bg-primary/5'
-                                          : 'text-muted-foreground/80 hover:text-foreground hover:bg-muted/40'
+                                          ? 'text-primary font-black bg-primary/15 border-l-4 border-primary shadow-xs'
+                                          : 'text-foreground font-black hover:text-primary hover:bg-muted/80'
                                       }`}
                                       data-testid={`button-section-${section.title}`}
                                     >
-                                      <span className="text-[8px] uppercase tracking-widest truncate">
+                                      <span className="text-xs sm:text-sm font-black uppercase tracking-wide truncate">
                                         {section.title}
                                       </span>
-                                      <div className={`w-1 h-1 rounded-full transition-all ${isSectionActive ? 'bg-primary scale-100 shadow-[0_0_8px_rgba(var(--primary),0.5)]' : 'bg-transparent scale-0 group-hover:bg-muted-foreground/20 group-hover:scale-75'}`} />
+                                      <div className={`w-2 h-2 rounded-full transition-all ${isSectionActive ? 'bg-primary scale-100 shadow-[0_0_8px_rgba(var(--primary),0.6)]' : 'bg-transparent scale-0 group-hover:bg-primary/40 group-hover:scale-75'}`} />
                                     </button>
                                   );
                                 })}

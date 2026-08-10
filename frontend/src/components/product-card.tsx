@@ -99,7 +99,7 @@ export function ProductCard({
       whileHover={{ y: -3, transition: { duration: 0.15 } }}
     >
       <Card 
-        className="overflow-hidden cursor-pointer group transition-all duration-300 border-border/50 hover:border-primary/20 bg-card/80 backdrop-blur-sm hover:shadow-xl dark:bg-card/70 dark:border-white/[0.06] dark:hover:border-primary/25 dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.4),0_0_0_1px_rgba(34,197,94,0.08)]"
+        className="overflow-hidden cursor-pointer group transition-all duration-300 border-border/50 hover:border-primary/20 bg-card hover:shadow-xl dark:bg-card/90 dark:border-white/[0.06] dark:hover:border-primary/25 dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.4),0_0_0_1px_rgba(34,197,94,0.08)]"
         style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)' }}
         onClick={() => onClick?.(product)}
         data-testid={`card-product-${product.id}`}
@@ -111,13 +111,13 @@ export function ProductCard({
           
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {product.isOrganic && (
-              <Badge className="bg-green-600/90 backdrop-blur-sm text-white gap-1 text-[10px] shadow-sm badge-shimmer">
+              <Badge className="bg-green-600 text-white gap-1 text-[10px] shadow-sm badge-shimmer">
                 <Leaf className="h-3 w-3" />
                 {t("product.organic", "Organic")}
               </Badge>
             )}
             {product.isFeatured && (
-              <Badge variant="secondary" className="text-[10px] backdrop-blur-sm shadow-sm badge-shimmer">
+              <Badge variant="secondary" className="text-[10px] shadow-sm badge-shimmer">
                 {t("product.featured", "Featured")}
               </Badge>
             )}
@@ -127,17 +127,17 @@ export function ProductCard({
             <FavoriteProductButton
               productId={product.id}
               productName={productName}
-              className="h-8 w-8 border border-background/70 bg-background/90 shadow-md backdrop-blur-sm hover:bg-background"
+              className="h-8 w-8 border border-background/70 bg-background/95 shadow-md hover:bg-background"
               onToggle={() => onWishlist?.(product)}
               data-testid={`button-wishlist-${product.id}`}
             />
             <Button
               size="icon"
               variant="secondary"
-              className={`transition-all backdrop-blur-sm shadow-md h-8 w-8 ${
+              className={`transition-all shadow-md h-8 w-8 ${
                 isComparing
                   ? 'opacity-100 bg-primary text-primary-foreground hover:bg-primary/90'
-                  : 'opacity-0 group-hover:opacity-100 bg-background/80 hover:bg-background'
+                  : 'opacity-0 group-hover:opacity-100 bg-background/90 hover:bg-background'
               }`}
               onClick={(e) => {
                 e.stopPropagation();
@@ -156,103 +156,106 @@ export function ProductCard({
           </div>
         </div>
 
-        <CardContent className="p-2 sm:p-3">
-          <div className="flex items-start justify-between gap-1 mb-1">
-            <h3 className="font-semibold text-[11px] sm:text-sm leading-tight line-clamp-2 flex-1 group-hover:text-primary transition-colors" data-testid={`text-product-name-${product.id}`}>
-              {productName}
-            </h3>
-            <TextToSpeech text={`${productName}. Price: ${formattedPrice} per ${safeUnit}. Sold by ${sellerName}.`} />
+        <CardContent className="p-4 sm:p-5 flex flex-col justify-between gap-3">
+          <div>
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <h3 className="font-black text-base sm:text-lg md:text-xl leading-tight line-clamp-2 flex-1 text-foreground group-hover:text-primary transition-colors tracking-tight" data-testid={`text-product-name-${product.id}`}>
+                {productName}
+              </h3>
+              <TextToSpeech text={`${productName}. Price: ${formattedPrice} per ${safeUnit}. Sold by ${sellerName}.`} />
+            </div>
+
+            {!shouldAutoTranslate && <TranslateButton text={descText} className="mb-2" />}
+
+            <div className="mb-2 flex items-center justify-between gap-2 flex-wrap">
+              <Link
+                href={product.farmerId ? `/sellers/${product.farmerId}` : "#"}
+                className="flex min-w-0 items-center gap-2 hover:text-primary transition-colors"
+                onClick={(e) => e.stopPropagation()}
+                data-testid={`link-seller-${product.farmerId}`}
+              >
+                <Avatar className="h-6 w-6 sm:h-7 sm:w-7 shrink-0 ring-2 ring-primary/30">
+                  <AvatarImage src={product.farmerAvatar || undefined} alt={sellerName} />
+                  <AvatarFallback className="text-[10px] font-black bg-primary/20 text-primary">
+                    {sellerName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-xs sm:text-sm font-black text-foreground/90 truncate hover:underline">
+                  {sellerName}
+                </span>
+              </Link>
+              <PublicSellerBadges rating={product.farmerRating} reviewCount={product.reviewCount} />
+            </div>
+
+            <div className="flex items-center gap-3 mb-2 text-xs sm:text-sm font-bold">
+              <div className="flex items-center gap-1 bg-amber-400/20 border border-amber-400/50 px-2 py-0.5 rounded-lg shadow-2xs">
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400 shrink-0" />
+                <span className="font-black text-foreground">{safeRating.toFixed(1)}</span>
+                <span className="text-muted-foreground font-bold">({safeReviewCount})</span>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground truncate font-black">
+                <MapPin className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span className="truncate">{Number.isFinite(product.distance) ? `${product.distance!.toFixed(1)}km` : "Location not specified"}</span>
+              </div>
+            </div>
+
+            {product.dietaryTags && product.dietaryTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {product.dietaryTags.slice(0, 2).map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="outline"
+                    className="text-xs px-2.5 py-0.5 h-6 border-primary/40 text-primary font-black bg-primary/10 rounded-lg"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+                {product.dietaryTags.length > 2 && (
+                  <Badge variant="outline" className="text-xs px-2 py-0.5 h-6 border-border/60 text-muted-foreground font-extrabold rounded-lg">
+                    +{product.dietaryTags.length - 2}
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
 
-          {!shouldAutoTranslate && <TranslateButton text={descText} className="mb-1" />}
+          <div className="pt-3 border-t-2 border-border/60 mt-auto space-y-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="inline-flex items-baseline flex-wrap min-w-0">
+                <span className="text-xl sm:text-2xl font-black tracking-tight font-mono text-amber-600 dark:text-amber-400 whitespace-nowrap" data-testid={`text-product-price-${product.id}`}>
+                  {formattedPrice}
+                </span>
+                {safePrice !== null && <span className="text-xs sm:text-sm text-muted-foreground font-black ml-1 whitespace-nowrap">/{safeUnit}</span>}
+              </div>
+              <Badge
+                variant={safeStock > 20 ? "secondary" : "destructive"}
+                className="text-xs font-black px-3 py-1 rounded-lg shadow-2xs shrink-0"
+              >
+                {safeStock > 0 ? `${safeStock}` : t("product.out_short")}
+              </Badge>
+            </div>
 
-          <div className="mb-1 flex items-center gap-1">
-            <Link
-              href={product.farmerId ? `/sellers/${product.farmerId}` : "#"}
-              className="flex min-w-0 items-center gap-1 hover:text-primary"
-              onClick={(e) => e.stopPropagation()}
-              data-testid={`link-seller-${product.farmerId}`}
-            >
-              <Avatar className="h-4 w-4 shrink-0">
-                <AvatarImage src={product.farmerAvatar || undefined} alt={sellerName} />
-                <AvatarFallback className="text-[8px] bg-primary text-primary-foreground">
-                  {sellerName.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-[9px] sm:text-[11px] text-muted-foreground truncate hover:underline">
-                {sellerName}
-              </span>
-            </Link>
-            <PublicSellerBadges rating={product.farmerRating} reviewCount={product.reviewCount} />
+            <motion.div whileTap={{ scale: 0.98 }}>
+              <Button
+                className="w-full gap-2 h-10 sm:h-11 text-xs sm:text-sm font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-md rounded-xl border border-amber-500/40"
+                onClick={handleAddToCart}
+                disabled={safeStock <= 0 || addedToCart}
+                data-testid={`button-add-to-cart-${product.id}`}
+              >
+                {addedToCart ? (
+                  <>
+                    <Check className="h-4.5 w-4.5 text-black" />
+                    {t("product.added", "Added")}
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-4.5 w-4.5 text-black" />
+                    <span>{t("product.add_to_cart", "Add to Cart")}</span>
+                  </>
+                )}
+              </Button>
+            </motion.div>
           </div>
-
-          <div className="flex items-center gap-1.5 mb-1 text-[9px] sm:text-[11px]">
-            <div className="flex items-center gap-0.5">
-              <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
-              <span className="font-semibold">{safeRating.toFixed(1)}</span>
-              <span className="text-muted-foreground hidden sm:inline">({safeReviewCount})</span>
-            </div>
-            <div className="flex items-center gap-0.5 text-muted-foreground">
-              <MapPin className="h-2.5 w-2.5" />
-              <span>{Number.isFinite(product.distance) ? `${product.distance!.toFixed(1)}km` : "Location not specified"}</span>
-            </div>
-          </div>
-          
-          {product.dietaryTags && product.dietaryTags.length > 0 && (
-            <div className="flex flex-wrap gap-0.5 sm:gap-1 mb-1 sm:mb-2">
-              {product.dietaryTags.slice(0, 2).map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="outline"
-                  className="text-[8px] sm:text-[9px] px-1 py-0 h-3.5 sm:h-4 border-primary/30 text-primary/80"
-                >
-                  {tag}
-                </Badge>
-              ))}
-              {product.dietaryTags.length > 2 && (
-                <Badge variant="outline" className="text-[8px] sm:text-[9px] px-1 py-0 h-3.5 sm:h-4 border-border/50 text-muted-foreground">
-                  +{product.dietaryTags.length - 2}
-                </Badge>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-            <div>
-              <span className="text-sm sm:text-lg font-bold tracking-tight font-mono" data-testid={`text-product-price-${product.id}`}>
-                {formattedPrice}
-              </span>
-              {safePrice !== null && <span className="text-[9px] sm:text-[11px] text-muted-foreground">/{safeUnit}</span>}
-            </div>
-            <Badge 
-              variant={safeStock > 20 ? "secondary" : "destructive"} 
-              className="text-[8px] sm:text-[10px] font-mono"
-            >
-              {safeStock > 0 ? `${safeStock}` : t("product.out_short")}
-            </Badge>
-          </div>
-
-          <motion.div whileTap={{ scale: 0.97 }}>
-            <Button 
-              className="w-full gap-1 h-7 sm:h-8 text-[10px] sm:text-[11px] font-bold uppercase tracking-tight transition-all btn-glow"
-              onClick={handleAddToCart}
-              disabled={safeStock <= 0 || addedToCart}
-              data-testid={`button-add-to-cart-${product.id}`}
-            >
-              {addedToCart ? (
-                <>
-                  <Check className="h-3 w-3" />
-                  {t("product.added", "Added")}
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="h-3 w-3" />
-                  <span className="hidden sm:inline">{t("product.add_to_cart", "Add to Cart")}</span>
-                  <span className="sm:hidden">{t("product.add_short")}</span>
-                </>
-              )}
-            </Button>
-          </motion.div>
         </CardContent>
       </Card>
     </motion.div>

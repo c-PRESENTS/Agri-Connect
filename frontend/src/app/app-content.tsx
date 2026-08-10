@@ -7,6 +7,7 @@ import { SeoManager } from "@/components/seo-manager";
 import { AppRoutes } from "@/app/routes";
 import { AppShell } from "@/app/shell";
 import { Loader2 } from "lucide-react";
+import { useLocation } from "wouter";
 
 const AIChatAssistant = lazy(() => import("@/components/ai-chat-assistant").then((module) => ({ default: module.AIChatAssistant })));
 const ProfileWizard = lazy(() => import("@/components/profile-wizard").then((module) => ({ default: module.ProfileWizard })));
@@ -65,14 +66,19 @@ function GlobalOverlays() {
 
 export function AppContent() {
   const { user, isAuthenticated } = useAuth();
+  const [location] = useLocation();
   usePageTranslation();
+  const isStudentPortalRoute =
+    location === "/student-help-point" ||
+    location.startsWith("/student/") ||
+    location.startsWith("/farmers-help/student");
 
   return (
     <>
       <I18nRuntime />
       <Toaster />
       <SeoManager />
-      {isAuthenticated && user && !user.profileComplete && (
+      {isAuthenticated && user && !user.profileComplete && !isStudentPortalRoute && (
         <Suspense fallback={<ShellFallback />}>
           <ProfileWizard />
         </Suspense>

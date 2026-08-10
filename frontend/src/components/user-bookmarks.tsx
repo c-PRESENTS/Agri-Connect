@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type SyntheticEvent } from "react";
+import { useState, useRef, useEffect, useCallback, memo, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import {
@@ -125,7 +125,7 @@ function handleFaviconError(event: SyntheticEvent<HTMLImageElement>) {
   image.src = LOCAL_BOOKMARK_FALLBACK_ICON;
 }
 
-export function UserBookmarks() {
+export const UserBookmarks = memo(function UserBookmarks() {
   const { t } = useTranslation();
   const [, setWouterLocation] = useLocation();
   const [bookmarks,  setBookmarks]  = useState<Bookmark[]>(readBookmarks);
@@ -229,12 +229,12 @@ export function UserBookmarks() {
 
   return (
     <>
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center px-0.5">
-          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40">{t("home.my_sites")}</span>
+          <span className="text-xs sm:text-sm font-black uppercase tracking-[0.18em] text-white/70">{t("home.my_sites")}</span>
         </div>
 
-        <div className="flex gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar sm:flex-wrap">
+        <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar sm:flex-wrap">
           {bookmarks.map(b => {
             const favicon = getFavicon(b.url);
             const isActive = panel.open && panel.url === normalizeUrl(b.url);
@@ -243,20 +243,20 @@ export function UserBookmarks() {
                 <button
                   onClick={() => openPanel(b)}
                   data-testid={`bookmark-${b.id}`}
-                  className={`flex flex-col items-center gap-1 p-1 sm:p-1.5 rounded-md sm:rounded-lg transition-all duration-150 w-12 sm:w-14 ${
+                  className={`flex flex-col items-center gap-1.5 p-1.5 sm:p-2 rounded-xl transition-all duration-150 w-16 sm:w-20 ${
                     isActive
-                      ? "bg-white/10 scale-[1.05]"
-                      : "hover:bg-white/8 active:scale-95"
+                      ? "bg-white/15 scale-[1.05]"
+                      : "hover:bg-white/10 active:scale-95"
                   }`}
                 >
-                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center overflow-hidden ${b.color} shadow-sm`}>
+                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center overflow-hidden ${b.color} shadow-md`}>
                     {favicon
-                      ? <img src={favicon} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+                      ? <img src={favicon} alt="" className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
                           loading="lazy" onError={handleFaviconError} />
-                      : <span className="text-xs sm:text-sm font-black text-white">{getInitial(b.name)}</span>
+                      : <span className="text-base sm:text-lg font-black text-white">{getInitial(b.name)}</span>
                     }
                   </div>
-                  <span className="text-[8px] sm:text-[9px] font-medium text-white/60 text-center leading-none w-full truncate">
+                  <span className="text-xs sm:text-xs font-bold text-white/90 text-center leading-none w-full truncate">
                     {b.name}
                   </span>
                 </button>
@@ -264,21 +264,21 @@ export function UserBookmarks() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black/60 border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black/75 border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
                       data-testid={`bookmark-opts-${b.id}`}
                     >
-                      <MoreVertical className="h-2.5 w-2.5 text-white/70" />
+                      <MoreVertical className="h-3 w-3 text-white" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-36">
-                    <DropdownMenuItem onClick={() => openEdit(b)} className="text-xs gap-2">
-                      <Pencil className="h-3 w-3" /> {t("common.edit")}
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem onClick={() => openEdit(b)} className="text-xs font-bold gap-2">
+                      <Pencil className="h-3.5 w-3.5" /> {t("common.edit")}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openPanel(b)} className="text-xs gap-2">
-                      <Globe className="h-3 w-3" /> Open site
+                    <DropdownMenuItem onClick={() => openPanel(b)} className="text-xs font-bold gap-2">
+                      <Globe className="h-3.5 w-3.5" /> Open site
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => deleteBookmark(b.id)} className="text-xs gap-2 text-destructive">
-                      <Trash2 className="h-3 w-3" /> {t("common.delete")}
+                    <DropdownMenuItem onClick={() => deleteBookmark(b.id)} className="text-xs font-bold gap-2 text-destructive">
+                      <Trash2 className="h-3.5 w-3.5" /> {t("common.delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -289,12 +289,12 @@ export function UserBookmarks() {
           <button
             onClick={openAdd}
             data-testid="bookmark-add-new"
-            className="flex flex-col items-center gap-0.5 p-1.5 sm:p-2 rounded-lg sm:rounded-xl border border-dashed border-white/20 bg-white/3 hover:border-white/40 hover:bg-white/8 transition-all min-w-[52px] sm:min-w-[60px] shrink-0"
+            className="flex flex-col items-center gap-1.5 p-2 sm:p-2.5 rounded-xl border-2 border-dashed border-white/30 bg-white/5 hover:border-white/50 hover:bg-white/10 transition-all min-w-[64px] sm:min-w-[76px] shrink-0"
           >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl border border-dashed border-white/30 flex items-center justify-center">
-              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white/50" />
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 border-dashed border-white/40 flex items-center justify-center">
+              <Plus className="h-6 w-6 text-white/70" />
             </div>
-            <span className="text-[7px] sm:text-[8px] font-bold text-white/40">{t("home.add_site")}</span>
+            <span className="text-xs sm:text-xs font-bold text-white/80">{t("home.add_site")}</span>
           </button>
         </div>
 
@@ -479,4 +479,4 @@ export function UserBookmarks() {
       </Dialog>
     </>
   );
-}
+});

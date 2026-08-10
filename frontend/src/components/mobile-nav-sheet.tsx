@@ -338,14 +338,23 @@ export function MobileNavSheet() {
                         </button>
                         {deep.map((section, si) => (
                           <div key={si} className="flex flex-col">
-                            <div className="text-[6px] font-black uppercase tracking-wider text-muted-foreground/60 px-0.5 pt-0.5 truncate">
+                            <button
+                              onClick={() => {
+                                if (activeCat) {
+                                  const qs = new URLSearchParams({ category: activeCat, subcategory: sub.id, section: section.title });
+                                  setLocation(`/?${qs.toString()}`);
+                                }
+                              }}
+                              className="text-[9px] font-black uppercase tracking-wide text-foreground px-0.5 pt-1 truncate hover:text-primary text-left transition-colors"
+                              data-testid={`mobile-nav-section-${sub.id}-${section.title.toLowerCase().replace(/\s+/g, '-')}`}
+                            >
                               {section.title}
-                            </div>
+                            </button>
                             {section.items.slice(0, 8).map((item) => (
                               <button
                                 key={item}
                                 onClick={() => handleLeafTap(sub.id, item)}
-                                className="text-[7px] font-semibold py-0.5 px-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground text-left truncate"
+                                className="text-[9px] font-extrabold py-0.5 px-0.5 rounded hover:bg-muted text-foreground hover:text-primary text-left truncate"
                                 title={item}
                                 data-testid={`mobile-nav-leaf-${sub.id}-${item.toLowerCase().replace(/\s+/g, '-')}`}
                               >

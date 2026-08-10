@@ -122,6 +122,10 @@ import poultryFeedImage from "@assets/AgriConnect Images/Other Agricultural/Poul
 import chiaSeedsImage from "@assets/AgriConnect Images/Processed/17_chia_seeds.png";
 import vanillaImage from "@assets/AgriConnect Images/Processed/05_vanilla.png";
 import strawberriesImage from "@assets/AgriConnect Images/daily_needs/Fruits/strawberry.png";
+import bulkTropicalFruitsCrateImage from "@assets/AgriConnect Images/Fresh_Produce/Fruits-WholeSale/01_bulk_tropical_fruits_crate.png";
+import orchidsImage from "@assets/AgriConnect Images/Fresh_Produce/Flowers & Decorative/06_orchids.png";
+import lemonPickleImage from "@assets/AgriConnect Images/Processed/Pickles & Preserves/02_lemon_pickle.png";
+import wholesaleGourdSelectionImage from "@assets/AgriConnect Images/Fresh_Produce/Vegetables-WholeSale/wholesale-gourd-selection.png";
 import matarImage from "@assets/AgriConnect Images/daily_needs/matar.jpg";
 import marketRiceImage from "@assets/AgriConnect Images/Market/Foods & Beverages/rice.png";
 import marketWheatImage from "@assets/AgriConnect Images/Market/Foods & Beverages/wheat.png";
@@ -283,7 +287,7 @@ const taxonomyByAssetFolder: Readonly<Record<string, { categoryId: string; subca
   "Market/Foods & Beverages": { categoryId: "supermarket", subcategoryId: "food-beverages" },
   "Market/Gardening": { categoryId: "supermarket", subcategoryId: "gardening" },
   "Market/Health & Wellness": { categoryId: "supermarket", subcategoryId: "health-wellness" },
-  "Market/Home  & Kitchen": { categoryId: "supermarket", subcategoryId: "home-kitchen" },
+  "Market/Home & Kitchen": { categoryId: "supermarket", subcategoryId: "home-kitchen" },
   "Market/HouseHold Items": { categoryId: "supermarket", subcategoryId: "household" },
   "Market/Party & Celebration": { categoryId: "supermarket", subcategoryId: "party" },
   "Market/Personal Care & Hygiene": { categoryId: "supermarket", subcategoryId: "personal-care" },
@@ -362,12 +366,16 @@ const entries: readonly ProductImageRegistryEntry[] = [
   { slug: "onion", name: "Onion", aliases: ["Onions", "Red Onions", "Spring Onion", "Shallots", "Garlic"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: onionImage, canonicalNameMatch: true, attribution: bundled("AgriConnect onion stock asset") },
   { slug: "carrot", name: "Carrot", aliases: ["Carrots", "Beetroot", "Radish", "Turnip"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("carrot", categoryImages.carrot), attribution: bundled("AgriConnect root vegetable stock asset") },
   { slug: "spinach", name: "Spinach", aliases: ["Coriander Leaves", "Mint Leaves", "Curry Leaves", "Lettuce", "Amaranth Leaves", "Fenugreek Leaves", "Moringa Leaves", "Leafy Greens"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: getUniqueLocalAsset("spinach", categoryImages.spinach), attribution: bundled("AgriConnect leafy greens stock asset") },
+  { slug: "wholesale-gourd-selection", name: "Wholesale Gourd Selection", aliases: [], categoryId: "fresh-produce", subcategoryId: "wholesale-veg", localAssetPath: wholesaleGourdSelectionImage, canonicalNameMatch: true, attribution: bundled("AgriConnect wholesale gourd selection product asset") },
   { slug: "vegetables", name: "Mixed Vegetables", aliases: ["Organic Vegetables Mix", "Bulk Mixed Vegetables Crate", "Organic Seasonal Vegetable Box", "Wholesale Gourd Selection", "Wholesale Root Vegetables Sack"], categoryId: "daily-needs", subcategoryId: "vegetables", localAssetPath: categoryImages.vegetables, attribution: bundled("AgriConnect vegetable stock asset") },
   { slug: "apple", name: "Apple", aliases: ["Apples", "Shimla Apple", "Kashmiri Apple", "Green Apple", "Wholesale Apple Pear Crate"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: getUniqueLocalAsset("apple", categoryImages.apple), attribution: bundled("AgriConnect apple stock asset") },
   { slug: "mango", name: "Mango", aliases: ["Mangoes", "Alphonso Mango", "Alphonso Mangoes", "Kesar Mango", "Premium Mangoes"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: getUniqueLocalAsset("mango", categoryImages.mango), attribution: bundled("AgriConnect mango stock asset") },
   { slug: "banana", name: "Banana", aliases: ["Bananas"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: bananaProductImage, attribution: bundled("AgriConnect banana product asset") },
   { slug: "orange", name: "Orange", aliases: ["Oranges", "Lemon", "Sweet Lime", "Grapefruit", "Pomelo", "Kinnow", "Mandarin", "Wholesale Citrus Fruit Box"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: getUniqueLocalAsset("orange", categoryImages.orange), attribution: bundled("AgriConnect citrus stock asset") },
   { slug: "grapes", name: "Grapes", aliases: ["Green Grapes", "Black Grapes", "Red Grapes", "Seedless Grapes", "Raisins", "Bulk Berry Pack"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: getUniqueLocalAsset("grapes", categoryImages.grapes), attribution: bundled("AgriConnect grape stock asset") },
+  { slug: "bulk-tropical-fruits-crate", name: "Bulk Tropical Fruits Crate", aliases: [], categoryId: "fresh-produce", subcategoryId: "wholesale-fruits", localAssetPath: bulkTropicalFruitsCrateImage, canonicalNameMatch: true, attribution: bundled("AgriConnect bulk tropical fruits crate product asset") },
+  { slug: "orchids", name: "Orchids", aliases: [], categoryId: "fresh-produce", subcategoryId: "flowers", localAssetPath: orchidsImage, canonicalNameMatch: true, attribution: bundled("AgriConnect orchids product asset") },
+  { slug: "lemon-pickle", name: "Lemon Pickle", aliases: [], categoryId: "processed", subcategoryId: "pickles", localAssetPath: lemonPickleImage, canonicalNameMatch: true, attribution: bundled("AgriConnect lemon pickle product asset") },
   { slug: "fruits", name: "Mixed Fruits", aliases: ["Bulk Tropical Fruits Crate", "Bulk Exotic Fruit Box", "Seasonal Mixed Fruit Crate"], categoryId: "daily-needs", subcategoryId: "fruits", localAssetPath: categoryImages.fruits, attribution: bundled("AgriConnect fruit stock asset") },
   { slug: "organic-carrots", name: "Organic Carrots", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicCarrotsImage, attribution: bundled("AgriConnect organic carrots product asset") },
   { slug: "organic-potatoes", name: "Organic Potatoes", aliases: [], categoryId: "daily-needs", subcategoryId: "organic-produce", localAssetPath: organicPotatoesImage, attribution: bundled("AgriConnect organic potatoes product asset") },

@@ -1547,7 +1547,7 @@
     "badge": "AgriConnect Uniongyrchol",
     "item_count": "{{count}} eitem",
     "farm_to_table": "Fferm i'r bwrdd",
-    "same_day_delivery": "Danfon yr un diwrnod",
+    "same_day_delivery": "Danfon mewn 3-5 diwrnod",
     "verified_farmers": "Ffermwyr wedi'u gwirio"
   },
   "shipping_quote": {

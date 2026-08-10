@@ -1021,4 +1021,21 @@
   .leaflet-control-container .leaflet-control {
     z-index: 400;
   }
+
+  /* Hardware acceleration & smooth scroll optimizations */
+  .transform-gpu {
+    transform: translate3d(0,0,0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  @keyframes selectedPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  @keyframes userPulse {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
 }

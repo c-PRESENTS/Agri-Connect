@@ -12,7 +12,6 @@ import { ResizableSplit } from "@/components/resizable-split";
 import { TrustIndicators } from "@/components/trust-indicators";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCart } from "@/hooks/use-cart";
 import { useTranslation } from "react-i18next";
 import type { Product, ProductFilters as Filters } from "@shared/schema";
@@ -25,6 +24,51 @@ function findCategoryForSubcategory(subcategoryId: string | null) {
   return getShoppableCategories().find((category) =>
     category.subcategories.some((subcategory) => subcategory.id === subcategoryId)
   )?.id ?? null;
+}
+
+const DIETARY_CHIPS = [
+  { id: "keto", label: "🥑 Keto" },
+  { id: "vegan", label: "🌱 Vegan" },
+  { id: "high-protein", label: "💪 High Protein" },
+  { id: "gluten-free", label: "🌾 Gluten Free" },
+  { id: "dairy-free", label: "🥛 Dairy Free" },
+  { id: "diabetic-friendly", label: "💉 Diabetic" },
+  { id: "heart-healthy", label: "❤️ Heart Healthy" },
+  { id: "paleo", label: "🦴 Paleo" },
+  { id: "mediterranean", label: "🫒 Mediterranean" },
+  { id: "organic", label: "🌿 Organic" },
+  { id: "ayurvedic", label: "🌺 Ayurvedic" },
+  { id: "baby-nutrition", label: "👶 Baby" },
+];
+
+function DietaryFilterStrip({ active, onChange }: { active: string | null; onChange: (id: string | null) => void }) {
+  return (
+    <div className="border-b border-border/60 bg-background/95 px-4 py-2.5 flex gap-2.5 overflow-x-auto no-scrollbar shrink-0" data-testid="dietary-filter-strip">
+      {active && (
+        <button
+          onClick={() => onChange(null)}
+          className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors border border-destructive/30 shadow-xs"
+          data-testid="dietary-filter-clear"
+        >
+          ✕ Clear
+        </button>
+      )}
+      {DIETARY_CHIPS.map((chip) => (
+        <button
+          key={chip.id}
+          onClick={() => onChange(active === chip.id ? null : chip.id)}
+          className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-xs font-black uppercase tracking-wide transition-all border ${
+            active === chip.id
+              ? "bg-primary text-primary-foreground border-primary shadow-md font-black scale-[1.02]"
+              : "bg-background text-foreground border-border/80 hover:border-primary/60 hover:bg-primary/10 shadow-2xs"
+          }`}
+          data-testid={`dietary-chip-${chip.id}`}
+        >
+          {chip.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export default function Home() {
@@ -54,7 +98,7 @@ export default function Home() {
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const requestedSubcategory =
-    activeDietaryFilter || activeSubcategory || selectedSubcategory;
+    activeDietaryFilter || urlSubcategory || activeSubcategory || selectedSubcategory;
   const effectiveSubcategory = useMemo(() => {
     if (!selectedCategory || !requestedSubcategory) return undefined;
     const category = getShoppableCategories().find(
@@ -79,26 +123,17 @@ export default function Home() {
     if (cat) {
       setSelectedCategory(cat);
       setSelectedSubcategory(subcat || undefined);
+      setActiveSubcategory(subcat);
     } else {
-      // URL has no category — fully reset back to the home view so the
-      // AgriConnect logo and the sidebar Home icon both land on the
-      // proper landing page even when local state still holds a category.
       setSelectedCategory(undefined);
       setSelectedSubcategory(undefined);
       setActiveSubcategory(null);
       setExpandedCategory(null);
       setFilters({});
     }
-    if (section) {
-      setActiveSection(section);
-    } else if (!cat) {
-      setActiveSection(null);
-    }
+    setActiveSection(section);
   }, [urlParams]);
 
-  // Also listen for the global "go home" event dispatched by the sidebar
-  // Home item and TopNavigation logo — guarantees a full reset even if a
-  // sibling state slipped past the URL effect above.
   useEffect(() => {
     const onClose = () => {
       setSelectedCategory(undefined);
@@ -132,7 +167,6 @@ export default function Home() {
     queryKey: [productsQs ? `/api/products?${productsQs}` : "/api/products"],
   });
 
-  // Category click - opens 2nd panel
   const handleCategoryClick = useCallback((categoryId: string | null) => {
     if (categoryId === expandedCategory) return;
     setExpandedCategory(categoryId);
@@ -140,7 +174,6 @@ export default function Home() {
     setActiveSection(null);
   }, [expandedCategory]);
 
-  // Category selection for filtering
   const handleCategorySelect = useCallback((categoryId: string, subcategoryId?: string) => {
     setSelectedCategory(categoryId);
     setSelectedSubcategory(subcategoryId);
@@ -151,7 +184,6 @@ export default function Home() {
     window.dispatchEvent(new CustomEvent("agri-subcategory-open", { detail: categoryId }));
   }, [setLocation]);
 
-  // Subcategory click - opens 3rd nav panel AND shows products on page
   const handleSubcategoryClick = useCallback((subId: string | null) => {
     setActiveSubcategory(subId);
     setActiveSection(null);
@@ -160,17 +192,6 @@ export default function Home() {
     }
   }, [expandedCategory]);
 
-  // Section navigation from 3rd panel
-  const handleSectionClick = useCallback((sectionTitle: string) => {
-    setActiveSection(sectionTitle);
-  }, []);
-
-  // Section visibility callback from ProductShowcase
-  const handleSectionVisible = useCallback((sectionTitle: string) => {
-    setActiveSection(sectionTitle);
-  }, []);
-
-  // Explicit close handlers
   const handleCloseSubcategoryPanel = useCallback(() => {
     setExpandedCategory(null);
     setActiveSubcategory(null);
@@ -182,41 +203,41 @@ export default function Home() {
     setActiveSection(null);
   }, []);
 
-  const handleProductClick = (product: Product) => {
+  const handleProductClick = useCallback((product: Product) => {
     setLocation(buildProductDetailUrl(product, {
       categoryId: selectedCategory,
       subcategoryId: effectiveSubcategory,
       section: activeSection,
     }));
-  };
+  }, [setLocation, selectedCategory, effectiveSubcategory, activeSection]);
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = useCallback((product: Product) => {
     addItem.mutate({ product, quantity: 1 });
-  };
+  }, [addItem]);
 
-  const handleUpdateQuantity = (itemId: string, quantity: number) => {
+  const handleUpdateQuantity = useCallback((itemId: string, quantity: number) => {
     updateItem.mutate({ itemId, quantity });
-  };
+  }, [updateItem]);
 
-  const handleRemoveItem = (itemId: string) => {
+  const handleRemoveItem = useCallback((itemId: string) => {
     removeItem.mutate(itemId);
-  };
+  }, [removeItem]);
 
-  const handleCheckout = () => {
+  const handleCheckout = useCallback(() => {
     setIsCartOpen(false);
     setLocation("/cart");
-  };
+  }, [setIsCartOpen, setLocation]);
 
-  const handleFarmerClick = (farmerId: string) => {
+  const handleFarmerClick = useCallback((farmerId: string) => {
     if (!farmerId) return;
     setLocation(`/sellers/${farmerId}`);
-  };
+  }, [setLocation]);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
-  };
+  }, []);
 
-  const handleHome = () => {
+  const handleHome = useCallback(() => {
     setSelectedCategory(undefined);
     setSelectedSubcategory(undefined);
     setSearchQuery("");
@@ -224,89 +245,27 @@ export default function Home() {
     setExpandedCategory(null);
     setActiveSubcategory(null);
     setActiveSection(null);
-    // Always land on the clean home URL ("/") with no leftover query params,
-    // even when called from the brand logo or sidebar Home icon while a
-    // category is active.
     if (window.location.pathname !== "/" || window.location.search) {
       window.history.pushState({}, "", "/");
     }
     setLocation("/");
     window.dispatchEvent(new Event("agri-subcategory-close"));
-  };
+  }, [setLocation]);
 
-  const handleBrowseAll = () => {
+  const handleBrowseAll = useCallback(() => {
     setSelectedCategory("daily-needs");
     setLocation("/?category=daily-needs");
     window.dispatchEvent(new CustomEvent("agri-subcategory-open", { detail: "daily-needs" }));
-  };
-
-  // Check if any panel is open to control auto-hide
-  const isPanelOpen = !!expandedCategory || !!activeSubcategory;
-
-  // Auto-hide sidebar 1 logic
-  useEffect(() => {
-    if (isPanelOpen && !expandedCategory) {
-      // If we are deep but category panel is closed
-    }
-  }, [isPanelOpen, expandedCategory]);
+  }, [setLocation]);
 
   const sidebarStyle = {
     "--sidebar-width": "16rem",
-    "--sidebar-width-icon": "6.5rem",  // 104px — fits 52px image + full label below
+    "--sidebar-width-icon": "6.5rem",
   };
 
   return (
     <SidebarProvider style={sidebarStyle as React.CSSProperties} defaultOpen={false}>
       <div className="flex h-screen w-full bg-gradient-to-br from-background via-background to-muted/20 gap-0 relative overflow-hidden pb-16 lg:pb-0">
-        {/* Animated Background Shapes */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              x: [0, 100, 0],
-              y: [0, 50, 0],
-              rotate: [0, 90, 0],
-            }}
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[100px]"
-          />
-          <motion.div
-            animate={{
-              scale: [1, 1.1, 1],
-              x: [0, -50, 0],
-              y: [0, 100, 0],
-              rotate: [0, -45, 0],
-            }}
-            transition={{
-              duration: 15,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute top-[20%] -right-[5%] w-[35%] h-[35%] bg-orange-500/5 rounded-full blur-[80px]"
-          />
-          <motion.div
-            animate={{
-              scale: [1, 1.3, 1],
-              x: [0, 30, 0],
-              y: [0, -60, 0],
-            }}
-            transition={{
-              duration: 18,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute bottom-[10%] left-[20%] w-[30%] h-[30%] bg-primary/3 rounded-full blur-[120px]"
-          />
-        </div>
-
-
-        {/* Front sidebars removed — categories now live in the main left vertical bar (AppNavRail) */}
-        
-        {/* Main Content Area */}
         <SidebarInset className="flex flex-col flex-1 min-w-0">
           <TopNavigation
             cartItemCount={cartCount}
@@ -317,37 +276,37 @@ export default function Home() {
           <main className="flex-1 overflow-hidden">
             <AnimatePresence mode="wait">
               {showHomepage ? (
-                <motion.div
-                  key="homepage"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full overflow-y-auto overflow-x-hidden"
-                >
-                  <ScrollArea className="h-full">
-                    <HeroSection 
-                      onBrowse={handleBrowseAll} 
+                <div key="homepage-scroll-container" className="h-full overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-gutter:stable] transform-gpu">
+                  <motion.div
+                    key="homepage"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="transform-gpu"
+                  >
+                    <HeroSection
+                      onBrowse={handleBrowseAll}
                       products={products}
                       onFarmerClick={handleFarmerClick}
                       onAddToCart={handleAddToCart}
                     />
-                    <CategoryCarousel 
+                    <CategoryCarousel
                       onCategorySelect={handleCategorySelect}
                       products={products}
                       onAddToCart={handleAddToCart}
                     />
                     <FeatureShowcase />
                     <TrustIndicators />
-                  </ScrollArea>
-                </motion.div>
+                  </motion.div>
+                </div>
               ) : (
                 <motion.div
                   key="products"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.15 }}
                   className="h-full flex flex-col"
                 >
                   <DietaryFilterStrip
@@ -370,7 +329,6 @@ export default function Home() {
                         activeSection={activeSection}
                         onAddToCart={handleAddToCart}
                         onProductClick={handleProductClick}
-                        onSectionVisible={handleSectionVisible}
                         onFarmerClick={handleFarmerClick}
                       />
                     }
@@ -392,50 +350,5 @@ export default function Home() {
         onCheckout={handleCheckout}
       />
     </SidebarProvider>
-  );
-}
-
-const DIETARY_CHIPS = [
-  { id: "keto", label: "🥑 Keto" },
-  { id: "vegan", label: "🌱 Vegan" },
-  { id: "high-protein", label: "💪 High Protein" },
-  { id: "gluten-free", label: "🌾 Gluten Free" },
-  { id: "dairy-free", label: "🥛 Dairy Free" },
-  { id: "diabetic-friendly", label: "💉 Diabetic" },
-  { id: "heart-healthy", label: "❤️ Heart Healthy" },
-  { id: "paleo", label: "🦴 Paleo" },
-  { id: "mediterranean", label: "🫒 Mediterranean" },
-  { id: "organic", label: "🌿 Organic" },
-  { id: "ayurvedic", label: "🌺 Ayurvedic" },
-  { id: "baby-nutrition", label: "👶 Baby" },
-];
-
-function DietaryFilterStrip({ active, onChange }: { active: string | null; onChange: (id: string | null) => void }) {
-  return (
-    <div className="border-b border-border/50 bg-background/95 backdrop-blur-sm px-3 py-2 flex gap-2 overflow-x-auto no-scrollbar shrink-0" data-testid="dietary-filter-strip">
-      {active && (
-        <button
-          onClick={() => onChange(null)}
-          className="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors border border-border/60"
-          data-testid="dietary-filter-clear"
-        >
-          ✕ Clear
-        </button>
-      )}
-      {DIETARY_CHIPS.map((chip) => (
-        <button
-          key={chip.id}
-          onClick={() => onChange(active === chip.id ? null : chip.id)}
-          className={`shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all border ${
-            active === chip.id
-              ? "bg-primary text-primary-foreground border-primary shadow-sm"
-              : "bg-background text-foreground border-border/60 hover:border-primary/40 hover:bg-primary/5"
-          }`}
-          data-testid={`dietary-chip-${chip.id}`}
-        >
-          {chip.label}
-        </button>
-      ))}
-    </div>
   );
 }

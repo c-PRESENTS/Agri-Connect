@@ -162,16 +162,16 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button 
-          variant="ghost" 
-          className="gap-2 px-2 sm:px-3" 
+        <Button
+          variant="ghost"
+          className="h-9 px-2.5 sm:px-3 gap-1.5 hover:bg-primary/10 transition-all rounded-xl border border-border/60 flex items-center"
           data-testid="button-region-switcher"
           aria-label={t("region.current_label", { region: selectedRegion.name })}
         >
-          <span className="text-base" aria-hidden="true">{getCountryFlag(selectedRegion.code)}</span>
-          <span className="hidden md:inline text-sm">{selectedRegion.code}</span>
-          <span className="font-semibold text-sm">{selectedRegion.currencySymbol}</span>
-          <ChevronDown className="h-3 w-3 opacity-50" aria-hidden="true" />
+          <span className="font-black text-xs sm:text-sm uppercase tracking-wider text-foreground">
+            {selectedRegion.code} · {selectedRegion.currencySymbol}
+          </span>
+          <ChevronDown className="h-4 w-4 text-foreground/70" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">

@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SafeProductImage } from "@/components/safe-product-image";
 import { MapPin, Star, Store, Navigation, Layers } from "lucide-react";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import type { Product } from "@shared/schema";
@@ -237,7 +238,7 @@ export function MapWithNearby({
               </div>
             ) : (
               visibleSellers.map((s) => {
-                const img = resolveProductImageForProduct(s.topProduct).src;
+                const imageResolution = resolveProductImageForProduct(s.topProduct);
                 return (
                   <Link
                     key={s.id}
@@ -245,11 +246,11 @@ export function MapWithNearby({
                     className="flex gap-3 p-3 hover-elevate active-elevate-2 cursor-pointer"
                     data-testid={`row-nearby-seller-${s.id}`}
                   >
-                      <img
-                        src={img}
+                      <SafeProductImage
+                        src={imageResolution.src}
+                        fallbackSrc={imageResolution.fallbackSrc}
                         alt={s.topProduct.name}
                         className="w-14 h-14 rounded-md object-cover shrink-0 bg-muted"
-                        loading="lazy"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">

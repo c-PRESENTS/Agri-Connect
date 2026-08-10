@@ -10,8 +10,18 @@ import {
   normalizeLocationQuery,
 } from "../../location/geocoder";
 import { localNeedsRepository } from "../../repositories/local-needs-repository";
+import {
+  ShareCareOwnListingError,
+  ShareCareUnavailableError,
+  shareCareRepository,
+} from "../../repositories/share-care-repository";
 import { storage } from "../../storage";
-import { localNeedPostSchema } from "@shared/schema";
+import {
+  createShareCareListingSchema,
+  localNeedPostSchema,
+  shareCareListingStatusSchema,
+  updateShareCareListingSchema,
+} from "@shared/schema";
 
 export function registerLocalNeedsRoutes(app: Express): void {
   app.get("/api/local-needs", async (req, res) => {
@@ -48,11 +58,7 @@ export function registerLocalNeedsRoutes(app: Express): void {
         buyer.latitude != null &&
         buyer.longitude != null;
       const resolved = sameAsProfile
-        ? {
-            label: buyer.location!,
-            latitude: buyer.latitude!,
-            longitude: buyer.longitude!,
-          }
+        ? { label: buyer.location!, latitude: buyer.latitude!, longitude: buyer.longitude! }
         : await geocodeLocation(requestedLocation);
 
       const buyerName =
@@ -104,26 +110,106 @@ export function registerLocalNeedsRoutes(app: Express): void {
 }
 
 export function registerShareCareRoutes(app: Express): void {
-  const items = [
-      { id: "sc-1", name: "Heritage Tomatoes", unit: "kg", qty: 4, donor: "Rachel Green", location: "Chelmsford, Essex", latitude: 51.7356, longitude: 0.4685, emoji: "🍅", postedAgo: "2m ago", category: "vegetables", urgency: "urgent", expiresIn: "45 mins" },
-      { id: "sc-2", name: "Fresh Kale Bundles", unit: "bundle", qty: 6, donor: "Tom Hart", location: "Norwich, Norfolk", latitude: 52.6309, longitude: 1.2974, emoji: "🥬", postedAgo: "8m ago", category: "vegetables", urgency: "medium", expiresIn: "2 hours" },
-      { id: "sc-3", name: "Duck Eggs (free-range)", unit: "dozen", qty: 2, donor: "Anna Bell", location: "Bath, Somerset", latitude: 51.3811, longitude: -2.359, emoji: "🥚", postedAgo: "15m ago", category: "dairy", urgency: "safe", expiresIn: "5 hours" },
-      { id: "sc-4", name: "Organic Apples", unit: "kg", qty: 5, donor: "Liam Walker", location: "Canterbury, Kent", latitude: 51.2802, longitude: 1.0789, emoji: "🍎", postedAgo: "22m ago", category: "fruits", urgency: "safe", expiresIn: "1 day" },
-      { id: "sc-5", name: "Wild Garlic Leaves", unit: "bunch", qty: 8, donor: "Sue Moore", location: "York, Yorkshire", latitude: 53.959, longitude: -1.0815, emoji: "🌿", postedAgo: "35m ago", category: "medicinal", urgency: "medium", expiresIn: "3 hours" },
-      { id: "sc-6", name: "Surplus Courgettes", unit: "kg", qty: 3, donor: "Paul Evans", location: "Oxford, Oxfordshire", latitude: 51.752, longitude: -1.2577, emoji: "🥒", postedAgo: "41m ago", category: "vegetables", urgency: "medium", expiresIn: "2 hours" },
-      { id: "sc-7", name: "Homemade Plum Jam", unit: "jar", qty: 10, donor: "Claire James", location: "Exeter, Devon", latitude: 50.7184, longitude: -3.5339, emoji: "🫙", postedAgo: "55m ago", category: "pickles", urgency: "safe", expiresIn: "30 days" },
-      { id: "sc-8", name: "Sunflower Seedlings", unit: "tray", qty: 3, donor: "Mark Singh", location: "Cambridge, Cambs", latitude: 52.2053, longitude: 0.1218, emoji: "🌻", postedAgo: "1h ago", category: "seeds", urgency: "safe", expiresIn: "7 days" },
-      { id: "sc-9", name: "Raw Honey (uncapped)", unit: "jar", qty: 4, donor: "Fiona Black", location: "Bury St Edmunds, Suffolk", latitude: 52.2452, longitude: 0.7104, emoji: "🍯", postedAgo: "1h ago", category: "honey", urgency: "safe", expiresIn: "60 days" },
-      { id: "sc-10", name: "Mixed Salad Greens", unit: "bag", qty: 7, donor: "George Ali", location: "Lincoln, Lincolnshire", latitude: 53.2307, longitude: -0.5406, emoji: "🥗", postedAgo: "2h ago", category: "vegetables", urgency: "urgent", expiresIn: "50 mins" },
-      { id: "sc-11", name: "Runner Beans (fresh)", unit: "kg", qty: 2, donor: "Priya Shah", location: "Colchester, Essex", latitude: 51.8959, longitude: 0.8919, emoji: "🫘", postedAgo: "2h ago", category: "pulses", urgency: "medium", expiresIn: "2 hours" },
-      { id: "sc-12", name: "Butternut Squash", unit: "each", qty: 5, donor: "David Owen", location: "Kings Lynn, Norfolk", latitude: 52.751, longitude: 0.3924, emoji: "🎃", postedAgo: "3h ago", category: "vegetables", urgency: "safe", expiresIn: "5 days" },
-      { id: "sc-13", name: "Sourdough Loaves", unit: "loaf", qty: 6, donor: "Holt Bakery", location: "Brighton, East Sussex", latitude: 50.8225, longitude: -0.1372, emoji: "🍞", postedAgo: "20m ago", category: "bakery", urgency: "urgent", expiresIn: "40 mins" },
-      { id: "sc-14", name: "Beef Mince (frozen)", unit: "kg", qty: 4, donor: "Hartley Farm", location: "Reading, Berkshire", latitude: 51.4543, longitude: -0.9781, emoji: "🥩", postedAgo: "30m ago", category: "meat", urgency: "safe", expiresIn: "30 days" },
-      { id: "sc-15", name: "Surplus Yoghurt Pots", unit: "pack", qty: 12, donor: "Dales Dairy", location: "Manchester", latitude: 53.4808, longitude: -2.2426, emoji: "🥣", postedAgo: "1h ago", category: "dairy", urgency: "medium", expiresIn: "1.5 hours" },
-  ];
+  app.get("/api/share-care", async (req, res) => {
+    try {
+      const parsedStatus = typeof req.query.status === "string"
+        ? shareCareListingStatusSchema.safeParse(req.query.status)
+        : undefined;
+      const requestedLimit = typeof req.query.limit === "string" ? Number(req.query.limit) : undefined;
+      const limit = Number.isInteger(requestedLimit) ? requestedLimit : undefined;
+      res.json(await shareCareRepository.list({
+        freeOnly: req.query.free === "true",
+        status: parsedStatus?.success ? parsedStatus.data : undefined,
+        limit,
+      }));
+    } catch (error) {
+      console.error("Failed to list Share & Care items:", error);
+      res.status(500).json({ error: "Failed to fetch Share & Care listings" });
+    }
+  });
 
-  app.get("/api/share-care", (_req, res) => {
-    res.json(items);
+  app.post("/api/share-care", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const donor = await authStorage.getUser(userId);
+      if (!donor) return res.status(404).json({ error: "User not found" });
+      const data = createShareCareListingSchema.parse(req.body);
+      const requestedLocation = normalizeLocationQuery(data.location || donor.location || "");
+      if (!requestedLocation) {
+        return res.status(422).json({ error: "Add a location before sharing an item", field: "location" });
+      }
+      const sameAsProfile =
+        requestedLocation === normalizeLocationQuery(donor.location ?? "") &&
+        donor.latitude != null &&
+        donor.longitude != null;
+      const resolved = sameAsProfile
+        ? { label: donor.location!, latitude: donor.latitude!, longitude: donor.longitude! }
+        : await geocodeLocation(requestedLocation);
+      const donorName =
+        donor.name ||
+        [donor.firstName, donor.lastName].filter(Boolean).join(" ").trim() ||
+        donor.email ||
+        "AgriConnect Member";
+      const listing = await shareCareRepository.create({
+        donorId: userId,
+        donorName,
+        sourceType: data.sourceType,
+        name: data.name,
+        category: data.category,
+        quantity: data.quantity,
+        unit: data.unit,
+        isFree: data.isFree,
+        price: data.isFree ? 0 : data.price,
+        location: resolved.label,
+        latitude: resolved.latitude,
+        longitude: resolved.longitude,
+        emoji: data.emoji,
+        urgency: data.urgency,
+        expiresAt: new Date(Date.now() + data.expiresInHours * 60 * 60 * 1_000),
+        dietaryTags: data.dietaryTags,
+      });
+      res.status(201).json(listing);
+    } catch (error) {
+      if (error instanceof ZodError) return res.status(400).json({ error: fromZodError(error).message });
+      if (error instanceof LocationNotFoundError) return res.status(422).json({ error: error.message, field: "location" });
+      if (error instanceof GeocodingUnavailableError) return res.status(503).json({ error: error.message, field: "location" });
+      console.error("Failed to create Share & Care listing:", error);
+      res.status(500).json({ error: "Failed to create Share & Care listing" });
+    }
+  });
+
+  app.patch("/api/share-care/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const data = updateShareCareListingSchema.parse(req.body);
+      const listing = await shareCareRepository.updateOwned(req.params.id, userId, {
+        ...data,
+        expiresAt: data.expiresInHours
+          ? new Date(Date.now() + data.expiresInHours * 60 * 60 * 1_000)
+          : undefined,
+      });
+      if (!listing) return res.status(404).json({ error: "Listing not found or not owned by you" });
+      res.json(listing);
+    } catch (error) {
+      if (error instanceof ZodError) return res.status(400).json({ error: fromZodError(error).message });
+      console.error("Failed to update Share & Care listing:", error);
+      res.status(500).json({ error: "Failed to update Share & Care listing" });
+    }
+  });
+
+  app.post("/api/share-care/:id/reserve", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      res.json(await shareCareRepository.reserve(req.params.id, userId));
+    } catch (error) {
+      if (error instanceof ShareCareUnavailableError) return res.status(409).json({ error: error.message });
+      if (error instanceof ShareCareOwnListingError) return res.status(400).json({ error: error.message });
+      console.error("Failed to reserve Share & Care listing:", error);
+      res.status(500).json({ error: "Failed to reserve Share & Care listing" });
+    }
   });
 
   app.get("/api/platform/stats", async (_req, res) => {
@@ -131,12 +217,13 @@ export function registerShareCareRoutes(app: Express): void {
       const products = await storage.getProducts();
       const services = products.filter((product) => product.categoryId === "services").length;
       const productListings = products.length - services;
+      const freeItems = await shareCareRepository.countAvailableFree();
 
       res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
       res.json({
         farmers: 1284,
         products: productListings,
-        freeItems: items.length,
+        freeItems,
         buyers: 3642,
         students: 876,
         services,

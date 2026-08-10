@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { GitCompareArrows, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SafeProductImage } from "@/components/safe-product-image";
 import { useCompare } from "@/hooks/use-compare";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { useTranslation } from "react-i18next";
@@ -41,8 +42,9 @@ export function CompareBar() {
             {items.map(p => (
               <div key={p.id} className="relative group" data-testid={`compare-item-${p.id}`}>
                 <div className="w-11 h-11 rounded-lg overflow-hidden border border-border bg-muted">
-                  <img
+                  <SafeProductImage
                     src={resolveProductImageForProduct(p).src}
+                    fallbackSrc={resolveProductImageForProduct(p).fallbackSrc}
                     alt={p.name}
                     className="w-full h-full object-cover"
                   />

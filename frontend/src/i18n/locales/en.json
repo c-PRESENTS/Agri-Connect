@@ -229,7 +229,7 @@
     "standard_delivery": "Standard Delivery",
     "standard_delivery_desc": "2-3 days",
     "express_delivery": "Express Delivery",
-    "express_delivery_desc": "Same day",
+    "express_delivery_desc": "3-5 days",
     "self_pickup": "Self Pickup",
     "self_pickup_desc": "Pick from aggregation point • Free",
     "payment_method": "Payment Method",
@@ -1873,7 +1873,7 @@
     "badge": "AgriConnect Direct",
     "item_count": "{{count}} items",
     "farm_to_table": "Farm to table",
-    "same_day_delivery": "Same day delivery",
+    "same_day_delivery": "3-5 Days Delivery",
     "verified_farmers": "Verified farmers"
   },
   "shipping_quote": {
@@ -1978,7 +1978,7 @@
     "service_standard": "Standard",
     "service_express": "Express",
     "service_cold_chain": "Cold-Chain",
-    "service_same_day": "Same-Day",
+    "service_same_day": "3-5 Days",
     "service_next_day": "Next-Day",
     "service_scheduled": "Scheduled",
     "service_freight": "Freight",
