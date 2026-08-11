@@ -35,6 +35,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -119,7 +120,6 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
     { id: "land", path: "/land-leasing", icon: MapPin, label: t("nav.land", "Land") },
     { id: "share", path: "/share-care", icon: HeartHandshake, label: t("nav.share", "Share") },
     { id: "ship", path: "/ship", icon: Truck, label: t("nav.ship", "Ship") },
-    { id: "user", path: isAuthenticated ? "/dashboard" : "/login", icon: User, label: t("nav.user", "User") },
   ];
 
   return (
@@ -253,8 +253,9 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="h-9 sm:h-10 px-2.5 sm:px-3 ml-1 gap-2 hover:bg-primary/10 transition-all rounded-xl border border-border/60 flex items-center"
+                  className="ml-1 flex h-9 items-center gap-2 rounded-xl border border-border/60 px-2.5 transition-all hover:bg-primary/10 sm:h-10 sm:px-3"
                   data-testid="button-user-menu"
+                  aria-label="Open profile menu"
                 >
                   <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-2 ring-primary/30">
                     <AvatarImage src={user.avatar || user.profileImageUrl || undefined} alt={user.name || user.email || "User"} />
@@ -268,6 +269,13 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52 backdrop-blur-xl rounded-2xl border-2 border-border/80 p-1.5 shadow-xl">
+                <DropdownMenuLabel className="px-2.5 py-2">
+                  <span className="block text-xs font-black uppercase tracking-wider text-muted-foreground">Profile</span>
+                  <span className="mt-0.5 block truncate text-sm font-black text-foreground">
+                    {user.name || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email}
+                  </span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="my-1.5 bg-border/80" />
                 <DropdownMenuItem onClick={() => setLocation("/my-profile")} data-testid="menu-item-my-profile" className="font-bold py-2.5 rounded-xl">
                   <User className="mr-2.5 h-4.5 w-4.5 text-primary" />
                   My Profile
@@ -300,7 +308,7 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
               <Button
                 variant="default"
                 onClick={() => (window.location.href = "/login")}
-                className="h-9 sm:h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-black uppercase tracking-wider ml-1 bg-amber-400 text-black hover:bg-amber-500 rounded-xl shadow-md border border-amber-500/40"
+                className="ml-1 h-9 rounded-xl border border-amber-500/40 bg-amber-400 px-3.5 text-xs font-black uppercase tracking-wider text-black shadow-md hover:bg-amber-500 sm:h-10 sm:px-4 sm:text-sm"
                 data-testid="button-login-nav"
               >
                 <User className="h-4.5 w-4.5 mr-1.5 text-black" />

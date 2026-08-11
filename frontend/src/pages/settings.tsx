@@ -413,15 +413,26 @@ export default function SettingsPage() {
                   </span>
                 ) : null}
               </div>
-              <Button
-                onClick={() => updateProfile.mutate()}
-                disabled={updateProfile.isPending || !isDirty || Boolean(validationMessage)}
-                className="h-13 px-8 text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg rounded-xl"
-                data-testid="button-save-profile"
-              >
-                {updateProfile.isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                Save changes
-              </Button>
+              <div className="flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto">
+                <Button
+                  variant="outline"
+                  onClick={logout}
+                  className="h-13 rounded-xl border-2 px-6 text-base font-black text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/30"
+                  data-testid="button-logout"
+                >
+                  <LogOut className="mr-2 h-5 w-5" />
+                  {t("nav.signout", "Sign out")}
+                </Button>
+                <Button
+                  onClick={() => updateProfile.mutate()}
+                  disabled={updateProfile.isPending || !isDirty || Boolean(validationMessage)}
+                  className="h-13 px-8 text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg rounded-xl"
+                  data-testid="button-save-profile"
+                >
+                  {updateProfile.isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                  Save changes
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -439,16 +450,6 @@ export default function SettingsPage() {
           </CardHeader>
         </Card>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t-2 border-border/40 pt-6">
-          <div>
-            <p className="text-lg font-black text-foreground">Finished for now?</p>
-            <p className="text-sm font-bold text-muted-foreground mt-0.5">Sign out securely from this device.</p>
-          </div>
-          <Button variant="outline" onClick={logout} className="h-12 px-6 text-base font-black border-2 rounded-xl" data-testid="button-logout">
-            <LogOut className="mr-2 h-5 w-5" />
-            {t("nav.signout", "Sign out")}
-          </Button>
-        </div>
       </div>
     </div>
   );
