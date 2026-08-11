@@ -79,28 +79,54 @@ export function ProductShowcase({
       }
 
       const remaining = new Map(products.map((product) => [product.id, product]));
-      const sections = deepContent.flatMap<ProductSection>((section) => {
+      const sections = deepContent.map<ProductSection>((section) => {
         const normalizedNames = new Set(section.items.map(normalizeProductImageKey));
-        const matchingProducts = products.filter(
-          (product) =>
-            remaining.has(product.id) &&
-            normalizedNames.has(normalizeProductImageKey(product.name)),
-        );
+        const secTitleLower = section.title.toLowerCase();
+
+        // 1. Match products by exact key, substring, or title overlap
+        const matchingProducts = products.filter((product) => {
+          if (!remaining.has(product.id)) return false;
+
+          const normName = normalizeProductImageKey(product.name);
+          if (normalizedNames.has(normName)) return true;
+
+          const nameLower = product.name.toLowerCase();
+          if (nameLower.includes(secTitleLower)) return true;
+
+          return section.items.some((item) => {
+            const itemLower = item.toLowerCase();
+            return nameLower.includes(itemLower) || itemLower.includes(nameLower);
+          });
+        });
+
         matchingProducts.forEach((product) => remaining.delete(product.id));
-        return matchingProducts.length > 0
-          ? [{ title: section.title, products: matchingProducts }]
-          : [];
+
+        return {
+          title: section.title,
+          products: matchingProducts,
+        };
       });
+
       const remainingProducts = Array.from(remaining.values());
 
-      if (remainingProducts.length > 0) {
-        sections.push({
-          title: t("product_showcase.available_products", "Available Products"),
-          products: remainingProducts,
-        });
+      // Ensure NO section is empty — if a taxonomy section has no direct match, populate with remaining or all products
+      sections.forEach((sec) => {
+        if (sec.products.length === 0) {
+          sec.products = remainingProducts.length > 0 ? remainingProducts : products;
+        }
+      });
+
+      if (remainingProducts.length > 0 && sections.every(s => !s.products.some(p => remaining.has(p.id)))) {
+        const leftover = remainingProducts.filter(p => !sections.some(s => s.products.some(sp => sp.id === p.id)));
+        if (leftover.length > 0) {
+          sections.push({
+            title: t("product_showcase.available_products", "Available Products"),
+            products: leftover,
+          });
+        }
       }
 
-      return sections;
+      return products.length > 0 ? sections : [];
     }
 
     if (categoryId) {
@@ -154,30 +180,67 @@ export function ProductShowcase({
     return (el: HTMLDivElement | null) => {
       if (el) {
         sectionRefsMap.current.set(title, el);
+      } else {
+        sectionRefsMap.current.delete(title);
       }
-      // Don't delete on null - React may call with null during reconciliation
-      // Refs will be naturally replaced when content changes
     };
   }, []);
 
-  // Scroll to section when activeSection changes from nav panel click
-  useEffect(() => {
-    if (activeSection) {
-      // Small delay to ensure refs are populated after render
-      const timer = setTimeout(() => {
-        const el = sectionRefsMap.current.get(activeSection);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollToSection = useCallback((targetTitle: string) => {
+    if (!targetTitle) return;
+    const normalizeTitle = (title: string) => title.trim().replace(/\s+/g, " ").toLocaleLowerCase();
+    const targetKey = normalizeTitle(targetTitle);
+    let targetEl: HTMLDivElement | undefined;
+
+    if (sectionRefsMap.current.has(targetTitle)) {
+      targetEl = sectionRefsMap.current.get(targetTitle);
+    } else {
+      for (const [key, el] of Array.from(sectionRefsMap.current.entries())) {
+        const normKey = normalizeTitle(key);
+        if (normKey === targetKey || normKey.includes(targetKey) || targetKey.includes(normKey)) {
+          targetEl = el;
+          break;
         }
-      }, 50);
+      }
+    }
+
+    if (targetEl) {
+      const viewport = containerRef.current?.querySelector(
+        "[data-radix-scroll-area-viewport]",
+      ) as HTMLElement | null;
+
+      if (viewport) {
+        const viewportRect = viewport.getBoundingClientRect();
+        const targetRect = targetEl.getBoundingClientRect();
+        const targetTop = viewport.scrollTop + targetRect.top - viewportRect.top - 12;
+        viewport.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+      } else {
+        targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, []);
+
+  // Scroll to top when subcategoryId or categoryId changes so user lands at top of that category slide
+  useEffect(() => {
+    if (containerRef.current) {
+      const viewport = containerRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+      if (viewport) {
+        viewport.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }, [subcategoryId, categoryId]);
+
+  // Scroll to section when activeSection changes from nav panel click or URL navigation
+  useEffect(() => {
+    if (activeSection && content.length > 0) {
+      const timer = setTimeout(() => {
+        scrollToSection(activeSection);
+      }, 100);
       return () => clearTimeout(timer);
     }
-  }, [activeSection]);
-
-  // Clear refs when content changes
-  useEffect(() => {
-    sectionRefsMap.current.clear();
-  }, [content.length > 0 ? content.map(c => c.title).join(',') : '']);
+  }, [activeSection, content, scrollToSection]);
 
   // Setup IntersectionObserver after content renders
   useEffect(() => {
@@ -243,23 +306,23 @@ export function ProductShowcase({
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden" ref={containerRef}>
       {/* Stats Bar */}
-      <div className="flex-shrink-0 bg-muted/20 border-b border-border/40 px-3 py-1.5">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-3 text-[10px]">
-            <div className="flex items-center gap-1">
-              <Package className="h-4 w-4 text-primary" />
-              <span className="font-bold">
+      <div className="flex-shrink-0 bg-muted/40 border-b border-border/60 px-4 py-2.5">
+        <div className="flex items-center justify-between flex-wrap gap-2.5">
+          <div className="flex items-center gap-3 text-sm sm:text-base font-black text-foreground">
+            <div className="flex items-center gap-2 bg-amber-500/15 text-amber-950 dark:text-amber-200 border-2 border-amber-500/40 px-4 py-2 rounded-xl shadow-xs">
+              <Package className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="font-black text-sm sm:text-base uppercase tracking-wide">
                 {products.length} {products.length === 1 ? "item" : "items"}
               </span>
             </div>
-            <div className="flex items-center gap-1">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span>{new Set(products.map(p => p.farmerId)).size} {t("features.farmers_label")}</span>
+            <div className="flex items-center gap-2 bg-emerald-500/15 text-emerald-950 dark:text-emerald-200 border-2 border-emerald-500/40 px-4 py-2 rounded-xl shadow-xs">
+              <MapPin className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="font-black text-sm sm:text-base uppercase tracking-wide">{new Set(products.map(p => p.farmerId)).size} {t("features.farmers_label")}</span>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Badge variant="outline" className="text-[9px] h-5 px-1.5">
-              <Truck className="h-2.5 w-2.5 mr-1" />
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs sm:text-sm font-black uppercase tracking-wide gap-2 h-9 px-4 bg-emerald-600 text-white border-0 shadow-md">
+              <Truck className="h-4.5 w-4.5 text-white" />
               {t("product_showcase.same_day_delivery")}
             </Badge>
           </div>
@@ -270,12 +333,18 @@ export function ProductShowcase({
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-primary/15 via-background to-emerald-500/10 border-2 border-primary/30 shadow-md">
             <div>
-              <h1 className="text-xl font-bold">{displayName}</h1>
-              <p className="text-sm text-muted-foreground">
-                {content.length} categories | {content.reduce((acc, c) => acc + c.products.length, 0)} items
-              </p>
+              <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight leading-tight mb-2">{displayName}</h1>
+              <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm font-black">
+                <span className="px-3 py-1 rounded-lg bg-primary/15 border border-primary/30 text-primary font-black shadow-2xs">
+                  {content.length} categories
+                </span>
+                <span className="text-foreground/40 font-bold">•</span>
+                <span className="px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-black shadow-2xs">
+                  {content.reduce((acc, c) => acc + c.products.length, 0)} items
+                </span>
+              </div>
             </div>
           </div>
 
@@ -307,15 +376,19 @@ export function ProductShowcase({
               }`}
             >
               {/* Section Header */}
-              <div className="flex items-center gap-1.5 mb-2">
-                <div className="h-1 w-1 rounded-full bg-primary" />
-                <h2 className="text-[10px] font-bold uppercase tracking-tight">{section.title}</h2>
-                <div className="flex-1 h-px bg-border/30" />
-                <span className="text-[8px] text-muted-foreground uppercase font-bold">{section.products.length}</span>
+              <div className="flex items-center gap-2.5 mb-3 px-1">
+                <div className="h-3.5 w-3.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.7)] shrink-0" />
+                <h2 className="text-base sm:text-lg font-black uppercase tracking-wider text-foreground">
+                  {section.title}
+                </h2>
+                <div className="flex-1 h-0.5 bg-gradient-to-r from-amber-500/40 via-border to-transparent rounded-full ml-1" />
+                <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/25 text-xs sm:text-sm font-black text-primary shadow-2xs">
+                  {section.products.length} items
+                </span>
               </div>
 
               {/* Product Grid */}
-              <div data-product-grid="showcase" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              <div data-product-grid="showcase" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
                 {section.products.map((product, itemIdx) => {
                   const imageResolution = resolveProductImageForProduct(product);
                   return (
@@ -325,65 +398,69 @@ export function ProductShowcase({
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: sectionIdx * 0.02 + itemIdx * 0.01, duration: 0.15 }}
                     >
-                      <Card data-product-tile data-product-name={product.name.toLowerCase()} className="overflow-hidden group hover:shadow-sm border-border/40 transition-all duration-200 active:scale-[0.97] cursor-pointer scroll-mt-20" onClick={() => onProductClick?.(product)}>
+                      <Card data-product-tile data-product-name={product.name.toLowerCase()} className="overflow-hidden group hover:shadow-xl border-2 border-border/80 bg-card hover:border-primary/60 transition-all duration-200 active:scale-[0.98] cursor-pointer scroll-mt-20 rounded-2xl shadow-md flex flex-col justify-between h-full" onClick={() => onProductClick?.(product)}>
                         {/* Product Image */}
                         <div className="relative aspect-square bg-muted/20 overflow-hidden">
                           <SafeProductImage src={imageResolution.src} fallbackSrc={imageResolution.fallbackSrc} alt={`${product.name} product image`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           
                           {/* Badges */}
-                          <div className="absolute top-1 left-1 flex flex-col gap-0.5">
+                          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
                             {product.isOrganic && (
-                              <Badge className="text-[7px] h-3.5 px-1 py-0 bg-green-600/90 border-0">
+                              <Badge className="text-xs px-2.5 py-1 bg-green-700 text-white font-black uppercase tracking-wider border-0 shadow-md rounded-lg">
                                 {t("product.org_short")}
                               </Badge>
                             )}
                           </div>
 
-                          {/* Quick Add Button — always visible (Amazon-style) */}
+                          {/* Quick Action Buttons */}
                           <FavoriteProductButton
                             productId={product.id}
                             productName={product.name}
-                            className="!absolute right-1 top-1 h-7 w-7 border bg-background/95 shadow-md hover:bg-red-50"
+                            className="!absolute right-2 top-2 h-9 w-9 border-2 border-border/60 bg-background/95 shadow-md hover:bg-red-50"
                             data-testid={`button-showcase-favorite-${sectionIdx}-${itemIdx}`}
                           />
                           <Button
                             size="icon"
-                            className="absolute bottom-1 right-1 h-7 w-7 shadow-md bg-primary hover:bg-primary/90 text-primary-foreground border border-background"
+                            className="absolute bottom-2 right-2 h-9 w-9 shadow-md bg-amber-400 hover:bg-amber-500 text-black border-2 border-black/20 font-black"
                             onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
                             data-testid={`button-quick-add-${product.id}`}
                             title={t("product.add_to_cart")}
                           >
-                            <ShoppingCart className="h-3.5 w-3.5" />
+                            <ShoppingCart className="h-4.5 w-4.5 text-black" />
                           </Button>
                         </div>
 
                         {/* Product Info */}
-                        <CardContent className="p-1.5">
-                          <h3 className="font-bold text-[9px] uppercase tracking-tight truncate mb-1">{product.name}</h3>
-                          
-                          {/* Price & Rating */}
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-[10px] text-primary">
-                              {format(product.price, {
-                                sourceCurrency: product.currency || "GBP",
-                                includeCode: true,
-                              })}
-                              <span className="text-[8px] font-normal text-muted-foreground ml-0.5">/{product.unit}</span>
-                            </span>
-                            <div className="flex items-center gap-0.5">
-                              <Star className="h-2 w-2 fill-yellow-400 text-yellow-400" />
-                              <span className="text-[8px] font-bold">{product.farmerRating.toFixed(1)}</span>
+                        <CardContent className="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-3">
+                          <div>
+                            <h3 className="font-black text-base sm:text-lg text-foreground line-clamp-2 leading-tight mb-2 group-hover:text-primary transition-colors tracking-tight">{product.name}</h3>
+
+                            {/* Price & Rating */}
+                            <div className="flex items-baseline justify-between gap-2 my-2 flex-wrap">
+                              <div className="inline-flex items-baseline flex-wrap min-w-0">
+                                <span className="font-black text-lg sm:text-xl text-amber-600 dark:text-amber-400 tracking-tight font-mono whitespace-nowrap">
+                                  {format(product.price, {
+                                    sourceCurrency: product.currency || "GBP",
+                                    includeCode: true,
+                                  })}
+                                </span>
+                                <span className="text-xs sm:text-sm font-black text-muted-foreground ml-1 whitespace-nowrap">/{product.unit}</span>
+                              </div>
+                              <div className="flex items-center gap-1 bg-amber-400/20 border border-amber-400/50 px-2 py-0.5 rounded-lg shadow-2xs shrink-0">
+                                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                <span className="text-xs font-black text-foreground">{product.farmerRating.toFixed(1)}</span>
+                              </div>
                             </div>
                           </div>
 
-                          {/* Always-visible {t("product.add_to_cart")} button */}
+                          {/* Add to Cart button */}
                           <Button
                             size="sm"
-                            className="w-full mt-1.5 h-6 px-2 text-[9px] font-bold uppercase tracking-tight gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                            className="w-full mt-1 h-10 sm:h-11 px-4 text-xs sm:text-sm font-black uppercase tracking-wider gap-2 bg-amber-400 hover:bg-amber-500 text-black shadow-md rounded-xl border border-amber-500/40"
                             onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
                             data-testid={`button-tile-add-${product.id}`}
                           >
-                            <ShoppingCart className="h-2.5 w-2.5" />
+                            <ShoppingCart className="h-4 w-4 text-black" />
                             {t("product.add_short")}
                           </Button>
                         </CardContent>
@@ -400,29 +477,29 @@ export function ProductShowcase({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-8 p-4 rounded-lg bg-gradient-to-r from-primary/10 to-green-500/10 border border-primary/20"
+            className="mt-8 p-5 rounded-2xl bg-gradient-to-r from-primary/15 via-green-500/10 to-amber-500/10 border-2 border-primary/30 shadow-md"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-white" />
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-green-700 shadow-md flex items-center justify-center shrink-0">
+                <Leaf className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-sm">{t("product_showcase.badge")}</h3>
-                <p className="text-xs text-muted-foreground">{t("product_showcase.verified_farmers")}</p>
+                <h3 className="font-black text-base sm:text-lg text-foreground tracking-tight">{t("product_showcase.badge")}</h3>
+                <p className="text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-400">{t("product_showcase.verified_farmers")}</p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3 text-center text-xs">
-              <div className="p-2 rounded-md bg-background/50">
-                <div className="font-bold text-lg text-primary">{products.length}+</div>
-                <div className="text-muted-foreground">{t("features.products_label")}</div>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="p-3 rounded-xl bg-background border border-primary/20 shadow-xs flex flex-col items-center justify-center">
+                <div className="font-black text-xl sm:text-2xl text-primary leading-none mb-1">{products.length}+</div>
+                <div className="font-extrabold text-xs sm:text-sm uppercase tracking-wide text-foreground">{t("features.products_label")}</div>
               </div>
-              <div className="p-2 rounded-md bg-background/50">
-                <div className="font-bold text-lg text-primary">100%</div>
-                <div className="text-muted-foreground">{t("common.verified")}</div>
+              <div className="p-3 rounded-xl bg-background border border-primary/20 shadow-xs flex flex-col items-center justify-center">
+                <div className="font-black text-xl sm:text-2xl text-primary leading-none mb-1">100%</div>
+                <div className="font-extrabold text-xs sm:text-sm uppercase tracking-wide text-foreground">{t("common.verified")}</div>
               </div>
-              <div className="p-2 rounded-md bg-background/50">
-                <div className="font-bold text-lg text-primary">24hr</div>
-                <div className="text-muted-foreground">{t("product_showcase.same_day_delivery")}</div>
+              <div className="p-3 rounded-xl bg-background border border-primary/20 shadow-xs flex flex-col items-center justify-center">
+                <div className="font-black text-xl sm:text-2xl text-primary leading-none mb-1">3-5 Days</div>
+                <div className="font-extrabold text-xs sm:text-sm uppercase tracking-wide text-foreground">{t("product_showcase.same_day_delivery")}</div>
               </div>
             </div>
           </motion.div>

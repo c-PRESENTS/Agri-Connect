@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { LOCAL_BRANDED_PRODUCT_FALLBACK } from "@/lib/product-images";
 
 interface SafeProductImageProps {
@@ -9,7 +9,7 @@ interface SafeProductImageProps {
 }
 
 /** Keeps card dimensions stable when a seller image is missing or fails to load. */
-export function SafeProductImage({ src, fallbackSrc, alt, className }: SafeProductImageProps) {
+export const SafeProductImage = memo(function SafeProductImage({ src, fallbackSrc, alt, className }: SafeProductImageProps) {
   const preferred = src?.trim() || fallbackSrc?.trim() || null;
   const [activeSrc, setActiveSrc] = useState<string | null>(preferred);
   const [failed, setFailed] = useState(false);
@@ -20,11 +20,11 @@ export function SafeProductImage({ src, fallbackSrc, alt, className }: SafeProdu
   }, [preferred]);
 
   if (!activeSrc || failed) {
-    return <img src={LOCAL_BRANDED_PRODUCT_FALLBACK} alt={`${alt} image unavailable`} className={className} loading="lazy" />;
+    return <img src={LOCAL_BRANDED_PRODUCT_FALLBACK} alt={`${alt} image unavailable`} className={className} loading="lazy" decoding="async" />;
   }
 
-  return <img src={activeSrc} alt={alt} className={className} loading="lazy" onError={() => {
+  return <img src={activeSrc} alt={alt} className={className} loading="lazy" decoding="async" onError={() => {
     if (fallbackSrc && activeSrc !== fallbackSrc) setActiveSrc(fallbackSrc);
     else setFailed(true);
   }} />;
-}
+});

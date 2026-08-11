@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TopNavigation } from "@/components/top-navigation";
+import { SafeProductImage } from "@/components/safe-product-image";
 import { useTranslation } from "react-i18next";
 import { useLocation, useSearch } from "wouter";
 
@@ -362,6 +363,44 @@ export default function SmartMapPage() {
     })),
   ].sort((first, second) => first.distanceKm - second.distanceKm);
 
+  const handleNearbyRadiusChange = useCallback((value: string) => {
+    const nextRadius: NearbyRadius = value === "all"
+      ? "all"
+      : Number(value) as Exclude<NearbyRadius, "all">;
+    setNearbyRadius(nextRadius);
+
+    const map = mapRef.current;
+    if (!map) return;
+    map.stop();
+
+    if (nextRadius === "all") {
+      const allLocations: [number, number][] = [
+        ...farmerMarkers.map((farmer) => [farmer.latitude, farmer.longitude] as [number, number]),
+        ...validLocalNeeds.map((need) => [need.latitude, need.longitude] as [number, number]),
+      ];
+      if (allLocations.length > 0) {
+        map.fitBounds(L.latLngBounds(allLocations), {
+          animate: true,
+          duration: 0.6,
+          padding: [36, 36],
+          maxZoom: 12,
+        });
+      } else {
+        map.setView(userLocation ?? mapCenter, 5, { animate: true });
+      }
+      return;
+    }
+
+    const currentMapCenter = map.getCenter();
+    const radiusCenter: [number, number] = userLocation ?? [currentMapCenter.lat, currentMapCenter.lng];
+    const radiusBounds = L.circle(radiusCenter, { radius: nextRadius * 1000 }).getBounds();
+    map.fitBounds(radiusBounds, {
+      animate: true,
+      duration: 0.6,
+      padding: [36, 36],
+    });
+  }, [farmerMarkers, mapCenter, userLocation, validLocalNeeds]);
+
   useEffect(() => {
     const requestedFarmerId = new URLSearchParams(routeSearch).get("farmer");
     if (!requestedFarmerId) {
@@ -445,31 +484,31 @@ export default function SmartMapPage() {
       <TopNavigation />
 
       {/* ── Toolbar ── */}
-      <div ref={toolbarRef} className="flex items-center gap-1 lg:gap-1.5 px-1.5 lg:px-3 py-1 lg:py-1.5 bg-background/95 backdrop-blur-sm border-b border-border/50 flex-none z-[1001] relative overflow-x-auto no-scrollbar">
+      <div ref={toolbarRef} className="flex items-center gap-2 lg:gap-3 px-3 lg:px-5 py-2 lg:py-2.5 bg-background/95 backdrop-blur-sm border-b-2 border-border/60 flex-none z-[1001] relative overflow-x-auto no-scrollbar">
 
         {/* Layers dropdown */}
         <div className="relative flex-shrink-0">
           <button
             onClick={() => toggleGroup("layers")}
-            className={`flex items-center gap-1 lg:gap-1.5 px-1.5 lg:px-3 py-1 lg:py-1.5 rounded-md lg:rounded-lg text-[10px] lg:text-xs whitespace-nowrap font-medium border transition-all ${openGroup === "layers" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted text-foreground"}`}
+            className={`flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-xl text-xs lg:text-sm whitespace-nowrap font-black border-2 transition-all shadow-xs ${openGroup === "layers" ? "bg-primary text-primary-foreground border-primary" : "border-border/80 hover:bg-muted text-foreground"}`}
             data-testid="btn-group-layers"
           >
-            <LayerIcon className="h-3.5 w-3.5" />
+            <LayerIcon className="h-4.5 w-4.5 stroke-[2.2]" />
             <span>{t('map.layers')}</span>
-            <ChevronDown className={`h-3 w-3 transition-transform ${openGroup === "layers" ? "rotate-180" : ""}`} />
+            <ChevronDown className={`h-4 w-4 transition-transform ${openGroup === "layers" ? "rotate-180" : ""}`} />
           </button>
           {openGroup === "layers" && (
-            <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-xl shadow-xl z-[1002] p-1.5 min-w-[160px]">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-2 py-1">{t('map.style')}</div>
+            <div className="absolute top-full left-0 mt-2 bg-background border-2 border-border/80 rounded-2xl shadow-2xl z-[1002] p-2 min-w-[190px]">
+              <div className="text-xs font-black text-muted-foreground uppercase tracking-wider px-3 py-1.5">{t('map.style')}</div>
               {(Object.keys(TILE_LAYERS) as Array<keyof typeof TILE_LAYERS>).map(key => {
                 const layer = TILE_LAYERS[key];
                 const Icon = layer.icon;
                 return (
                   <button key={key} onClick={() => { setActiveLayer(key); setOpenGroup(null); }}
-                    className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-all ${activeLayer === key ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted text-foreground"}`}>
-                    <Icon className="h-3.5 w-3.5" />
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${activeLayer === key ? "bg-primary/15 text-primary font-black" : "hover:bg-muted text-foreground"}`}>
+                    <Icon className="h-4.5 w-4.5" />
                     {layer.label}
-                    {activeLayer === key && <span className="ml-auto text-primary">✓</span>}
+                    {activeLayer === key && <span className="ml-auto text-primary font-black">✓</span>}
                   </button>
                 );
               })}
@@ -481,16 +520,16 @@ export default function SmartMapPage() {
         <div className="relative flex-shrink-0">
           <button
             onClick={() => toggleGroup("overlays")}
-            className={`flex items-center gap-1 lg:gap-1.5 px-1.5 lg:px-3 py-1 lg:py-1.5 rounded-md lg:rounded-lg text-[10px] lg:text-xs whitespace-nowrap font-medium border transition-all ${openGroup === "overlays" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted text-foreground"}`}
+            className={`flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-xl text-xs lg:text-sm whitespace-nowrap font-black border-2 transition-all shadow-xs ${openGroup === "overlays" ? "bg-primary text-primary-foreground border-primary" : "border-border/80 hover:bg-muted text-foreground"}`}
             data-testid="btn-group-overlays"
           >
-            <Layers className="h-3.5 w-3.5" />
+            <Layers className="h-4.5 w-4.5 stroke-[2.2]" />
             <span>{t('map.overlays')}</span>
-            <ChevronDown className={`h-3 w-3 transition-transform ${openGroup === "overlays" ? "rotate-180" : ""}`} />
+            <ChevronDown className={`h-4 w-4 transition-transform ${openGroup === "overlays" ? "rotate-180" : ""}`} />
           </button>
           {openGroup === "overlays" && (
-            <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-xl shadow-xl z-[1002] p-1.5 min-w-[180px]">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-2 py-1">{t('map.toggle_overlays')}</div>
+            <div className="absolute top-full left-0 mt-2 bg-background border-2 border-border/80 rounded-2xl shadow-2xl z-[1002] p-2 min-w-[220px]">
+              <div className="text-xs font-black text-muted-foreground uppercase tracking-wider px-3 py-1.5">{t('map.toggle_overlays')}</div>
               {[
                 { label: t('map.tab_farmers'), state: showFarmers, set: setShowFarmers, color: "text-green-600", icon: Users },
                 { label: t('map.demand_pins'), state: showDemand, set: setShowDemand, color: "text-amber-600", icon: ShoppingBag },
@@ -499,11 +538,11 @@ export default function SmartMapPage() {
                 { label: t('map.irrigation_legend'), state: showIrrigationLayer, set: setShowIrrigationLayer, color: "text-blue-500", icon: Droplets },
               ].map(({ label, state, set, color, icon: Icon }) => (
                 <button key={label} onClick={() => set(v => !v)}
-                  className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-all ${state ? "bg-muted font-medium" : "hover:bg-muted text-muted-foreground"}`}>
-                  <Icon className={`h-3.5 w-3.5 ${state ? color : ""}`} />
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${state ? "bg-muted font-black" : "hover:bg-muted text-muted-foreground"}`}>
+                  <Icon className={`h-4.5 w-4.5 ${state ? color : ""}`} />
                   <span className={state ? "text-foreground" : ""}>{label}</span>
-                  <div className={`ml-auto w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${state ? "bg-primary border-primary" : "border-border"}`}>
-                    {state && <span className="text-white text-[9px] font-bold">✓</span>}
+                  <div className={`ml-auto w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${state ? "bg-primary border-primary" : "border-border"}`}>
+                    {state && <span className="text-white text-xs font-black">✓</span>}
                   </div>
                 </button>
               ))}
@@ -515,41 +554,41 @@ export default function SmartMapPage() {
         <div className="relative flex-shrink-0">
           <button
             onClick={() => toggleGroup("drawing")}
-            className={`flex items-center gap-1 lg:gap-1.5 px-1.5 lg:px-3 py-1 lg:py-1.5 rounded-md lg:rounded-lg text-[10px] lg:text-xs whitespace-nowrap font-medium border transition-all ${drawMode !== "none" ? "bg-green-600 text-white border-green-600" : openGroup === "drawing" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted text-foreground"}`}
+            className={`flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-xl text-xs lg:text-sm whitespace-nowrap font-black border-2 transition-all shadow-xs ${drawMode !== "none" ? "bg-green-600 text-white border-green-600" : openGroup === "drawing" ? "bg-primary text-primary-foreground border-primary" : "border-border/80 hover:bg-muted text-foreground"}`}
             data-testid="btn-group-drawing"
           >
-            <PenTool className="h-3.5 w-3.5" />
+            <PenTool className="h-4.5 w-4.5 stroke-[2.2]" />
             <span>{t('map.drawing')}</span>
-            <ChevronDown className={`h-3 w-3 transition-transform ${openGroup === "drawing" ? "rotate-180" : ""}`} />
+            <ChevronDown className={`h-4 w-4 transition-transform ${openGroup === "drawing" ? "rotate-180" : ""}`} />
           </button>
           {openGroup === "drawing" && (
-            <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-xl shadow-xl z-[1002] p-1.5 min-w-[180px]">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-2 py-1">{t('map.land_parcel_tools')}</div>
+            <div className="absolute top-full left-0 mt-2 bg-background border-2 border-border/80 rounded-2xl shadow-2xl z-[1002] p-2 min-w-[210px]">
+              <div className="text-xs font-black text-muted-foreground uppercase tracking-wider px-3 py-1.5">{t('map.land_parcel_tools')}</div>
               <button onClick={() => { setDrawMode(drawMode === "polygon" ? "none" : "polygon"); setDrawnPoints([]); setOpenGroup(null); }}
-                className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-all ${drawMode === "polygon" ? "bg-green-100 text-green-700 font-semibold dark:bg-green-900 dark:text-green-300" : "hover:bg-muted text-foreground"}`}>
-                <PenTool className="h-3.5 w-3.5" />
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${drawMode === "polygon" ? "bg-green-100 text-green-800 font-black dark:bg-green-900/60 dark:text-green-200" : "hover:bg-muted text-foreground"}`}>
+                <PenTool className="h-4.5 w-4.5" />
                 {drawMode === "polygon" ? t('map.stop_drawing') : t('map.draw_polygon')}
               </button>
               {drawMode !== "none" && (
                 <>
-                  <button onClick={() => { handleUndoPoint(); setOpenGroup(null); }} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs hover:bg-muted text-foreground">
-                    <span className="text-base leading-none">↩</span> {t('map.undo_last_point')}
+                  <button onClick={() => { handleUndoPoint(); setOpenGroup(null); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold hover:bg-muted text-foreground">
+                    <span className="text-lg leading-none">↩</span> {t('map.undo_last_point')}
                   </button>
                   <button onClick={() => { handleSavePolygon(); setOpenGroup(null); }} disabled={drawnPoints.length < 3}
-                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs bg-primary/10 text-primary font-semibold disabled:opacity-40">
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm bg-primary/15 text-primary font-black disabled:opacity-40">
                     {t('common.save')} ({drawnPoints.length} pts)
                   </button>
-                  <button onClick={() => { setDrawnPoints([]); setDrawMode("none"); setOpenGroup(null); }} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs text-destructive hover:bg-red-50 dark:hover:bg-red-950">
-                    <X className="h-3.5 w-3.5" /> {t('map.clear_drawing')}
+                  <button onClick={() => { setDrawnPoints([]); setDrawMode("none"); setOpenGroup(null); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold text-destructive hover:bg-red-50 dark:hover:bg-red-950">
+                    <X className="h-4.5 w-4.5" /> {t('map.clear_drawing')}
                   </button>
                 </>
               )}
-              <div className="border-t border-border/40 my-1" />
-              <button onClick={() => { handleExportGDB(); setOpenGroup(null); }} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs hover:bg-muted text-muted-foreground">
-                <Download className="h-3.5 w-3.5" /> {t('map.export_geojson')}
+              <div className="border-t border-border/60 my-1" />
+              <button onClick={() => { handleExportGDB(); setOpenGroup(null); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold hover:bg-muted text-foreground/80">
+                <Download className="h-4.5 w-4.5" /> {t('map.export_geojson')}
               </button>
-              <button onClick={() => { handleImportGDB(); setOpenGroup(null); }} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs hover:bg-muted text-muted-foreground">
-                <Upload className="h-3.5 w-3.5" /> {t('map.import_geojson')}
+              <button onClick={() => { handleImportGDB(); setOpenGroup(null); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold hover:bg-muted text-foreground/80">
+                <Upload className="h-4.5 w-4.5" /> {t('map.import_geojson')}
               </button>
             </div>
           )}
@@ -559,43 +598,46 @@ export default function SmartMapPage() {
         <button
           onClick={handleLocate}
           disabled={isLocating}
-          className="flex-shrink-0 flex items-center gap-1 lg:gap-1.5 px-1.5 lg:px-3 py-1 lg:py-1.5 rounded-md lg:rounded-lg text-[10px] lg:text-xs whitespace-nowrap border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-700 font-medium transition-all"
+          className="flex-shrink-0 flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 rounded-xl text-xs lg:text-sm whitespace-nowrap border-2 border-blue-400 bg-blue-50 text-blue-800 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-700 font-black transition-all shadow-xs"
           data-testid="btn-locate"
         >
-          {isLocating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Crosshair className="h-3.5 w-3.5" />}
+          {isLocating ? <RefreshCw className="h-4.5 w-4.5 animate-spin" /> : <Crosshair className="h-4.5 w-4.5 stroke-[2.2]" />}
           <span>{t('map.my_location')}</span>
         </button>
 
         <Select
           value={String(nearbyRadius)}
-          onValueChange={(value) =>
-            setNearbyRadius(value === "all" ? "all" : Number(value) as Exclude<NearbyRadius, "all">)
-          }
+          onValueChange={handleNearbyRadiusChange}
         >
-          <SelectTrigger className="h-7 w-[92px] flex-shrink-0 text-[10px] lg:h-8 lg:w-[112px] lg:text-xs" data-testid="select-nearby-radius">
-            <SelectValue />
+          <SelectTrigger
+            className="h-9 w-[110px] flex-shrink-0 rounded-xl border-2 text-xs font-black lg:h-10 lg:w-[130px] lg:text-sm"
+            aria-label="Nearby search distance"
+            title="Change nearby search distance and map area"
+            data-testid="select-nearby-radius"
+          >
+            <SelectValue placeholder="Distance" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="!z-[2000] rounded-xl border-2">
             {[10, 25, 50, 100].map((radius) => (
-              <SelectItem key={radius} value={String(radius)}>{radius} km</SelectItem>
+              <SelectItem key={radius} value={String(radius)} className="text-sm font-bold">{radius} km</SelectItem>
             ))}
-            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="all" className="text-sm font-bold">All</SelectItem>
           </SelectContent>
         </Select>
 
         {/* Live stats */}
-        <div className="ml-auto flex-shrink-0 flex items-center gap-1 lg:gap-2 text-[10px] lg:text-xs text-muted-foreground">
-          <div className="flex-shrink-0 flex items-center gap-1 lg:gap-1.5 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md lg:rounded-lg px-1.5 lg:px-2.5 py-0.5 lg:py-1 whitespace-nowrap">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            <span className="font-semibold text-green-700 dark:text-green-300">{sortedFarmerMarkers.filter(f => f.isOnline).length}</span>
-            <span className="text-green-600 dark:text-green-400">{t('map.on_label')}</span>
+        <div className="ml-auto flex-shrink-0 flex items-center gap-2 text-xs lg:text-sm font-black">
+          <div className="flex-shrink-0 flex items-center gap-2 bg-green-50 dark:bg-green-950 border-2 border-green-300 dark:border-green-800 rounded-xl px-3 py-1.5 whitespace-nowrap shadow-2xs">
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+            <span className="font-black text-green-800 dark:text-green-200">{sortedFarmerMarkers.filter(f => f.isOnline).length}</span>
+            <span className="text-green-700 dark:text-green-300 font-bold">{t('map.on_label')}</span>
           </div>
-          <div className="flex-shrink-0 flex items-center gap-1 bg-muted rounded-md lg:rounded-lg px-1.5 lg:px-2.5 py-0.5 lg:py-1 whitespace-nowrap">
-            <span className="font-semibold text-foreground">{sortedProducts.length}</span><span className="hidden lg:inline">{t('map.products_count')}</span><span className="lg:hidden">{t('map.prod_short')}</span>
+          <div className="flex-shrink-0 flex items-center gap-1.5 bg-muted/80 border-2 border-border/60 rounded-xl px-3 py-1.5 whitespace-nowrap shadow-2xs">
+            <span className="font-black text-foreground">{sortedProducts.length}</span><span className="hidden lg:inline font-bold">{t('map.products_count')}</span><span className="lg:hidden font-bold">{t('map.prod_short')}</span>
           </div>
-          <div className="flex-shrink-0 flex items-center gap-1 bg-muted rounded-md lg:rounded-lg px-1.5 lg:px-2.5 py-0.5 lg:py-1 whitespace-nowrap">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="font-semibold text-foreground">{filteredNeeds.length}</span><span>{t('map.need_count')}</span>
+          <div className="flex-shrink-0 flex items-center gap-1.5 bg-muted/80 border-2 border-border/60 rounded-xl px-3 py-1.5 whitespace-nowrap shadow-2xs">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="font-black text-foreground">{filteredNeeds.length}</span><span className="font-bold">{t('map.need_count')}</span>
           </div>
         </div>
       </div>
@@ -616,16 +658,16 @@ export default function SmartMapPage() {
         {/* MAP */}
         <div className="flex-1 relative" style={{ cursor: drawMode !== "none" ? "crosshair" : "grab" }}>
           {user && !hasSavedProfileLocation && !usingDeviceLocation && (
-            <div className="absolute left-1/2 top-3 z-[1001] w-[min(92%,420px)] -translate-x-1/2 rounded-xl border border-amber-300 bg-background/95 p-3 shadow-xl backdrop-blur-sm" data-testid="map-profile-location-prompt">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <div className="absolute left-1/2 top-4 z-[1001] w-[min(94%,480px)] -translate-x-1/2 rounded-2xl border-2 border-amber-400 bg-background/95 p-4 shadow-2xl backdrop-blur-md" data-testid="map-profile-location-prompt">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-6 w-6 shrink-0 text-amber-600 dark:text-amber-400" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold">Add your city to discover nearby marketplace activity</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">Save a City, Country location or use device location for this session.</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Button size="sm" className="h-7 text-xs" onClick={() => setLocation("/settings")}>Account Settings</Button>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleLocate} disabled={isLocating}>
-                      <Crosshair className="mr-1 h-3.5 w-3.5" />Use device location
+                  <p className="text-base sm:text-lg font-black text-foreground">Add your city to discover nearby marketplace activity</p>
+                  <p className="mt-1 text-xs sm:text-sm font-bold text-foreground/80">Save a City, Country location or use device location for this session.</p>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    <Button size="sm" className="h-9 px-4 text-xs sm:text-sm font-black uppercase tracking-wide shadow-xs" onClick={() => setLocation("/settings")}>Account Settings</Button>
+                    <Button size="sm" variant="outline" className="h-9 px-4 text-xs sm:text-sm font-black uppercase tracking-wide border-2" onClick={handleLocate} disabled={isLocating}>
+                      <Crosshair className="mr-1.5 h-4 w-4 stroke-[2.5]" />Use device location
                     </Button>
                   </div>
                 </div>
@@ -640,19 +682,17 @@ export default function SmartMapPage() {
             <MapCenterTracker onChange={setMapCenter} />
 
             <div className="leaflet-top leaflet-right" style={{ zIndex: 1000 }}>
-              <div className="leaflet-control flex flex-col gap-1 mr-3 mt-3">
-                <button onClick={() => mapRef.current?.zoomIn()} className="w-8 h-8 bg-background border border-border rounded-lg shadow flex items-center justify-center hover:bg-muted"><ZoomIn className="h-4 w-4" /></button>
-                <button onClick={() => mapRef.current?.zoomOut()} className="w-8 h-8 bg-background border border-border rounded-lg shadow flex items-center justify-center hover:bg-muted"><ZoomOut className="h-4 w-4" /></button>
+              <div className="leaflet-control flex flex-col gap-1.5 mr-3 mt-3">
+                <button onClick={() => mapRef.current?.zoomIn()} className="w-10 h-10 bg-background border-2 border-border/80 rounded-xl shadow-md flex items-center justify-center hover:bg-muted font-black"><ZoomIn className="h-5 w-5" /></button>
+                <button onClick={() => mapRef.current?.zoomOut()} className="w-10 h-10 bg-background border-2 border-border/80 rounded-xl shadow-md flex items-center justify-center hover:bg-muted font-black"><ZoomOut className="h-5 w-5" /></button>
               </div>
             </div>
 
             {userLocation && (
-              <>
-                <Marker position={userLocation} icon={userIcon}><Popup><strong>Your location</strong><div>{currentLocationLabel}</div></Popup></Marker>
-                {nearbyRadius !== "all" && (
-                  <Circle center={userLocation} radius={nearbyRadius * 1000} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.05, weight: 1, dashArray: "4" }} />
-                )}
-              </>
+              <Marker position={userLocation} icon={userIcon}><Popup><strong>Your location</strong><div>{currentLocationLabel}</div></Popup></Marker>
+            )}
+            {nearbyRadius !== "all" && (
+              <Circle center={refPoint} radius={nearbyRadius * 1000} pathOptions={{ color: "#3b82f6", fillColor: "#3b82f6", fillOpacity: 0.05, weight: 1, dashArray: "4" }} />
             )}
 
             {showFarmers && sortedFarmerMarkers.map(farmer => (
@@ -739,20 +779,20 @@ export default function SmartMapPage() {
             ))}
           </MapContainer>
 
-          {/* Map legend — tiny */}
-          <div className="absolute bottom-2 left-2 z-[1000] bg-background/90 backdrop-blur-sm border border-border rounded-md lg:rounded-xl px-1.5 py-1 lg:p-3 shadow-md text-[8px] lg:text-xs space-y-0.5 lg:space-y-1.5">
-            <div className="font-semibold text-[7px] lg:text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5 lg:mb-1">Legend</div>
-            {showFarmers && <div className="flex items-center gap-1 lg:gap-2"><div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded-full bg-green-500" /><span>Online</span></div>}
-            {showFarmers && <div className="flex items-center gap-1 lg:gap-2"><div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded-full bg-gray-400" /><span>Offline</span></div>}
-            {showDemand && <div className="flex items-center gap-1 lg:gap-2"><div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded-full bg-red-500" /><span>High Need</span></div>}
-            {showDemand && <div className="flex items-center gap-1 lg:gap-2"><div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded-full bg-amber-500" /><span>Med Need</span></div>}
-            {showHeatmap && <div className="flex items-center gap-1 lg:gap-2"><div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded-full bg-green-400 opacity-60" /><span>Heatmap</span></div>}
-            {showSurveyLayer && <div className="flex items-center gap-1 lg:gap-2"><div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded bg-purple-500 opacity-50" /><span>Survey</span></div>}
-            {showIrrigationLayer && <div className="flex items-center gap-1 lg:gap-2"><div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded bg-blue-400 opacity-50" /><span>Irrigation</span></div>}
-            {savedPolygons.length > 0 && <div className="flex items-center gap-1 lg:gap-2"><div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded bg-primary opacity-50" /><span>Parcel</span></div>}
+          {/* Map legend */}
+          <div className="absolute bottom-3 left-3 z-[1000] bg-background/95 backdrop-blur-md border-2 border-border/80 rounded-2xl p-3 shadow-xl text-xs sm:text-sm space-y-1.5">
+            <div className="font-black text-xs uppercase tracking-wider text-foreground mb-1.5 pb-1 border-b">Legend</div>
+            {showFarmers && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded-full bg-green-500 border border-white shadow-xs" /><span>Online</span></div>}
+            {showFarmers && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded-full bg-gray-400 border border-white shadow-xs" /><span>Offline</span></div>}
+            {showDemand && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded-full bg-red-500 border border-white shadow-xs" /><span>High Need</span></div>}
+            {showDemand && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded-full bg-amber-500 border border-white shadow-xs" /><span>Med Need</span></div>}
+            {showHeatmap && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded-full bg-green-400 opacity-60" /><span>Heatmap</span></div>}
+            {showSurveyLayer && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded bg-purple-500 opacity-50" /><span>Survey</span></div>}
+            {showIrrigationLayer && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded bg-blue-400 opacity-50" /><span>Irrigation</span></div>}
+            {savedPolygons.length > 0 && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded bg-primary opacity-50" /><span>Parcel</span></div>}
           </div>
           {unmappedFarmerCount > 0 && (
-            <div className="absolute top-2 left-2 z-[1000] max-w-[240px] rounded-lg border border-border/60 bg-background/95 px-2 py-1.5 text-[10px] text-muted-foreground shadow-md" data-testid="map-location-fallback">
+            <div className="absolute top-3 left-3 z-[1000] max-w-[280px] rounded-xl border-2 border-border/80 bg-background/95 p-3 text-xs font-bold text-foreground/85 shadow-lg backdrop-blur-md" data-testid="map-location-fallback">
               {unmappedFarmerCount} seller {unmappedFarmerCount === 1 ? "location is" : "locations are"} not mapped because public coordinates are unavailable. Location not specified.
             </div>
           )}
@@ -783,7 +823,7 @@ export default function SmartMapPage() {
           </div>
 
           {/* Vertical tab rail */}
-          <div className="flex flex-col gap-0.5 lg:gap-1 p-0.5 lg:p-1.5 bg-background border-l border-border z-[500] flex-shrink-0">
+          <div className="flex flex-col gap-1 lg:gap-1.5 p-1 lg:p-2 bg-background border-l-2 border-border/80 z-[500] flex-shrink-0 shadow-sm">
             {RIGHT_PANEL_TABS.filter((tab) => tab.id !== "post" || user?.role === "buyer").map(tab => {
               const Icon = tab.icon;
               const active = rightPanel === tab.id;
@@ -792,12 +832,12 @@ export default function SmartMapPage() {
                   key={tab.id}
                   onClick={() => setRightPanel(tab.id)}
                   title={t(tab.labelKey)}
-                  className={`flex flex-col items-center gap-0.5 w-8 lg:w-12 py-1 lg:py-2.5 rounded-md lg:rounded-xl text-[7px] lg:text-[9px] font-semibold transition-all ${active ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted text-muted-foreground"}`}
+                  className={`flex flex-col items-center justify-center gap-1 w-10 lg:w-14 py-2 lg:py-3.5 rounded-xl lg:rounded-2xl text-[9px] lg:text-xs font-black transition-all ${active ? "bg-primary text-primary-foreground shadow-md scale-105" : "hover:bg-muted text-muted-foreground"}`}
                   data-testid={`tab-${tab.id}`}
                 >
-                  <Icon className={`h-3 w-3 lg:h-4 lg:w-4 ${active ? "" : tab.color}`} />
-                  <span className="leading-tight text-center w-full lg:hidden">{t(tab.shortLabelKey)}</span>
-                  <span className="leading-tight text-center hidden lg:block" style={{ maxWidth: 44 }}>{t(tab.labelKey).split(" ").map((w, i) => <span key={i} className="block">{w}</span>)}</span>
+                  <Icon className={`h-4.5 w-4.5 lg:h-5 lg:w-5 stroke-[2.2] ${active ? "" : tab.color}`} />
+                  <span className="leading-tight text-center w-full lg:hidden font-black">{t(tab.shortLabelKey)}</span>
+                  <span className="leading-tight text-center hidden lg:block font-black" style={{ maxWidth: 50 }}>{t(tab.labelKey).split(" ").map((w, i) => <span key={i} className="block">{w}</span>)}</span>
                 </button>
               );
             })}
@@ -914,11 +954,11 @@ export default function SmartMapPage() {
                             <div className="pt-2 space-y-1.5">
                               {farmer.productItems.slice(0, 6).map(product => (
                                 <div key={product.id} className="flex items-center gap-2 p-1.5 rounded-lg bg-background border border-border/40">
-                                  <img
+                                  <SafeProductImage
                                     src={resolveProductImageForProduct(product).src}
+                                    fallbackSrc={resolveProductImageForProduct(product).fallbackSrc}
                                     alt={product.name}
                                     className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
-                                    onError={e => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1518977676405-d4e4e7c23d14?w=64&q=75`; }}
                                   />
                                   <div className="flex-1 min-w-0">
                                     <div className="text-xs font-medium truncate">{product.name}</div>
@@ -978,11 +1018,11 @@ export default function SmartMapPage() {
                                   onClick={() => { if (mapRef.current) mapRef.current.flyTo([product.farmerLatitude, product.farmerLongitude], 12, { duration: 1 }); }}
                                   data-testid={`food-product-${product.id}`}
                                 >
-                                <img
+                                <SafeProductImage
                                   src={resolveProductImageForProduct(product).src}
+                                  fallbackSrc={resolveProductImageForProduct(product).fallbackSrc}
                                   alt={product.name}
                                   className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
-                                  onError={e => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1518977676405-d4e4e7c23d14?w=64&q=75`; }}
                                 />
                                 <div className="min-w-0 flex-1">
                                   <div className="text-[11px] font-medium truncate leading-tight">{product.name}</div>
@@ -1012,67 +1052,67 @@ export default function SmartMapPage() {
             {/* ── LIVE NEEDS panel ── */}
             {rightPanel === "needs" && (
               <div className="flex flex-col h-full">
-                <div className="p-4 border-b border-border/50 flex-shrink-0">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="p-4 lg:p-5 border-b-2 border-border/80 flex-shrink-0 bg-card">
+                  <div className="flex items-center justify-between mb-3.5">
                     <div>
-                      <h2 className="font-bold text-base flex items-center gap-2">
-                        <Radio className="h-4 w-4 text-red-500 animate-pulse" />
+                      <h2 className="font-black text-base lg:text-lg uppercase tracking-wider flex items-center gap-2 text-foreground">
+                        <Radio className="h-5 w-5 text-red-500 animate-pulse stroke-[2.5]" />
                         {t("map.live_local_needs")}
                       </h2>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t("map.realtime_buyer_demand")}</p>
+                      <p className="text-xs sm:text-sm font-bold text-foreground/80 mt-1">{t("map.realtime_buyer_demand")}</p>
                     </div>
                     {user?.role === "buyer" && (
-                      <Button size="sm" className="text-xs h-7" onClick={() => setRightPanel("post")}>
-                        <Plus className="h-3.5 w-3.5 mr-1" />{t("map.post_btn")}
+                      <Button size="sm" className="text-xs sm:text-sm font-black uppercase tracking-wide h-9 px-3.5 bg-amber-400 text-black hover:bg-amber-500 shadow-md" onClick={() => setRightPanel("post")}>
+                        <Plus className="h-4 w-4 mr-1 stroke-[2.5]" />{t("map.post_btn")}
                       </Button>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2.5">
                     <div className="relative flex-1">
-                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                      <Input placeholder={t("map.search_needs")} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-7 h-8 text-xs" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder={t("map.search_needs")} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-10 text-xs sm:text-sm font-bold rounded-xl border-2" />
                     </div>
                     <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
-                      <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("common.all")}</SelectItem>
-                        <SelectItem value="high">🔴 {t("map.urgency_high")}</SelectItem>
-                        <SelectItem value="medium">🟡 {t("map.urgency_medium")}</SelectItem>
-                        <SelectItem value="low">🟢 {t("map.urgency_low")}</SelectItem>
+                      <SelectTrigger className="w-28 h-10 text-xs sm:text-sm font-black rounded-xl border-2"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-xl border-2">
+                        <SelectItem value="all" className="font-bold">{t("common.all")}</SelectItem>
+                        <SelectItem value="high" className="font-bold">🔴 {t("map.urgency_high")}</SelectItem>
+                        <SelectItem value="medium" className="font-bold">🟡 {t("map.urgency_medium")}</SelectItem>
+                        <SelectItem value="low" className="font-bold">🟢 {t("map.urgency_low")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-                <ScrollArea className="flex-1 p-3">
-                  <div className="space-y-2">
+                <ScrollArea className="flex-1 p-3 lg:p-4">
+                  <div className="space-y-3">
                     {filteredNeeds.map((need, idx) => (
                       <motion.div key={need.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.04 }}>
-                        <Card className={`border ${need.urgency === "high" ? "border-red-200 dark:border-red-900" : need.urgency === "medium" ? "border-amber-200 dark:border-amber-900" : "border-green-200 dark:border-green-900"} hover:shadow-md transition-all cursor-pointer`}
+                        <Card className={`border-2 ${need.urgency === "high" ? "border-red-300 dark:border-red-900" : need.urgency === "medium" ? "border-amber-300 dark:border-amber-900" : "border-green-300 dark:border-green-900"} hover:shadow-lg transition-all cursor-pointer rounded-2xl`}
                           onClick={() => { setFlyTo([need.latitude, need.longitude]); mapRef.current?.flyTo([need.latitude, need.longitude], 12, { duration: 1 }); }}>
-                          <CardContent className="p-3 space-y-2">
+                          <CardContent className="p-4 space-y-2.5">
                             <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg">{BUYER_ICONS[need.buyerType]}</span>
+                              <div className="flex items-center gap-2.5">
+                                <span className="text-2xl">{BUYER_ICONS[need.buyerType]}</span>
                                 <div>
-                                  <div className="font-semibold text-sm leading-tight">{need.productName}</div>
-                                  <div className="text-xs text-muted-foreground">{need.buyerName}</div>
+                                  <div className="font-black text-base text-foreground leading-tight">{need.productName}</div>
+                                  <div className="text-xs sm:text-sm font-bold text-muted-foreground mt-0.5">{need.buyerName}</div>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-end gap-0.5">
-                                <Badge className={`text-[10px] px-1.5 py-0.5 capitalize ${URGENCY_COLORS[need.urgency]}`}>{need.urgency}</Badge>
-                                <span className="text-[9px] text-muted-foreground whitespace-nowrap">{need._distanceKm < 1 ? `${Math.round(need._distanceKm * 1000)} m` : `${need._distanceKm.toFixed(1)} km`}</span>
+                              <div className="flex flex-col items-end gap-1">
+                                <Badge className={`text-xs font-black px-2.5 py-0.5 uppercase tracking-wider ${URGENCY_COLORS[need.urgency]}`}>{need.urgency}</Badge>
+                                <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md whitespace-nowrap">{need._distanceKm < 1 ? `${Math.round(need._distanceKm * 1000)} m` : `${need._distanceKm.toFixed(1)} km`}</span>
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                            <div className="grid grid-cols-2 gap-1.5 text-xs sm:text-sm font-bold text-foreground/80">
                               <span>📦 {need.quantity} {need.unit}</span>
                               <span>💰 {need.priceRange}</span>
                               <span className="col-span-2">📍 {need.location}</span>
                               {need.deadline && <span className="col-span-2">⏰ By {need.deadline}</span>}
                             </div>
-                            {need.description && <p className="text-xs text-muted-foreground border-t border-border/40 pt-1.5 line-clamp-2">{need.description}</p>}
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{need.timePosted}</span>
-                              <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={(e) => { e.stopPropagation(); toast({ title: `Contact sent to ${need.buyerName}!` }); }}>Contact</Button>
+                            {need.description && <p className="text-xs sm:text-sm font-bold text-muted-foreground border-t border-border/60 pt-2 line-clamp-2">{need.description}</p>}
+                            <div className="flex items-center justify-between pt-1">
+                              <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />{need.timePosted}</span>
+                              <Button size="sm" variant="outline" className="h-8 text-xs font-black uppercase px-3.5 border-2 rounded-xl" onClick={(e) => { e.stopPropagation(); toast({ title: `Contact sent to ${need.buyerName}!` }); }}>Contact</Button>
                             </div>
                           </CardContent>
                         </Card>

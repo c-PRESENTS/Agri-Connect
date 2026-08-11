@@ -90,73 +90,79 @@ export default function SupportPage() {
   return (
     <div className="min-h-screen bg-background">
       <TopNavigation />
-      <div className="max-w-3xl mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <LifeBuoy className="h-5 w-5 text-primary" />
+      <div className="max-w-4xl mx-auto p-5 sm:p-10 space-y-8">
+        <div className="flex items-center gap-4">
+          <div className="h-14 w-14 rounded-2xl bg-amber-400/20 border-2 border-amber-400/40 flex items-center justify-center shrink-0">
+            <LifeBuoy className="h-7 w-7 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold" data-testid="text-support-heading">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight" data-testid="text-support-heading">
               {t("support.title")}
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base sm:text-lg font-bold text-foreground/80 mt-1">
               {t("support.subtitle")}
             </p>
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-3">
-          <Card>
-            <CardContent className="pt-6 flex gap-3 items-start">
-              <Mail className="h-5 w-5 text-primary mt-0.5" />
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Card className="border-2 border-border/80 rounded-2xl shadow-md hover:shadow-lg transition-all">
+            <CardContent className="p-6 flex gap-4 items-start">
+              <div className="p-3 rounded-xl bg-amber-400/10 text-amber-600 dark:text-amber-400 shrink-0">
+                <Mail className="h-6 w-6" />
+              </div>
               <div>
-                <p className="text-sm font-medium">{t("support.email_us")}</p>
+                <p className="text-base sm:text-lg font-black text-foreground">{t("support.email_us")}</p>
                 <a
                   href="mailto:support@agriconnect.app"
-                  className="text-sm text-primary underline"
+                  className="text-base font-black text-amber-600 dark:text-amber-400 underline decoration-2 hover:text-amber-700"
                   data-testid="link-support-email"
                 >
                   support@agriconnect.app
                 </a>
-                <p className="text-xs text-muted-foreground mt-1">{t("support.replies_within")}</p>
+                <p className="text-sm font-bold text-muted-foreground mt-1">{t("support.replies_within")}</p>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-6 flex gap-3 items-start">
-              <MessageCircle className="h-5 w-5 text-primary mt-0.5" />
+          <Card className="border-2 border-border/80 rounded-2xl shadow-md hover:shadow-lg transition-all">
+            <CardContent className="p-6 flex gap-4 items-start">
+              <div className="p-3 rounded-xl bg-amber-400/10 text-amber-600 dark:text-amber-400 shrink-0">
+                <MessageCircle className="h-6 w-6" />
+              </div>
               <div>
-                <p className="text-sm font-medium">{t("support.knowledge_hub")}</p>
+                <p className="text-base sm:text-lg font-black text-foreground">{t("support.knowledge_hub")}</p>
                 <Link
                   href="/farmers-help"
-                  className="text-sm text-primary underline"
+                  className="text-base font-black text-amber-600 dark:text-amber-400 underline decoration-2 hover:text-amber-700"
                   data-testid="link-knowledge-hub"
                 >
                   {t("support.browse_articles")}
                 </Link>
-                <p className="text-xs text-muted-foreground mt-1">{t("support.self_serve")}</p>
+                <p className="text-sm font-bold text-muted-foreground mt-1">{t("support.self_serve")}</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("support.send_message")}</CardTitle>
-            <CardDescription>
+        <Card className="border-2 border-border/80 rounded-3xl shadow-xl p-2 sm:p-4">
+          <CardHeader className="p-6 sm:p-8">
+            <CardTitle className="text-2xl sm:text-3xl font-black text-foreground">{t("support.send_message")}</CardTitle>
+            <CardDescription className="text-base font-bold text-muted-foreground mt-1">
               {t("support.send_message_desc")}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-6 pb-8 sm:px-8">
             {submitted ? (
-              <div className="text-center py-10" data-testid="text-support-thanks">
-                <CheckCircle2 className="h-14 w-14 text-primary mx-auto mb-3" />
-                <h2 className="text-lg font-semibold mb-1">{t("support.thank_you")}</h2>
-                <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
+              <div className="text-center py-12" data-testid="text-support-thanks">
+                <CheckCircle2 className="h-16 w-16 text-emerald-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-black mb-2 text-foreground">{t("support.thank_you")}</h2>
+                <p className="text-base font-bold text-muted-foreground mb-6 max-w-md mx-auto">
                   {t("support.thank_you_desc", { email: user?.email || form.email })}
                 </p>
                 <Button
+                  size="lg"
                   variant="outline"
+                  className="h-12 px-6 text-base font-black border-2 rounded-xl"
                   onClick={() => {
                     setSubmitted(false);
                     setForm({ name: "", email: "", topic: "other", message: "" });
@@ -167,12 +173,13 @@ export default function SupportPage() {
                 </Button>
               </div>
             ) : (
-              <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (canSubmit) submit.mutate(); }}>
-                <div className="grid sm:grid-cols-2 gap-4">
+              <form className="space-y-6" onSubmit={(event) => { event.preventDefault(); if (canSubmit) submit.mutate(); }}>
+                <div className="grid sm:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="s-name">{t("support.your_name")}</Label>
+                    <Label htmlFor="s-name" className="text-sm sm:text-base font-black uppercase tracking-wider text-foreground mb-2 block">{t("support.your_name")}</Label>
                     <Input
                       id="s-name"
+                      className="h-13 text-base sm:text-lg font-bold rounded-xl border-2 px-4"
                       value={form.name}
                       onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                       placeholder={user?.name || user?.firstName || "Full name"}
@@ -180,10 +187,11 @@ export default function SupportPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="s-email">{t("support.email")}{user?.email ? "" : <span className="text-rose-500"> *</span>}</Label>
+                    <Label htmlFor="s-email" className="text-sm sm:text-base font-black uppercase tracking-wider text-foreground mb-2 block">{t("support.email")}{user?.email ? "" : <span className="text-rose-500"> *</span>}</Label>
                     <Input
                       id="s-email"
                       type="email"
+                      className="h-13 text-base sm:text-lg font-bold rounded-xl border-2 px-4"
                       value={form.email}
                       onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                       placeholder={user?.email || "you@example.com"}
@@ -192,17 +200,17 @@ export default function SupportPage() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="s-topic">{t("support.topic")}</Label>
+                  <Label htmlFor="s-topic" className="text-sm sm:text-base font-black uppercase tracking-wider text-foreground mb-2 block">{t("support.topic")}</Label>
                   <Select
                     value={form.topic}
                     onValueChange={(v) => setForm((f) => ({ ...f, topic: v }))}
                   >
-                    <SelectTrigger id="s-topic" data-testid="select-support-topic">
+                    <SelectTrigger id="s-topic" className="h-13 text-base sm:text-lg font-bold rounded-xl border-2 px-4" data-testid="select-support-topic">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {TOPICS.map((topic) => (
-                        <SelectItem key={topic.value} value={topic.value}>
+                        <SelectItem key={topic.value} value={topic.value} className="text-base font-bold py-2.5">
                           {topic.label}
                         </SelectItem>
                       ))}
@@ -210,28 +218,31 @@ export default function SupportPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="s-message">
+                  <Label htmlFor="s-message" className="text-sm sm:text-base font-black uppercase tracking-wider text-foreground mb-2 block">
                     {t("support.message")} <span className="text-rose-500">*</span>
                   </Label>
                   <Textarea
                     id="s-message"
                     rows={6}
+                    className="text-base sm:text-lg font-bold rounded-xl border-2 p-4 min-h-[160px]"
                     value={form.message}
                     onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
                     placeholder={t("support.message_placeholder")}
                     data-testid="input-support-message"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-sm font-bold text-muted-foreground mt-2">
                     {t("support.char_count", { count: form.message.trim().length })}
                   </p>
                 </div>
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-end pt-4">
                   <Button
                     type="submit"
+                    size="lg"
                     disabled={!canSubmit}
+                    className="h-13 px-8 text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg rounded-xl"
                     data-testid="button-send-support"
                   >
-                    {submit.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {submit.isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                     {t("support.send_button")}
                   </Button>
                 </div>

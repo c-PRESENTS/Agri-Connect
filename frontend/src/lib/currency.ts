@@ -47,5 +47,5 @@ export function formatCurrencyAmount(
     currency,
     currencyDisplay: "narrowSymbol",
   }).format(amount);
-  return includeCode ? `${formatted} · ${currency}` : formatted;
+  return includeCode ? `${formatted}\u00A0·\u00A0${currency}` : formatted;
 }

@@ -35,6 +35,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -119,15 +120,14 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
     { id: "land", path: "/land-leasing", icon: MapPin, label: t("nav.land", "Land") },
     { id: "share", path: "/share-care", icon: HeartHandshake, label: t("nav.share", "Share") },
     { id: "ship", path: "/ship", icon: Truck, label: t("nav.ship", "Ship") },
-    { id: "user", path: isAuthenticated ? "/dashboard" : "/login", icon: User, label: t("nav.user", "User") },
   ];
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
+      className={`sticky top-0 z-50 w-full border-b transition-colors duration-200 ${
         scrolled
-          ? "border-border/60 bg-background/90 backdrop-blur-2xl shadow-sm shadow-black/5 dark:bg-background/80 dark:border-white/[0.06] dark:shadow-[0_1px_0_rgba(255,255,255,0.03)]"
-          : "border-border/40 bg-background/70 backdrop-blur-xl dark:bg-background/60 dark:border-white/[0.04]"
+          ? "border-border/60 bg-background/95 shadow-sm shadow-black/5 dark:bg-background/90 dark:border-white/[0.06]"
+          : "border-border/40 bg-background/90 dark:bg-background/85 dark:border-white/[0.04]"
       }`}
     >
       {/* ── Row 1: main bar (all screen sizes) ── */}
@@ -185,28 +185,28 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
           whileTap={{ scale: 0.97 }}
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-green-700 shadow-sm shadow-primary/30 ring-1 ring-primary/20">
-            <Leaf className="h-[18px] w-[18px] text-white" />
+            <Leaf className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-[13px] leading-tight tracking-tight hidden sm:inline">AgriConnect</span>
+          <span className="font-black text-sm sm:text-base leading-tight tracking-tight text-foreground hidden sm:inline">AgriConnect</span>
         </motion.div>
 
-        <nav className="hidden md:flex items-center gap-0.5 ml-1 shrink-0 relative z-20">
+        <nav className="hidden md:flex items-center gap-1 ml-1 shrink-0 relative z-20">
           {navLinks.map((item) => (
             <motion.div key={item.path} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setLocation(item.path)}
-                className={`gap-1.5 h-8 w-8 2xl:w-auto 2xl:px-2.5 p-0 text-[11px] font-bold uppercase tracking-tight transition-all ${
+                className={`gap-1.5 h-8 px-2 sm:px-2.5 text-xs font-black uppercase tracking-wide transition-all ${
                   location === item.path
-                    ? "text-primary bg-primary/8"
-                    : "hover:text-primary hover:bg-primary/5"
+                    ? "text-primary bg-primary/10 border border-primary/20 shadow-xs"
+                    : "text-foreground/90 hover:text-primary hover:bg-primary/10"
                 }`}
                 aria-label={item.label}
                 data-testid={`nav-link-${item.id}`}
               >
-                <item.icon className="h-[18px] w-[18px]" />
-                <span className="hidden 2xl:inline">{item.label}</span>
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span className="inline">{item.label}</span>
               </Button>
             </motion.div>
           ))}
@@ -220,8 +220,8 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
           />
         </div>
 
-        <div className="flex items-center gap-0 ml-auto shrink-0 relative z-10">
-          <div className="hidden sm:flex items-center gap-0">
+        <div className="flex items-center gap-1.5 ml-auto shrink-0 relative z-10">
+          <div className="hidden sm:flex items-center gap-1">
             <VoiceCommand onSearch={handleSearch} />
             <LanguageSwitcher />
             <ThemeToggle />
@@ -231,16 +231,16 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 relative hover:bg-primary/5 transition-colors"
+            className="h-9 w-9 sm:h-10 sm:w-10 relative hover:bg-primary/10 transition-all rounded-xl"
             onClick={() => setLocation("/cart")}
             data-testid="button-cart-nav"
           >
-            <ShoppingCart className="h-[22px] w-[22px]" />
+            <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
             {cartCount > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[9px] font-bold text-primary-foreground flex items-center justify-center notification-pulse"
+                className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-amber-400 text-black text-xs font-black flex items-center justify-center border-2 border-background shadow-md"
                 data-testid="badge-cart-count"
               >
                 {cartCount > 9 ? "9+" : cartCount}
@@ -253,45 +253,52 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="h-8 px-2 ml-1 gap-1.5 hover:bg-primary/5 transition-colors"
+                  className="ml-1 flex h-9 items-center gap-2 rounded-xl border border-border/60 px-2.5 transition-all hover:bg-primary/10 sm:h-10 sm:px-3"
                   data-testid="button-user-menu"
+                  aria-label="Open profile menu"
                 >
-                  <Avatar className="h-6 w-6">
+                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-2 ring-primary/30">
                     <AvatarImage src={user.avatar || user.profileImageUrl || undefined} alt={user.name || user.email || "User"} />
-                    <AvatarFallback className="text-[10px]">
+                    <AvatarFallback className="text-xs sm:text-sm font-black bg-primary/20 text-primary">
                       {(user.name || user.firstName || user.email || "U").charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-tight max-w-[80px] truncate">
+                  <span className="hidden sm:inline text-xs sm:text-sm font-black uppercase tracking-wide text-foreground max-w-[130px] truncate">
                     {user.name || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 backdrop-blur-xl">
-                <DropdownMenuItem onClick={() => setLocation("/my-profile")} data-testid="menu-item-my-profile">
-                  <User className="mr-2 h-4 w-4" />
+              <DropdownMenuContent align="end" className="w-52 backdrop-blur-xl rounded-2xl border-2 border-border/80 p-1.5 shadow-xl">
+                <DropdownMenuLabel className="px-2.5 py-2">
+                  <span className="block text-xs font-black uppercase tracking-wider text-muted-foreground">Profile</span>
+                  <span className="mt-0.5 block truncate text-sm font-black text-foreground">
+                    {user.name || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email}
+                  </span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="my-1.5 bg-border/80" />
+                <DropdownMenuItem onClick={() => setLocation("/my-profile")} data-testid="menu-item-my-profile" className="font-bold py-2.5 rounded-xl">
+                  <User className="mr-2.5 h-4.5 w-4.5 text-primary" />
                   My Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation("/dashboard")} data-testid="menu-item-dashboard">
-                  <User className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={() => setLocation("/dashboard")} data-testid="menu-item-dashboard" className="font-bold py-2.5 rounded-xl">
+                  <User className="mr-2.5 h-4.5 w-4.5 text-primary" />
                   {t("nav.dashboard", "Dashboard")}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation("/orders")} data-testid="menu-item-orders">
-                  <ShoppingBag className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={() => setLocation("/orders")} data-testid="menu-item-orders" className="font-bold py-2.5 rounded-xl">
+                  <ShoppingBag className="mr-2.5 h-4.5 w-4.5 text-primary" />
                   {t("nav.orders", "My Orders")}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation("/favorites")} data-testid="menu-item-favorites">
-                  <Heart className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={() => setLocation("/favorites")} data-testid="menu-item-favorites" className="font-bold py-2.5 rounded-xl">
+                  <Heart className="mr-2.5 h-4.5 w-4.5 text-rose-500" />
                   Favorites
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation("/settings")} data-testid="menu-item-settings">
-                  <Settings className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={() => setLocation("/settings")} data-testid="menu-item-settings" className="font-bold py-2.5 rounded-xl">
+                  <Settings className="mr-2.5 h-4.5 w-4.5 text-primary" />
                   {t("nav.settings", "Account Settings")}
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => logout()} data-testid="menu-item-logout">
-                  <LogOut className="mr-2 h-4 w-4" />
+                <DropdownMenuSeparator className="my-1.5 bg-border/80" />
+                <DropdownMenuItem onClick={() => logout()} data-testid="menu-item-logout" className="font-bold py-2.5 rounded-xl text-red-600 dark:text-red-400">
+                  <LogOut className="mr-2.5 h-4.5 w-4.5" />
                   {t("nav.signout", "Sign Out")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -300,12 +307,11 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
                 variant="default"
-                size="sm"
                 onClick={() => (window.location.href = "/login")}
-                className="h-8 px-2.5 text-[10px] font-bold uppercase tracking-tight ml-1 bg-primary hover:bg-primary/90 shadow-sm btn-glow transition-all"
+                className="ml-1 h-9 rounded-xl border border-amber-500/40 bg-amber-400 px-3.5 text-xs font-black uppercase tracking-wider text-black shadow-md hover:bg-amber-500 sm:h-10 sm:px-4 sm:text-sm"
                 data-testid="button-login-nav"
               >
-                <User className="h-[22px] w-[22px] mr-1" />
+                <User className="h-4.5 w-4.5 mr-1.5 text-black" />
                 <span className="hidden sm:inline">{t("nav.login", "Login")}</span>
               </Button>
             </motion.div>

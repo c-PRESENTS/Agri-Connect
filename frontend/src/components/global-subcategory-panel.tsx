@@ -34,7 +34,7 @@ export function GlobalSubcategoryPanel() {
   }, [urlCategory]);
 
   useEffect(() => {
-    if (urlSubcategory) setActiveSubcategory(urlSubcategory);
+    setActiveSubcategory(urlSubcategory ?? null);
   }, [urlSubcategory]);
 
   useEffect(() => {
@@ -98,10 +98,11 @@ export function GlobalSubcategoryPanel() {
   }, [setLocation]);
 
   // Section title clicked — navigate to the products view scrolled to that section
-  const handleSectionClick = useCallback((sectionTitle: string) => {
+  const handleSectionClick = useCallback((sectionTitle: string, subId?: string) => {
     if (!activeCategory) return;
+    const sub = subId || activeSubcategory || "";
     setActiveSection(sectionTitle);
-    const sub = activeSubcategory ?? "";
+    if (sub) setActiveSubcategory(sub);
     const qs = new URLSearchParams();
     qs.set("category", activeCategory);
     if (sub) qs.set("subcategory", sub);

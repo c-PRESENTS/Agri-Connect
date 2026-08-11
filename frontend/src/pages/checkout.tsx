@@ -30,6 +30,7 @@ import { createCheckoutQuote } from "@/lib/payment-client";
 import type { Cart, ShipQuote, ShipServiceType } from "@shared/schema";
 import { useCurrency } from "@/contexts/currency-context";
 import { CheckoutProgress } from "@/components/checkout-progress";
+import { SafeProductImage } from "@/components/safe-product-image";
 
 interface CartShippingGroup {
   farmerId: string;
@@ -302,44 +303,44 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-background">
       <TopNavigation />
-      <main className="mx-auto max-w-5xl px-3 py-5 sm:px-4 sm:py-7">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 space-y-6">
         <button
           type="button"
           onClick={() => (step === 2 ? setStep(1) : navigate("/cart"))}
-          className="mb-5 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-6 flex items-center gap-2 text-sm sm:text-base font-black uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-5 w-5 stroke-[2.5]" />
           {step === 2 ? "Back to delivery details" : "Back to cart"}
         </button>
 
-        <div className="mb-7 rounded-2xl border bg-card px-3 py-4 shadow-sm sm:px-6">
+        <div className="mb-8 rounded-3xl border-2 border-border/80 bg-card px-4 py-6 shadow-md sm:px-8">
           <CheckoutProgress currentStep={2} />
         </div>
 
-        <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
           <div>
-            <h1 className="text-2xl font-black">Checkout</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight">Checkout</h1>
+            <p className="mt-2 text-base sm:text-lg font-bold text-foreground/85">
               {step === 1
                 ? "Delivery details"
                 : "Select the farmers you want to check out"}
             </p>
           </div>
-          <span className="text-sm font-semibold text-muted-foreground">
+          <span className="text-sm sm:text-base font-black uppercase tracking-wider text-muted-foreground bg-muted/60 px-4 py-2 rounded-xl border w-fit">
             Delivery step {step} of 2
           </span>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-8 lg:grid-cols-3">
           <section className="lg:col-span-2">
             {step === 1 ? (
-              <Card>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="mb-5 flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg font-bold">Delivery details</h2>
+              <Card className="border-2 border-border/80 rounded-3xl shadow-md p-2">
+                <CardContent className="p-6 sm:p-8">
+                  <div className="mb-6 flex items-center gap-3 pb-3 border-b">
+                    <MapPin className="h-7 w-7 text-primary flex-shrink-0" />
+                    <h2 className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-wider">Delivery details</h2>
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-5 sm:grid-cols-2">
                     {[
                       ["fullName", "Full name", "text"],
                       ["phone", "Phone", "tel"],
@@ -354,7 +355,7 @@ export default function CheckoutPage() {
                         key={field}
                         className={field === "line1" || field === "line2" ? "sm:col-span-2" : ""}
                       >
-                        <Label htmlFor={field}>
+                        <Label htmlFor={field} className="text-xs sm:text-sm font-black uppercase tracking-wider text-foreground mb-1.5 block">
                           {label}
                           {!["line2", "county"].includes(field) ? " *" : ""}
                         </Label>
@@ -363,7 +364,7 @@ export default function CheckoutPage() {
                           type={type}
                           value={address[field as keyof Address]}
                           aria-invalid={Boolean(errors[field])}
-                          className={errors[field] ? "border-destructive" : ""}
+                          className={`h-12 text-base font-bold rounded-xl border-2 ${errors[field] ? "border-destructive" : ""}`}
                           onChange={(event) =>
                             setAddress((current) => ({
                               ...current,
@@ -375,24 +376,24 @@ export default function CheckoutPage() {
                           }
                         />
                         {errors[field] && (
-                          <p className="mt-1 text-xs text-destructive">{errors[field]}</p>
+                          <p className="mt-1.5 text-xs font-bold text-destructive">{errors[field]}</p>
                         )}
                       </div>
                     ))}
-                    <div>
-                      <Label htmlFor="country">Country *</Label>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="country" className="text-xs sm:text-sm font-black uppercase tracking-wider text-foreground mb-1.5 block">Country *</Label>
                       <Select
                         value={address.country}
                         onValueChange={(country) =>
                           setAddress((current) => ({ ...current, country }))
                         }
                       >
-                        <SelectTrigger id="country">
+                        <SelectTrigger id="country" className="h-12 text-base font-bold rounded-xl border-2">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-xl border-2">
                           {COUNTRIES.map((country) => (
-                            <SelectItem key={country.code} value={country.code}>
+                            <SelectItem key={country.code} value={country.code} className="text-base font-bold py-2.5">
                               {country.flag} {country.name}
                             </SelectItem>
                           ))}
@@ -403,17 +404,17 @@ export default function CheckoutPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="mb-2 flex items-center gap-2">
-                    <Truck className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg font-bold">Order Fulfillment Dashboard</h2>
+              <Card className="border-2 border-border/80 rounded-3xl shadow-md p-2">
+                <CardContent className="p-6 sm:p-8">
+                  <div className="mb-3 flex items-center gap-3">
+                    <Truck className="h-7 w-7 text-primary flex-shrink-0" />
+                    <h2 className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-wider">Order Fulfillment Dashboard</h2>
                   </div>
-                  <p className="mb-5 text-sm text-muted-foreground">
+                  <p className="mb-6 text-sm sm:text-base font-bold text-foreground/80 leading-relaxed">
                     Select one or more farmers, then choose fulfilment for each selected farmer.
                     Unselected products will stay in your cart.
                   </p>
-                  <div className="space-y-5">
+                  <div className="space-y-6">
                     {shippingGroups?.map((group) => {
                       const isFarmerSelected = selectedFarmerIdSet.has(group.farmerId);
                       const selected = shippingChoices[group.farmerId];
@@ -421,11 +422,12 @@ export default function CheckoutPage() {
                         ? `${selected.partnerId}|${selected.service}`
                         : "";
                       return (
-                        <div key={group.farmerId} className="rounded-xl border border-border">
-                          <div className="border-b border-border bg-muted/30 px-4 py-3">
-                            <label className="flex cursor-pointer items-center gap-3">
+                        <div key={group.farmerId} className="rounded-2xl border-2 border-border/80 overflow-hidden shadow-xs">
+                          <div className="border-b-2 border-border/60 bg-muted/40 px-5 py-4">
+                            <label className="flex cursor-pointer items-center gap-3.5">
                               <Checkbox
                                 checked={isFarmerSelected}
+                                className="h-5 w-5 rounded-md border-2"
                                 onCheckedChange={(checked) => {
                                   if (checked === true) {
                                     setSelectedFarmerIds((current) =>
@@ -447,15 +449,15 @@ export default function CheckoutPage() {
                                 aria-label={`Include ${group.farmerName} in this checkout`}
                               />
                               <span className="min-w-0 flex-1">
-                                <span className="block font-semibold">
+                                <span className="block text-base sm:text-lg font-black text-foreground">
                                   {group.farmerName}
                                 </span>
-                                <span className="block text-xs text-muted-foreground">
+                                <span className="block text-xs sm:text-sm font-bold text-muted-foreground">
                                   {group.farmerLocation} · {group.itemCount} item
                                   {group.itemCount === 1 ? "" : "s"}
                                 </span>
                               </span>
-                              <span className="text-xs font-semibold text-muted-foreground">
+                              <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-muted-foreground bg-background px-3 py-1 rounded-lg border">
                                 {isFarmerSelected ? "Selected" : "Select farmer"}
                               </span>
                             </label>
@@ -463,7 +465,7 @@ export default function CheckoutPage() {
                           {isFarmerSelected && group.quotes.length ? (
                             <RadioGroup
                               value={selectedKey}
-                              className="space-y-2 p-3"
+                              className="space-y-3 p-4"
                               onValueChange={(value) => {
                                 const [partnerId, service] = value.split("|");
                                 setShippingChoices((current) => ({
@@ -481,23 +483,23 @@ export default function CheckoutPage() {
                                 return (
                                   <label
                                     key={quote.id}
-                                    className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-colors ${
+                                    className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all ${
                                       selectedKey === value
-                                        ? "border-primary bg-primary/5"
-                                        : "border-border hover:border-primary/40"
+                                        ? "border-primary bg-primary/10 shadow-xs"
+                                        : "border-border/80 hover:border-primary/40"
                                     }`}
                                   >
-                                    <RadioGroupItem value={value} />
+                                    <RadioGroupItem value={value} className="h-5 w-5" />
                                     {direct ? (
-                                      <MapPin className="h-5 w-5 shrink-0 text-primary" />
+                                      <MapPin className="h-6 w-6 shrink-0 text-primary" />
                                     ) : (
-                                      <Truck className="h-5 w-5 shrink-0 text-primary" />
+                                      <Truck className="h-6 w-6 shrink-0 text-primary" />
                                     )}
                                     <span className="min-w-0 flex-1">
-                                      <span className="block text-sm font-semibold">
+                                      <span className="block text-base font-black text-foreground">
                                         {quote.partnerName}
                                       </span>
-                                      <span className="block text-xs text-muted-foreground">
+                                      <span className="block text-xs sm:text-sm font-bold text-foreground/80">
                                         {direct
                                           ? `Collect directly from ${group.farmerName}.`
                                           : quote.partnerId === "farmer-delivery"
@@ -505,7 +507,7 @@ export default function CheckoutPage() {
                                             : "Delivered by a carrier; online prepayment is required."}
                                       </span>
                                     </span>
-                                    <span className="text-sm font-bold">
+                                    <span className="text-base sm:text-lg font-black text-primary">
                                       {quote.price === 0
                                         ? "Free"
                                         : format(quote.price, {
@@ -518,12 +520,12 @@ export default function CheckoutPage() {
                               })}
                             </RadioGroup>
                           ) : isFarmerSelected ? (
-                            <div className="flex items-start gap-2 p-4 text-sm text-destructive">
-                              <AlertCircle className="mt-0.5 h-4 w-4" />
+                            <div className="flex items-start gap-2.5 p-5 text-base font-bold text-destructive">
+                              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
                               No fulfilment options are available for this farmer.
                             </div>
                           ) : (
-                            <p className="px-4 py-3 text-sm text-muted-foreground">
+                            <p className="px-5 py-4 text-sm sm:text-base font-bold text-muted-foreground">
                               Select this farmer to view fulfilment options.
                             </p>
                           )}
@@ -535,26 +537,26 @@ export default function CheckoutPage() {
               </Card>
             )}
 
-            <div className="mt-5 flex gap-3">
+            <div className="mt-6 flex flex-wrap gap-4">
               {step === 2 && (
-                <Button variant="outline" onClick={() => setStep(1)}>
-                  <ChevronLeft className="mr-1 h-4 w-4" /> Back
+                <Button variant="outline" className="h-13 px-6 text-sm sm:text-base font-black uppercase tracking-wider border-2" onClick={() => setStep(1)}>
+                  <ChevronLeft className="mr-1 h-5 w-5 stroke-[2.5]" /> Back
                 </Button>
               )}
               <Button
-                className="ml-auto"
+                className="ml-auto h-13 sm:h-14 px-8 text-base sm:text-lg font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg transition-transform hover:scale-[1.01]"
                 disabled={shippingQuotes.isPending || createQuote.isPending}
                 onClick={step === 1 ? continueToFulfilment : continueToPayment}
               >
                 {shippingQuotes.isPending || createQuote.isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     {step === 1 ? "Loading options…" : "Preparing payment…"}
                   </>
                 ) : (
                   <>
                     {step === 1 ? "Continue to fulfilment" : "Proceed to payment"}
-                    <ChevronRight className="ml-1 h-4 w-4" />
+                    <ChevronRight className="ml-2 h-5 w-5 stroke-[3]" />
                   </>
                 )}
               </Button>
@@ -562,31 +564,32 @@ export default function CheckoutPage() {
           </section>
 
           <aside>
-            <Card className="lg:sticky lg:top-4">
-              <CardContent className="p-4 sm:p-5">
-                <h2 className="mb-1 font-bold">
+            <Card className="lg:sticky lg:top-4 border-2 border-border/80 rounded-3xl shadow-md p-2">
+              <CardContent className="p-6 space-y-5">
+                <h2 className="font-black text-xl sm:text-2xl uppercase tracking-wider text-foreground">
                   {step === 2 ? "Selected order summary" : "Order summary"}
                 </h2>
                 {step === 2 && (
-                  <p className="mb-4 text-xs text-muted-foreground">
+                  <p className="text-xs sm:text-sm font-bold text-muted-foreground">
                     {selectedFarmerIds.length
                       ? `${selectedFarmerIds.length} farmer${selectedFarmerIds.length === 1 ? "" : "s"} selected`
                       : "Select at least one farmer"}
                   </p>
                 )}
-                <div className="max-h-52 space-y-3 overflow-y-auto">
+                <div className="max-h-64 space-y-4 overflow-y-auto pr-1">
                   {displayedItems.map((item) => (
-                    <div key={item.id} className="flex items-center gap-2">
-                      <img
+                    <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl bg-muted/30 border">
+                      <SafeProductImage
                         src={resolveProductImageForProduct(item.product).src}
+                        fallbackSrc={resolveProductImageForProduct(item.product).fallbackSrc}
                         alt=""
-                        className="h-10 w-10 rounded-lg object-cover"
+                        className="h-12 w-12 rounded-xl object-cover border flex-shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium">{item.product.name}</p>
-                        <p className="text-xs text-muted-foreground">Qty {item.quantity}</p>
+                        <p className="truncate text-sm font-black text-foreground">{item.product.name}</p>
+                        <p className="text-xs font-bold text-muted-foreground">Qty {item.quantity}</p>
                       </div>
-                      <span className="text-xs font-bold">
+                      <span className="text-sm font-black text-foreground">
                         {format((item.unitPrice ?? item.product.price) * item.quantity, {
                           sourceCurrency: item.product.currency || "GBP",
                           includeCode: true,
@@ -595,43 +598,43 @@ export default function CheckoutPage() {
                     </div>
                   ))}
                   {step === 2 && displayedItems.length === 0 && (
-                    <p className="py-4 text-center text-xs text-muted-foreground">
+                    <p className="py-6 text-center text-sm font-bold text-muted-foreground">
                       Selected farmers&apos; products will appear here.
                     </p>
                   )}
                 </div>
-                <Separator className="my-4" />
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>{format(subtotal, { includeCode: true })}</span>
+                <Separator className="my-4 h-0.5" />
+                <div className="space-y-3 text-base">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-muted-foreground">Subtotal</span>
+                    <span className="font-black text-foreground">{format(subtotal, { includeCode: true })}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Delivery</span>
-                    <span>{shippingTotal ? format(shippingTotal, { includeCode: true }) : "—"}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-muted-foreground">Delivery</span>
+                    <span className="font-black text-foreground">{shippingTotal ? format(shippingTotal, { includeCode: true }) : "—"}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Taxes</span>
-                    <span className="text-right text-xs">Included where applicable</span>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-muted-foreground">Taxes</span>
+                    <span className="text-right text-xs font-bold text-muted-foreground">Included where applicable</span>
                   </div>
-                  <Separator />
-                  <div className="flex justify-between text-base font-bold">
-                    <span>Total</span>
-                    <span>{format(displayedTotal, { includeCode: true })}</span>
+                  <Separator className="my-2 h-0.5" />
+                  <div className="flex justify-between items-center">
+                    <span className="font-black text-lg sm:text-xl uppercase tracking-wider text-foreground">Total</span>
+                    <span className="font-black text-2xl text-primary">{format(displayedTotal, { includeCode: true })}</span>
                   </div>
                 </div>
                 {currency !== "GBP" && (
-                  <div className="mt-3 rounded-lg border border-amber-300/70 bg-amber-50 p-3 text-xs text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-                    <p className="font-bold">
+                  <div className="mt-4 rounded-xl border-2 border-amber-300/80 bg-amber-50 p-4 text-xs sm:text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+                    <p className="font-black text-sm sm:text-base">
                       Estimated {format(displayedTotal, { includeCode: true })}
                     </p>
-                    <p className="mt-1">
+                    <p className="mt-1 font-bold">
                       You will be charged £{displayedTotal.toFixed(2)} GBP. Converted prices are estimates.
                     </p>
                   </div>
                 )}
-                <div className="mt-4 flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-                  <Shield className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-muted/60 p-4 text-xs sm:text-sm font-bold text-foreground/80 border">
+                  <Shield className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
                   Final totals are calculated and locked securely by AgriConnect before payment.
                 </div>
               </CardContent>

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -30,7 +30,7 @@ interface PlatformStatistics {
 
 const statisticNumber = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 
-export function FeatureShowcase() {
+export const FeatureShowcase = memo(function FeatureShowcase() {
   const { t } = useTranslation();
   const { data: platformStats, isError: statsUnavailable } = useQuery<PlatformStatistics>({
     queryKey: ["/api/platform/stats"],
@@ -46,61 +46,54 @@ export function FeatureShowcase() {
     { id: "services", value: platformStats?.services, label: t("platform_stats.services", "Services"), icon: Wrench },
   ];
   return (
-    <section className="py-8 px-4 bg-gradient-to-b from-background via-muted/20 to-background">
-      <div className="container mx-auto max-w-5xl">
+    <section
+      className="py-12 sm:py-20 px-4 bg-gradient-to-b from-background via-muted/20 to-background"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "850px" }}
+    >
+      <div className="container mx-auto max-w-7xl">
 
         {/* Heading */}
-        <motion.div
-          className="text-center mb-6"
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+        <div
+          className="text-center mb-10 sm:mb-14"
         >
-          <span className="text-primary font-semibold text-xs uppercase tracking-widest">
+          <span className="text-amber-700 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/70 px-4 py-1.5 rounded-full border-2 border-amber-300 dark:border-amber-700 font-black text-xs sm:text-sm uppercase tracking-widest inline-block shadow-xs">
             {t("features.section_title")}
           </span>
-          <h2 className="text-xl md:text-2xl font-bold mt-1 mb-1">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mt-3 sm:mt-4 mb-3 tracking-tight leading-tight">
             {t("features.powerful_features")}{" "}
             <span className="bg-gradient-to-r from-primary via-green-500 to-emerald-500 bg-clip-text text-transparent">
               {t("features.modern_agriculture")}
             </span>
           </h2>
-          <p className="text-muted-foreground text-xs max-w-lg mx-auto">
+          <p className="text-foreground/80 text-sm sm:text-base md:text-lg font-bold max-w-2xl mx-auto leading-relaxed">
             {t("features.section_subtitle")}
           </p>
-        </motion.div>
+        </div>
 
         {/* Feature grid — 4 cols desktop, 2 tablet, all visible */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-          {features.map((f, i) => (
-            <motion.div
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10 sm:mb-14">
+          {features.map((f) => (
+            <div
               key={f.title}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.04 }}
-              className="flex items-start gap-2.5 p-3 rounded-xl border border-border/30 bg-card hover:border-primary/30 hover:bg-card/95 transition-all duration-200 group"
+              className="flex items-start gap-4 p-4.5 sm:p-5.5 rounded-2xl border-2 border-border/70 bg-card hover:border-primary/70 hover:bg-card/95 shadow-sm hover:shadow-xl transition-all duration-300 group"
             >
-              <div className={`flex-shrink-0 h-8 w-8 rounded-lg bg-gradient-to-br ${f.color} flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-200`}>
-                <f.icon className="h-4 w-4 text-white" />
+              <div className={`flex-shrink-0 h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                <f.icon className="h-6 w-6 sm:h-7 sm:w-7 text-white drop-shadow-xs" />
               </div>
-              <div className="min-w-0">
-                <div className="text-[11px] font-bold leading-tight text-foreground group-hover:text-primary transition-colors truncate">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm sm:text-base md:text-lg font-black leading-tight text-foreground group-hover:text-primary transition-colors uppercase tracking-wide mb-1">
                   {t(f.title)}
                 </div>
-                <div className="text-[10px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
+                <div className="text-xs sm:text-sm font-bold text-foreground/85 leading-snug">
                   {t(f.description)}
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
-        <motion.div
-          className="grid md:grid-cols-3 gap-3 mb-6"
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+        <div
+          className="grid md:grid-cols-3 gap-5 mb-10 sm:mb-14"
           data-testid="section-farmer-access-messaging"
         >
           {[
@@ -108,69 +101,62 @@ export function FeatureShowcase() {
             { title: "features.zero_barrier_title", text: "features.zero_barrier_desc", icon: Zap },
             { title: "features.transparent_policy_title", text: "features.transparent_policy_desc", icon: Clock },
           ].map(({ title, text, icon: Icon }) => (
-            <div key={title} className="rounded-xl border border-primary/15 bg-primary/5 p-3 flex items-start gap-3">
-              <div className="h-8 w-8 rounded-lg bg-background border border-primary/15 flex items-center justify-center shrink-0">
-                <Icon className="h-4 w-4 text-primary" />
+            <div key={title} className="rounded-2xl border-2 border-amber-300/60 dark:border-amber-700/50 bg-amber-50/70 dark:bg-amber-950/20 p-5 sm:p-6 flex items-start gap-4 sm:gap-5 shadow-xs">
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-background border-2 border-amber-300 dark:border-amber-700 flex items-center justify-center shrink-0 shadow-md">
+                <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-amber-600 dark:text-amber-400" />
               </div>
-              <div>
-                <h3 className="text-[12px] font-bold text-foreground leading-tight mb-1">{t(title)}</h3>
-                <p className="text-[11px] text-muted-foreground leading-snug">{t(text)}</p>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base sm:text-lg md:text-xl font-black text-foreground leading-tight mb-1.5 uppercase tracking-wide">{t(title)}</h3>
+                <p className="text-xs sm:text-sm md:text-base text-foreground/85 leading-relaxed font-bold">{t(text)}</p>
               </div>
             </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* Live platform statistics */}
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/10 via-emerald-500/5 to-background px-5 py-4 shadow-sm">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4 rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/15 via-emerald-500/10 to-background px-6 py-5 shadow-sm">
           <div>
-            <h3 className="text-xl font-black tracking-tight text-foreground sm:text-2xl">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-foreground">
               {t("platform_stats.title", "Live platform statistics")}
             </h3>
-            <p className="mt-1 text-xs font-medium text-muted-foreground sm:text-sm">
+            <p className="mt-1 text-sm sm:text-base font-bold text-muted-foreground">
               {statsUnavailable
                 ? t("platform_stats.unavailable", "Statistics are temporarily unavailable")
                 : t("platform_stats.subtitle", "Marketplace totals refresh automatically")}
             </p>
           </div>
           {!statsUnavailable && (
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 shadow-sm dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-emerald-400 bg-emerald-100/90 px-4 py-2 text-xs sm:text-sm font-black uppercase tracking-wider text-emerald-800 shadow-sm dark:border-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300">
+              <span className="h-3 w-3 animate-pulse rounded-full bg-emerald-500" />
               {t("platform_stats.live", "Live")}
             </span>
           )}
         </div>
-        <motion.div
-          className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+        <div
+          className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
           aria-live="polite"
           data-testid="platform-statistics"
         >
-          {stats.map((s, i) => (
-            <motion.div
+          {stats.map((s) => (
+            <div
               key={s.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.07 }}
-              className="group flex min-h-28 flex-col items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-card p-4 text-center shadow-md transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
+              className="group flex min-h-40 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-primary/30 bg-card p-5 text-center shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-xl"
               data-testid={`platform-stat-${s.id}`}
             >
-              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-emerald-500/15 ring-1 ring-primary/15 transition-transform group-hover:scale-105">
-                <s.icon className="h-5 w-5 text-primary" />
+              <div className="flex h-13 w-13 sm:h-15 sm:w-15 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/25 to-emerald-500/20 ring-2 ring-primary/20 shadow-sm transition-transform group-hover:scale-110">
+                <s.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
               </div>
               <div className="min-w-0">
-                <div className="bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-2xl font-black leading-none tracking-tight text-transparent sm:text-3xl">
+                <div className="bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-3xl sm:text-4xl lg:text-5xl font-black leading-none tracking-tight text-transparent">
                   {s.value === undefined ? "—" : statisticNumber.format(s.value)}
                 </div>
-                <div className="mt-1 truncate text-xs font-bold uppercase tracking-wide text-foreground/75 sm:text-sm">{s.label}</div>
+                <div className="mt-2 truncate text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-foreground">{s.label}</div>
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
       </div>
     </section>
   );
-}
+});

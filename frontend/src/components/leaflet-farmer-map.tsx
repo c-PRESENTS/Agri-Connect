@@ -61,7 +61,7 @@ export interface LeafletFarmerMapProps {
 }
 
 const makeFarmerIcon = (isOnline: boolean, selected: boolean = false) => L.divIcon({
-  html: `<div style="width:${selected ? 32 : 22}px;height:${selected ? 32 : 22}px;border-radius:50%;background:${isOnline ? "linear-gradient(135deg,#22c55e,#16a34a)" : "linear-gradient(135deg,#9ca3af,#6b7280)"};border:${selected ? 2.5 : 2}px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3),0 0 0 ${selected ? 4 : 2}px ${selected ? "rgba(59,130,246,0.45)" : isOnline ? "rgba(34,197,94,0.2)" : "rgba(156,163,175,0.2)"}${selected ? ",0 0 14px rgba(59,130,246,0.6)" : ""};display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;${selected ? "animation:selectedPulse 1.6s ease-out infinite;" : ""}"><svg width="${selected ? 14 : 10}" height="${selected ? 14 : 10}" viewBox="0 0 24 24" fill="white"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${isOnline ? `<div style="position:absolute;top:-1px;right:-1px;width:${selected ? 8 : 7}px;height:${selected ? 8 : 7}px;border-radius:50%;background:#22c55e;border:1.5px solid white;"></div>` : ""}</div><style>@keyframes selectedPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}</style>`,
+  html: `<div style="width:${selected ? 32 : 22}px;height:${selected ? 32 : 22}px;border-radius:50%;background:${isOnline ? "linear-gradient(135deg,#22c55e,#16a34a)" : "linear-gradient(135deg,#9ca3af,#6b7280)"};border:${selected ? 2.5 : 2}px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3),0 0 0 ${selected ? 4 : 2}px ${selected ? "rgba(59,130,246,0.45)" : isOnline ? "rgba(34,197,94,0.2)" : "rgba(156,163,175,0.2)"}${selected ? ",0 0 14px rgba(59,130,246,0.6)" : ""};display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;${selected ? "animation:selectedPulse 1.6s ease-out infinite;" : ""}"><svg width="${selected ? 14 : 10}" height="${selected ? 14 : 10}" viewBox="0 0 24 24" fill="white"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${isOnline ? `<div style="position:absolute;top:-1px;right:-1px;width:${selected ? 8 : 7}px;height:${selected ? 8 : 7}px;border-radius:50%;background:#22c55e;border:1.5px solid white;"></div>` : ""}</div>`,
   className: "",
   iconSize: [22, 22],
   iconAnchor: [11, 22],
@@ -87,7 +87,6 @@ const makeUserLocationIcon = (heading?: number | null) => L.divIcon({
       <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;background:#3b82f6;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>
       ${heading != null ? `<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-100%) rotate(${heading}deg);transform-origin:50% 100%;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:10px solid #3b82f6;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));"></div>` : ""}
     </div>
-    <style>@keyframes userPulse{0%{transform:scale(0.8);opacity:1}100%{transform:scale(2.4);opacity:0}}</style>
   `,
   className: "",
   iconSize: [20, 20],
@@ -421,7 +420,7 @@ export function LeafletFarmerMap({
       </div>
 
       {/* ── MAP ── */}
-      <MapContainer center={center} zoom={initialZoom} style={{ width: "100%", height: "100%" }} zoomControl={false} attributionControl={false}>
+      <MapContainer center={center} zoom={initialZoom} style={{ width: "100%", height: "100%" }} zoomControl={false} attributionControl={false} scrollWheelZoom={false}>
         <TileLayer key={activeLayer} url={currentTile.url} attribution={currentTile.attribution} maxZoom={19} />
         <MapController flyTo={flyTo} />
         <InvalidateSizeOnMount />

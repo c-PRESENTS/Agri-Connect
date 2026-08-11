@@ -5,6 +5,7 @@ import { listAdapters } from "../../shipping/adapters";
 import { storage } from "../../storage";
 import type { Order } from "@shared/schema";
 import { audit } from "../../audit";
+import { requireAdminPermission } from "../../organisations/access";
 
 type DashboardRouteDeps = { getUserId: (req: Request) => string | undefined };
 
@@ -48,10 +49,9 @@ export function registerDashboardRoutes(app: Express, deps: DashboardRouteDeps):
     }
   });
 
-  app.get("/api/dashboard/operator", isAuthenticated, async (req, res) => {
+  app.get("/api/dashboard/operator", isAuthenticated, requireAdminPermission("dashboard.view"), async (req, res) => {
     try {
-      const userId = await hasRole(req, res, deps.getUserId, ["admin"]);
-      if (!userId) return;
+      const userId = deps.getUserId(req)!;
       audit({ action: "operator.dashboard_viewed", actorId: userId, targetType: "dashboard", targetId: "operator" });
       const [orders, products] = await Promise.all([storage.getAllOrders(), storage.getProducts()]);
       const statusCounts = orders.reduce<Record<string, number>>((counts, order) => {

@@ -279,40 +279,40 @@ export default function GovernmentSchemes() {
 
       {/* Hero */}
       <div className="bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-14">
           <Button
             variant="ghost"
             onClick={() => {
               if (typeof window !== "undefined" && window.history.length > 1) window.history.back();
               else setLocation("/");
             }}
-            className="text-blue-200 hover:text-white hover:bg-blue-800/50 mb-4 -ml-2"
+            className="text-blue-200 hover:text-white hover:bg-blue-800/50 mb-6 -ml-2 text-sm sm:text-base font-bold"
             data-testid="button-back"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back
+            <ArrowLeft className="h-5 w-5 mr-2" /> Back
           </Button>
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
             <div>
-              <h1 className="text-3xl font-bold mb-2 flex flex-wrap items-center gap-2">
-                <Building2 className="h-8 w-8 text-blue-300" />
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3 flex flex-wrap items-center gap-3 tracking-tight">
+                <Building2 className="h-9 w-9 sm:h-11 sm:w-11 text-blue-300 shrink-0" />
                 {t("gov_schemes.title", "Government Schemes Repository")}
                 <ComingSoonBadge />
               </h1>
-              <p className="text-blue-100 max-w-xl">
+              <p className="text-base sm:text-lg font-bold text-blue-100/90 max-w-2xl leading-relaxed">
                 {t("gov_schemes.subtitle", "Discover and apply for government subsidies, insurance schemes, training programs, and financial aid — all in one place.")}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3 shrink-0">
+            <div className="grid grid-cols-2 gap-4 shrink-0 w-full lg:w-auto">
               {[
                 { value: stats.total, label: t("gov_schemes.stat_schemes", "Schemes"), icon: FileText },
                 { value: stats.subsidies, label: t("gov_schemes.stat_subsidies", "Subsidies"), icon: TrendingUp },
                 { value: stats.myApplications, label: t("gov_schemes.stat_my_apps", "My Applications"), icon: ClipboardList },
                 { value: stats.approved, label: t("gov_schemes.stat_approved", "Approved"), icon: CheckCircle },
               ].map(({ value, label, icon: Icon }) => (
-                <div key={label} className="bg-blue-800/40 rounded-xl p-3 text-center border border-blue-600/30 min-w-[100px]">
-                  <Icon className="h-4 w-4 text-blue-300 mx-auto mb-1" />
-                  <div className="text-xl font-bold">{value}</div>
-                  <div className="text-blue-200 text-xs">{label}</div>
+                <div key={label} className="bg-blue-800/50 rounded-2xl p-4 text-center border-2 border-blue-400/30 min-w-[120px] shadow-md">
+                  <Icon className="h-5 w-5 text-blue-300 mx-auto mb-1.5" />
+                  <div className="text-2xl sm:text-3xl font-black text-white">{value}</div>
+                  <div className="text-blue-200 text-xs sm:text-sm font-bold mt-0.5">{label}</div>
                 </div>
               ))}
             </div>
@@ -320,32 +320,32 @@ export default function GovernmentSchemes() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <Tabs defaultValue="browse">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-10">
+        <Tabs defaultValue="browse" className="space-y-6">
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <TabsList className="h-10" data-testid="tabs-government">
-              <TabsTrigger value="browse">Browse Schemes</TabsTrigger>
-              <TabsTrigger value="applications">
+            <TabsList className="h-auto flex-wrap gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm" data-testid="tabs-government">
+              <TabsTrigger value="browse" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl data-[state=active]:bg-emerald-700 data-[state=active]:text-white shadow-xs">Browse Schemes</TabsTrigger>
+              <TabsTrigger value="applications" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl data-[state=active]:bg-emerald-700 data-[state=active]:text-white shadow-xs">
                 My Applications
                 {applications.length > 0 && (
-                  <Badge className="ml-2 h-5 w-5 p-0 text-xs flex items-center justify-center" variant="secondary">
+                  <Badge className="ml-2 h-6 w-6 p-0 text-xs font-black flex items-center justify-center rounded-full" variant="secondary">
                     {applications.length}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="eligibility">Eligibility Guide</TabsTrigger>
+              <TabsTrigger value="eligibility" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl data-[state=active]:bg-emerald-700 data-[state=active]:text-white shadow-xs">Eligibility Guide</TabsTrigger>
             </TabsList>
           </div>
 
           {/* BROWSE TAB */}
           <TabsContent value="browse">
-            <div className="flex flex-col sm:flex-row gap-3 mb-5">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="flex flex-col lg:flex-row gap-4 mb-8">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search schemes..."
-                  className="pl-10"
+                  className="pl-12 h-12 text-base font-bold rounded-xl border-2"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   data-testid="input-search-schemes"
@@ -353,7 +353,8 @@ export default function GovernmentSchemes() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
-                  size="sm"
+                  size="lg"
+                  className={`h-12 px-5 text-sm sm:text-base font-black rounded-xl border-2 ${activeCategory === "all" ? "bg-emerald-700 hover:bg-emerald-800 text-white" : ""}`}
                   variant={activeCategory === "all" ? "default" : "outline"}
                   onClick={() => setActiveCategory("all")}
                   data-testid="filter-all-schemes"
@@ -363,7 +364,8 @@ export default function GovernmentSchemes() {
                 {Object.entries(categoryConfig).map(([key, config]) => (
                   <Button
                     key={key}
-                    size="sm"
+                    size="lg"
+                    className={`h-12 px-5 text-sm sm:text-base font-black rounded-xl border-2 ${activeCategory === key ? "bg-emerald-700 hover:bg-emerald-800 text-white" : ""}`}
                     variant={activeCategory === key ? "default" : "outline"}
                     onClick={() => setActiveCategory(key)}
                     data-testid={`filter-${key}`}
@@ -649,58 +651,58 @@ function SchemeCard({ scheme, applied, onApply }: { scheme: Scheme; applied: boo
   const Icon = scheme.icon;
 
   return (
-    <Card className="overflow-visible border-border/60 hover:shadow-md transition-shadow" data-testid={`scheme-card-${scheme.id}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start gap-3">
-          <div className={`p-2 rounded-lg ${config.color} text-white shrink-0`}>
-            <Icon className="h-5 w-5" />
+    <Card className="overflow-visible border-2 border-border/80 rounded-2xl shadow-md hover:shadow-xl transition-all" data-testid={`scheme-card-${scheme.id}`}>
+      <CardHeader className="p-5 sm:p-6 pb-3">
+        <div className="flex items-start gap-3.5">
+          <div className={`p-3 rounded-xl ${config.color} text-white shrink-0 shadow-sm`}>
+            <Icon className="h-6 w-6" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-1">
-              <CardTitle className="text-sm leading-snug">{scheme.name}</CardTitle>
+            <div className="flex items-start justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg font-black text-foreground leading-snug">{scheme.name}</CardTitle>
               {scheme.urgency === "high" && (
-                <Badge variant="destructive" className="text-xs shrink-0">Urgent</Badge>
+                <Badge variant="destructive" className="text-xs font-black px-2.5 py-1 rounded-lg uppercase tracking-wider shrink-0">Urgent</Badge>
               )}
             </div>
-            <Badge variant="secondary" className="mt-1 text-xs">{config.label}</Badge>
+            <Badge variant="secondary" className="mt-1.5 text-xs font-bold px-2.5 py-0.5 rounded-md">{config.label}</Badge>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <CardDescription className="text-xs line-clamp-2">
+      <CardContent className="p-5 sm:p-6 pt-0 space-y-4">
+        <CardDescription className="text-sm font-bold text-muted-foreground leading-relaxed line-clamp-2">
           {scheme.description}
         </CardDescription>
 
         {scheme.amount && (
-          <div className={`rounded-lg px-3 py-2 ${config.bg}`}>
-            <span className={`text-xs font-semibold ${config.textColor}`}>
+          <div className={`rounded-xl p-3 ${config.bg} border border-border/20`}>
+            <span className={`text-sm font-black ${config.textColor}`}>
               Benefit: {scheme.amount}
             </span>
           </div>
         )}
 
-        <div className="space-y-1 text-xs">
+        <div className="space-y-1.5 text-sm font-bold">
           <div>
             <span className="text-muted-foreground">Eligibility: </span>
-            <span className="line-clamp-1">{scheme.eligibility}</span>
+            <span className="text-foreground line-clamp-1">{scheme.eligibility}</span>
           </div>
           {scheme.deadline && (
             <div>
               <span className="text-muted-foreground">Deadline: </span>
-              <span className="text-orange-600 dark:text-orange-400">{scheme.deadline}</span>
+              <span className="text-orange-600 dark:text-orange-400 font-black">{scheme.deadline}</span>
             </div>
           )}
         </div>
 
         {applied ? (
-          <Button className="w-full gap-2" variant="secondary" disabled>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+          <Button className="w-full h-12 text-base font-black rounded-xl gap-2" variant="secondary" disabled>
+            <CheckCircle className="h-5 w-5 text-green-600" />
             Applied
           </Button>
         ) : (
-          <Button className="w-full gap-2" onClick={onApply} data-testid={`button-apply-${scheme.id}`}>
+          <Button className="w-full h-12 text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg rounded-xl gap-2" onClick={onApply} data-testid={`button-apply-${scheme.id}`}>
             Apply Now
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-5 w-5" />
           </Button>
         )}
       </CardContent>

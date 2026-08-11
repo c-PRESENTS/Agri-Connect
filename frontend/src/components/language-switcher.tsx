@@ -65,13 +65,12 @@ export function LanguageSwitcher() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover:bg-primary/5 transition-colors relative"
+            className="h-9 px-2 sm:px-2.5 gap-1.5 hover:bg-primary/10 transition-all rounded-xl border border-border/60 flex items-center"
             data-testid="button-language-switcher"
             title={t("language.change")}
           >
-            <Globe className="h-5 w-5" />
-            <span className="absolute -bottom-0.5 -right-0.5 text-[8px] leading-none">{current.flag}</span>
+            <Globe className="h-5 w-5 text-foreground shrink-0" />
+            <span className="font-black text-xs sm:text-sm uppercase tracking-wider text-foreground">{baseLang.toUpperCase()}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44 backdrop-blur-xl" data-testid="dropdown-language">

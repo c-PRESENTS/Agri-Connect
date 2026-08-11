@@ -46,12 +46,12 @@ export function SplitMapLayout({
         data-testid="section-bottom-map"
       >
         <div className="px-4 sm:px-6 py-6">
-          <div className="mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold" data-testid="text-bottom-map-title">
+          <div className="mb-6">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight" data-testid="text-bottom-map-title">
               {title}
             </h2>
             {subtitle && (
-              <p className="text-sm text-muted-foreground" data-testid="text-bottom-map-subtitle">
+              <p className="text-base sm:text-lg font-bold text-muted-foreground mt-1" data-testid="text-bottom-map-subtitle">
                 {subtitle}
               </p>
             )}

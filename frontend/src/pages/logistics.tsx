@@ -79,56 +79,56 @@ export default function LogisticsPage() {
     return (
       <Card 
         key={partner.id} 
-        className="hover-elevate cursor-pointer"
+        className="hover-elevate cursor-pointer border-2 border-border/80 rounded-2xl shadow-md hover:shadow-xl transition-all"
         onClick={() => setSelectedPartner(partner)}
         data-testid={`card-partner-${partner.id}`}
       >
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between gap-2 mb-3">
+        <CardContent className="p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-md ${typeColors[partner.type]}`}>
-                <TypeIcon className="w-5 h-5" />
+              <div className={`p-3 rounded-xl ${typeColors[partner.type]}`}>
+                <TypeIcon className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-semibold">{partner.name}</h3>
-                <p className="text-xs text-muted-foreground capitalize">{partner.type.replace("-", " ")}</p>
+                <h3 className="font-black text-base sm:text-lg text-foreground">{partner.name}</h3>
+                <p className="text-sm font-bold text-muted-foreground capitalize">{partner.type.replace("-", " ")}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium">{partner.rating}</span>
+            <div className="flex items-center gap-1.5">
+              <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+              <span className="text-base font-black">{partner.rating}</span>
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-3">{partner.coverage}</p>
+          <p className="text-sm font-bold text-foreground/80 mb-4">{partner.coverage}</p>
 
-          <div className="flex flex-wrap gap-1 mb-3">
+          <div className="flex flex-wrap gap-2 mb-4">
             {partner.coldChain && (
-              <Badge variant="secondary" className="text-xs">
-                <Snowflake className="w-3 h-3 mr-1" />
+              <Badge variant="secondary" className="text-sm font-black px-3 py-1 rounded-lg">
+                <Snowflake className="w-4 h-4 mr-1.5" />
                 Cold Chain
               </Badge>
             )}
             {partner.tracking && (
-              <Badge variant="secondary" className="text-xs">
-                <MapPin className="w-3 h-3 mr-1" />
+              <Badge variant="secondary" className="text-sm font-black px-3 py-1 rounded-lg">
+                <MapPin className="w-4 h-4 mr-1.5" />
                 Tracking
               </Badge>
             )}
             {partner.insurance && (
-              <Badge variant="secondary" className="text-xs">
-                <Shield className="w-3 h-3 mr-1" />
+              <Badge variant="secondary" className="text-sm font-black px-3 py-1 rounded-lg">
+                <Shield className="w-4 h-4 mr-1.5" />
                 Insured
               </Badge>
             )}
           </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <Clock className="w-3 h-3" />
+          <div className="flex items-center justify-between text-sm sm:text-base pt-2 border-t border-border/40">
+            <div className="flex items-center gap-1.5 font-bold text-muted-foreground">
+              <Clock className="w-4 h-4" />
               <span>{partner.deliveryTime}</span>
             </div>
-            <span className="font-semibold text-primary">
+            <span className="font-black text-base sm:text-lg text-primary">
               {formatPriceRange(partner.priceRange)}
             </span>
           </div>
@@ -245,42 +245,42 @@ export default function LogisticsPage() {
     <div className="min-h-screen bg-background">
       <TopNavigation />
       <SplitMapLayout mapProps={{ title: "Sellers along your routes", subtitle: "Tap a pin to view seller listings" }}>
-      <div className="p-4 max-w-7xl mx-auto">
-        <div className="mb-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold" data-testid="text-logistics-heading">{t("logistics.title", "Logistics & Delivery")}</h1>
+      <div className="p-5 sm:p-8 max-w-7xl mx-auto">
+        <div className="mb-8">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight" data-testid="text-logistics-heading">{t("logistics.title", "Logistics & Delivery")}</h1>
             <ComingSoonBadge />
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-base sm:text-lg font-bold text-foreground/80 mt-2">
             {t("logistics.subtitle", "Choose from trusted logistics partners or join efficient milk run routes")}
           </p>
         </div>
 
-        <Tabs defaultValue="partners" className="space-y-4">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="partners" data-testid="tab-partners">
-              <Truck className="w-4 h-4 mr-2" />
+        <Tabs defaultValue="partners" className="space-y-6">
+          <TabsList className="h-auto flex-wrap gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm justify-start">
+            <TabsTrigger value="partners" className="px-5 py-3 text-base font-black uppercase tracking-wide rounded-xl data-[state=active]:bg-emerald-700 data-[state=active]:text-white shadow-xs" data-testid="tab-partners">
+              <Truck className="w-5 h-5 mr-2" />
               {t("logistics.partners_tab", "Logistics Partners")}
             </TabsTrigger>
-            <TabsTrigger value="milk-run" data-testid="tab-milk-run">
-              <Route className="w-4 h-4 mr-2" />
+            <TabsTrigger value="milk-run" className="px-5 py-3 text-base font-black uppercase tracking-wide rounded-xl data-[state=active]:bg-emerald-700 data-[state=active]:text-white shadow-xs" data-testid="tab-milk-run">
+              <Route className="w-5 h-5 mr-2" />
               {t("logistics.milk_run_tab", "Milk Run Routes")}
             </TabsTrigger>
-            <TabsTrigger value="tracking" data-testid="tab-tracking">
-              <MapPin className="w-4 h-4 mr-2" />
+            <TabsTrigger value="tracking" className="px-5 py-3 text-base font-black uppercase tracking-wide rounded-xl data-[state=active]:bg-emerald-700 data-[state=active]:text-white shadow-xs" data-testid="tab-tracking">
+              <MapPin className="w-5 h-5 mr-2" />
               {t("logistics.tracking_tab", "Track Shipment")}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="partners" className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
+          <TabsContent value="partners" className="space-y-6">
+            <div className="flex flex-col lg:flex-row gap-4 mb-8">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   placeholder={t("logistics.search_placeholder", "Search logistics partners...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-12 h-12 text-base font-bold rounded-xl border-2"
                   data-testid="input-search-partners"
                 />
               </div>
@@ -288,9 +288,9 @@ export default function LogisticsPage() {
                 {["all", "international", "national", "hyperlocal", "cold-chain", "freight"].map((type) => (
                   <Button
                     key={type}
-                    variant="outline"
-                    size="sm"
-                    className={`capitalize toggle-elevate ${selectedType === type ? "toggle-elevated" : ""}`}
+                    variant={selectedType === type ? "default" : "outline"}
+                    size="lg"
+                    className={`h-12 px-5 text-base font-black rounded-xl border-2 capitalize ${selectedType === type ? "bg-emerald-700 hover:bg-emerald-800 text-white" : ""}`}
                     onClick={() => setSelectedType(type)}
                     data-testid={`button-filter-${type}`}
                   >
@@ -300,7 +300,7 @@ export default function LogisticsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPartners.map(renderPartnerCard)}
             </div>
 

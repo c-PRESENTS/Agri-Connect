@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { SafeProductImage } from "@/components/safe-product-image";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import {
   DropdownMenu,
@@ -760,8 +761,9 @@ export function MapView({ products, onFarmerClick, autoLocate = true, compact = 
                   data-testid={`button-map-nearby-favorite-${product.id}`}
                 />
                 <div className="flex items-center gap-2 mb-1">
-                  <img 
+                  <SafeProductImage
                     src={resolveProductImageForProduct(product).src}
+                    fallbackSrc={resolveProductImageForProduct(product).fallbackSrc}
                     alt={product.name}
                     className="w-8 h-8 rounded object-cover"
                   />

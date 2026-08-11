@@ -40,7 +40,7 @@ const statusLabel: Record<ShipmentStatus, string> = {
 };
 
 const shipTabClass =
-  "flex-col gap-1 rounded-md py-2 text-[10px] font-extrabold text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 sm:text-xs data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-sm";
+  "flex-col sm:flex-row gap-2 rounded-xl py-3 px-4 text-sm sm:text-base font-black text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md uppercase tracking-wide";
 
 export default function ShipPage() {
   const { format } = useCurrency();
@@ -72,71 +72,71 @@ export default function ShipPage() {
   };
 
   return (
-    <div className="container max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-4">
+    <div className="container max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-10 space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight flex flex-wrap items-center gap-3">
+            <Truck className="h-8 w-8 sm:h-10 sm:w-10 text-primary shrink-0" />
             {t("ship.title")}
             <ComingSoonBadge />
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">{t("ship.description")}</p>
+          <p className="text-base sm:text-lg font-bold text-foreground/80 mt-2">{t("ship.description")}</p>
         </div>
-        <Button size="sm" onClick={() => setTab("send")} data-testid="button-quick-send">
-          <Plus className="h-4 w-4 mr-1" />{t("ship.send_parcel_button")}
+        <Button size="lg" onClick={() => setTab("send")} className="h-12 px-6 text-sm sm:text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg rounded-xl shrink-0" data-testid="button-quick-send">
+          <Plus className="h-5 w-5 mr-1.5" />{t("ship.send_parcel_button")}
         </Button>
       </div>
 
       {/* Quick track bar */}
-      <Card className="bg-primary/5 border-primary/30">
-        <CardContent className="p-3">
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+      <Card className="bg-amber-500/10 border-2 border-amber-300 rounded-2xl shadow-md">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-center gap-3">
+            <Search className="h-6 w-6 text-muted-foreground flex-shrink-0" />
             <Input
               placeholder={t("ship_track.tracking_number_placeholder")}
               value={trackInput}
               onChange={(e) => setTrackInput(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-              className="border-0 bg-transparent focus-visible:ring-0 px-0 font-mono"
+              className="border-0 bg-transparent focus-visible:ring-0 px-0 text-base sm:text-lg font-black font-mono h-12"
               data-testid="input-track-quick"
             />
-            <Button size="sm" onClick={handleTrack} disabled={!trackInput.trim()} data-testid="button-track-quick">{t("ship_track.track_button")}</Button>
+            <Button size="lg" onClick={handleTrack} disabled={!trackInput.trim()} className="h-12 px-6 text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-md rounded-xl" data-testid="button-track-quick">{t("ship_track.track_button")}</Button>
           </div>
         </CardContent>
       </Card>
 
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid h-auto w-full grid-cols-5 gap-1 border border-emerald-200 bg-emerald-50/80 p-1">
-          <TabsTrigger value="track" className={shipTabClass} data-testid="tab-track"><Package className="h-4 w-4" />Track</TabsTrigger>
-          <TabsTrigger value="orders" className={shipTabClass} data-testid="tab-orders"><Truck className="h-4 w-4" />{t("ship.parcels_tab")}</TabsTrigger>
-          <TabsTrigger value="send" className={shipTabClass} data-testid="tab-send"><Send className="h-4 w-4" />{t("ship.send_parcel_button")}</TabsTrigger>
-          <TabsTrigger value="milk" className={shipTabClass} data-testid="tab-milk"><Calendar className="h-4 w-4" />{t("ship.settings_tab")}</TabsTrigger>
-          <TabsTrigger value="partner" className={shipTabClass} data-testid="tab-partner"><Building2 className="h-4 w-4" />{t("ship.parcels_tab")}</TabsTrigger>
+      <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+        <TabsList className="grid h-auto w-full grid-cols-5 gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm">
+          <TabsTrigger value="track" className={shipTabClass} data-testid="tab-track"><Package className="h-5 w-5" />Track</TabsTrigger>
+          <TabsTrigger value="orders" className={shipTabClass} data-testid="tab-orders"><Truck className="h-5 w-5" />{t("ship.parcels_tab")}</TabsTrigger>
+          <TabsTrigger value="send" className={shipTabClass} data-testid="tab-send"><Send className="h-5 w-5" />{t("ship.send_parcel_button")}</TabsTrigger>
+          <TabsTrigger value="milk" className={shipTabClass} data-testid="tab-milk"><Calendar className="h-5 w-5" />{t("ship.settings_tab")}</TabsTrigger>
+          <TabsTrigger value="partner" className={shipTabClass} data-testid="tab-partner"><Building2 className="h-5 w-5" />{t("ship.parcels_tab")}</TabsTrigger>
         </TabsList>
 
         {/* TRACK — list of my shipments */}
-        <TabsContent value="track" className="space-y-3 mt-4">
+        <TabsContent value="track" className="space-y-4 mt-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">{t("ship.active_parcels")}</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-foreground">{t("ship.active_parcels")}</h2>
             {myShipments && myShipments.length > 0 && (
-              <Badge variant="outline" className="text-[10px]">{myShipments.length}</Badge>
+              <Badge variant="outline" className="text-sm font-black px-3 py-1 rounded-lg">{myShipments.length}</Badge>
             )}
           </div>
           {loadingMine ? (
-            <div className="space-y-2">{[0, 1].map((i) => (<div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />))}</div>
+            <div className="space-y-3">{[0, 1].map((i) => (<div key={i} className="h-28 bg-muted animate-pulse rounded-2xl" />))}</div>
           ) : !myShipments || myShipments.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center space-y-2">
-                <Package className="h-8 w-8 mx-auto text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">{t("ship.no_parcels_yet")}</p>
-                <Button size="sm" onClick={() => setTab("send")} data-testid="button-empty-send">{t("ship.send_parcel_button")}</Button>
+            <Card className="border-2 rounded-2xl shadow-md">
+              <CardContent className="p-8 sm:p-12 text-center space-y-4">
+                <Package className="h-12 w-12 mx-auto text-muted-foreground opacity-40" />
+                <p className="text-base sm:text-lg font-bold text-foreground/80">{t("ship.no_parcels_yet")}</p>
+                <Button size="lg" onClick={() => setTab("send")} className="h-12 px-6 text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg rounded-xl" data-testid="button-empty-send">{t("ship.send_parcel_button")}</Button>
               </CardContent>
             </Card>
           ) : (
             myShipments.map((s) => (
-              <Card key={s.id} className="hover:border-primary/50 transition-colors" data-testid={`card-shipment-${s.id}`}>
-                <CardContent className="p-3 sm:p-4">
+              <Card key={s.id} className="border-2 rounded-2xl shadow-md hover:border-primary/50 transition-all" data-testid={`card-shipment-${s.id}`}>
+                <CardContent className="p-5 sm:p-6">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">

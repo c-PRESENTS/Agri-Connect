@@ -8,6 +8,8 @@ export * from "./models/student";
 export * from "./models/commerce";
 export * from "./models/payments";
 export * from "./models/payment-operations";
+export * from "./models/community";
+export * from "./models/organisations";
 
 // Categories
 export interface Category {
@@ -97,6 +99,68 @@ export interface CommunityPlotListing {
   amenities: string[];
   images: string[];
 }
+
+export const shareCareUrgencySchema = z.enum(["urgent", "medium", "safe"]);
+export const shareCareSourceTypeSchema = z.enum(["restaurant", "home", "retail", "production", "event"]);
+export const shareCareListingStatusSchema = z.enum(["available", "reserved", "claimed", "expired", "cancelled"]);
+
+export interface ShareCareListing {
+  id: string;
+  donorId?: string;
+  donor: string;
+  sourceType: z.infer<typeof shareCareSourceTypeSchema>;
+  name: string;
+  category: string;
+  qty: number;
+  unit: string;
+  isFree: boolean;
+  price: number;
+  currency: "GBP";
+  location: string;
+  latitude: number;
+  longitude: number;
+  emoji: string;
+  urgency: z.infer<typeof shareCareUrgencySchema>;
+  status: z.infer<typeof shareCareListingStatusSchema>;
+  expiresAt: string;
+  expiresIn: string;
+  createdAt: string;
+  postedAgo: string;
+  dietaryTags: string[];
+}
+
+export const createShareCareListingSchema = z.object({
+  sourceType: shareCareSourceTypeSchema,
+  name: z.string().trim().min(2).max(160),
+  category: z.string().trim().min(2).max(80),
+  quantity: z.number().int().positive().max(10_000),
+  unit: z.string().trim().min(1).max(40),
+  isFree: z.boolean(),
+  price: z.number().nonnegative().max(1_000_000).default(0),
+  location: z.string().trim().max(200).optional(),
+  emoji: z.string().trim().min(1).max(20).default("🎁"),
+  urgency: shareCareUrgencySchema.default("safe"),
+  expiresInHours: z.number().positive().max(24 * 30),
+  dietaryTags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+}).superRefine((value, context) => {
+  if (value.isFree && value.price !== 0) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["price"], message: "Free listings must have a zero price." });
+  }
+  if (!value.isFree && value.price <= 0) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["price"], message: "Add a price or mark the listing as free." });
+  }
+});
+
+export const updateShareCareListingSchema = z.object({
+  name: z.string().trim().min(2).max(160).optional(),
+  category: z.string().trim().min(2).max(80).optional(),
+  quantity: z.number().int().positive().max(10_000).optional(),
+  unit: z.string().trim().min(1).max(40).optional(),
+  status: shareCareListingStatusSchema.optional(),
+  urgency: shareCareUrgencySchema.optional(),
+  expiresInHours: z.number().positive().max(24 * 30).optional(),
+  dietaryTags: z.array(z.string().trim().min(1).max(40)).max(12).optional(),
+});
 
 // Products
 export interface Product {
@@ -265,6 +329,15 @@ export const insertReviewSchema = z.object({
   comment: z.string().min(1).max(2000),
 });
 
+const genericProductPlaceholderSignatures = [
+  "photo-1540420828642-fca2c5c18abe",
+] as const;
+
+const sellerProductImageSchema = z.string().url().refine(
+  (imageUrl) => !genericProductPlaceholderSignatures.some((signature) => imageUrl.includes(signature)),
+  { message: "Use a genuine image of the product instead of a generic placeholder." },
+);
+
 export const insertProductSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
@@ -273,7 +346,7 @@ export const insertProductSchema = z.object({
   stock: z.number().int().nonnegative(),
   categoryId: z.string().min(1),
   subcategoryId: z.string().min(1),
-  images: z.array(z.string().url()).min(1).max(10),
+  images: z.array(sellerProductImageSchema).min(1, "Add at least one genuine product image.").max(10),
   isOrganic: z.boolean().optional(),
 });
 

@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { TopNavigation } from "@/components/top-navigation";
 import { SplitMapLayout } from "@/components/split-map-layout";
@@ -44,6 +45,9 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect as useEffectMap } from "react";
 import { useCurrency } from "@/contexts/currency-context";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { ShareCareListing } from "@shared/schema";
 
 function InvalidateSizeOnMount() {
   const map = useMap();
@@ -86,13 +90,6 @@ const safeIcon = new L.DivIcon({
   iconAnchor: [8, 8],
 });
 
-type ShareItem = {
-  id: string; name: string; unit: string; qty: number; donor: string;
-  location: string; latitude: number; longitude: number; emoji: string;
-  postedAgo: string; category: string; urgency: "urgent" | "medium" | "safe";
-  expiresIn: string;
-};
-
 const URGENCY_ICON: Record<string, L.DivIcon> = {
   urgent: urgentIcon, medium: mediumIcon, safe: safeIcon,
 };
@@ -103,13 +100,115 @@ const URGENCY_BADGE: Record<string, string> = {
   urgent: "text-red-600", medium: "text-yellow-600", safe: "text-green-600",
 };
 
+type ShareCareFormState = {
+  sourceType: ShareCareListing["sourceType"];
+  name: string;
+  category: string;
+  quantity: string;
+  unit: string;
+  isFree: boolean;
+  price: string;
+  location: string;
+  emoji: string;
+  urgency: ShareCareListing["urgency"];
+  expiresInHours: string;
+  dietaryTags: string[];
+};
+
+const EMPTY_SHARE_FORM: ShareCareFormState = {
+  sourceType: "home",
+  name: "",
+  category: "",
+  quantity: "",
+  unit: "kg",
+  isFree: true,
+  price: "",
+  location: "",
+  emoji: "🎁",
+  urgency: "safe",
+  expiresInHours: "4",
+  dietaryTags: [] as string[],
+};
+
+function shareCareErrorMessage(reason: unknown): string {
+  if (!(reason instanceof Error)) return "Unable to complete this Share & Care request.";
+  const responseText = reason.message.replace(/^\d+:\s*/, "");
+  try {
+    const parsed = JSON.parse(responseText) as { error?: unknown };
+    return typeof parsed.error === "string" ? parsed.error.replace(/^Validation error:\s*/, "") : responseText;
+  } catch {
+    return responseText;
+  }
+}
+
 export default function ShareCarePage() {
   const { currency, format } = useCurrency();
   const { t } = useTranslation();
+  const [, navigate] = useLocation();
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("marketplace");
-  const { data: shareItems = [], isLoading: loadingShare } = useQuery<ShareItem[]>({
-    queryKey: ["/api/share-care"],
+  const [shareForm, setShareForm] = useState(EMPTY_SHARE_FORM);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState(() => new URLSearchParams(window.location.search).get("item"));
+  const listingRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const { data: shareItems = [], isLoading: loadingShare } = useQuery<ShareCareListing[]>({
+    queryKey: ["/api/share-care?status=available"],
   });
+  const createListing = useMutation({
+    mutationFn: async () => {
+      if (!isAuthenticated) throw new Error("Sign in before sharing an item.");
+      const quantity = Number(shareForm.quantity);
+      const price = shareForm.isFree ? 0 : Number(shareForm.price);
+      const expiresInHours = Number(shareForm.expiresInHours);
+      if (!Number.isInteger(quantity) || quantity <= 0) throw new Error("Enter a valid whole-number quantity.");
+      if (!shareForm.isFree && (!Number.isFinite(price) || price <= 0)) throw new Error("Enter a price or mark the item as free.");
+      if (!Number.isFinite(expiresInHours) || expiresInHours <= 0) throw new Error("Enter a valid expiry time.");
+      const response = await apiRequest("POST", "/api/share-care", {
+        ...shareForm,
+        quantity,
+        price,
+        expiresInHours,
+      });
+      return response.json() as Promise<ShareCareListing>;
+    },
+    onSuccess: async (listing) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ predicate: (query) => String(query.queryKey[0] ?? "").startsWith("/api/share-care") }),
+        queryClient.invalidateQueries({ queryKey: ["/api/platform/stats"] }),
+      ]);
+      setShareForm(EMPTY_SHARE_FORM);
+      setShareMessage("Your Share & Care listing is now live.");
+      setActiveTab("marketplace");
+      setSelectedItemId(listing.id);
+      window.history.replaceState(null, "", `/share-care?item=${encodeURIComponent(listing.id)}`);
+      window.setTimeout(() => listingRefs.current[listing.id]?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+    },
+    onError: (reason) => setShareMessage(shareCareErrorMessage(reason)),
+  });
+  const reserveListing = useMutation({
+    mutationFn: async (listingId: string) => {
+      if (!isAuthenticated) {
+        navigate(`/login?returnTo=${encodeURIComponent(`/share-care?item=${listingId}`)}`);
+        throw new Error("Sign in to reserve this item.");
+      }
+      const response = await apiRequest("POST", `/api/share-care/${encodeURIComponent(listingId)}/reserve`, {});
+      return response.json() as Promise<ShareCareListing>;
+    },
+    onSuccess: async () => {
+      setShareMessage("Item reserved. Contact the donor to arrange collection.");
+      await Promise.all([
+        queryClient.invalidateQueries({ predicate: (query) => String(query.queryKey[0] ?? "").startsWith("/api/share-care") }),
+        queryClient.invalidateQueries({ queryKey: ["/api/platform/stats"] }),
+      ]);
+    },
+    onError: (reason) => {
+      if (isAuthenticated) setShareMessage(shareCareErrorMessage(reason));
+    },
+  });
+  useEffect(() => {
+    if (!selectedItemId || shareItems.length === 0) return;
+    window.setTimeout(() => listingRefs.current[selectedItemId]?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+  }, [selectedItemId, shareItems]);
   const ukCenter: [number, number] = useMemo(() => {
     if (shareItems.length === 0) return [52.5, -1.0];
     const lat = shareItems.reduce((s, i) => s + i.latitude, 0) / shareItems.length;
@@ -133,6 +232,11 @@ export default function ShareCarePage() {
           <p className="text-muted-foreground text-lg">
             {t("share_care.subtitle", "Community Food Rescue - Reducing waste, feeding the community.")}
           </p>
+          {shareMessage && (
+            <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">
+              {shareMessage}
+            </p>
+          )}
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -252,7 +356,8 @@ export default function ShareCarePage() {
                     {shareItems.map((listing) => (
                       <Card
                         key={listing.id}
-                        className={`hover-elevate transition-all border-l-4 ${URGENCY_BORDER[listing.urgency] ?? "border-l-green-500"}`}
+                        ref={(node) => { listingRefs.current[listing.id] = node; }}
+                        className={`hover-elevate transition-all border-l-4 ${URGENCY_BORDER[listing.urgency] ?? "border-l-green-500"} ${selectedItemId === listing.id ? "ring-2 ring-primary ring-offset-2" : ""}`}
                         data-testid={`card-share-${listing.id}`}
                       >
                         <CardHeader className="pb-2">
@@ -261,7 +366,9 @@ export default function ShareCarePage() {
                               <span className="text-lg">{listing.emoji}</span>
                               {listing.name}
                             </CardTitle>
-                            <Badge variant="secondary">FREE</Badge>
+                            <Badge variant="secondary">
+                              {listing.isFree ? "FREE" : format(listing.price, { sourceCurrency: listing.currency })}
+                            </Badge>
                           </div>
                           <CardDescription className="flex items-center gap-1">
                             <Store className="w-3 h-3" /> {listing.donor} • {listing.location}
@@ -292,8 +399,10 @@ export default function ShareCarePage() {
                             className="flex-1"
                             size="sm"
                             data-testid={`button-reserve-${listing.id}`}
+                            disabled={reserveListing.isPending}
+                            onClick={() => reserveListing.mutate(listing.id)}
                           >
-                            Reserve now
+                            {reserveListing.isPending && reserveListing.variables === listing.id ? "Reserving…" : "Reserve now"}
                           </Button>
                           <Button
                             variant="outline"
@@ -380,15 +489,15 @@ export default function ShareCarePage() {
                 <CardDescription>Enter details of the food you want to share with the community</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>Category</Label>
+                    <Label>Source</Label>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" className="justify-start h-auto py-3 px-4 flex flex-col items-start gap-1">
+                      <Button type="button" variant={shareForm.sourceType === "restaurant" ? "default" : "outline"} onClick={() => setShareForm({ ...shareForm, sourceType: "restaurant" })} className="justify-start h-auto py-3 px-4 flex flex-col items-start gap-1">
                         <Utensils className="w-4 h-4 text-primary" />
                         <span className="text-xs">Restaurant</span>
                       </Button>
-                      <Button variant="outline" className="justify-start h-auto py-3 px-4 flex flex-col items-start gap-1">
+                      <Button type="button" variant={shareForm.sourceType === "home" ? "default" : "outline"} onClick={() => setShareForm({ ...shareForm, sourceType: "home" })} className="justify-start h-auto py-3 px-4 flex flex-col items-start gap-1">
                         <Home className="w-4 h-4 text-primary" />
                         <span className="text-xs">Home</span>
                       </Button>
@@ -396,35 +505,46 @@ export default function ShareCarePage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Item Name</Label>
-                    <Input placeholder="e.g. Mixed Fruit Basket" />
+                    <Input value={shareForm.name} onChange={(event) => setShareForm({ ...shareForm, name: event.target.value })} placeholder="e.g. Mixed Fruit Basket" data-testid="input-share-name" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Food category</Label>
+                    <Input value={shareForm.category} onChange={(event) => setShareForm({ ...shareForm, category: event.target.value })} placeholder="e.g. fruit, bakery" data-testid="input-share-category" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div className="space-y-2">
                     <Label>Quantity</Label>
-                    <Input placeholder="e.g. 5kg or 10 units" />
+                    <Input type="number" min="1" step="1" value={shareForm.quantity} onChange={(event) => setShareForm({ ...shareForm, quantity: event.target.value })} placeholder="e.g. 5" data-testid="input-share-quantity" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Unit</Label>
+                    <Input value={shareForm.unit} onChange={(event) => setShareForm({ ...shareForm, unit: event.target.value })} placeholder="kg, portions, packs…" data-testid="input-share-unit" />
                   </div>
                   <div className="space-y-2">
                     <Label>Price</Label>
                     <div className="flex gap-2">
-                      <Input placeholder={currency} className="flex-1" />
+                      <Input type="number" min="0" step="0.01" value={shareForm.price} onChange={(event) => setShareForm({ ...shareForm, price: event.target.value })} placeholder={currency} className="flex-1" disabled={shareForm.isFree} data-testid="input-share-price" />
                       <div className="flex items-center gap-2 border rounded-md px-3 bg-muted/30">
-                        <Checkbox id="is-free" />
+                        <Checkbox id="is-free" checked={shareForm.isFree} onCheckedChange={(checked) => setShareForm({ ...shareForm, isFree: checked === true, price: checked === true ? "" : shareForm.price })} />
                         <Label htmlFor="is-free" className="text-xs">FREE</Label>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Prepared At</Label>
-                    <Input type="time" defaultValue="18:00" />
+                    <Label>Collection location</Label>
+                    <Input value={shareForm.location} onChange={(event) => setShareForm({ ...shareForm, location: event.target.value })} placeholder="Uses your profile location when empty" data-testid="input-share-location" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Best Consumed By</Label>
-                    <Input type="time" defaultValue="22:00" />
+                    <Label>Available for</Label>
+                    <div className="flex items-center gap-2">
+                      <Input type="number" min="0.5" max="720" step="0.5" value={shareForm.expiresInHours} onChange={(event) => setShareForm({ ...shareForm, expiresInHours: event.target.value })} data-testid="input-share-expiry" />
+                      <span className="text-sm text-muted-foreground">hours</span>
+                    </div>
                   </div>
                 </div>
 
@@ -433,7 +553,7 @@ export default function ShareCarePage() {
                   <div className="flex flex-wrap gap-3 p-3 border rounded-md bg-muted/10">
                     {["Vegetarian", "Vegan", "Gluten-Free", "Nut-Free"].map(tag => (
                       <div key={tag} className="flex items-center gap-2">
-                        <Checkbox id={`tag-${tag}`} />
+                        <Checkbox id={`tag-${tag}`} checked={shareForm.dietaryTags.includes(tag)} onCheckedChange={(checked) => setShareForm({ ...shareForm, dietaryTags: checked === true ? [...shareForm.dietaryTags, tag] : shareForm.dietaryTags.filter((item) => item !== tag) })} />
                         <Label htmlFor={`tag-${tag}`} className="text-xs">{tag}</Label>
                       </div>
                     ))}
@@ -448,8 +568,8 @@ export default function ShareCarePage() {
                   </div>
                 </div>
 
-                <Button className="w-full h-12 text-lg">
-                  List Now - Expires in 4 hours
+                <Button className="w-full h-12 text-lg" disabled={createListing.isPending} onClick={() => { setShareMessage(null); createListing.mutate(); }} data-testid="button-create-share-listing">
+                  {createListing.isPending ? "Publishing…" : `List Now - Expires in ${shareForm.expiresInHours || "0"} hours`}
                 </Button>
               </CardContent>
             </Card>

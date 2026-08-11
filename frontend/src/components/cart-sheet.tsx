@@ -12,6 +12,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeProductImage } from "@/components/safe-product-image";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import type { CartItem } from "@shared/schema";
 import { useCurrency } from "@/contexts/currency-context";
@@ -71,8 +72,9 @@ export function CartSheet({
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-3" data-testid={`cart-item-${item.id}`}>
                     <div className="h-20 w-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                      <img
+                      <SafeProductImage
                         src={resolveProductImageForProduct(item.product).src}
+                        fallbackSrc={resolveProductImageForProduct(item.product).fallbackSrc}
                         alt={item.product.name}
                         className="h-full w-full object-cover"
                       />

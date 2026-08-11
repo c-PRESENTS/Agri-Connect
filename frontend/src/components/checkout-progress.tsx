@@ -27,25 +27,25 @@ export function CheckoutProgress({ currentStep }: { currentStep: 1 | 2 | 3 | 4 }
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "absolute left-1/2 top-4 h-0.5 w-full",
-                    step < currentStep ? "bg-primary" : "bg-border",
+                    "absolute left-1/2 top-[22px] sm:top-[26px] -translate-y-1/2 h-1.5 w-full rounded-full transition-colors",
+                    step < currentStep ? "bg-amber-400" : "bg-border/60",
                   )}
                 />
               )}
               <span
                 className={cn(
-                  "relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 bg-background text-xs font-bold transition-colors sm:h-9 sm:w-9 sm:text-sm",
-                  completed && "border-primary bg-primary text-primary-foreground",
-                  active && "border-primary text-primary ring-4 ring-primary/10",
-                  !completed && !active && "border-border text-muted-foreground",
+                  "relative z-10 flex h-11 w-11 items-center justify-center rounded-full border-3 bg-background text-sm font-black transition-all sm:h-13 sm:w-13 sm:text-base md:text-lg shadow-sm",
+                  completed && "border-primary bg-primary text-primary-foreground shadow-md",
+                  active && "border-amber-500 bg-amber-400 text-black ring-4 ring-amber-400/25 shadow-md scale-105",
+                  !completed && !active && "border-border/80 text-muted-foreground bg-muted/30",
                 )}
               >
-                {completed ? <Check className="h-4 w-4" aria-hidden="true" /> : step}
+                {completed ? <Check className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={3} aria-hidden="true" /> : step}
               </span>
               <span
                 className={cn(
-                  "mt-2 max-w-24 text-[10px] font-semibold leading-tight sm:max-w-none sm:text-xs md:text-sm",
-                  active || completed ? "text-foreground" : "text-muted-foreground",
+                  "mt-2.5 max-w-28 text-xs font-black uppercase tracking-wider leading-tight sm:max-w-none sm:text-sm md:text-base",
+                  active ? "text-amber-600 dark:text-amber-400" : completed ? "text-foreground font-black" : "text-muted-foreground font-bold",
                 )}
               >
                 {label}

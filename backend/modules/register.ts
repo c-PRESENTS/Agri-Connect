@@ -21,6 +21,7 @@ import { registerRefundRoutes } from "./payments/refund-routes";
 import { registerDisputeRoutes } from "./payments/dispute-routes";
 import { registerPaymentDashboardRoutes } from "./payments/dashboard-routes";
 import { registerPaymentOperatorRoutes } from "./payments/operator-routes";
+import { registerAdminFoundationRoutes } from "./admin/routes";
 
 export interface BackendModuleDeps {
   getUserId(req: Request): string | undefined;
@@ -32,6 +33,7 @@ export interface BackendModuleDeps {
 }
 
 export function registerBackendModules(app: Express, deps: BackendModuleDeps): void {
+  registerAdminFoundationRoutes(app);
   registerCatalogRoutes(app);
   registerCartRoutes(app, {
     getUserId: deps.getUserId,

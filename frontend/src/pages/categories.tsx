@@ -37,20 +37,20 @@ export default function CategoriesPage() {
           Back to home
         </Link>
 
-        <header className="mb-7">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+        <header className="mb-8">
+          <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/70 px-3 py-1 rounded-full border border-amber-400/40 inline-block mb-3 shadow-2xs">
             Browse by category
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+          </span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground leading-tight">
             All farm products and services
           </h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
+          <p className="mt-2 text-base sm:text-lg font-bold text-foreground/80 max-w-2xl">
             Choose a category to explore its products and subcategories.
           </p>
         </header>
 
         <section
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           aria-label="Marketplace categories"
         >
           {marketplaceCategories.map((category) => {
@@ -62,7 +62,7 @@ export default function CategoriesPage() {
                 key={category.id}
                 role="link"
                 tabIndex={0}
-                className="group cursor-pointer overflow-hidden"
+                className="group cursor-pointer overflow-hidden border-2 border-border/80 bg-card rounded-2xl shadow-md hover:shadow-xl hover:border-primary/60 transition-all duration-200"
                 onClick={() => openCategory(category.id)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
@@ -72,7 +72,7 @@ export default function CategoriesPage() {
                 }}
                 data-testid={`category-page-card-${category.id}`}
               >
-                <div className="relative h-40 overflow-hidden bg-muted">
+                <div className="relative h-44 overflow-hidden bg-muted">
                   {image && (
                     <img
                       src={image}
@@ -80,21 +80,21 @@ export default function CategoriesPage() {
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
-                  <div className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur-sm">
-                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
+                  <div className="absolute bottom-3 left-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400/30 text-white backdrop-blur-md border border-white/30 shadow-md">
+                    <Icon className="h-6 w-6 text-white drop-shadow-xs" aria-hidden="true" />
                   </div>
                 </div>
-                <div className="p-4">
+                <div className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h2 className="font-semibold">{category.name}</h2>
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <h2 className="text-lg sm:text-xl font-black uppercase tracking-wide text-foreground group-hover:text-primary transition-colors">{category.name}</h2>
+                      <p className="mt-1 text-xs sm:text-sm font-extrabold text-muted-foreground">
                         {category.subcategories.length} subcategories
                       </p>
                     </div>
                     <ArrowRight
-                      className="mt-1 h-4 w-4 shrink-0 text-primary transition-transform group-hover:translate-x-1"
+                      className="mt-1 h-5 w-5 shrink-0 text-primary transition-transform group-hover:translate-x-1 font-black"
                       aria-hidden="true"
                     />
                   </div>

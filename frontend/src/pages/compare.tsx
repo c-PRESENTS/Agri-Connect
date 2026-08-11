@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TopNavigation } from "@/components/top-navigation";
+import { SafeProductImage } from "@/components/safe-product-image";
 import { useCompare } from "@/hooks/use-compare";
 import { useCart } from "@/hooks/use-cart";
 import { resolveProductImageForProduct } from "@/lib/product-images";
@@ -143,8 +144,9 @@ export default function ComparePage() {
                     onClick={() => setLocation(`/products/${p.id}`)}
                     className="block w-full aspect-square rounded-xl overflow-hidden bg-muted hover:opacity-90 transition-opacity"
                   >
-                    <img
+                    <SafeProductImage
                       src={resolveProductImageForProduct(p).src}
+                      fallbackSrc={resolveProductImageForProduct(p).fallbackSrc}
                       alt={p.name}
                       className="w-full h-full object-cover"
                     />

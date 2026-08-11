@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
@@ -55,7 +55,7 @@ function persist(o: string[], h: Set<string>, e: Record<string, string>) {
   localStorage.setItem(LS_EMOJIS, JSON.stringify(e));
 }
 
-export function HeroServiceGrid() {
+export const HeroServiceGrid = memo(function HeroServiceGrid() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
@@ -106,35 +106,35 @@ export function HeroServiceGrid() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-1.5 sm:mb-2 px-0.5">
-        <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40">{t("home.quick_access")}</span>
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between mb-2.5 sm:mb-3 px-0.5">
+        <span className="text-xs sm:text-sm font-black uppercase tracking-[0.18em] text-white/70">{t("home.quick_access")}</span>
+        <div className="flex items-center gap-2">
           {editMode && (
             <button
               onClick={reset}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold text-white/50 hover:text-white/80 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white/70 hover:text-white hover:bg-white/10 border border-white/20 transition-all"
             >
-              <RotateCcw className="h-2.5 w-2.5" /> {t("nav.reset")}
+              <RotateCcw className="h-3.5 w-3.5" /> {t("nav.reset")}
             </button>
           )}
           <button
             onClick={() => { setEditMode(v => !v); setEditingEmoji(null); }}
             data-testid="hero-services-edit"
-            className={`flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[9px] sm:text-[10px] font-bold border transition-all shadow-sm ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-xs font-black border transition-all shadow-sm ${
               editMode
                 ? "bg-primary text-primary-foreground border-primary shadow-primary/30"
-                : "bg-white/10 text-white/80 border-white/20 hover:bg-white/18 hover:border-white/35 hover:text-white"
+                : "bg-white/10 text-white/90 border-white/20 hover:bg-white/18 hover:border-white/35 hover:text-white"
             }`}
           >
             {editMode
-              ? <><Check className="h-3 w-3" /> {t("nav.done")}</>
-              : <><Pencil className="h-3 w-3" /> {t("nav.edit")}</>
+              ? <><Check className="h-4 w-4" /> {t("nav.done")}</>
+              : <><Pencil className="h-4 w-4" /> {t("nav.edit")}</>
             }
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-10 gap-1.5 sm:gap-1.5">
+      <div className="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-10 gap-2 sm:gap-2.5">
         {visibleItems.map((item, idx) => {
           const Icon = item.icon;
           const customEmoji = emojis[item.id];
@@ -144,17 +144,17 @@ export function HeroServiceGrid() {
               <button
                 onClick={() => { if (!editMode) setLocation(item.path); }}
                 data-testid={`nav-${item.id}`}
-                className={`w-full h-[58px] sm:h-[64px] flex flex-col items-center justify-center gap-1 rounded-lg sm:rounded-xl border transition-all duration-150 py-1.5 sm:py-2 px-0.5 bg-white/[0.07] ${
+                className={`w-full h-[72px] sm:h-[82px] flex flex-col items-center justify-center gap-1.5 rounded-xl sm:rounded-2xl border transition-all duration-150 py-2 px-1 bg-white/[0.09] ${
                   editMode
                     ? "border-white/10 cursor-default"
-                    : "border-white/10 hover:border-white/30 hover:bg-white/[0.12] hover:scale-[1.05] active:scale-95 cursor-pointer"
+                    : "border-white/15 hover:border-white/40 hover:bg-white/[0.16] hover:scale-[1.05] active:scale-95 cursor-pointer shadow-md"
                 }`}
               >
                 {customEmoji
-                  ? <span className="text-base sm:text-base leading-none drop-shadow flex-shrink-0">{customEmoji}</span>
-                  : <Icon className={`h-[18px] w-[18px] sm:h-[17px] sm:w-[17px] drop-shadow flex-shrink-0 ${item.color}`} />
+                  ? <span className="text-xl sm:text-2xl leading-none drop-shadow flex-shrink-0">{customEmoji}</span>
+                  : <Icon className={`h-6 w-6 sm:h-7 sm:w-7 drop-shadow flex-shrink-0 ${item.color}`} />
                 }
-                <span className="text-[9px] sm:text-[8px] font-bold text-white/85 text-center leading-[1.1] w-full truncate drop-shadow px-0.5">
+                <span className="text-xs sm:text-xs font-black text-white text-center leading-tight w-full truncate drop-shadow px-0.5">
                   {t(item.label, { defaultValue: item.fallbackLabel })}
                 </span>
               </button>
@@ -219,4 +219,4 @@ export function HeroServiceGrid() {
       )}
     </div>
   );
-}
+});
