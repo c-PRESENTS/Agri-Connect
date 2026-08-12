@@ -9,6 +9,7 @@ const Home = lazy(() => import("@/pages/home"));
 const CategoriesPage = lazy(() => import("@/pages/categories"));
 const AboutPage = lazy(() => import("@/pages/about"));
 const LogisticsPage = lazy(() => import("@/pages/logistics"));
+const LogisticsCollaborationPage = lazy(() => import("@/pages/logistics-collaboration"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const PhotoSell = lazy(() => import("@/pages/photo-sell"));
 const ProductListingPage = lazy(() => import("@/pages/product-listing"));
@@ -98,6 +99,7 @@ export function AppRoutes() {
       <Route path="/farmers-help" component={FarmersHelp} />
       <Route path="/land-leasing" component={LandLeasingPage} />
       <Route path="/logistics" component={LogisticsPage} />
+      <Route path="/logistics-collaboration" component={LogisticsCollaborationPage} />
       <Route path="/ship/track/:trackingId" component={ShipTrackPage} />
       <Route path="/ship" component={ShipPage} />
       <Route path="/share-care" component={ShareCarePage} />

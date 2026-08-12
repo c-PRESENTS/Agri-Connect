@@ -21,6 +21,7 @@ const NO_MARKET_PANEL_ROUTES = [
   "/farmers-help",
   "/government-schemes",
   "/logistics",
+  "/logistics-collaboration",
 ];
 const NO_MOBILE_NAV_ROUTES = ["/login"];
 

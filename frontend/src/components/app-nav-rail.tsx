@@ -25,6 +25,7 @@ import {
   Pencil, X, Check, RotateCcw, ChevronsRight, ChevronsLeft, GripVertical,
   ShoppingBasket, Wrench, Package, Award, Wheat, Store, Beef,
   Salad, Factory, Leaf, Briefcase, Sparkles, Grid3X3, GraduationCap,
+  Handshake,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { categories as defaultCategories, categoryImages, isShoppableCategory } from "@/lib/categories";
@@ -67,6 +68,7 @@ const ALL_SERVICES = [
   { id: "share",    path: "/share-care",           icon: HeartHandshake,  label: "Share",     public: true  },
   { id: "ship",     path: "/ship",                 icon: Truck,           label: "Ship",      public: true  },
   { id: "logistics",path: "/logistics",            icon: Package,         label: "Delivery",  public: true  },
+  { id: "logistics-collaboration", path: "/logistics-collaboration", icon: Handshake, label: "Collaborate", public: true },
   { id: "schemes",  path: "/government-schemes",   icon: FileText,        label: "Schemes",   public: true  },
   { id: "cart",     path: "/cart",                 icon: ShoppingCart,    label: "Cart",      public: true  },
   { id: "dash",     path: "/dashboard",            icon: LayoutDashboard, label: "Dashboard", public: false },
@@ -87,6 +89,7 @@ const COMING_SOON_SERVICE_IDS = new Set([
   "share",
   "ship",
   "logistics",
+  "logistics-collaboration",
   "schemes",
 ]);
 
@@ -103,6 +106,7 @@ const FULL_SERVICE_LABELS: Record<string, string> = {
   share: "Share & Care Community",
   ship: "Shipping Management",
   logistics: "Logistics & Delivery",
+  "logistics-collaboration": "Logistics Collaboration",
   schemes: "Government Schemes",
   cart: "Shopping Cart",
   dash: "Dashboard",
