@@ -7,12 +7,14 @@ import { z, ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { updateProfileSchema, type User } from "@shared/models/auth";
 import { authStorage } from "./storage";
+import { audit } from "../audit";
 import { verifyGoogleToken } from "./google";
 import {
   geocodeLocation,
   GeocodingUnavailableError,
   LocationNotFoundError,
   normalizeLocationQuery,
+  reverseGeocodeLocation,
 } from "../location/geocoder";
 
 const loginLimiter = rateLimit({
@@ -36,6 +38,14 @@ declare module "express-session" {
     userId?: string;
     guest?: boolean;
     guestCartKey?: string;
+    liveLocation?: {
+      latitude: number;
+      longitude: number;
+      accuracyMeters: number | null;
+      label: string;
+      countryCode: string | null;
+      updatedAt: string;
+    };
   }
 }
 
@@ -46,6 +56,14 @@ const credentialsSchema = z.object({
 });
 
 const loginSchema = credentialsSchema.pick({ email: true, password: true });
+const liveLocationSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  accuracyMeters: z.number().nonnegative().max(100_000).optional().nullable(),
+});
+const accountModeSchema = z.object({
+  mode: z.enum(["buyer", "seller"]),
+});
 
 function serializeUser(user: User) {
   const { passwordHash: _passwordHash, ...safeUser } = user;
@@ -245,6 +263,45 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/auth/live-location", isAuthenticated, async (req, res) => {
+    return res.json(req.session.liveLocation ?? null);
+  });
+
+  app.put("/api/auth/live-location", isAuthenticated, async (req, res) => {
+    try {
+      const input = liveLocationSchema.parse(req.body);
+      let label = "Current device location";
+      let countryCode: string | null = null;
+      try {
+        const resolved = await reverseGeocodeLocation(input.latitude, input.longitude);
+        label = resolved.label;
+        countryCode = resolved.countryCode;
+      } catch (error) {
+        if (!(error instanceof LocationNotFoundError || error instanceof GeocodingUnavailableError)) {
+          throw error;
+        }
+      }
+
+      req.session.liveLocation = {
+        latitude: input.latitude,
+        longitude: input.longitude,
+        accuracyMeters: input.accuracyMeters ?? null,
+        label,
+        countryCode,
+        updatedAt: new Date().toISOString(),
+      };
+      return res.json(req.session.liveLocation);
+    } catch (error) {
+      if (handleAuthError(error, res)) return;
+      return res.status(500).json({ message: "Failed to update live location" });
+    }
+  });
+
+  app.delete("/api/auth/live-location", isAuthenticated, (req, res) => {
+    delete req.session.liveLocation;
+    return res.status(204).end();
+  });
+
   app.patch("/api/auth/profile", isAuthenticated, async (req, res) => {
     try {
       const userId = getSessionUserId(req);
@@ -295,6 +352,30 @@ export function registerAuthRoutes(app: Express): void {
       }
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.post("/api/auth/account-mode", isAuthenticated, async (req, res) => {
+    const userId = getSessionUserId(req);
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    try {
+      const { mode } = accountModeSchema.parse(req.body);
+      const current = await authStorage.getUser(userId);
+      if (!current) return res.status(404).json({ message: "User not found" });
+      if (!["buyer", "farmer"].includes(current.role)) {
+        audit({ action: "account.mode_switched", actorId: userId, targetType: "account", targetId: userId, outcome: "denied" });
+        return res.status(403).json({ message: "This account type cannot switch to seller mode" });
+      }
+
+      const user = await authStorage.switchAccountMode(userId, mode);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      audit({ action: "account.mode_switched", actorId: userId, targetType: "account", targetId: userId });
+      return res.json(serializeUser(user));
+    } catch (error) {
+      if (handleAuthError(error, res)) return;
+      console.error("Error switching account mode:", error);
+      return res.status(500).json({ message: "Failed to switch account mode" });
     }
   });
 

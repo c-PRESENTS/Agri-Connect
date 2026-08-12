@@ -345,6 +345,7 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       for (const item of parsed.items) {
         const product = await storage.getProduct(item.productId);
         if (!product) return res.status(400).json({ error: `Product no longer available: ${item.productName}` });
+        if ((product.publicationStatus ?? "published") !== "published") return res.status(400).json({ error: `Product is not currently published: ${product.name}` });
         if (product?.farmerId === userId) {
           return res.status(400).json({ error: "You cannot order your own product" });
         }
@@ -500,6 +501,9 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
         const prod = await storage.getProduct(it.productId);
         if (!prod) {
           return res.status(400).json({ error: `Product no longer available: ${it.productName}` });
+        }
+        if ((prod.publicationStatus ?? "published") !== "published") {
+          return res.status(400).json({ error: `Product is not currently published: ${prod.name}` });
         }
         repricedItems.push({
           ...it,

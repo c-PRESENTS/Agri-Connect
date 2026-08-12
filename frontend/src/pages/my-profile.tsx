@@ -20,6 +20,7 @@ import {
   ShoppingBag,
   Star,
   Store,
+  SwitchCamera,
   Truck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -35,6 +36,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useFavorites } from "@/hooks/use-favorites";
 import { resolveProductImageForOrderItem, resolveProductImageForProduct } from "@/lib/product-images";
 import { useCurrency } from "@/contexts/currency-context";
+import { useToast } from "@/hooks/use-toast";
 
 type SellerDashboardData = {
   products: Product[];
@@ -155,13 +157,34 @@ function QuickLink({
 
 function ProfileHeader() {
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const { user, switchAccountMode } = useAuth();
+  const { toast } = useToast();
   const isFarmer = user?.role === "farmer";
   const fullName =
     user?.name?.trim() ||
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     "AgriConnect user";
   const contact = user?.email || user?.phone || "Add contact details";
+
+  const handleAccountSwitch = async () => {
+    const targetMode = isFarmer ? "buyer" : "seller";
+    try {
+      await switchAccountMode.mutateAsync(targetMode);
+      toast({
+        title: targetMode === "seller" ? "Seller account is active" : "Buyer account is active",
+        description: targetMode === "seller"
+          ? "Your seller workspace is ready. Complete verification before publishing listings."
+          : "You can keep shopping while your seller information remains safely saved.",
+      });
+      navigate(targetMode === "seller" ? "/seller" : "/my-profile");
+    } catch (error) {
+      toast({
+        title: "Could not switch account",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <section className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-gradient-to-r from-emerald-950 via-emerald-900 to-green-800 p-5 text-white shadow-lg sm:p-7">
@@ -195,6 +218,19 @@ function ProfileHeader() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
+            onClick={handleAccountSwitch}
+            disabled={switchAccountMode.isPending}
+            className="gap-2 bg-amber-400 font-black text-emerald-950 hover:bg-amber-300"
+            data-testid="button-switch-account-mode"
+          >
+            {switchAccountMode.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <SwitchCamera className="h-4 w-4" />
+            )}
+            {isFarmer ? "Switch to Buyer Account" : "Switch to Seller Account"}
+          </Button>
+          <Button
             variant="outline"
             onClick={() => navigate("/settings")}
             className="gap-2 border-white/30 bg-white/10 font-bold text-white hover:bg-white/20 hover:text-white"
@@ -205,7 +241,7 @@ function ProfileHeader() {
           {isFarmer && (
             <Button
               onClick={() => navigate("/dashboard/list-product")}
-              className="gap-2 bg-amber-400 font-black text-emerald-950 hover:bg-amber-300"
+              className="gap-2 border-white/30 bg-white/10 font-bold text-white hover:bg-white/20 hover:text-white"
             >
               <Plus className="h-4 w-4" />
               Add product

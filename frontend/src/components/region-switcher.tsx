@@ -126,6 +126,7 @@ export function RegionSwitcher({ onRegionChange }: RegionSwitcherProps) {
   const handleRegionChange = (region: Region) => {
     setSelectedRegion(region);
     localStorage.setItem(STORAGE_KEY, region.code);
+    localStorage.setItem("agriconnect-region-source", "manual");
     setRegion(region);
     onRegionChange?.(region);
     setOpen(false);

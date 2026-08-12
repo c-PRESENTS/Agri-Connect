@@ -10,6 +10,7 @@ export interface IAuthStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: UpsertUser): Promise<User>;
   updateProfile(id: string, updates: UpdateProfileInput): Promise<User | undefined>;
+  switchAccountMode(id: string, mode: "buyer" | "seller"): Promise<User | undefined>;
 }
 
 class AuthStorage implements IAuthStorage {
@@ -62,9 +63,23 @@ class AuthStorage implements IAuthStorage {
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) patch[key] = value;
     }
+    if (updates.role === "farmer") patch.sellerEnabled = true;
     const [user] = await db
       .update(users)
       .set(patch)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async switchAccountMode(id: string, mode: "buyer" | "seller"): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        role: mode === "seller" ? "farmer" : "buyer",
+        ...(mode === "seller" ? { sellerEnabled: true } : {}),
+        updatedAt: new Date(),
+      })
       .where(eq(users.id, id))
       .returning();
     return user;

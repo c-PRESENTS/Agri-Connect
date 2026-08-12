@@ -39,6 +39,12 @@ type NominatimResult = {
   };
 };
 
+type GoogleGeocodeResult = {
+  formatted_address?: string;
+  geometry?: { location?: { lat?: number; lng?: number } };
+  address_components?: Array<{ short_name: string; types: string[] }>;
+};
+
 const COUNTRY_ALIASES: Record<string, string> = {
   uk: "GB",
   "u.k.": "GB",
@@ -88,6 +94,21 @@ export function buildNominatimSearchUrl(
   url.searchParams.set("limit", "5");
   const countryCode = inferCountryCode(query);
   if (countryCode) url.searchParams.set("countrycodes", countryCode.toLowerCase());
+  if (process.env.GEOCODER_EMAIL) url.searchParams.set("email", process.env.GEOCODER_EMAIL);
+  return url;
+}
+
+export function buildNominatimReverseUrl(
+  latitude: number,
+  longitude: number,
+  baseUrl = process.env.GEOCODER_BASE_URL ?? "https://nominatim.openstreetmap.org",
+): URL {
+  const url = new URL(`${baseUrl.replace(/\/+$/, "")}/reverse`);
+  url.searchParams.set("lat", latitude.toFixed(6));
+  url.searchParams.set("lon", longitude.toFixed(6));
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("zoom", "10");
   if (process.env.GEOCODER_EMAIL) url.searchParams.set("email", process.env.GEOCODER_EMAIL);
   return url;
 }
@@ -209,6 +230,50 @@ async function fetchFromNominatim(query: string): Promise<GeocodedLocation> {
   }
 }
 
+async function fetchFromGoogle(query: string): Promise<GeocodedLocation> {
+  const apiKey = process.env.GEOCODING_API_KEY?.trim();
+  if (!apiKey) throw new GeocodingUnavailableError();
+  const url = new URL(process.env.GEOCODER_BASE_URL?.trim() || "https://maps.googleapis.com/maps/api/geocode/json");
+  url.searchParams.set("address", query);
+  url.searchParams.set("key", apiKey);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+  try {
+    const response = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
+    if (!response.ok) throw new GeocodingUnavailableError();
+    const body = await response.json() as { status?: string; results?: GoogleGeocodeResult[] };
+    if (body.status === "ZERO_RESULTS") throw new LocationNotFoundError();
+    if (body.status !== "OK") throw new GeocodingUnavailableError();
+    const match = body.results?.[0];
+    const latitude = Number(match?.geometry?.location?.lat);
+    const longitude = Number(match?.geometry?.location?.lng);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) throw new LocationNotFoundError();
+    const country = match?.address_components?.find((component) => component.types.includes("country"));
+    return { label: match?.formatted_address || query, latitude, longitude, countryCode: country?.short_name?.toUpperCase() ?? null, provider: "google" };
+  } catch (error) {
+    if (error instanceof LocationNotFoundError || error instanceof GeocodingUnavailableError) throw error;
+    throw new GeocodingUnavailableError();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function reverseFromGoogle(latitude: number, longitude: number): Promise<GeocodedLocation> {
+  const apiKey = process.env.GEOCODING_API_KEY?.trim();
+  if (!apiKey) throw new GeocodingUnavailableError();
+  const url = new URL(process.env.GEOCODER_BASE_URL?.trim() || "https://maps.googleapis.com/maps/api/geocode/json");
+  url.searchParams.set("latlng", `${latitude},${longitude}`);
+  url.searchParams.set("key", apiKey);
+  const response = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!response.ok) throw new GeocodingUnavailableError();
+  const body = await response.json() as { status?: string; results?: GoogleGeocodeResult[] };
+  if (body.status === "ZERO_RESULTS") throw new LocationNotFoundError();
+  if (body.status !== "OK") throw new GeocodingUnavailableError();
+  const match = body.results?.[0];
+  const country = match?.address_components?.find((component) => component.types.includes("country"));
+  return { label: match?.formatted_address || `${latitude}, ${longitude}`, latitude, longitude, countryCode: country?.short_name?.toUpperCase() ?? null, provider: "google-reverse" };
+}
+
 export async function geocodeLocation(value: string): Promise<GeocodedLocation> {
   const query = normalizeLocationQuery(value);
   if (!query) throw new LocationNotFoundError();
@@ -219,7 +284,9 @@ export async function geocodeLocation(value: string): Promise<GeocodedLocation> 
   const existing = inflight.get(cacheKey);
   if (existing) return existing;
 
-  const request = fetchFromNominatim(query)
+  const request = ((process.env.GEOCODING_PROVIDER || "nominatim").trim().toLowerCase() === "google"
+    ? fetchFromGoogle(query)
+    : fetchFromNominatim(query))
     .then(async (result) => {
       await writeCache(cacheKey, query, result);
       return result;
@@ -227,6 +294,74 @@ export async function geocodeLocation(value: string): Promise<GeocodedLocation> 
     .finally(() => {
       inflight.delete(cacheKey);
     });
+  inflight.set(cacheKey, request);
+  return request;
+}
+
+export async function reverseGeocodeLocation(
+  latitude: number,
+  longitude: number,
+): Promise<GeocodedLocation> {
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    throw new LocationNotFoundError();
+  }
+
+  const roundedLatitude = Math.round(latitude * 100) / 100;
+  const roundedLongitude = Math.round(longitude * 100) / 100;
+  const cacheKey = `reverse:${roundedLatitude.toFixed(2)},${roundedLongitude.toFixed(2)}`;
+  const cached = await readCache(cacheKey);
+  if (cached) return cached;
+
+  const existing = inflight.get(cacheKey);
+  if (existing) return existing;
+
+  const request = (async () => {
+    if ((process.env.GEOCODING_PROVIDER || "nominatim").trim().toLowerCase() === "google") {
+      const resolved = await reverseFromGoogle(latitude, longitude);
+      await writeCache(cacheKey, `${roundedLatitude}, ${roundedLongitude}`, resolved);
+      return resolved;
+    }
+    await waitForProviderSlot();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8_000);
+    try {
+      const response = await fetch(buildNominatimReverseUrl(latitude, longitude), {
+        signal: controller.signal,
+        headers: {
+          Accept: "application/json",
+          "Accept-Language": "en",
+          "User-Agent":
+            process.env.GEOCODER_USER_AGENT ??
+            "AgriConnect-MVP/1.0 (support@agriconnect.app)",
+        },
+      });
+      if (!response.ok) throw new GeocodingUnavailableError();
+      const result = (await response.json()) as NominatimResult;
+      if (!result.address) throw new LocationNotFoundError();
+      const resolved: GeocodedLocation = {
+        label: canonicalLabel(result, `${roundedLatitude}, ${roundedLongitude}`),
+        latitude,
+        longitude,
+        countryCode: result.address.country_code?.toUpperCase() ?? null,
+        provider: "nominatim-reverse",
+      };
+      await writeCache(cacheKey, `${roundedLatitude}, ${roundedLongitude}`, resolved);
+      return resolved;
+    } catch (error) {
+      if (error instanceof LocationNotFoundError || error instanceof GeocodingUnavailableError) throw error;
+      throw new GeocodingUnavailableError();
+    } finally {
+      clearTimeout(timeout);
+    }
+  })().finally(() => inflight.delete(cacheKey));
+
   inflight.set(cacheKey, request);
   return request;
 }

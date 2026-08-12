@@ -7,6 +7,9 @@ import { OperatorPayoutRecovery } from "@/components/payments/operator-payout-re
 import { OperatorDisputeControls } from "@/components/payments/operator-dispute-controls";
 import { OperatorPaymentOperations } from "@/components/payments/operator-payment-operations";
 import { useCurrency } from "@/contexts/currency-context";
+import { OperatorSellerVerifications } from "@/components/operator-seller-verifications";
+import { OperatorRegionalMarketplace } from "@/components/operator-regional-marketplace";
+import { OperatorRegionalOrganisations } from "@/components/operator-regional-organisations";
 
 type OperatorDashboard = {
   summary: {
@@ -90,6 +93,9 @@ export default function OperatorDashboardPage() {
             <OperatorPayoutRecovery />
             <OperatorDisputeControls />
             <OperatorPaymentOperations />
+            <OperatorSellerVerifications />
+            <OperatorRegionalMarketplace />
+            <OperatorRegionalOrganisations />
           </>
         )}
       </main>

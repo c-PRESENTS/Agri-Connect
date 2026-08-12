@@ -6,13 +6,16 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Home,
   Loader2,
   MapPin,
   Package,
+  Plus,
   Shield,
   Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -27,7 +30,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { COUNTRIES } from "@/lib/countries";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { createCheckoutQuote } from "@/lib/payment-client";
-import type { Cart, ShipQuote, ShipServiceType } from "@shared/schema";
+import type { Cart, SavedAddress, ShipQuote, ShipServiceType } from "@shared/schema";
 import { useCurrency } from "@/contexts/currency-context";
 import { CheckoutProgress } from "@/components/checkout-progress";
 import { SafeProductImage } from "@/components/safe-product-image";
@@ -60,6 +63,25 @@ type Address = {
   phone: string;
   email: string;
 };
+
+type BulkFulfilment = "collection" | "door_delivery";
+
+function quoteForBulkMode(
+  group: CartShippingGroup,
+  mode: BulkFulfilment,
+): ShipQuote | undefined {
+  if (mode === "collection") {
+    return group.quotes.find((quote) => quote.partnerId === "buyer-collection");
+  }
+
+  return group.quotes
+    .filter((quote) => quote.partnerId !== "buyer-collection")
+    .sort((first, second) => {
+      const firstPriority = first.partnerId === "farmer-delivery" ? 0 : 1;
+      const secondPriority = second.partnerId === "farmer-delivery" ? 0 : 1;
+      return firstPriority - secondPriority || first.price - second.price;
+    })[0];
+}
 
 function checkoutErrorMessage(error: Error): string {
   const responseText = error.message.replace(/^\d+:\s*/, "");
@@ -94,6 +116,11 @@ export default function CheckoutPage() {
     Record<string, { partnerId: string; service: ShipServiceType }>
   >({});
   const [selectedFarmerIds, setSelectedFarmerIds] = useState<string[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
+  const [saveNewAddress, setSaveNewAddress] = useState(true);
+  const [newAddressLabel, setNewAddressLabel] = useState("Home");
+  const [bulkFulfilment, setBulkFulfilment] = useState<BulkFulfilment>("door_delivery");
+  const [applyBulkToAll, setApplyBulkToAll] = useState(true);
 
   const {
     data: cart,
@@ -101,6 +128,34 @@ export default function CheckoutPage() {
     isError: isCartError,
     refetch: refetchCart,
   } = useQuery<Cart>({ queryKey: ["/api/cart"] });
+
+  const {
+    data: savedAddresses = [],
+    isLoading: areAddressesLoading,
+    isError: isAddressError,
+  } = useQuery<SavedAddress[]>({
+    queryKey: ["/api/account/addresses"],
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
+  const saveAddress = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/account/addresses", {
+        label: newAddressLabel.trim() || "Address",
+        fullName: address.fullName.trim(),
+        phone: address.phone.trim(),
+        email: address.email.trim() || undefined,
+        line1: address.line1.trim(),
+        line2: address.line2.trim() || undefined,
+        city: address.city.trim(),
+        county: address.county.trim() || undefined,
+        postcode: address.postcode.trim(),
+        country: address.country,
+      });
+      return (await response.json()) as SavedAddress;
+    },
+  });
 
   const selectedFarmerIdSet = useMemo(
     () => new Set(selectedFarmerIds),
@@ -225,8 +280,109 @@ export default function CheckoutPage() {
   }, [user]);
 
   useEffect(() => {
+    if (selectedAddressId || areAddressesLoading) return;
+    const preferred =
+      savedAddresses.find((savedAddress) => savedAddress.isDefault) ??
+      savedAddresses[0];
+    if (preferred) {
+      setSelectedAddressId(preferred.id);
+      setAddress({
+        fullName: preferred.fullName,
+        phone: preferred.phone,
+        email: preferred.email || user?.email || "",
+        line1: preferred.line1,
+        line2: preferred.line2 || "",
+        city: preferred.city,
+        county: preferred.county || "",
+        postcode: preferred.postcode,
+        country: preferred.country,
+      });
+      return;
+    }
+    setSelectedAddressId("new");
+  }, [areAddressesLoading, savedAddresses, selectedAddressId, user?.email]);
+
+  useEffect(() => {
     if (cart && cart.items.length === 0) navigate("/cart", { replace: true });
   }, [cart, navigate]);
+
+  function selectCheckoutAddress(addressId: string) {
+    setSelectedAddressId(addressId);
+    setErrors({});
+    if (addressId === "new") {
+      setAddress({
+        fullName: user?.name || "",
+        phone: "",
+        email: user?.email || "",
+        line1: "",
+        line2: "",
+        city: "",
+        county: "",
+        postcode: "",
+        country: "GB",
+      });
+      return;
+    }
+
+    const savedAddress = savedAddresses.find((candidate) => candidate.id === addressId);
+    if (!savedAddress) return;
+    setAddress({
+      fullName: savedAddress.fullName,
+      phone: savedAddress.phone,
+      email: savedAddress.email || user?.email || "",
+      line1: savedAddress.line1,
+      line2: savedAddress.line2 || "",
+      city: savedAddress.city,
+      county: savedAddress.county || "",
+      postcode: savedAddress.postcode,
+      country: savedAddress.country,
+    });
+  }
+
+  function applyBulkFulfilment(mode: BulkFulfilment, farmerIds = selectedFarmerIds) {
+    if (!shippingGroups) return;
+    const farmerIdSet = new Set(farmerIds);
+    const missing: string[] = [];
+    const selections: Record<string, { partnerId: string; service: ShipServiceType }> = {};
+    for (const group of shippingGroups) {
+      if (!farmerIdSet.has(group.farmerId)) continue;
+      const quote = quoteForBulkMode(group, mode);
+      if (!quote) {
+        missing.push(group.farmerName);
+        continue;
+      }
+      selections[group.farmerId] = {
+        partnerId: quote.partnerId,
+        service: quote.service,
+      };
+    }
+    setShippingChoices((current) => {
+      const next = { ...current };
+      for (const group of shippingGroups) {
+        if (!farmerIdSet.has(group.farmerId)) continue;
+        if (selections[group.farmerId]) next[group.farmerId] = selections[group.farmerId];
+        else delete next[group.farmerId];
+      }
+      return next;
+    });
+    if (missing.length) {
+      toast({
+        title: "Some sellers need a custom choice",
+        description: `${missing.join(", ")} do not offer this fulfilment option.`,
+        variant: "destructive",
+      });
+    }
+  }
+
+  function selectAllFarmers(checked: boolean) {
+    const farmerIds = checked ? (shippingGroups ?? []).map((group) => group.farmerId) : [];
+    setSelectedFarmerIds(farmerIds);
+    if (!checked) {
+      setShippingChoices({});
+      return;
+    }
+    if (applyBulkToAll) applyBulkFulfilment(bulkFulfilment, farmerIds);
+  }
 
   function validateAddress(): boolean {
     const nextErrors: Record<string, string> = {};
@@ -240,8 +396,20 @@ export default function CheckoutPage() {
     return Object.keys(nextErrors).length === 0;
   }
 
-  function continueToFulfilment() {
+  async function continueToFulfilment() {
     if (!validateAddress()) return;
+    if (selectedAddressId === "new" && saveNewAddress) {
+      try {
+        const created = await saveAddress.mutateAsync();
+        setSelectedAddressId(created.id);
+      } catch (error) {
+        toast({
+          title: "Address was not saved",
+          description: `${checkoutErrorMessage(error as Error)} Checkout will continue with the entered address.`,
+          variant: "destructive",
+        });
+      }
+    }
     shippingQuotes.mutate();
   }
 
@@ -340,6 +508,68 @@ export default function CheckoutPage() {
                     <MapPin className="h-7 w-7 text-primary flex-shrink-0" />
                     <h2 className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-wider">Delivery details</h2>
                   </div>
+                  <div className="mb-7 space-y-3">
+                    <div>
+                      <h3 className="text-base font-black text-foreground">Saved addresses</h3>
+                      <p className="mt-1 text-sm font-bold text-muted-foreground">
+                        Choose an address or add a new one for this order.
+                      </p>
+                    </div>
+                    {areAddressesLoading ? (
+                      <div className="flex items-center gap-2 rounded-xl border-2 border-border/70 p-4 text-sm font-bold text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Loading saved addresses…
+                      </div>
+                    ) : (
+                      <RadioGroup
+                        value={selectedAddressId || "new"}
+                        onValueChange={selectCheckoutAddress}
+                        className="space-y-3"
+                      >
+                        {savedAddresses.map((savedAddress) => (
+                          <label
+                            key={savedAddress.id}
+                            className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors ${
+                              selectedAddressId === savedAddress.id
+                                ? "border-primary bg-primary/5"
+                                : "border-border/70 hover:border-primary/40"
+                            }`}
+                          >
+                            <RadioGroupItem value={savedAddress.id} className="mt-1" />
+                            <Home className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                            <span className="min-w-0 flex-1">
+                              <span className="flex flex-wrap items-center gap-2 font-black text-foreground">
+                                {savedAddress.label}
+                                {savedAddress.isDefault && (
+                                  <Badge variant="secondary" className="text-xs">Default</Badge>
+                                )}
+                              </span>
+                              <span className="mt-1 block text-sm font-bold text-muted-foreground">
+                                {savedAddress.line1}, {savedAddress.city}, {savedAddress.postcode}
+                              </span>
+                            </span>
+                          </label>
+                        ))}
+                        <label
+                          className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
+                            selectedAddressId === "new"
+                              ? "border-primary bg-primary/5"
+                              : "border-border/70 hover:border-primary/40"
+                          }`}
+                          data-testid="checkout-add-new-address"
+                        >
+                          <RadioGroupItem value="new" />
+                          <Plus className="h-5 w-5 text-primary" />
+                          <span className="font-black text-foreground">Add New Address</span>
+                        </label>
+                      </RadioGroup>
+                    )}
+                    {isAddressError && (
+                      <p className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-bold text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+                        Saved addresses are unavailable right now. You can still enter an address for this order.
+                      </p>
+                    )}
+                  </div>
+                  <Separator className="mb-7" />
                   <div className="grid gap-5 sm:grid-cols-2">
                     {[
                       ["fullName", "Full name", "text"],
@@ -400,6 +630,38 @@ export default function CheckoutPage() {
                         </SelectContent>
                       </Select>
                     </div>
+                    {selectedAddressId === "new" && (
+                      <div className="sm:col-span-2 rounded-2xl border-2 border-border/70 bg-muted/20 p-4 space-y-4">
+                        <label className="flex cursor-pointer items-center gap-3">
+                          <Checkbox
+                            checked={saveNewAddress}
+                            onCheckedChange={(checked) => setSaveNewAddress(checked === true)}
+                            data-testid="checkout-save-address"
+                          />
+                          <span>
+                            <span className="block text-sm font-black text-foreground">Save this address</span>
+                            <span className="block text-xs font-bold text-muted-foreground">
+                              Use it faster during your next checkout.
+                            </span>
+                          </span>
+                        </label>
+                        {saveNewAddress && (
+                          <div>
+                            <Label htmlFor="address-label" className="text-xs font-black uppercase tracking-wider">
+                              Address label
+                            </Label>
+                            <Input
+                              id="address-label"
+                              value={newAddressLabel}
+                              maxLength={60}
+                              onChange={(event) => setNewAddressLabel(event.target.value)}
+                              placeholder="Home, Office, Farm…"
+                              className="mt-1.5 h-11 border-2 font-bold"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -414,6 +676,60 @@ export default function CheckoutPage() {
                     Select one or more farmers, then choose fulfilment for each selected farmer.
                     Unselected products will stay in your cart.
                   </p>
+                  {(shippingGroups?.length ?? 0) > 1 && (
+                    <div className="mb-6 rounded-2xl border-2 border-primary/25 bg-primary/5 p-5 space-y-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-base sm:text-lg font-black text-foreground">
+                            Fulfilment for selected sellers
+                          </h3>
+                          <p className="mt-1 text-sm font-bold text-muted-foreground">
+                            Choose once and apply the available option to every selected seller.
+                          </p>
+                        </div>
+                        <label className="flex cursor-pointer items-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-black">
+                          <Checkbox
+                            checked={selectedFarmerIds.length === shippingGroups?.length}
+                            onCheckedChange={(checked) => selectAllFarmers(checked === true)}
+                            data-testid="checkout-select-all-sellers"
+                          />
+                          Select all sellers
+                        </label>
+                      </div>
+                      <RadioGroup
+                        value={bulkFulfilment}
+                        onValueChange={(value) => {
+                          const mode = value as BulkFulfilment;
+                          setBulkFulfilment(mode);
+                          if (applyBulkToAll) applyBulkFulfilment(mode);
+                        }}
+                        className="grid gap-3 sm:grid-cols-2"
+                      >
+                        <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-border/70 bg-background p-4">
+                          <RadioGroupItem value="door_delivery" />
+                          <Truck className="h-5 w-5 text-primary" />
+                          <span className="font-black">Door Delivery</span>
+                        </label>
+                        <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-border/70 bg-background p-4">
+                          <RadioGroupItem value="collection" />
+                          <MapPin className="h-5 w-5 text-primary" />
+                          <span className="font-black">Collect from Farmers</span>
+                        </label>
+                      </RadioGroup>
+                      <label className="flex cursor-pointer items-center gap-3 text-sm font-black text-foreground">
+                        <Checkbox
+                          checked={applyBulkToAll}
+                          onCheckedChange={(checked) => {
+                            const enabled = checked === true;
+                            setApplyBulkToAll(enabled);
+                            if (enabled) applyBulkFulfilment(bulkFulfilment);
+                          }}
+                          data-testid="checkout-apply-fulfilment-all"
+                        />
+                        Apply this option to all selected sellers
+                      </label>
+                    </div>
+                  )}
                   <div className="space-y-6">
                     {shippingGroups?.map((group) => {
                       const isFarmerSelected = selectedFarmerIdSet.has(group.farmerId);
@@ -435,6 +751,9 @@ export default function CheckoutPage() {
                                         ? current
                                         : [...current, group.farmerId],
                                     );
+                                    if (applyBulkToAll) {
+                                      applyBulkFulfilment(bulkFulfilment, [group.farmerId]);
+                                    }
                                     return;
                                   }
                                   setSelectedFarmerIds((current) =>
@@ -545,10 +864,10 @@ export default function CheckoutPage() {
               )}
               <Button
                 className="ml-auto h-13 sm:h-14 px-8 text-base sm:text-lg font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg transition-transform hover:scale-[1.01]"
-                disabled={shippingQuotes.isPending || createQuote.isPending}
+                disabled={shippingQuotes.isPending || createQuote.isPending || saveAddress.isPending}
                 onClick={step === 1 ? continueToFulfilment : continueToPayment}
               >
-                {shippingQuotes.isPending || createQuote.isPending ? (
+                {shippingQuotes.isPending || createQuote.isPending || saveAddress.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     {step === 1 ? "Loading options…" : "Preparing payment…"}

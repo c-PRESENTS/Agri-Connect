@@ -18,6 +18,7 @@ import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-
 import type { Product, LocalNeed } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useCurrency } from "@/contexts/currency-context";
+import { useLiveLocation } from "@/contexts/live-location-context";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -165,6 +166,7 @@ export function LeafletFarmerMap({
 }: LeafletFarmerMapProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
+  const { location: liveLocation } = useLiveLocation();
   const markersRef = useRef<Record<string, L.Marker>>({});
   const [activeLayer, setActiveLayer] = useState<LayerKey>(tileStyle);
   const layerLabel = (key: LayerKey) => t(`map.layer_${key}`);
@@ -186,6 +188,14 @@ export function LeafletFarmerMap({
   const [postPanel, setPostPanel] = useState(false);
   const [form, setForm] = useState({ productName: "", quantity: "", unit: "kg", priceRange: "", addressLine: "", city: "Chelmsford", postcode: "", location: "Chelmsford", urgency: "medium" as "high" | "medium" | "low", buyerType: "individual" as any, buyerName: "", description: "" });
   const [postSuccess, setPostSuccess] = useState<LocalNeed | null>(null);
+
+  useEffect(() => {
+    if (!liveLocation) return;
+    const latlng: [number, number] = [liveLocation.latitude, liveLocation.longitude];
+    setUserPos(latlng);
+    setUserAccuracy(liveLocation.accuracyMeters);
+    setFlyTo(latlng);
+  }, [liveLocation]);
 
   const { data: localNeeds = [], refetch } = useQuery<LocalNeed[]>({
     queryKey: ["/api/local-needs"],

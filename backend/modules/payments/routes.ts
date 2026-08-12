@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "crypto";
-import type { Express, Request } from "express";
+import type { Express, Request, Response } from "express";
 import { z } from "zod";
 import { isAuthenticated } from "../../auth";
 import { authStorage } from "../../auth/storage";
@@ -24,6 +24,10 @@ import {
   resolveCheckoutFulfillmentQuote,
   resolveSellerPickupCoordinates,
 } from "../../shipping/quote-engine";
+import {
+  verifyCheckoutTurnstile,
+  type TurnstileVerification,
+} from "../../security/turnstile";
 
 interface PaymentRouteDeps {
   getUserId(req: Request): string | undefined;
@@ -52,6 +56,7 @@ const quoteSchema = z.object({
 
 const intentSchema = z.object({
   quoteId: z.string().uuid(),
+  captchaToken: z.string().min(1).max(2048),
   provider: z.enum(["stripe", "razorpay", "mock"]),
   simulatedMethod: z.enum(["card", "razorpay", "paypal"]).optional(),
   deliveryAddress: z.string().min(3).max(500).optional(),
@@ -65,7 +70,10 @@ const intentSchema = z.object({
     });
   }
 });
-const cashOrderSchema = z.object({ quoteId: z.string().uuid() });
+const cashOrderSchema = z.object({
+  quoteId: z.string().uuid(),
+  captchaToken: z.string().min(1).max(2048),
+});
 const clientConfirmationSchema = z.object({
   providerPaymentId: z.string().min(1).max(255),
   providerSessionId: z.string().min(1).max(255),
@@ -74,6 +82,19 @@ const clientConfirmationSchema = z.object({
 
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const orderNumber = () => `AGC${new Date().getFullYear().toString().slice(-2)}-${Math.floor(100000 + Math.random() * 900000)}`;
+
+function respondToCaptchaFailure(
+  verification: Exclude<TurnstileVerification, { success: true }>,
+  res: Response,
+): Response {
+  const unavailable = verification.code !== "captcha_invalid";
+  return res.status(unavailable ? 503 : 400).json({
+    error: unavailable
+      ? "Security verification is temporarily unavailable"
+      : "Complete the security verification again",
+    code: verification.code,
+  });
+}
 const cartFingerprint = (cart: Awaited<ReturnType<typeof storage.getCart>>) =>
   hash(
     cart.map((item) => [
@@ -145,6 +166,11 @@ function serializeQuote(quote: Awaited<ReturnType<typeof paymentRepository.getQu
 async function cashEligibility(quote: NonNullable<Awaited<ReturnType<typeof paymentRepository.getQuote>>>) {
   const data = quote.quoteData as QuoteData;
   const sellerIds = data.sellerIds ?? [];
+  const { marketplaceSellerVerified } = await import("../../seller-verification/capabilities");
+  const verified = await Promise.all(sellerIds.map((sellerId) => marketplaceSellerVerified(sellerId)));
+  if (verified.some((value) => !value)) {
+    return { available: false, reasonCode: "seller_marketplace_verification_required" };
+  }
   if (paymentRuntimeConfig.mode !== "live") {
     return {
       available: sellerIds.length > 0,
@@ -524,6 +550,8 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
           attemptId: usedQuote.attemptId,
         });
       }
+      const captcha = await verifyCheckoutTurnstile(input.captchaToken, req.ip);
+      if (!captcha.success) return respondToCaptchaFailure(captcha, res);
       if (quote.currency !== "GBP") {
         return res.status(409).json({ error: "Cash checkout is available for GBP orders only" });
       }
@@ -637,6 +665,8 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
           attemptId: usedQuote.attemptId,
         });
       }
+      const captcha = await verifyCheckoutTurnstile(input.captchaToken, req.ip);
+      if (!captcha.success) return respondToCaptchaFailure(captcha, res);
       const quoteData = quote.quoteData as QuoteData;
       const cart = await storage.getCart(userId);
       const selectedCart = selectQuotedCart(cart, quoteData);
@@ -693,7 +723,12 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         amountMinor: quote.totalMinor.toString(),
         currency: quote.currency as "GBP" | "INR",
         idempotencyReference,
-        requestFingerprint: hash({ input, quoteId: quote.id }),
+        requestFingerprint: hash({
+          provider: input.provider,
+          simulatedMethod: input.simulatedMethod,
+          scenario: input.scenario,
+          quoteId: quote.id,
+        }),
         expiresAt: new Date(Date.now() + paymentRuntimeConfig.reservationTtlMinutes * 60_000),
       });
       const sellerAccounts =

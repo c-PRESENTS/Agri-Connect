@@ -56,6 +56,9 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   // Business profile fields
   role: text("role").notNull().default("buyer"),
+  // A user keeps this capability after returning to buyer mode, so the same
+  // identity can safely move between buyer and seller experiences.
+  sellerEnabled: boolean("seller_enabled").notNull().default(false),
   name: text("name"),
   avatar: text("avatar"),
   location: text("location"),

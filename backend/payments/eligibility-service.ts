@@ -4,6 +4,7 @@ import { providerRegistry } from "./provider-registry";
 import type { ProviderName, VerifiedProviderCapabilities } from "./types";
 import { hasStripeTestSecretKey, hasStripeWebhookSecret } from "./stripe";
 import { hasRazorpayTestCredentials, hasRazorpayWebhookSecret } from "./razorpay";
+import { marketplaceSellerVerified } from "../seller-verification/capabilities";
 
 export interface PaymentEligibility {
   provider: ProviderName;
@@ -22,6 +23,10 @@ export class EligibilityService {
     options: { allowUiPreview?: boolean } = {},
   ): Promise<PaymentEligibility> {
     const reasons: string[] = [];
+    if (provider !== "mock" && sellerIds.length) {
+      const marketplaceVerification = await Promise.all(sellerIds.map((sellerId) => marketplaceSellerVerified(sellerId)));
+      if (marketplaceVerification.some((verified) => !verified)) reasons.push("seller_marketplace_verification_required");
+    }
     if (!paymentRuntimeConfig.supportedCurrencies.includes(currency)) reasons.push("currency_not_supported");
     if (provider === "razorpay" && currency !== "INR") reasons.push("razorpay_inr_only");
     if (!providerRegistry.has(provider)) reasons.push("provider_not_registered");
@@ -219,6 +224,7 @@ export class EligibilityService {
       if (
         options.allowUiPreview &&
         paymentRuntimeConfig.uiPreviewEnabled &&
+        !reasons.includes("seller_marketplace_verification_required") &&
         provider !== "mock" &&
         providerRegistry.has(provider)
       ) {

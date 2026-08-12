@@ -15,6 +15,8 @@ const NO_RAIL_ROUTES = ["/login"];
 const NO_MARKET_PANEL_ROUTES = [
   "/",
   "/map",
+  "/marketplace",
+  "/regional-organisation",
   "/login",
   "/about",
   "/support",

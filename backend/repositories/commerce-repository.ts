@@ -25,6 +25,7 @@ function hydrateProduct(row: Record<string, any>): Product {
     farmerLongitude: row.seller_longitude == null ? 0 : Number(row.seller_longitude),
     farmerRating:
       row.seller_rating == null ? stored.farmerRating : Number(row.seller_rating),
+    regionId: row.region_id ?? stored.regionId,
   };
 }
 
@@ -74,6 +75,7 @@ export class CommerceRepository {
           | "farmerRating"
         >
       >();
+      const farmerRegionIds = new Map<string, string>();
       for (const product of products) {
         if (!catalogFarmers.has(product.farmerId)) {
           catalogFarmers.set(product.farmerId, {
@@ -107,14 +109,36 @@ export class CommerceRepository {
             farmer.farmerRating,
           ],
         );
+        const region = await client.query(
+          `SELECT id,name FROM market_regions WHERE active=true AND lower(name)=lower($1) LIMIT 1`,
+          [farmer.farmerLocation],
+        );
+        if (region.rows[0]) {
+          farmerRegionIds.set(farmer.farmerId, region.rows[0].id);
+          await client.query(
+            `INSERT INTO seller_region_assignments
+               (seller_id,organisation_id,region_id,status,can_publish,can_fulfil,approved_at,effective_at,reason)
+             VALUES ($1,'agriconnect-platform',$2,'active',true,true,now(),now(),'Approved catalogue seller')
+             ON CONFLICT (seller_id,region_id) DO UPDATE SET
+               status='active',can_publish=true,can_fulfil=true,updated_at=now()`,
+            [farmer.farmerId, region.rows[0].id],
+          );
+        }
       }
       for (const product of products) {
+        const regionId = farmerRegionIds.get(product.farmerId) ?? null;
+        const persistedProduct = regionId ? { ...product, regionId } : product;
         await client.query(
           `INSERT INTO commerce_products
              (id, name, description, price_minor, currency, unit, stock, category_id,
-              subcategory_id, farmer_id, product_data, created_at, updated_at)
-           VALUES ($1,$2,$3,$4,'GBP',$5,$6,$7,$8,$9,$10::jsonb,$11,$11)
-           ON CONFLICT (id) DO NOTHING`,
+              subcategory_id, farmer_id, product_data, region_id, created_at, updated_at)
+           VALUES ($1,$2,$3,$4,'GBP',$5,$6,$7,$8,$9,$10::jsonb,$11,$12,$12)
+           ON CONFLICT (id) DO UPDATE SET
+             region_id=COALESCE(commerce_products.region_id,EXCLUDED.region_id),
+             product_data=CASE WHEN commerce_products.region_id IS NULL AND EXCLUDED.region_id IS NOT NULL
+               THEN jsonb_set(commerce_products.product_data,'{regionId}',to_jsonb(EXCLUDED.region_id::text),true)
+               ELSE commerce_products.product_data END,
+             updated_at=now()`,
           [
             product.id,
             product.name,
@@ -125,7 +149,8 @@ export class CommerceRepository {
             product.categoryId,
             product.subcategoryId,
             product.farmerId,
-            JSON.stringify(product),
+            JSON.stringify(persistedProduct),
+            regionId,
             product.createdAt,
           ],
         );
@@ -149,6 +174,25 @@ export class CommerceRepository {
     return result.rows.map(hydrateProduct);
   }
 
+  async listApprovedMarketplaceProducts(): Promise<Product[]> {
+    const result = await pool.query(
+      `SELECT p.*, ${SELLER_LOCATION_SELECT},r.name AS region_name
+         FROM commerce_products p
+         JOIN seller_region_assignments sra ON sra.seller_id=p.farmer_id AND sra.region_id=p.region_id
+         JOIN market_regions r ON r.id=p.region_id AND r.active=true
+         LEFT JOIN users u ON u.id=p.farmer_id
+        WHERE sra.status='active' AND sra.can_publish=true
+          AND (sra.effective_at IS NULL OR sra.effective_at<=now())
+          AND (sra.expires_at IS NULL OR sra.expires_at>now())
+          AND ((u.auth_method='catalog_seed' AND u.is_verified=true) OR EXISTS (
+            SELECT 1 FROM seller_verification_cases svc WHERE svc.seller_id=p.farmer_id
+              AND svc.status='verified' AND (svc.expires_at IS NULL OR svc.expires_at>now())
+          ))
+        ORDER BY p.created_at DESC,p.id`,
+    );
+    return result.rows.map((row: Record<string, any>) => ({ ...hydrateProduct(row), regionName: row.region_name }));
+  }
+
   async getProduct(id: string): Promise<Product | undefined> {
     const result = await pool.query(
       `SELECT p.*, ${SELLER_LOCATION_SELECT}
@@ -164,13 +208,13 @@ export class CommerceRepository {
     const result = await pool.query(
       `INSERT INTO commerce_products
          (id, name, description, price_minor, currency, unit, stock, category_id,
-          subcategory_id, farmer_id, product_data, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,'GBP',$5,$6,$7,$8,$9,$10::jsonb,$11,now())
+          subcategory_id, farmer_id, product_data, region_id, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,'GBP',$5,$6,$7,$8,$9,$10::jsonb,$11,$12,now())
        ON CONFLICT (id) DO UPDATE SET
          name=EXCLUDED.name, description=EXCLUDED.description, price_minor=EXCLUDED.price_minor,
          unit=EXCLUDED.unit, stock=EXCLUDED.stock, category_id=EXCLUDED.category_id,
          subcategory_id=EXCLUDED.subcategory_id, farmer_id=EXCLUDED.farmer_id,
-         product_data=EXCLUDED.product_data, updated_at=now()
+         product_data=EXCLUDED.product_data, region_id=EXCLUDED.region_id, updated_at=now()
        RETURNING *`,
       [
         product.id,
@@ -183,6 +227,7 @@ export class CommerceRepository {
         product.subcategoryId,
         product.farmerId,
         JSON.stringify(product),
+        product.regionId ?? null,
         product.createdAt,
       ],
     );

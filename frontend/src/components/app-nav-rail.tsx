@@ -53,7 +53,7 @@ const ALL_SERVICES = [
   { id: "cat-processed",path: "/?category=processed",       icon: Package,        label: "Processed",  public: true, category: "processed"       },
   { id: "cat-specialty",path: "/?category=specialty",       icon: Award,          label: "Specialty",  public: true, category: "specialty"       },
   { id: "cat-other",    path: "/?category=other-agri",      icon: Wheat,          label: "Other Agri", public: true, category: "other-agri"      },
-  { id: "cat-super",    path: "/?category=supermarket",     icon: Store,          label: "Complete Supermarket", public: true, category: "supermarket"     },
+  { id: "cat-super",    path: "/marketplace?category=supermarket", icon: Store, label: "Complete Supermarket", public: true, category: "supermarket" },
   { id: "cat-dietary",  path: "/?category=dietary",         icon: Salad,          label: "Dietary",    public: true, category: "dietary"         },
   { id: "cat-modern",   path: "/?category=modern-farming",  icon: Sparkles,       label: "Modern",     public: true, category: "modern-farming"  },
   { id: "cat-services", path: "/?category=services",        icon: Briefcase,      label: "Services",   public: true, category: "services"        },
@@ -91,6 +91,7 @@ const COMING_SOON_SERVICE_IDS = new Set([
   "logistics",
   "logistics-collaboration",
   "schemes",
+  "cat-dietary",
 ]);
 
 const LS_ORDER    = "agri-nav-order";

@@ -10,6 +10,7 @@ import { CategoryCarousel } from "@/components/category-carousel";
 import { LiveSellersRail } from "@/components/live-sellers-rail";
 import { ResizableSplit } from "@/components/resizable-split";
 import { TrustIndicators } from "@/components/trust-indicators";
+import { DietaryComingSoon } from "@/components/dietary-coming-soon";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 import { useCart } from "@/hooks/use-cart";
@@ -78,7 +79,6 @@ export default function Home() {
   const { items: cartItems, itemCount: cartCount, addItem, updateItem, removeItem } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeDietaryFilter, setActiveDietaryFilter] = useState<string | null>(null);
 
   const search = useSearch();
   const rawSearch = search || (typeof window !== "undefined" ? window.location.search : "");
@@ -97,8 +97,7 @@ export default function Home() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const requestedSubcategory =
-    activeDietaryFilter || urlSubcategory || activeSubcategory || selectedSubcategory;
+  const requestedSubcategory = urlSubcategory || activeSubcategory || selectedSubcategory;
   const effectiveSubcategory = useMemo(() => {
     if (!selectedCategory || !requestedSubcategory) return undefined;
     const category = getShoppableCategories().find(
@@ -269,6 +268,7 @@ export default function Home() {
         <SidebarInset className="flex flex-col flex-1 min-w-0">
           <TopNavigation
             cartItemCount={cartCount}
+            searchValue={searchQuery}
             onSearch={handleSearch}
             onHome={handleHome}
           />
@@ -309,31 +309,24 @@ export default function Home() {
                   transition={{ duration: 0.15 }}
                   className="h-full flex flex-col"
                 >
-                  <DietaryFilterStrip
-                    active={activeDietaryFilter}
-                    onChange={(diet) => {
-                      setActiveDietaryFilter(diet);
-                      if (diet) {
-                        setSelectedCategory("dietary");
-                        setSelectedSubcategory(diet);
-                      } else {
-                        setSelectedSubcategory(undefined);
+                  {selectedCategory === "dietary" ? (
+                    <DietaryComingSoon products={products} />
+                  ) : (
+                    <ResizableSplit
+                      left={
+                        <ProductShowcase
+                          categoryId={selectedCategory || null}
+                          subcategoryId={effectiveSubcategory || null}
+                          activeSection={activeSection}
+                          searchQuery={searchQuery}
+                          onAddToCart={handleAddToCart}
+                          onProductClick={handleProductClick}
+                          onFarmerClick={handleFarmerClick}
+                        />
                       }
-                    }}
-                  />
-                  <ResizableSplit
-                    left={
-                      <ProductShowcase
-                        categoryId={selectedCategory || null}
-                        subcategoryId={effectiveSubcategory || null}
-                        activeSection={activeSection}
-                        onAddToCart={handleAddToCart}
-                        onProductClick={handleProductClick}
-                        onFarmerClick={handleFarmerClick}
-                      />
-                    }
-                    right={<LiveSellersRail mapHeight={400} listHeight={460} />}
-                  />
+                      right={<LiveSellersRail mapHeight={400} listHeight={460} />}
+                    />
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

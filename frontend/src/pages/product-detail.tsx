@@ -35,6 +35,7 @@ import {
   getProductBrowseContext,
 } from "@/lib/product-navigation";
 import { useCurrency } from "@/contexts/currency-context";
+import { ProductConversation } from "@/components/product-conversation";
 
 const REVIEWER_NAMES = [
   "Priya Sharma", "James O'Brien", "Mei Lin", "Tariq Hassan", "Sophie Adeyemi",
@@ -587,9 +588,19 @@ export default function ProductDetailPage() {
                     <span className="truncate">Verified</span>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="text-xs h-8 px-2 sm:px-3 flex-none" onClick={() => toast({ title: t("common.loading") })} data-testid="button-contact-seller">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 flex-none px-2 text-xs sm:px-3"
+                  onClick={() => {
+                    document.getElementById("product-conversation")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    window.setTimeout(() => document.getElementById("product-conversation-message")?.focus(), 450);
+                  }}
+                  aria-label={user?.id === product.farmerId ? "View product conversations" : `Message ${product.farmerName} about ${product.name}`}
+                  data-testid="button-contact-seller"
+                >
                   <MessageSquare className="h-3.5 w-3.5 sm:mr-1.5" />
-                  <span className="hidden sm:inline">{t("product_detail.verified_seller")}</span>
+                  <span className="hidden sm:inline">{user?.id === product.farmerId ? "View conversations" : "Message farmer"}</span>
                 </Button>
               </div>
               <div className="sm:hidden flex items-center gap-1 text-[11px] text-muted-foreground -mt-1">
@@ -599,9 +610,9 @@ export default function ProductDetailPage() {
 
               <div className="grid grid-cols-3 gap-2 text-center">
                 {[
-                  { label: t("seller_profile.response_time"), value: "98%" },
-                  { label: t("product_detail.standard_delivery"), value: "96%" },
-                  { label: t("product_detail.subscription_title"), value: "82%" },
+                  { label: "Messaging", value: "Available" },
+                  { label: "Current stock", value: `${product.stock} ${product.unit}` },
+                  { label: "Distance", value: product.distance ? `${product.distance.toFixed(1)} km` : "Location shown" },
                 ].map(({ label, value }) => (
                   <div key={label} className="bg-background/70 rounded-xl p-2 border border-border/30">
                     <div className="text-sm font-bold text-primary">{value}</div>
@@ -898,6 +909,8 @@ export default function ProductDetailPage() {
             </div>
           </aside>
         </div>
+
+        <ProductConversation product={product} />
 
         {/* FREQUENTLY BOUGHT TOGETHER — Amazon-style row */}
         {relatedProducts.filter(p => p.id !== product.id).length >= 2 && (

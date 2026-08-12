@@ -9,6 +9,7 @@ import {
   Salad, Factory, Leaf, Briefcase, Sparkles, Grid3X3,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 
 interface AppItem {
   id: string;
@@ -18,11 +19,12 @@ interface AppItem {
   fallbackLabel: string;
   color: string;
   public: boolean;
+  comingSoon?: boolean;
 }
 
 const ALL_APPS: AppItem[] = [
   { id: "home",          path: "/",                       icon: Home,            label: "nav.home",             fallbackLabel: "Home",             color: "from-green-500 to-emerald-600",    public: true },
-  { id: "marketplace",   path: "/?category=daily-needs",  icon: ShoppingBasket,  label: "home.marketplace",      fallbackLabel: "Marketplace",      color: "from-blue-500 to-indigo-600",      public: true },
+  { id: "marketplace",   path: "/marketplace",             icon: ShoppingBasket,  label: "home.marketplace",      fallbackLabel: "Marketplace",      color: "from-blue-500 to-indigo-600",      public: true },
   { id: "smart-map",     path: "/map",                    icon: Map,             label: "home.smart_map",        fallbackLabel: "Smart Map",        color: "from-cyan-500 to-teal-600",        public: true },
   { id: "land",          path: "/land-leasing",            icon: Landmark,        label: "land.title",            fallbackLabel: "Land",             color: "from-amber-500 to-orange-600",     public: true },
   { id: "share",         path: "/share-care",              icon: HeartHandshake,  label: "share.title",           fallbackLabel: "Share",            color: "from-rose-500 to-pink-600",        public: true },
@@ -31,12 +33,13 @@ const ALL_APPS: AppItem[] = [
   { id: "schemes",       path: "/government-schemes",      icon: FileText,        label: "home.govt_schemes",     fallbackLabel: "Govt Schemes",     color: "from-emerald-500 to-green-600",    public: true },
   { id: "learn",         path: "/farmers-help",            icon: Sprout,          label: "help.title",            fallbackLabel: "Help",             color: "from-lime-500 to-green-600",       public: true },
   { id: "modern-farming",path: "/?category=modern-farming",icon: Sparkles,        label: "category.modern",       fallbackLabel: "Modern",           color: "from-yellow-500 to-amber-600",     public: true },
-  { id: "dietary",       path: "/?category=dietary",       icon: Salad,           label: "category.dietary",      fallbackLabel: "Dietary",          color: "from-red-500 to-rose-600",        public: true },
+  { id: "dietary",       path: "/?category=dietary",       icon: Salad,           label: "category.dietary",      fallbackLabel: "Dietary",          color: "from-red-500 to-rose-600",        public: true, comingSoon: true },
   { id: "supermarket",   path: "/?category=supermarket",   icon: Store,           label: "home.supermarket",      fallbackLabel: "Supermarket",      color: "from-orange-500 to-red-600",      public: true },
   { id: "commercial",    path: "/?category=commercial-crops", icon: Factory,      label: "category.commercial",   fallbackLabel: "Commercial",       color: "from-stone-500 to-neutral-600",   public: true },
   { id: "bio",           path: "/?category=bio-products",  icon: Leaf,            label: "category.bio",          fallbackLabel: "Bio",              color: "from-teal-500 to-emerald-600",    public: true },
   { id: "cart",          path: "/cart",                    icon: ShoppingCart,    label: "nav.cart",             fallbackLabel: "Cart",             color: "from-pink-500 to-rose-600",       public: true },
   { id: "dashboard",     path: "/dashboard",               icon: LayoutDashboard, label: "nav.dashboard",        fallbackLabel: "Dashboard",        color: "from-indigo-500 to-violet-600",   public: false },
+  { id: "regional-manager", path: "/regional-organisation", icon: Briefcase,       label: "regional.manager",    fallbackLabel: "Regional Manager", color: "from-emerald-600 to-teal-700",     public: false },
   { id: "sell",          path: "/dashboard/photo-sell",     icon: Camera,          label: "home.sell_list",        fallbackLabel: "Sell / List",      color: "from-amber-500 to-yellow-600",    public: false },
   { id: "settings",      path: "/settings",                 icon: Settings,        label: "nav.settings",         fallbackLabel: "Settings",         color: "from-gray-500 to-slate-600",      public: false },
 ];
@@ -51,6 +54,7 @@ export function AppLauncher({ open, onClose, railWidth }: AppLauncherProps) {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
+  const { data: regionalAccess } = useQuery<{ hasAccess: boolean }>({ queryKey: ["/api/organisation/regional-marketplace/access"], enabled: isAuthenticated, retry: false });
 
   const handleLaunch = useCallback((app: AppItem) => {
     if (app.path.startsWith("/?category=") || app.path === "/") {
@@ -61,7 +65,7 @@ export function AppLauncher({ open, onClose, railWidth }: AppLauncherProps) {
     onClose();
   }, [setLocation, onClose]);
 
-  const visible = ALL_APPS.filter(a => a.public || isAuthenticated);
+  const visible = ALL_APPS.filter((app) => (app.public || isAuthenticated) && (app.id !== "regional-manager" || regionalAccess?.hasAccess));
 
   useEffect(() => {
     if (!open) return;
@@ -121,8 +125,13 @@ export function AppLauncher({ open, onClose, railWidth }: AppLauncherProps) {
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleLaunch(app)}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/40 hover:bg-muted/80 border border-border/40 hover:border-primary/30 transition-all"
+                    className="relative flex flex-col items-center gap-1.5 rounded-xl border border-border/40 bg-muted/40 p-3 transition-all hover:border-primary/30 hover:bg-muted/80"
                   >
+                    {app.comingSoon && (
+                      <span className="absolute right-1 top-1 rounded-full bg-amber-400 px-1.5 py-0.5 text-[8px] font-black uppercase leading-none text-black">
+                        Soon
+                      </span>
+                    )}
                     <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${app.color} flex items-center justify-center shadow-sm`}>
                       <Icon className="h-5 w-5 text-white" />
                     </div>

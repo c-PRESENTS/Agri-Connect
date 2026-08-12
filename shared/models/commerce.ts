@@ -28,6 +28,7 @@ export const commerceProducts = pgTable(
     categoryId: varchar("category_id").notNull(),
     subcategoryId: varchar("subcategory_id").notNull(),
     farmerId: varchar("farmer_id").notNull(),
+    regionId: varchar("region_id"),
     productData: jsonb("product_data").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

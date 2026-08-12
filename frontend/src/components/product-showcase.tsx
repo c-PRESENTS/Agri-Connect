@@ -21,6 +21,7 @@ interface ProductShowcaseProps {
   categoryId: string | null;
   subcategoryId: string | null;
   activeSection: string | null;
+  searchQuery?: string;
   onAddToCart?: (product: Product) => void;
   onProductClick?: (product: Product) => void;
   onSectionVisible?: (sectionTitle: string) => void;
@@ -43,10 +44,28 @@ interface ProductSection {
   products: Product[];
 }
 
+function HighlightedProductName({ name, query }: { name: string; query: string }) {
+  const term = query.trim();
+  const matchIndex = term ? name.toLocaleLowerCase().indexOf(term.toLocaleLowerCase()) : -1;
+
+  if (matchIndex < 0) return <>{name}</>;
+
+  return (
+    <>
+      {name.slice(0, matchIndex)}
+      <mark className="rounded bg-amber-300 px-0.5 text-black">
+        {name.slice(matchIndex, matchIndex + term.length)}
+      </mark>
+      {name.slice(matchIndex + term.length)}
+    </>
+  );
+}
+
 export function ProductShowcase({
   categoryId,
   subcategoryId,
   activeSection,
+  searchQuery = "",
   onAddToCart,
   onProductClick,
   onSectionVisible,
@@ -61,15 +80,23 @@ export function ProductShowcase({
   const queryParams = new URLSearchParams();
   if (categoryId) queryParams.set("categoryId", categoryId);
   if (subcategoryId) queryParams.set("subcategoryId", subcategoryId);
+  if (searchQuery.trim()) queryParams.set("search", searchQuery.trim());
   const queryString = queryParams.toString();
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: [queryString ? `/api/products?${queryString}` : "/api/products"],
   });
+  const normalizedSearch = searchQuery.trim().toLocaleLowerCase();
 
   // Every section contains complete canonical API products. Taxonomy labels
   // without a matching backend product never become clickable commerce cards.
   const content = useMemo<ProductSection[]>(() => {
+    if (normalizedSearch) {
+      return products.length > 0
+        ? [{ title: t("search.results", "Search Results"), products }]
+        : [];
+    }
+
     if (subcategoryId) {
       const deepContent = getSubSubcategories(subcategoryId);
       if (deepContent.length === 0) {
@@ -159,9 +186,10 @@ export function ProductShowcase({
     return products.length > 0
       ? [{ title: t("product_showcase.available_products", "Available Products"), products }]
       : [];
-  }, [subcategoryId, categoryId, products, t]);
+  }, [subcategoryId, categoryId, normalizedSearch, products, t]);
 
   const displayName = useMemo(() => {
+    if (searchQuery.trim()) return `Search results for “${searchQuery.trim()}”`;
     if (subcategoryId) {
       for (const cat of getShoppableCategories()) {
         const sub = cat.subcategories.find(s => s.id === subcategoryId);
@@ -173,7 +201,7 @@ export function ProductShowcase({
       if (cat) return cat.name;
     }
     return "Products";
-  }, [subcategoryId, categoryId]);
+  }, [subcategoryId, categoryId, searchQuery]);
 
   // Create stable ref callback per section title
   const createRefCallback = useCallback((title: string) => {
@@ -220,7 +248,7 @@ export function ProductShowcase({
     }
   }, []);
 
-  // Scroll to top when subcategoryId or categoryId changes so user lands at top of that category slide
+  // Scroll to top when browsing context changes so search results start with the best match.
   useEffect(() => {
     if (containerRef.current) {
       const viewport = containerRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
@@ -230,7 +258,7 @@ export function ProductShowcase({
         containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [subcategoryId, categoryId]);
+  }, [subcategoryId, categoryId, normalizedSearch]);
 
   // Scroll to section when activeSection changes from nav panel click or URL navigation
   useEffect(() => {
@@ -274,7 +302,7 @@ export function ProductShowcase({
   }, [content, onSectionVisible]);
 
   // Show placeholder when no category selected
-  if (!categoryId && !subcategoryId) {
+  if (!categoryId && !subcategoryId && !normalizedSearch) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center max-w-md">
@@ -391,6 +419,9 @@ export function ProductShowcase({
               <div data-product-grid="showcase" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
                 {section.products.map((product, itemIdx) => {
                   const imageResolution = resolveProductImageForProduct(product);
+                  const isNameMatch = Boolean(
+                    normalizedSearch && product.name.toLocaleLowerCase().includes(normalizedSearch),
+                  );
                   return (
                     <motion.div
                       key={product.id}
@@ -398,13 +429,20 @@ export function ProductShowcase({
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: sectionIdx * 0.02 + itemIdx * 0.01, duration: 0.15 }}
                     >
-                      <Card data-product-tile data-product-name={product.name.toLowerCase()} className="overflow-hidden group hover:shadow-xl border-2 border-border/80 bg-card hover:border-primary/60 transition-all duration-200 active:scale-[0.98] cursor-pointer scroll-mt-20 rounded-2xl shadow-md flex flex-col justify-between h-full" onClick={() => onProductClick?.(product)}>
+                      <Card data-product-tile data-product-name={product.name.toLowerCase()} className={`overflow-hidden group hover:shadow-xl border-2 bg-card hover:border-primary/60 transition-all duration-200 active:scale-[0.98] cursor-pointer scroll-mt-20 rounded-2xl shadow-md flex flex-col justify-between h-full ${
+                        isNameMatch ? "border-amber-400 ring-2 ring-amber-300/60" : "border-border/80"
+                      }`} onClick={() => onProductClick?.(product)}>
                         {/* Product Image */}
                         <div className="relative aspect-square bg-muted/20 overflow-hidden">
                           <SafeProductImage src={imageResolution.src} fallbackSrc={imageResolution.fallbackSrc} alt={`${product.name} product image`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           
                           {/* Badges */}
                           <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                            {isNameMatch && (
+                              <Badge className="text-xs px-2.5 py-1 bg-amber-400 text-black font-black uppercase tracking-wider border-0 shadow-md rounded-lg">
+                                Search match
+                              </Badge>
+                            )}
                             {product.isOrganic && (
                               <Badge className="text-xs px-2.5 py-1 bg-green-700 text-white font-black uppercase tracking-wider border-0 shadow-md rounded-lg">
                                 {t("product.org_short")}
@@ -433,7 +471,9 @@ export function ProductShowcase({
                         {/* Product Info */}
                         <CardContent className="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-3">
                           <div>
-                            <h3 className="font-black text-base sm:text-lg text-foreground line-clamp-2 leading-tight mb-2 group-hover:text-primary transition-colors tracking-tight">{product.name}</h3>
+                            <h3 className="font-black text-base sm:text-lg text-foreground line-clamp-2 leading-tight mb-2 group-hover:text-primary transition-colors tracking-tight">
+                              <HighlightedProductName name={product.name} query={searchQuery} />
+                            </h3>
 
                             {/* Price & Rating */}
                             <div className="flex items-baseline justify-between gap-2 my-2 flex-wrap">

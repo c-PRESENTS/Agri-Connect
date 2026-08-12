@@ -1,0 +1,30 @@
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { MapPinned, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+type Assignment = { id: string; sellerName: string; regionName: string; countryCode: string; organisationName: string | null; status: string; requestedAt: string };
+type Region = { id: string; name: string; countryCode: string; type: string };
+
+export function OperatorRegionalMarketplace({ organisationMode = false }: { organisationMode?: boolean }) {
+  const { toast } = useToast();
+  const assignmentsEndpoint = organisationMode ? "/api/organisation/regional-marketplace/assignments" : "/api/operator/regional-marketplace/assignments";
+  const [target, setTarget] = useState({ regionId: "", productName: "", categoryId: "", subcategoryId: "" });
+  const { data: assignments = [], isError } = useQuery<Assignment[]>({ queryKey: [assignmentsEndpoint] });
+  const { data: regions = [] } = useQuery<Region[]>({ queryKey: ["/api/marketplace/regions"] });
+  const review = useMutation({ mutationFn: async ({ id, status }: { id: string; status: "active" | "rejected" | "suspended" }) => (await apiRequest("POST", `/api/operator/regional-marketplace/assignments/${id}/review`, { status, reason: status === "active" ? "Approved for regional marketplace operations." : "Regional marketplace access was not approved.", canPublish: status === "active", canFulfil: status === "active" })).json(), onSuccess: () => { queryClient.invalidateQueries({ queryKey: [assignmentsEndpoint] }); toast({ title: "Regional assignment updated" }); } });
+  const createTarget = useMutation({ mutationFn: async () => (await apiRequest("POST", "/api/operator/regional-marketplace/targets", { ...target, minimumActiveListings: 1 })).json(), onSuccess: () => { setTarget({ regionId: "", productName: "", categoryId: "", subcategoryId: "" }); toast({ title: "Regional product target saved" }); } });
+  const scan = useMutation({ mutationFn: async () => (await apiRequest("POST", "/api/operator/regional-marketplace/scan")).json() as Promise<{ opened: number; completed: number }>, onSuccess: (result) => toast({ title: "Opportunity scan complete", description: `${result.opened} opened · ${result.completed} completed` }) });
+  if (isError) return null;
+  return <Card className="mt-5"><CardHeader><div className="flex flex-wrap items-center justify-between gap-2"><div><CardTitle className="flex items-center gap-2"><MapPinned className="h-5 w-5 text-emerald-600" />Regional marketplace operations</CardTitle><p className="mt-1 text-sm text-muted-foreground">Approve sellers only for regions assigned to your organisation.</p></div>{!organisationMode && <Button variant="outline" onClick={() => scan.mutate()} disabled={scan.isPending}><RefreshCw className={`mr-2 h-4 w-4 ${scan.isPending ? "animate-spin" : ""}`} />Run opportunity scan</Button>}</div></CardHeader><CardContent className="space-y-6">
+    <section><h3 className="mb-3 font-black">Seller region requests</h3><div className="space-y-2">{assignments.map((assignment) => <div key={assignment.id} className="flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center"><div className="flex-1"><div className="flex items-center gap-2"><strong>{assignment.sellerName}</strong><Badge variant="outline">{assignment.status}</Badge></div><p className="text-xs text-muted-foreground">{assignment.regionName}, {assignment.countryCode}{assignment.organisationName ? ` · ${assignment.organisationName}` : " · AgriConnect managed"}</p></div><div className="flex gap-2"><Button size="sm" disabled={review.isPending} onClick={() => review.mutate({ id: assignment.id, status: "active" })}><ShieldCheck className="mr-1 h-4 w-4" />Approve</Button><Button size="sm" variant="outline" disabled={review.isPending} onClick={() => review.mutate({ id: assignment.id, status: "rejected" })}><XCircle className="mr-1 h-4 w-4" />Reject</Button></div></div>)}{assignments.length === 0 && <p className="text-sm text-muted-foreground">No regional seller requests.</p>}</div></section>
+    {!organisationMode && <section className="border-t pt-5"><h3 className="font-black">Regional catalogue target</h3><p className="mb-3 text-xs text-muted-foreground">Configure products that should be present in a marketplace. A gap creates one claimable seller opportunity.</p><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><div><Label>Region</Label><Select value={target.regionId} onValueChange={(regionId) => setTarget({ ...target, regionId })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{regions.filter((region) => !["country", "state", "province"].includes(region.type)).map((region) => <SelectItem key={region.id} value={region.id}>{region.name}</SelectItem>)}</SelectContent></Select></div><div><Label>Product</Label><Input value={target.productName} onChange={(event) => setTarget({ ...target, productName: event.target.value })} placeholder="Tomatoes" /></div><div><Label>Category ID</Label><Input value={target.categoryId} onChange={(event) => setTarget({ ...target, categoryId: event.target.value })} /></div><div><Label>Subcategory ID</Label><Input value={target.subcategoryId} onChange={(event) => setTarget({ ...target, subcategoryId: event.target.value })} /></div></div><Button className="mt-3" disabled={!target.regionId || !target.productName || !target.categoryId || !target.subcategoryId || createTarget.isPending} onClick={() => createTarget.mutate()}>Save target</Button></section>}
+  </CardContent></Card>;
+}
