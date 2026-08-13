@@ -14,6 +14,7 @@ import { regions } from "@/lib/categories";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useCurrency } from "@/contexts/currency-context";
+import { hasValidCoordinates } from "@/lib/public-map-location";
 
 const REGION_SOURCE_KEY = "agriconnect-region-source";
 export const LIVE_LOCATION_EVENT = "agriconnect-live-location-changed";
@@ -47,19 +48,44 @@ const LiveLocationContext = createContext<LiveLocationContextValue | null>(null)
 function profileFallback(user: User | null): LiveLocation | null {
   if (
     !user?.location ||
-    user.latitude == null ||
-    user.longitude == null ||
-    !Number.isFinite(user.latitude) ||
-    !Number.isFinite(user.longitude)
+    !hasValidCoordinates(user.latitude, user.longitude)
   ) return null;
   return {
-    latitude: user.latitude,
-    longitude: user.longitude,
+    latitude: user.latitude as number,
+    longitude: user.longitude as number,
     accuracyMeters: null,
     label: user.location,
     countryCode: null,
     updatedAt: user.updatedAt?.toString() ?? new Date().toISOString(),
     source: "profile",
+  };
+}
+
+function normalizeServerLocation(value: unknown): LiveLocation | null {
+  if (!value || typeof value !== "object") return null;
+  const candidate = value as Record<string, unknown>;
+  if (!hasValidCoordinates(candidate.latitude, candidate.longitude)) return null;
+
+  const accuracyMeters = typeof candidate.accuracyMeters === "number" &&
+    Number.isFinite(candidate.accuracyMeters) &&
+    candidate.accuracyMeters >= 0
+    ? candidate.accuracyMeters
+    : null;
+
+  return {
+    latitude: candidate.latitude as number,
+    longitude: candidate.longitude as number,
+    accuracyMeters,
+    label: typeof candidate.label === "string" && candidate.label.trim()
+      ? candidate.label.trim()
+      : "Current device location",
+    countryCode: typeof candidate.countryCode === "string" && candidate.countryCode.trim()
+      ? candidate.countryCode.trim().toUpperCase()
+      : null,
+    updatedAt: typeof candidate.updatedAt === "string" && candidate.updatedAt
+      ? candidate.updatedAt
+      : new Date().toISOString(),
+    source: "device",
   };
 }
 
@@ -87,8 +113,9 @@ export function LiveLocationProvider({ children }: { children: ReactNode }) {
   const latestLocationRef = useRef<LiveLocation | null>(null);
   const lastServerSyncRef = useRef(0);
 
-  const applyServerLocation = useCallback((serverLocation: Omit<LiveLocation, "source">) => {
-    const next: LiveLocation = { ...serverLocation, source: "device" };
+  const applyServerLocation = useCallback((serverLocation: unknown) => {
+    const next = normalizeServerLocation(serverLocation);
+    if (!next) throw new Error("Live location response contained invalid coordinates.");
     latestLocationRef.current = next;
     setLocation(next);
     setStatus("active");
@@ -117,6 +144,11 @@ export function LiveLocationProvider({ children }: { children: ReactNode }) {
   const syncPosition = useCallback(async (position: GeolocationPosition) => {
     const now = Date.now();
     const { latitude, longitude, accuracy } = position.coords;
+    if (!hasValidCoordinates(latitude, longitude)) {
+      setStatus("unavailable");
+      setError("The browser returned an invalid location. Please refresh and try again.");
+      return;
+    }
     const moved = movementKm(latestLocationRef.current, latitude, longitude);
     if (now - lastServerSyncRef.current < 60_000 && moved < 0.25) {
       setStatus("active");

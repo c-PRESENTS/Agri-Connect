@@ -13,6 +13,7 @@ import { paymentMaintenanceService } from "./payments/maintenance-service";
 import { registerCurrencyRoutes } from "./currency/routes";
 import { ensureBootstrapSuperAdmins } from "./organisations/repository";
 import { opportunityMonitor } from "./regional-marketplace/opportunity-monitor";
+import { getTurnstileSiteKey } from "./security/turnstile";
 
 const app = express();
 const httpServer = createServer(app);
@@ -277,10 +278,7 @@ app.use((req, res, next) => {
   app.get("/api/config", (_req, res) => {
     res.json({
       googleClientId: process.env.GOOGLE_CLIENT_ID || "",
-      turnstileSiteKey:
-        process.env.TURNSTILE_SITE_KEY ||
-        process.env.VITE_TURNSTILE_SITE_KEY ||
-        "",
+      turnstileSiteKey: getTurnstileSiteKey(),
     });
   });
 

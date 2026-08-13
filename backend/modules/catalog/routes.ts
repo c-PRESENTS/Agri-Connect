@@ -113,9 +113,6 @@ export function registerCatalogRoutes(app: Express): void {
       if ((product.publicationStatus ?? "published") !== "published" && product.farmerId !== getUserId(req)) {
         return res.status(404).json({ error: "Product not found" });
       }
-      if (product.farmerId !== getUserId(req) && !await regionalMarketplaceRepository.isProductMarketplaceEligible(product.id)) {
-        return res.status(404).json({ error: "Product not found" });
-      }
       res.json(product);
     } catch {
       res.status(500).json({ error: "Failed to fetch product" });

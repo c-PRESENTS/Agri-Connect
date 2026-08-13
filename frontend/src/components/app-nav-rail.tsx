@@ -25,7 +25,7 @@ import {
   Pencil, X, Check, RotateCcw, ChevronsRight, ChevronsLeft, GripVertical,
   ShoppingBasket, Wrench, Package, Award, Wheat, Store, Beef,
   Salad, Factory, Leaf, Briefcase, Sparkles, Grid3X3, GraduationCap,
-  Handshake,
+  Handshake, MapPinned,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { categories as defaultCategories, categoryImages, isShoppableCategory } from "@/lib/categories";
@@ -53,7 +53,8 @@ const ALL_SERVICES = [
   { id: "cat-processed",path: "/?category=processed",       icon: Package,        label: "Processed",  public: true, category: "processed"       },
   { id: "cat-specialty",path: "/?category=specialty",       icon: Award,          label: "Specialty",  public: true, category: "specialty"       },
   { id: "cat-other",    path: "/?category=other-agri",      icon: Wheat,          label: "Other Agri", public: true, category: "other-agri"      },
-  { id: "cat-super",    path: "/marketplace?category=supermarket", icon: Store, label: "Complete Supermarket", public: true, category: "supermarket" },
+  { id: "cat-super",    path: "/?category=supermarket",     icon: Store,          label: "Complete Supermarket", public: true, category: "supermarket"     },
+  { id: "regional-marketplace", path: "/marketplace",       icon: MapPinned,      label: "Regional Marketplace", public: true },
   { id: "cat-dietary",  path: "/?category=dietary",         icon: Salad,          label: "Dietary",    public: true, category: "dietary"         },
   { id: "cat-modern",   path: "/?category=modern-farming",  icon: Sparkles,       label: "Modern",     public: true, category: "modern-farming"  },
   { id: "cat-services", path: "/?category=services",        icon: Briefcase,      label: "Services",   public: true, category: "services"        },
@@ -108,6 +109,7 @@ const FULL_SERVICE_LABELS: Record<string, string> = {
   ship: "Shipping Management",
   logistics: "Logistics & Delivery",
   "logistics-collaboration": "Logistics Collaboration",
+  "regional-marketplace": "Regional Marketplace",
   schemes: "Government Schemes",
   cart: "Shopping Cart",
   dash: "Dashboard",
@@ -143,8 +145,16 @@ function persist(order: string[], hidden: Set<string>) {
 function mergeAvailableOrder(saved: string[] | null, availableIds: string[]): string[] {
   const available = new Set(availableIds);
   const merged = (saved ?? []).filter((id) => available.has(id));
-  availableIds.forEach((id) => {
-    if (!merged.includes(id)) merged.push(id);
+  availableIds.forEach((id, defaultIndex) => {
+    if (merged.includes(id)) return;
+    const nextExistingId = availableIds
+      .slice(defaultIndex + 1)
+      .find((candidate) => merged.includes(candidate));
+    if (nextExistingId) {
+      merged.splice(merged.indexOf(nextExistingId), 0, id);
+    } else {
+      merged.push(id);
+    }
   });
   return merged;
 }

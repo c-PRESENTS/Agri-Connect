@@ -11,6 +11,14 @@ function credentials() {
   return { clientId, clientSecret };
 }
 
+export function hasPayPalSandboxCredentials(): boolean {
+  return (
+    process.env.PAYPAL_ENV !== "live" &&
+    Boolean(process.env.PAYPAL_CLIENT_ID?.trim()) &&
+    Boolean(process.env.PAYPAL_CLIENT_SECRET?.trim())
+  );
+}
+
 export async function getPayPalAccessToken(): Promise<string> {
   const { clientId, clientSecret } = credentials();
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");

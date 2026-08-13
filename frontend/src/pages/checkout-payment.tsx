@@ -44,6 +44,8 @@ const reasonMessages: Record<string, string> = {
   razorpay_unavailable: "Razorpay test checkout is not configured.",
   razorpay_test_credentials_missing: "Razorpay test credentials are not configured.",
   razorpay_webhook_secret_missing: "Razorpay webhook verification is not configured.",
+  paypal_test_credentials_missing: "PayPal sandbox credentials are not configured.",
+  seller_marketplace_verification_required: "Seller verification is required for live payments.",
   cash_gbp_only: "Cash checkout is available for GBP orders only.",
   seller_payment_account_ineligible:
     "One or more farmers cannot currently accept online payments.",

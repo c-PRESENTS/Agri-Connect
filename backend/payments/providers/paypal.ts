@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { paymentOperationsRepository } from "../../repositories/payment-operations-repository";
 import { paypalApi, verifyPayPalWebhook } from "../paypal";
+import { paymentRuntimeConfig } from "../config";
 import type {
   NormalizedProviderEvent,
   PaymentProviderAdapter,
@@ -137,10 +138,23 @@ export class PayPalPaymentAdapter implements PaymentProviderAdapter {
   }
 
   async createCheckout(input: ProviderCheckoutInput): Promise<ProviderCheckoutResult> {
-    if (!input.allocations?.length || input.allocations.length !== input.sellerIds.length) {
+    if (
+      !paymentRuntimeConfig.mvpModeEnabled &&
+      (!input.allocations?.length || input.allocations.length !== input.sellerIds.length)
+    ) {
       throw new Error("PayPal requires a verified payee allocation for every seller");
     }
-    const purchaseUnits = input.allocations.map((allocation) => ({
+    const purchaseUnits = paymentRuntimeConfig.mvpModeEnabled
+      ? [{
+          reference_id: input.orderId,
+          custom_id: input.orderId,
+          invoice_id: input.orderId,
+          amount: {
+            currency_code: input.amount.currency,
+            value: minorToDecimal(input.amount.amountMinor),
+          },
+        }]
+      : input.allocations!.map((allocation) => ({
       reference_id: `${input.orderId}:${allocation.sellerId}`,
       custom_id: input.orderId,
       invoice_id: `${input.orderId}-${allocation.sellerId}`,
@@ -164,7 +178,7 @@ export class PayPalPaymentAdapter implements PaymentProviderAdapter {
             }
           : {}),
       },
-    }));
+        }));
     const order = await paypalApi<PayPalOrder>(
       "/v2/checkout/orders",
       {

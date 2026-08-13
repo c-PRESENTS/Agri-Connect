@@ -57,7 +57,7 @@ const quoteSchema = z.object({
 const intentSchema = z.object({
   quoteId: z.string().uuid(),
   captchaToken: z.string().min(1).max(2048),
-  provider: z.enum(["stripe", "razorpay", "mock"]),
+  provider: z.enum(["stripe", "paypal", "razorpay", "mock"]),
   simulatedMethod: z.enum(["card", "razorpay", "paypal"]).optional(),
   deliveryAddress: z.string().min(3).max(500).optional(),
   scenario: z.enum(["success", "failure", "cancelled", "requires_action", "pending", "timeout"]).optional(),
@@ -166,6 +166,12 @@ function serializeQuote(quote: Awaited<ReturnType<typeof paymentRepository.getQu
 async function cashEligibility(quote: NonNullable<Awaited<ReturnType<typeof paymentRepository.getQuote>>>) {
   const data = quote.quoteData as QuoteData;
   const sellerIds = data.sellerIds ?? [];
+  if (paymentRuntimeConfig.mvpModeEnabled) {
+    return {
+      available: sellerIds.length > 0,
+      reasonCode: sellerIds.length > 0 ? undefined : "cart_empty",
+    };
+  }
   const { marketplaceSellerVerified } = await import("../../seller-verification/capabilities");
   const verified = await Promise.all(sellerIds.map((sellerId) => marketplaceSellerVerified(sellerId)));
   if (verified.some((value) => !value)) {
@@ -243,8 +249,16 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
             sellerIds,
             sellerIds.length,
           );
+      const paypal = simulatedCard
+        ? stripe
+        : await eligibilityService.evaluate(
+            "paypal",
+            currency,
+            sellerIds,
+            sellerIds.length,
+          );
       const cash =
-        currency === "GBP"
+        paymentRuntimeConfig.mvpModeEnabled || currency === "GBP"
           ? await cashEligibility(quote)
           : { available: false, reasonCode: "cash_gbp_only" };
       return res.json({
@@ -276,14 +290,12 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
           },
           {
             id: "paypal",
-            available: simulatedCard && stripe.eligible,
-            reasonCode: simulatedCard
-              ? stripe.eligible
-                ? undefined
-                : stripe.reasons[0] ?? "mock_not_available"
-              : "coming_soon",
-            displayStatus: simulatedCard ? "available" : "coming_soon",
-            flow: simulatedCard ? "mock" : "disabled",
+            available: paypal.eligible,
+            reasonCode: paypal.eligible
+              ? undefined
+              : paypal.reasons[0] ?? "paypal_unavailable",
+            displayStatus: paypal.eligible ? "available" : "unavailable",
+            flow: simulatedCard ? "mock" : "redirect",
           },
         ],
       });
@@ -552,7 +564,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       }
       const captcha = await verifyCheckoutTurnstile(input.captchaToken, req.ip);
       if (!captcha.success) return respondToCaptchaFailure(captcha, res);
-      if (quote.currency !== "GBP") {
+      if (!paymentRuntimeConfig.mvpModeEnabled && quote.currency !== "GBP") {
         return res.status(409).json({ error: "Cash checkout is available for GBP orders only" });
       }
       const data = quote.quoteData as QuoteData;
@@ -613,7 +625,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       const result = await checkoutRepository.createCashOrder({
         order,
         quoteId: quote.id,
-        currency: "GBP",
+        currency: quote.currency as "GBP" | "INR",
         idempotencyKey,
         reservationExpiresAt: now,
       });

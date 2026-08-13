@@ -3,7 +3,7 @@
  * Keep coordinate validation in one place so incomplete seller records never
  * reach Leaflet (which throws when given invalid positions).
  */
-export function hasValidPublicCoordinates(latitude: unknown, longitude: unknown): latitude is number {
+export function hasValidCoordinates(latitude: unknown, longitude: unknown): latitude is number {
   return (
     typeof latitude === "number" &&
     typeof longitude === "number" &&
@@ -12,9 +12,12 @@ export function hasValidPublicCoordinates(latitude: unknown, longitude: unknown)
     latitude >= -90 &&
     latitude <= 90 &&
     longitude >= -180 &&
-    longitude <= 180 &&
-    !(latitude === 0 && longitude === 0)
+    longitude <= 180
   );
+}
+
+export function hasValidPublicCoordinates(latitude: unknown, longitude: unknown): latitude is number {
+  return hasValidCoordinates(latitude, longitude) && !(latitude === 0 && longitude === 0);
 }
 
 /** Only show the public city/region label, never raw coordinates or an address. */

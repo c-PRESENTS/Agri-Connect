@@ -58,6 +58,7 @@ export interface PaymentRuntimeConfig {
   disputeResponseDays: number;
   providerExecutionEnabled: boolean;
   uiPreviewEnabled: boolean;
+  mvpModeEnabled: boolean;
 }
 
 export function loadPaymentRuntimeConfig(
@@ -113,6 +114,12 @@ export function loadPaymentRuntimeConfig(
     disputeFilingDays: positiveInteger(environment.PAYMENT_DISPUTE_FILING_DAYS, 30),
     disputeResponseDays: positiveInteger(environment.PAYMENT_DISPUTE_RESPONSE_DAYS, 7),
     providerExecutionEnabled: requestedProviders.length > 0,
+    // Sandbox is the investor-demo environment: exercise real provider APIs
+    // without requiring marketplace KYC and connected seller accounts first.
+    // Live payments always retain the full production eligibility controls.
+    mvpModeEnabled:
+      mode !== "live" &&
+      environment.PAYMENT_MVP_MODE?.trim().toLowerCase() !== "false",
     uiPreviewEnabled:
       environment.NODE_ENV !== "production" &&
       mode !== "live" &&

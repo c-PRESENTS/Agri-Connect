@@ -24,7 +24,7 @@ interface AppItem {
 
 const ALL_APPS: AppItem[] = [
   { id: "home",          path: "/",                       icon: Home,            label: "nav.home",             fallbackLabel: "Home",             color: "from-green-500 to-emerald-600",    public: true },
-  { id: "marketplace",   path: "/marketplace",             icon: ShoppingBasket,  label: "home.marketplace",      fallbackLabel: "Marketplace",      color: "from-blue-500 to-indigo-600",      public: true },
+  { id: "marketplace",   path: "/marketplace",             icon: ShoppingBasket,  label: "marketplace.regional_title", fallbackLabel: "Regional Marketplace", color: "from-blue-500 to-indigo-600", public: true },
   { id: "smart-map",     path: "/map",                    icon: Map,             label: "home.smart_map",        fallbackLabel: "Smart Map",        color: "from-cyan-500 to-teal-600",        public: true },
   { id: "land",          path: "/land-leasing",            icon: Landmark,        label: "land.title",            fallbackLabel: "Land",             color: "from-amber-500 to-orange-600",     public: true },
   { id: "share",         path: "/share-care",              icon: HeartHandshake,  label: "share.title",           fallbackLabel: "Share",            color: "from-rose-500 to-pink-600",        public: true },
@@ -66,17 +66,6 @@ export function AppLauncher({ open, onClose, railWidth }: AppLauncherProps) {
   }, [setLocation, onClose]);
 
   const visible = ALL_APPS.filter((app) => (app.public || isAuthenticated) && (app.id !== "regional-manager" || regionalAccess?.hasAccess));
-
-  useEffect(() => {
-    if (!open) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [onClose, open]);
-
-  const launcherLeft = railWidth + 12;
 
   useEffect(() => {
     if (!open) return;

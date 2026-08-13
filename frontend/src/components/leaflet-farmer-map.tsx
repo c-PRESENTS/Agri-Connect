@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { isSellerOnline } from "@/lib/seller-presence";
-import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
+import { getPublicLocationLabel, hasValidCoordinates, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product, LocalNeed } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useCurrency } from "@/contexts/currency-context";
@@ -104,10 +104,78 @@ const distanceKm = (from: [number, number], to: [number, number]) => {
   return 2 * earthRadiusKm * Math.asin(Math.min(1, Math.sqrt(value)));
 };
 
+const toValidLatLng = (latitude: unknown, longitude: unknown): [number, number] | null =>
+  hasValidCoordinates(latitude, longitude) ? [latitude as number, longitude as number] : null;
+
+function moveMapWhenReady(
+  map: L.Map,
+  position: [number, number],
+  zoom: number,
+  onMoved?: () => void,
+): () => void {
+  if (!hasValidCoordinates(position[0], position[1]) || !Number.isFinite(zoom)) {
+    return () => undefined;
+  }
+
+  const container = map.getContainer();
+  const safeZoom = Math.min(19, Math.max(1, zoom));
+  let animationFrame: number | null = null;
+  let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+  let resizeObserver: ResizeObserver | null = null;
+  let cancelled = false;
+  let moved = false;
+
+  const move = (): boolean => {
+    if (cancelled || moved || !container.isConnected) return false;
+    const bounds = container.getBoundingClientRect();
+    if (
+      !Number.isFinite(bounds.width) ||
+      !Number.isFinite(bounds.height) ||
+      bounds.width <= 0 ||
+      bounds.height <= 0
+    ) return false;
+
+    moved = true;
+    resizeObserver?.disconnect();
+    if (fallbackTimer != null) clearTimeout(fallbackTimer);
+    map.stop();
+    map.invalidateSize({ animate: false, pan: false });
+    map.setView(position, safeZoom, { animate: false });
+    onMoved?.();
+    return true;
+  };
+
+  animationFrame = window.requestAnimationFrame(() => {
+    animationFrame = null;
+    if (move()) return;
+
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        if (move()) resizeObserver?.disconnect();
+      });
+      resizeObserver.observe(container);
+      return;
+    }
+
+    fallbackTimer = setTimeout(() => {
+      fallbackTimer = null;
+      move();
+    }, 250);
+  });
+
+  return () => {
+    cancelled = true;
+    if (animationFrame != null) window.cancelAnimationFrame(animationFrame);
+    if (fallbackTimer != null) clearTimeout(fallbackTimer);
+    resizeObserver?.disconnect();
+  };
+}
+
 function MapController({ flyTo }: { flyTo: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
-    if (flyTo) map.flyTo(flyTo, 14, { animate: true, duration: 1.5 });
+    if (!flyTo) return;
+    return moveMapWhenReady(map, flyTo, 14);
   }, [flyTo, map]);
   return null;
 }
@@ -126,18 +194,26 @@ function SelectedFarmerController({
   const map = useMap();
   const lastIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!selectedId || lat == null || lng == null) {
+    const selectedPosition = toValidLatLng(lat, lng);
+    if (!selectedId || !selectedPosition) {
       lastIdRef.current = null;
       return;
     }
     if (lastIdRef.current === selectedId) return;
     lastIdRef.current = selectedId;
-    map.flyTo([lat, lng], Math.max(map.getZoom(), 11), { animate: true, duration: 1.2 });
-    const t = setTimeout(() => {
-      const m = markerRefs.current[selectedId];
-      if (m && !m.isPopupOpen()) m.openPopup();
-    }, 650);
-    return () => clearTimeout(t);
+    const currentZoom = map.getZoom();
+    const targetZoom = Number.isFinite(currentZoom) ? Math.max(currentZoom, 11) : 11;
+    let popupTimer: ReturnType<typeof setTimeout> | null = null;
+    const cancelMove = moveMapWhenReady(map, selectedPosition, targetZoom, () => {
+      popupTimer = setTimeout(() => {
+        const marker = markerRefs.current[selectedId];
+        if (marker && !marker.isPopupOpen()) marker.openPopup();
+      }, 250);
+    });
+    return () => {
+      cancelMove();
+      if (popupTimer != null) clearTimeout(popupTimer);
+    };
   }, [selectedId, lat, lng, map, markerRefs]);
   return null;
 }
@@ -190,10 +266,27 @@ export function LeafletFarmerMap({
   const [postSuccess, setPostSuccess] = useState<LocalNeed | null>(null);
 
   useEffect(() => {
-    if (!liveLocation) return;
-    const latlng: [number, number] = [liveLocation.latitude, liveLocation.longitude];
+    if (!liveLocation) {
+      setUserPos(null);
+      setUserAccuracy(null);
+      setFlyTo(null);
+      return;
+    }
+    const latlng = toValidLatLng(liveLocation.latitude, liveLocation.longitude);
+    if (!latlng) {
+      setUserPos(null);
+      setUserAccuracy(null);
+      setFlyTo(null);
+      return;
+    }
     setUserPos(latlng);
-    setUserAccuracy(liveLocation.accuracyMeters);
+    setUserAccuracy(
+      typeof liveLocation.accuracyMeters === "number" &&
+      Number.isFinite(liveLocation.accuracyMeters) &&
+      liveLocation.accuracyMeters >= 0
+        ? liveLocation.accuracyMeters
+        : null,
+    );
     setFlyTo(latlng);
   }, [liveLocation]);
 
@@ -209,7 +302,8 @@ export function LeafletFarmerMap({
       setPostPanel(false);
       setForm({ productName: "", quantity: "", unit: "kg", priceRange: "", addressLine: "", city: "Chelmsford", postcode: "", location: "Chelmsford", urgency: "medium", buyerType: "individual", buyerName: "", description: "" });
       refetch();
-      if (created.latitude && created.longitude) setFlyTo([created.latitude, created.longitude]);
+      const createdPosition = toValidLatLng(created.latitude, created.longitude);
+      if (createdPosition) setFlyTo(createdPosition);
       setTimeout(() => setPostSuccess(null), 5000);
     },
   });
@@ -242,10 +336,16 @@ export function LeafletFarmerMap({
     let firstFix = true;
     const id = navigator.geolocation.watchPosition(
       (pos) => {
-        const latlng: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        const latlng = toValidLatLng(pos.coords.latitude, pos.coords.longitude);
+        if (!latlng) {
+          setLocating(false);
+          setTracking(false);
+          setLocateError(t("map.location_unavailable"));
+          return;
+        }
         setUserPos(latlng);
-        setUserAccuracy(pos.coords.accuracy ?? null);
-        setUserHeading(typeof pos.coords.heading === "number" && !isNaN(pos.coords.heading) ? pos.coords.heading : null);
+        setUserAccuracy(Number.isFinite(pos.coords.accuracy) && pos.coords.accuracy >= 0 ? pos.coords.accuracy : null);
+        setUserHeading(typeof pos.coords.heading === "number" && Number.isFinite(pos.coords.heading) ? pos.coords.heading : null);
         setLocating(false);
         setTracking(true);
         if (firstFix) {
@@ -317,11 +417,18 @@ export function LeafletFarmerMap({
 
   const unmappedFarmerCount = new Set(products.map((product) => product.farmerId))
     .size - farmerMarkers.length;
+  const mappableLocalNeeds = localNeeds.filter((need) =>
+    hasValidCoordinates(need.latitude, need.longitude),
+  );
   const visibleFarmerMarkers = nearbyOnly && userPos
     ? farmerMarkers.filter((farmer) => distanceKm(userPos, [farmer.latitude, farmer.longitude]) <= 50)
     : farmerMarkers;
   const onlineFarmers = visibleFarmerMarkers.filter(f => f.isOnline).length;
   const currentTile = TILE_LAYERS[activeLayer];
+  const safeCenter = toValidLatLng(center[0], center[1]) ?? [52.3, -1.0] as [number, number];
+  const safeInitialZoom = Number.isFinite(initialZoom)
+    ? Math.min(19, Math.max(1, initialZoom))
+    : 7;
 
   return (
     <div style={{ width: "100%", height }} className="relative select-none">
@@ -430,7 +537,7 @@ export function LeafletFarmerMap({
       </div>
 
       {/* ── MAP ── */}
-      <MapContainer center={center} zoom={initialZoom} style={{ width: "100%", height: "100%" }} zoomControl={false} attributionControl={false} scrollWheelZoom={false}>
+      <MapContainer center={safeCenter} zoom={safeInitialZoom} style={{ width: "100%", height: "100%" }} zoomControl={false} attributionControl={false} scrollWheelZoom={false}>
         <TileLayer key={activeLayer} url={currentTile.url} attribution={currentTile.attribution} maxZoom={19} />
         <MapController flyTo={flyTo} />
         <InvalidateSizeOnMount />
@@ -518,7 +625,7 @@ export function LeafletFarmerMap({
         ))}
 
         {/* Demand/Need markers */}
-        {showNeeds && localNeeds.map(need => (
+        {showNeeds && mappableLocalNeeds.map(need => (
           <Marker key={need.id} position={[need.latitude, need.longitude]} icon={makeNeedIcon(need.urgency)}>
             <Popup minWidth={230} maxWidth={270}>
               <div className="p-0.5">

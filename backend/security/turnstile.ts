@@ -1,4 +1,20 @@
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA";
+const TURNSTILE_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA";
+
+function useTurnstileTestKeys(): boolean {
+  return process.env.NODE_ENV !== "production" &&
+    process.env.TURNSTILE_USE_TEST_KEYS?.trim().toLocaleLowerCase() !== "false";
+}
+
+export function getTurnstileSiteKey(): string {
+  if (useTurnstileTestKeys()) return TURNSTILE_TEST_SITE_KEY;
+  return (
+    process.env.TURNSTILE_SITE_KEY ||
+    process.env.VITE_TURNSTILE_SITE_KEY ||
+    ""
+  ).trim();
+}
 
 type TurnstileResponse = {
   success?: boolean;
@@ -18,7 +34,10 @@ export async function verifyCheckoutTurnstile(
   token: string,
   remoteIp?: string,
 ): Promise<TurnstileVerification> {
-  const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
+  const testMode = useTurnstileTestKeys();
+  const secret = testMode
+    ? TURNSTILE_TEST_SECRET_KEY
+    : process.env.TURNSTILE_SECRET_KEY?.trim();
   if (!secret) return { success: false, code: "captcha_not_configured" };
   if (!token.trim() || token.length > 2048) {
     return { success: false, code: "captcha_invalid" };
@@ -43,15 +62,17 @@ export async function verifyCheckoutTurnstile(
       return { success: false, code: "captcha_invalid" };
     }
 
-    const allowedHostnames = (process.env.TURNSTILE_EXPECTED_HOSTNAME ?? "")
-      .split(",")
-      .map((hostname) => hostname.trim().toLocaleLowerCase())
-      .filter(Boolean);
-    if (
-      allowedHostnames.length > 0 &&
-      (!result.hostname || !allowedHostnames.includes(result.hostname.toLocaleLowerCase()))
-    ) {
-      return { success: false, code: "captcha_invalid" };
+    if (!testMode) {
+      const allowedHostnames = (process.env.TURNSTILE_EXPECTED_HOSTNAME ?? "")
+        .split(",")
+        .map((hostname) => hostname.trim().toLocaleLowerCase())
+        .filter(Boolean);
+      if (
+        allowedHostnames.length > 0 &&
+        (!result.hostname || !allowedHostnames.includes(result.hostname.toLocaleLowerCase()))
+      ) {
+        return { success: false, code: "captcha_invalid" };
+      }
     }
 
     return { success: true };
@@ -61,4 +82,3 @@ export async function verifyCheckoutTurnstile(
     clearTimeout(timeout);
   }
 }
-

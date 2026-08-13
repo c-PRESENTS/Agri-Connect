@@ -2348,7 +2348,7 @@ class PersistentCommerceStorage extends MemStorage {
 
   override async getProducts(filters?: ProductFilters): Promise<Product[]> {
     await this.ensureCatalog();
-    let products = (await commerceRepository.listApprovedMarketplaceProducts()).filter((product) =>
+    let products = (await commerceRepository.listProducts()).filter((product) =>
       (product.publicationStatus ?? "published") === "published",
     );
     if (!filters) return products;
@@ -2441,10 +2441,7 @@ class PersistentCommerceStorage extends MemStorage {
 
   override async getCart(userId: string): Promise<CartItem[]> {
     await this.ensureCatalog();
-    const items = await commerceRepository.getCart(userId);
-    const { regionalMarketplaceRepository } = await import("./repositories/regional-marketplace-repository");
-    const eligibility = await Promise.all(items.map((item) => regionalMarketplaceRepository.isProductMarketplaceEligible(item.productId)));
-    return items.filter((_item, index) => eligibility[index]);
+    return commerceRepository.getCart(userId);
   }
 
   override async addToCart(
@@ -2457,10 +2454,6 @@ class PersistentCommerceStorage extends MemStorage {
     const product = await this.getProduct(productId);
     if (!product) throw new Error("Product not found");
     if ((product.publicationStatus ?? "published") !== "published") throw new Error("Product is not currently published");
-    const { regionalMarketplaceRepository } = await import("./repositories/regional-marketplace-repository");
-    if (!await regionalMarketplaceRepository.isProductMarketplaceEligible(productId)) {
-      throw new Error("This seller is not approved to fulfil orders in the product region");
-    }
     if ((product.currency ?? "GBP") !== "GBP") {
       throw new Error("The volunteer payment MVP currently supports GBP products only");
     }
