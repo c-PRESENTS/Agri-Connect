@@ -4,6 +4,8 @@ import { providerRegistry } from "./provider-registry";
 import type { ProviderName, VerifiedProviderCapabilities } from "./types";
 import { hasStripeTestSecretKey, hasStripeWebhookSecret } from "./stripe";
 import { hasRazorpayTestCredentials, hasRazorpayWebhookSecret } from "./razorpay";
+import { hasPayPalSandboxCredentials } from "./paypal";
+import { marketplaceSellerVerified } from "../seller-verification/capabilities";
 
 export interface PaymentEligibility {
   provider: ProviderName;
@@ -22,6 +24,11 @@ export class EligibilityService {
     options: { allowUiPreview?: boolean } = {},
   ): Promise<PaymentEligibility> {
     const reasons: string[] = [];
+    const mvpMode = paymentRuntimeConfig.mvpModeEnabled;
+    if (!mvpMode && provider !== "mock" && sellerIds.length) {
+      const marketplaceVerification = await Promise.all(sellerIds.map((sellerId) => marketplaceSellerVerified(sellerId)));
+      if (marketplaceVerification.some((verified) => !verified)) reasons.push("seller_marketplace_verification_required");
+    }
     if (!paymentRuntimeConfig.supportedCurrencies.includes(currency)) reasons.push("currency_not_supported");
     if (provider === "razorpay" && currency !== "INR") reasons.push("razorpay_inr_only");
     if (!providerRegistry.has(provider)) reasons.push("provider_not_registered");
@@ -36,11 +43,14 @@ export class EligibilityService {
     }
     if (provider === "razorpay" && paymentRuntimeConfig.mode === "sandbox") {
       if (!hasRazorpayTestCredentials()) reasons.push("razorpay_test_credentials_missing");
-      if (!hasRazorpayWebhookSecret()) reasons.push("razorpay_webhook_secret_missing");
+      if (!mvpMode && !hasRazorpayWebhookSecret()) reasons.push("razorpay_webhook_secret_missing");
     }
     if (provider === "stripe" && paymentRuntimeConfig.mode === "sandbox") {
       if (!hasStripeTestSecretKey()) reasons.push("provider_not_activated");
-      if (!hasStripeWebhookSecret()) reasons.push("provider_webhook_unverified");
+      if (!mvpMode && !hasStripeWebhookSecret()) reasons.push("provider_webhook_unverified");
+    }
+    if (provider === "paypal" && paymentRuntimeConfig.mode === "sandbox") {
+      if (!hasPayPalSandboxCredentials()) reasons.push("paypal_test_credentials_missing");
     }
     // Render and other hosted test deployments run with NODE_ENV=production.
     // Sandbox eligibility must therefore be keyed to the payment mode and
@@ -50,7 +60,7 @@ export class EligibilityService {
       paymentRuntimeConfig.mode === "sandbox" &&
       paymentRuntimeConfig.requestedProviders.includes("stripe") &&
       hasStripeTestSecretKey() &&
-      hasStripeWebhookSecret();
+      (mvpMode || hasStripeWebhookSecret());
     if (stripeSandboxCheckout && reasons.length === 0) {
       const now = new Date();
       return {
@@ -77,7 +87,7 @@ export class EligibilityService {
       paymentRuntimeConfig.mode === "sandbox" &&
       paymentRuntimeConfig.requestedProviders.includes("razorpay") &&
       hasRazorpayTestCredentials() &&
-      hasRazorpayWebhookSecret();
+      (mvpMode || hasRazorpayWebhookSecret());
     if (razorpaySandboxCheckout && reasons.length === 0) {
       const now = new Date();
       return {
@@ -95,6 +105,31 @@ export class EligibilityService {
           expiresAt: new Date(now.getTime() + 60 * 60 * 1000),
           source: "approved_configuration",
           sourceReference: "razorpay-sandbox-checkout",
+        },
+      };
+    }
+    const paypalSandboxCheckout =
+      provider === "paypal" &&
+      paymentRuntimeConfig.mode === "sandbox" &&
+      paymentRuntimeConfig.requestedProviders.includes("paypal") &&
+      hasPayPalSandboxCredentials();
+    if (paypalSandboxCheckout && reasons.length === 0 && mvpMode) {
+      const now = new Date();
+      return {
+        provider,
+        eligible: true,
+        reasons: [],
+        capabilities: {
+          maximumSellersPerCheckout: 25,
+          maximumAllocationsPerPayment: 100,
+          supportsPartialSellerRefund: true,
+          supportsIndependentSellerRelease: false,
+          supportsIdempotentPaymentCreation: true,
+          supportsLookupByMerchantReference: true,
+          verifiedAt: now,
+          expiresAt: new Date(now.getTime() + 60 * 60 * 1000),
+          source: "approved_configuration",
+          sourceReference: "paypal-sandbox-mvp-checkout",
         },
       };
     }
@@ -219,6 +254,7 @@ export class EligibilityService {
       if (
         options.allowUiPreview &&
         paymentRuntimeConfig.uiPreviewEnabled &&
+        !reasons.includes("seller_marketplace_verification_required") &&
         provider !== "mock" &&
         providerRegistry.has(provider)
       ) {

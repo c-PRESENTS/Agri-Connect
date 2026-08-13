@@ -36,6 +36,7 @@ import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-
 import type { Product, LocalNeed } from "@shared/schema";
 import { FavoriteProductButton } from "@/components/favorite-product-button";
 import { useCurrency } from "@/contexts/currency-context";
+import { useLiveLocation } from "@/contexts/live-location-context";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -162,6 +163,7 @@ export default function SmartMapPage() {
   const { format } = useCurrency();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { location: liveLocation, status: liveLocationStatus, refresh: refreshLiveLocation } = useLiveLocation();
   const [, setLocation] = useLocation();
   const routeSearch = useSearch();
   const { toast } = useToast();
@@ -196,6 +198,19 @@ export default function SmartMapPage() {
   const mapRef = useRef<L.Map | null>(null);
   const lastFocusedFarmerId = useRef<string | null>(null);
   const roleDefaultsApplied = useRef(false);
+
+  useEffect(() => {
+    if (!liveLocation) return;
+    const currentLocation: [number, number] = [liveLocation.latitude, liveLocation.longitude];
+    setUsingDeviceLocation(liveLocation.source === "device");
+    setUserLocation(currentLocation);
+    setMapCenter(currentLocation);
+    setFlyTo(currentLocation);
+  }, [liveLocation]);
+
+  useEffect(() => {
+    if (liveLocationStatus !== "requesting") setIsLocating(false);
+  }, [liveLocationStatus]);
 
   // Toolbar group open state
   const [openGroup, setOpenGroup] = useState<string | null>(null);
@@ -417,6 +432,7 @@ export default function SmartMapPage() {
   }, [routeSearch, farmerMarkers]);
 
   const handleLocate = useCallback(() => {
+    refreshLiveLocation();
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       pos => {
@@ -428,7 +444,7 @@ export default function SmartMapPage() {
       () => { setIsLocating(false); toast({ title: t("map.location_failed"), variant: "destructive" }); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, [toast]);
+  }, [refreshLiveLocation, toast]);
 
   const handleDrawPoint = useCallback((latlng: [number, number]) => setDrawnPoints(prev => [...prev, latlng]), []);
   const handleUndoPoint = useCallback(() => setDrawnPoints(prev => prev.slice(0, -1)), []);
@@ -474,7 +490,7 @@ export default function SmartMapPage() {
   const hasSavedProfileLocation =
     !!user && hasValidPublicCoordinates(user.latitude, user.longitude);
   const currentLocationLabel = usingDeviceLocation
-    ? "Current device location"
+    ? liveLocation?.label || "Current device location"
     : user?.location || "Your location";
 
   const toggleGroup = (g: string) => setOpenGroup(prev => prev === g ? null : g);

@@ -6,6 +6,7 @@ export function usePaymentCheckout() {
     mutationFn: async (input: {
       deliveryAddress: string;
       provider: CheckoutProvider;
+      captchaToken: string;
       currency: "GBP";
       deliveryMethod: "standard" | "pickup";
       sellerIds: string[];
@@ -27,6 +28,7 @@ export function usePaymentCheckout() {
         quote.id,
         idempotencyKey,
         input.provider,
+        input.captchaToken,
       );
     },
   });

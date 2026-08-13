@@ -22,6 +22,11 @@ import { registerDisputeRoutes } from "./payments/dispute-routes";
 import { registerPaymentDashboardRoutes } from "./payments/dashboard-routes";
 import { registerPaymentOperatorRoutes } from "./payments/operator-routes";
 import { registerAdminFoundationRoutes } from "./admin/routes";
+import { registerConversationRoutes } from "./conversations/routes";
+import { registerAccountRoutes } from "./account/routes";
+import { registerSellerVerificationRoutes } from "./seller-verification/routes";
+import { registerLogisticsCollaborationRoutes } from "./logistics-collaboration/routes";
+import { registerRegionalMarketplaceRoutes } from "./regional-marketplace/routes";
 
 export interface BackendModuleDeps {
   getUserId(req: Request): string | undefined;
@@ -34,6 +39,13 @@ export interface BackendModuleDeps {
 
 export function registerBackendModules(app: Express, deps: BackendModuleDeps): void {
   registerAdminFoundationRoutes(app);
+  registerAccountRoutes(app, { getUserId: deps.getUserId });
+  registerSellerVerificationRoutes(app, { getUserId: deps.getUserId });
+  registerLogisticsCollaborationRoutes(app, {
+    getUserId: deps.getUserId,
+    rateLimit: deps.rateLimit,
+  });
+  registerRegionalMarketplaceRoutes(app);
   registerCatalogRoutes(app);
   registerCartRoutes(app, {
     getUserId: deps.getUserId,
@@ -51,6 +63,7 @@ export function registerBackendModules(app: Express, deps: BackendModuleDeps): v
   registerPaymentOperatorRoutes(app, { getUserId: deps.getUserId });
   registerPaymentWebhookRoutes(app);
   registerReviewsRoutes(app, { getUserId: deps.getUserId });
+  registerConversationRoutes(app, { getUserId: deps.getUserId, rateLimit: deps.rateLimit });
   registerFarmerRoutes(app);
   registerLocalNeedsRoutes(app);
   registerSearchRoutes(app);

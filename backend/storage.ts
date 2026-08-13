@@ -1189,6 +1189,49 @@ export interface IStorage {
   listShipmentEvents(shipmentId: string): Promise<ShipmentEvent[]>;
 }
 
+function normalizeCatalogSearch(value: string | undefined): string {
+  return (value ?? "").trim().toLocaleLowerCase().replace(/\s+/g, " ");
+}
+
+function filterAndRankProducts(
+  products: Product[],
+  rawQuery: string,
+  categories: Category[],
+): Product[] {
+  const query = normalizeCatalogSearch(rawQuery);
+  if (!query) return products;
+
+  return products
+    .map((product, originalIndex) => {
+      const category = categories.find((item) => item.id === product.categoryId);
+      const subcategory = category?.subcategories.find((item) => item.id === product.subcategoryId);
+      const name = normalizeCatalogSearch(product.name);
+      const searchableFields = [
+        name,
+        normalizeCatalogSearch(subcategory?.name),
+        normalizeCatalogSearch(category?.name),
+        normalizeCatalogSearch(product.farmerName),
+        normalizeCatalogSearch(product.description),
+        normalizeCatalogSearch(product.farmerLocation),
+      ];
+
+      let relevance = Number.POSITIVE_INFINITY;
+      if (name === query) relevance = 0;
+      else if (name.startsWith(query)) relevance = 1;
+      else if (name.split(/[\s\-_.,/()]+/).some((word) => word.startsWith(query))) relevance = 2;
+      else if (name.includes(query)) relevance = 3;
+      else {
+        const matchingField = searchableFields.slice(1).findIndex((value) => value.includes(query));
+        if (matchingField >= 0) relevance = 4 + matchingField;
+      }
+
+      return { product, originalIndex, relevance };
+    })
+    .filter((result) => Number.isFinite(result.relevance))
+    .sort((a, b) => a.relevance - b.relevance || a.originalIndex - b.originalIndex)
+    .map(({ product }) => product);
+}
+
 export class MemStorage implements IStorage {
   private products: Map<string, Product>;
   private categories: Category[];
@@ -1322,15 +1365,7 @@ export class MemStorage implements IStorage {
         products = products.filter((p) => p.price <= filters.maxPrice!);
       }
       if (filters.search) {
-        const query = filters.search.toLowerCase();
-        products = products.filter(
-          (p) => {
-            const category = this.categories.find((item) => item.id === p.categoryId);
-            const subcategory = category?.subcategories.find((item) => item.id === p.subcategoryId);
-            return [p.name, p.farmerName, p.description, p.farmerLocation, category?.name, subcategory?.name]
-              .some((value) => value?.toLowerCase().includes(query));
-          }
-        );
+        products = filterAndRankProducts(products, filters.search, this.categories);
       }
 
       if (filters.sortBy) {
@@ -2313,7 +2348,9 @@ class PersistentCommerceStorage extends MemStorage {
 
   override async getProducts(filters?: ProductFilters): Promise<Product[]> {
     await this.ensureCatalog();
-    let products = await commerceRepository.listProducts();
+    let products = (await commerceRepository.listProducts()).filter((product) =>
+      (product.publicationStatus ?? "published") === "published",
+    );
     if (!filters) return products;
     if (filters.categoryId) products = products.filter((p) => p.categoryId === filters.categoryId);
     if (filters.subcategoryId) products = products.filter((p) => p.subcategoryId === filters.subcategoryId);
@@ -2323,21 +2360,10 @@ class PersistentCommerceStorage extends MemStorage {
     if (filters.rating) products = products.filter((p) => p.rating >= filters.rating!);
     if (filters.minPrice !== undefined) products = products.filter((p) => p.price >= filters.minPrice!);
     if (filters.maxPrice !== undefined) products = products.filter((p) => p.price <= filters.maxPrice!);
+    if (filters.qualityGrade) products = products.filter((p) => p.qualityGrade === filters.qualityGrade);
     if (filters.search) {
-      const query = filters.search.toLowerCase();
       const categories = await super.getCategories();
-      products = products.filter((product) => {
-        const category = categories.find((item) => item.id === product.categoryId);
-        const subcategory = category?.subcategories.find((item) => item.id === product.subcategoryId);
-        return [
-          product.name,
-          product.farmerName,
-          product.description,
-          product.farmerLocation,
-          category?.name,
-          subcategory?.name,
-        ].some((value) => value?.toLowerCase().includes(query));
-      });
+      products = filterAndRankProducts(products, filters.search, categories);
     }
     if (filters.sortBy === "price_asc") products.sort((a, b) => a.price - b.price);
     if (filters.sortBy === "price_desc") products.sort((a, b) => b.price - a.price);
@@ -2357,6 +2383,11 @@ class PersistentCommerceStorage extends MemStorage {
   override async createProduct(insertProduct: InsertProduct, farmerId: string): Promise<Product> {
     await this.ensureCatalog();
     const farmer = await authStorage.getUser(farmerId);
+    const { sellerCapabilities } = await import("./seller-verification/capabilities");
+    const { regionalMarketplaceRepository } = await import("./repositories/regional-marketplace-repository");
+    const capabilities = await sellerCapabilities(farmerId);
+    const regionalAssignment = await regionalMarketplaceRepository.getActiveSellerAssignment(farmerId, insertProduct.regionId);
+    const canPublish = capabilities.canPublishListings && Boolean(regionalAssignment?.canPublish);
     const product: Product = {
       id: randomUUID(),
       ...insertProduct,
@@ -2380,6 +2411,14 @@ class PersistentCommerceStorage extends MemStorage {
       rating: 0,
       reviewCount: 0,
       createdAt: new Date().toISOString(),
+      publicationStatus: canPublish ? "published" : "draft",
+      publicationReason: canPublish
+        ? undefined
+        : !capabilities.canPublishListings
+          ? "Complete seller verification before publishing this listing."
+          : "Obtain approval for a selling region before publishing this listing.",
+      regionId: regionalAssignment?.regionId,
+      regionName: regionalAssignment?.regionName,
     };
     return commerceRepository.saveProduct(product);
   }
@@ -2396,7 +2435,8 @@ class PersistentCommerceStorage extends MemStorage {
   }
 
   override async getProductsByFarmer(farmerId: string): Promise<Product[]> {
-    return (await this.getProducts()).filter((product) => product.farmerId === farmerId);
+    await this.ensureCatalog();
+    return (await commerceRepository.listProducts()).filter((product) => product.farmerId === farmerId);
   }
 
   override async getCart(userId: string): Promise<CartItem[]> {
@@ -2413,6 +2453,7 @@ class PersistentCommerceStorage extends MemStorage {
     if (!Number.isInteger(quantity) || quantity <= 0) throw new Error("Quantity must be a positive integer");
     const product = await this.getProduct(productId);
     if (!product) throw new Error("Product not found");
+    if ((product.publicationStatus ?? "published") !== "published") throw new Error("Product is not currently published");
     if ((product.currency ?? "GBP") !== "GBP") {
       throw new Error("The volunteer payment MVP currently supports GBP products only");
     }
@@ -2480,6 +2521,7 @@ class PersistentCommerceStorage extends MemStorage {
     for (const item of items) {
       const product = await this.getProduct(item.productId);
       if (!product) throw new Error(`Product not found: ${item.productId}`);
+      if ((product.publicationStatus ?? "published") !== "published") throw new Error(`Product is not currently published: ${product.name}`);
       canonicalItems.push({
         productId: product.id,
         productName: product.name,
@@ -2640,7 +2682,7 @@ class PersistentCommerceStorage extends MemStorage {
     const issues: { productId: string; productName: string; reason: "missing" | "insufficient_stock" | "out_of_stock"; available?: number; requested: number }[] = [];
     for (const item of items) {
       const product = await this.getProduct(item.productId);
-      if (!product) issues.push({ productId: item.productId, productName: "Unknown product", reason: "missing", requested: item.quantity });
+      if (!product || (product.publicationStatus ?? "published") !== "published") issues.push({ productId: item.productId, productName: product?.name ?? "Unknown product", reason: "missing", requested: item.quantity });
       else if (product.stock <= 0) issues.push({ productId: item.productId, productName: product.name, reason: "out_of_stock", available: 0, requested: item.quantity });
       else if (product.stock < item.quantity) issues.push({ productId: item.productId, productName: product.name, reason: "insufficient_stock", available: product.stock, requested: item.quantity });
     }

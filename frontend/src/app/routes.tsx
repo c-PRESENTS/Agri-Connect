@@ -9,6 +9,7 @@ const Home = lazy(() => import("@/pages/home"));
 const CategoriesPage = lazy(() => import("@/pages/categories"));
 const AboutPage = lazy(() => import("@/pages/about"));
 const LogisticsPage = lazy(() => import("@/pages/logistics"));
+const LogisticsCollaborationPage = lazy(() => import("@/pages/logistics-collaboration"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const PhotoSell = lazy(() => import("@/pages/photo-sell"));
 const ProductListingPage = lazy(() => import("@/pages/product-listing"));
@@ -50,12 +51,15 @@ const StudentVerifyEmailPage = lazy(() => import("@/pages/student-verify-email")
 const StudentConfirmLoginPage = lazy(() => import("@/pages/student-confirm-login"));
 const FulfillmentPage = lazy(() => import("@/pages/fulfillment"));
 const OperatorDashboardPage = lazy(() => import("@/pages/operator-dashboard"));
+const MarketplacePage = lazy(() => import("@/pages/marketplace"));
+const RegionalOrganisationPage = lazy(() => import("@/pages/regional-organisation"));
 
 export function AppRoutes() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/categories" component={CategoriesPage} />
+      <Route path="/marketplace" component={MarketplacePage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/dashboard">
         <ProtectedRoute><Dashboard /></ProtectedRoute>
@@ -98,6 +102,7 @@ export function AppRoutes() {
       <Route path="/farmers-help" component={FarmersHelp} />
       <Route path="/land-leasing" component={LandLeasingPage} />
       <Route path="/logistics" component={LogisticsPage} />
+      <Route path="/logistics-collaboration" component={LogisticsCollaborationPage} />
       <Route path="/ship/track/:trackingId" component={ShipTrackPage} />
       <Route path="/ship" component={ShipPage} />
       <Route path="/share-care" component={ShareCarePage} />
@@ -114,6 +119,9 @@ export function AppRoutes() {
       </Route>
       <Route path="/operator">
         <AdminAccessRoute permission="dashboard.view"><OperatorDashboardPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/regional-organisation">
+        <ProtectedRoute><RegionalOrganisationPage /></ProtectedRoute>
       </Route>
       <Route path="/sellers/:id" component={SellerProfilePage} />
       <Route path="/map" component={SmartMapPage} />

@@ -14,13 +14,15 @@ import {
 import { LeafletFarmerMap } from "./leaflet-farmer-map";
 import { HeroServiceGrid } from "./hero-service-grid";
 import { UserBookmarks } from "./user-bookmarks";
-import type { Product } from "@shared/schema";
+import type { HomeProductRecommendations, Product } from "@shared/schema";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { categoryImages, getShoppableCategories } from "@/lib/categories";
 import { MAIN_MARKETPLACE_CATEGORIES } from "@/lib/main-marketplace-categories";
 import { FavoriteProductButton } from "./favorite-product-button";
 import { buildCategoryBrowseUrl } from "@/lib/product-navigation";
 import { useCurrency } from "@/contexts/currency-context";
+import { useAuth } from "@/hooks/use-auth";
+import { useLiveLocation } from "@/contexts/live-location-context";
 
 type ShareCareItem = { id: string; name: string; unit: string; qty: number; donor: string; location: string; emoji: string; postedAgo: string; category: string };
 
@@ -86,6 +88,8 @@ const HERO_MAP_MODES: { id: HeroMapMode; label: string; emoji: string; overlays:
 export const HeroSection = memo(function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: HeroSectionProps) {
   const { format } = useCurrency();
   const { t } = useTranslation();
+  const { user, isAuthenticated } = useAuth();
+  const { location: liveLocation } = useLiveLocation();
   const [, navigate] = useLocation();
   const isEmbeddedView = new URLSearchParams(window.location.search).get("embedded") === "1";
   const [heroMapMode, setHeroMapMode] = useState<HeroMapMode>("products");
@@ -124,8 +128,12 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
   const { data: shareCareItems = [] } = useQuery<ShareCareItem[]>({
     queryKey: ["/api/share-care"],
   });
-  const { data: dailyNeedsProducts = [] } = useQuery<Product[]>({
-    queryKey: ["/api/products?categoryId=daily-needs"],
+  const { data: homeRecommendations } = useQuery<HomeProductRecommendations>({
+    queryKey: [
+      `/api/products/home-recommendations?profile=${encodeURIComponent(user?.id ?? "")}`
+      + `&locationUpdatedAt=${encodeURIComponent(liveLocation?.updatedAt ?? "profile")}`,
+    ],
+    enabled: isAuthenticated,
   });
 
   const startHeroDrag = (e: React.MouseEvent) => {
@@ -168,10 +176,8 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
     return () => window.removeEventListener("resize", applyWidth);
   }, [heroLeftPct]);
 
-  const freshPickProducts = dailyNeedsProducts.filter(
-    product => product.categoryId === "daily-needs" && product.price > 0,
-  );
-  const featuredProducts = products.filter(p => p.isFeatured);
+  const freshPickProducts = homeRecommendations?.freshPicks ?? [];
+  const featuredProducts = homeRecommendations?.featuredProducts ?? [];
   const farmerCount = new Set(products.map(p => p.farmerId)).size;
   const openProductCategory = (product: Product) => {
     navigate(
@@ -457,6 +463,11 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
               {t("common.all")} <ArrowRight className="h-3 w-3" />
             </Button>
           </div>
+          {homeRecommendations && (
+            <p className="mb-2 text-[10px] font-semibold leading-snug text-muted-foreground sm:text-xs">
+              In-stock fresh food listed within the last {homeRecommendations.freshnessWindowDays} days and available within {homeRecommendations.nearbyRadiusKm} km of {homeRecommendations.location.label}. Nearest products are shown first, followed by higher stock and ratings.
+            </p>
+          )}
           <div className="flex gap-1.5 sm:gap-2.5 overflow-x-auto pb-1 sm:pb-1.5 no-scrollbar">
             {freshPickProducts.slice(0, 14).map((product, idx) => (
               <motion.div
@@ -504,7 +515,9 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                   )}
                 </div>
                 <h3 className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-primary transition-colors">{product.name}</h3>
-                <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-tight">{product.farmerName}</p>
+                <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-tight">
+                  {product.farmerName} · {product.distance?.toFixed(1)} km
+                </p>
                 <div className="flex items-center gap-0.5 mt-0.5">
                   <span className="text-[11px] sm:text-[13px] font-black text-primary leading-none">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</span>
                   <span className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">/{product.unit}</span>
@@ -536,6 +549,11 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                 {t("common.all")} <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
+            {homeRecommendations && (
+              <p className="mb-2 text-[10px] font-semibold leading-snug text-muted-foreground sm:text-xs">
+                In-stock featured listings available within {homeRecommendations.nearbyRadiusKm} km of {homeRecommendations.location.label}, ordered by distance, stock, rating, and recency.
+              </p>
+            )}
             <div className="flex gap-1.5 sm:gap-3 overflow-x-auto pb-1 sm:pb-1.5 no-scrollbar">
               {featuredProducts.slice(0, 16).map((product, idx) => (
                 <motion.div
@@ -581,7 +599,9 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                     />
                   </div>
                   <h3 className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-amber-600 transition-colors">{product.name}</h3>
-                  <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-tight">{product.farmerName}</p>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-tight">
+                    {product.farmerName} · {product.distance?.toFixed(1)} km
+                  </p>
                   <div className="flex items-center gap-0.5 mt-0.5">
                     <span className="text-[11px] sm:text-[13px] font-black text-amber-600 dark:text-amber-400 leading-none">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</span>
                     <span className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">/{product.unit}</span>

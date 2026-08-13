@@ -126,6 +126,34 @@ export async function getPlatformAdminAccess(userId: string): Promise<AdminAcces
   };
 }
 
+export async function hasOrganisationPermission(
+  userId: string,
+  organisationId: string,
+  permission: AdminPermissionCode,
+): Promise<boolean> {
+  const result = await pool.query(
+    `SELECT r.is_super_admin,
+            EXISTS (
+              SELECT 1 FROM admin_role_permissions rp
+              JOIN admin_permissions p ON p.id=rp.permission_id
+              WHERE rp.role_id=r.id AND p.code=$3
+            ) AS role_allowed,
+            (SELECT mpo.effect FROM member_permission_overrides mpo
+             JOIN admin_permissions p ON p.id=mpo.permission_id
+             WHERE mpo.membership_id=m.id AND p.code=$3 LIMIT 1) AS override_effect
+       FROM organisation_memberships m
+       JOIN organisations o ON o.id=m.organisation_id
+       JOIN admin_roles r ON r.id=m.role_id
+      WHERE m.user_id=$1 AND m.organisation_id=$2 AND m.status='active'
+        AND o.status='approved' AND r.scope='organisation'
+      LIMIT 1`,
+    [userId, organisationId, permission],
+  );
+  const row = result.rows[0];
+  if (!row || row.override_effect === "deny") return false;
+  return row.override_effect === "allow" || row.is_super_admin === true || row.role_allowed === true;
+}
+
 export async function listPlatformPermissions(): Promise<Array<Record<string, unknown>>> {
   const result = await pool.query(
     `SELECT id, code, name, description, group_name AS "groupName", high_risk AS "highRisk"

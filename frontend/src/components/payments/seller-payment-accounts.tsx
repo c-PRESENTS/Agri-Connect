@@ -36,6 +36,11 @@ export function SellerPaymentAccounts() {
   const { data, isLoading } = useQuery<{ accounts: SellerPaymentAccount[] }>({
     queryKey: ["/api/payments/seller/accounts"],
   });
+  const { data: marketplaceVerification } = useQuery<{
+    profile?: { country: string } | null;
+    case?: { status: string } | null;
+  }>({ queryKey: ["/api/seller/verification/status"] });
+  const marketplaceVerified = marketplaceVerification?.case?.status === "verified";
   const { data: cashPreferences } = useQuery<{
     acceptsCashAtPickup: boolean;
     acceptsCashOnFarmerDelivery: boolean;
@@ -124,10 +129,15 @@ export function SellerPaymentAccounts() {
           <p className="mt-1 text-xs text-muted-foreground">
             Complete provider-hosted verification before protected payments can be offered.
           </p>
+          {!marketplaceVerified && (
+            <p className="mt-2 text-xs font-semibold text-amber-700">
+              Complete the Seller Hub Verification Centre before starting provider onboarding.
+            </p>
+          )}
         </div>
         <div className="w-36">
           <Label htmlFor="seller-payment-country" className="text-xs">Business country</Label>
-          <Select value={country} onValueChange={setCountry}>
+          <Select value={marketplaceVerification?.profile?.country ?? country} onValueChange={setCountry} disabled={Boolean(marketplaceVerification?.profile?.country)}>
             <SelectTrigger id="seller-payment-country" className="mt-1 h-8">
               <SelectValue />
             </SelectTrigger>
@@ -148,7 +158,7 @@ export function SellerPaymentAccounts() {
       ) : (
         <div className="grid gap-3 md:grid-cols-3">
           {(data?.accounts ?? []).map((account) => {
-            const active = account.status === "active";
+                    const active = account.status === "active" && marketplaceVerified;
             const platformAvailable = ["sandbox_ready", "active"].includes(account.platformStatus);
             const demoAvailable = platformAvailable && account.platformStatus === "sandbox_ready";
             return (
@@ -184,7 +194,7 @@ export function SellerPaymentAccounts() {
                     <Button
                       size="sm"
                       className="h-8 flex-1 gap-1.5 text-xs"
-                      disabled={!platformAvailable || onboarding.isPending}
+                      disabled={!marketplaceVerified || !platformAvailable || onboarding.isPending}
                       onClick={() => onboarding.mutate(account.provider)}
                     >
                       <ExternalLink className="h-3.5 w-3.5" />

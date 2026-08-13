@@ -56,6 +56,18 @@ export function useAuth() {
     },
   });
 
+  const switchAccountMode = useMutation({
+    mutationFn: async (mode: "buyer" | "seller") => {
+      const res = await apiRequest("POST", "/api/auth/account-mode", { mode });
+      return res.json() as Promise<User>;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/auth/user"], data);
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/seller"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+
   const login = useMutation({
     mutationFn: async (credentials: LoginInput) => {
       const res = await apiRequest("POST", "/api/auth/login", credentials);
@@ -122,5 +134,6 @@ export function useAuth() {
     logout,
     updateProfile,
     completeProfile,
+    switchAccountMode,
   };
 }

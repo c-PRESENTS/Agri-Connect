@@ -5,6 +5,7 @@ import { authStorage } from "../../auth/storage";
 import { paymentProviderSchema } from "../../payments/config";
 import { sellerAccountService } from "../../payments/seller-account-service";
 import { paymentOperationsRepository } from "../../repositories/payment-operations-repository";
+import { marketplaceSellerVerified } from "../../seller-verification/capabilities";
 
 interface SellerPaymentRouteDeps {
   getUserId(req: Request): string | undefined;
@@ -57,6 +58,12 @@ export function registerSellerPaymentRoutes(
         return res.status(403).json({ error: "Seller access is required" });
       }
       const input = cashPreferenceSchema.parse(req.body);
+      if ((input.acceptsCashAtPickup || input.acceptsCashOnFarmerDelivery) && !(await marketplaceSellerVerified(userId))) {
+        return res.status(403).json({
+          error: "Complete marketplace seller verification before accepting cash orders.",
+          code: "SELLER_VERIFICATION_REQUIRED",
+        });
+      }
       const preference = await paymentOperationsRepository.upsertSellerCashPreference({
         sellerId: userId,
         ...input,
@@ -79,6 +86,12 @@ export function registerSellerPaymentRoutes(
         }
         const provider = paymentProviderSchema.parse(req.params.provider);
         const input = onboardingSchema.parse(req.body);
+        if (!(await marketplaceSellerVerified(userId))) {
+          return res.status(403).json({
+            error: "Complete marketplace seller verification before payment-provider onboarding.",
+            code: "SELLER_VERIFICATION_REQUIRED",
+          });
+        }
         const result = await sellerAccountService.beginOnboarding(
           user,
           provider,

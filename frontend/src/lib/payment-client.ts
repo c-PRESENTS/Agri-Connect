@@ -108,6 +108,7 @@ export async function createCheckoutIntent(
   quoteId: string,
   idempotencyKey: string,
   provider: CheckoutProvider,
+  captchaToken: string,
   simulatedMethod?: "card" | "razorpay" | "paypal",
 ) {
   const response = await fetch("/api/checkout/intents", {
@@ -117,6 +118,7 @@ export async function createCheckoutIntent(
     body: JSON.stringify({
       quoteId,
       provider,
+      captchaToken,
       ...(provider === "mock"
         ? { scenario: "success", simulatedMethod: simulatedMethod ?? "card" }
         : {}),
@@ -171,6 +173,7 @@ export async function getCheckoutMethods(
 export async function createCashOrder(
   quoteId: string,
   idempotencyKey: string,
+  captchaToken: string,
 ): Promise<{ orderId: string; replayed: boolean }> {
   const response = await fetch("/api/checkout/cash-orders", {
     method: "POST",
@@ -179,7 +182,7 @@ export async function createCashOrder(
       "Content-Type": "application/json",
       "Idempotency-Key": idempotencyKey,
     },
-    body: JSON.stringify({ quoteId }),
+    body: JSON.stringify({ quoteId, captchaToken }),
   });
   const body = await response.json();
   if (!response.ok) {

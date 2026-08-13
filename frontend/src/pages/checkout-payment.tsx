@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -31,6 +31,7 @@ import { queryClient } from "@/lib/queryClient";
 import { CheckoutProgress } from "@/components/checkout-progress";
 import { SafeProductImage } from "@/components/safe-product-image";
 import { resolveProductImageForOrderItem } from "@/lib/product-images";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 type FunctionalMethod = "stripe" | "cash" | "razorpay" | "paypal";
 type OnlineMethod = Exclude<FunctionalMethod, "cash">;
@@ -43,6 +44,8 @@ const reasonMessages: Record<string, string> = {
   razorpay_unavailable: "Razorpay test checkout is not configured.",
   razorpay_test_credentials_missing: "Razorpay test credentials are not configured.",
   razorpay_webhook_secret_missing: "Razorpay webhook verification is not configured.",
+  paypal_test_credentials_missing: "PayPal sandbox credentials are not configured.",
+  seller_marketplace_verification_required: "Seller verification is required for live payments.",
   cash_gbp_only: "Cash checkout is available for GBP orders only.",
   seller_payment_account_ineligible:
     "One or more farmers cannot currently accept online payments.",
@@ -113,6 +116,9 @@ export default function CheckoutPaymentPage() {
   const { toast } = useToast();
   const { currency, format } = useCurrency();
   const [selectedMethod, setSelectedMethod] = useState<FunctionalMethod | "">("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const handleCaptchaToken = useCallback((token: string) => setCaptchaToken(token), []);
   const onlineKeys = useRef<Record<OnlineMethod, string>>({
     stripe: crypto.randomUUID(),
     razorpay: crypto.randomUUID(),
@@ -135,6 +141,10 @@ export default function CheckoutPaymentPage() {
     staleTime: 0,
     refetchOnMount: "always",
   });
+  const configQuery = useQuery<{ turnstileSiteKey?: string }>({
+    queryKey: ["/api/config"],
+    retry: false,
+  });
   const methods = new Map(
     (methodsQuery.data?.methods ?? []).map((method) => [method.id, method]),
   );
@@ -151,6 +161,7 @@ export default function CheckoutPaymentPage() {
           quoteId,
           onlineKeys.current[selectedOnlineMethod],
           provider,
+          captchaToken,
           provider === "mock"
             ? selectedOnlineMethod === "stripe"
               ? "card"
@@ -166,7 +177,7 @@ export default function CheckoutPaymentPage() {
         return;
       }
       if (selectedMethod === "cash") {
-        const result = await createCashOrder(quoteId, cashKey.current);
+        const result = await createCashOrder(quoteId, cashKey.current, captchaToken);
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ["/api/cart"] }),
           queryClient.invalidateQueries({ queryKey: ["/api/orders"] }),
@@ -179,6 +190,10 @@ export default function CheckoutPaymentPage() {
       throw new Error("Choose a payment method");
     },
     onError: (error: PaymentClientError) => {
+      if (error.code?.startsWith("captcha_")) {
+        setCaptchaToken("");
+        setCaptchaResetKey((current) => current + 1);
+      }
       if (error.code === "quote_consumed" && error.orderId) {
         queryClient.removeQueries({ queryKey: ["/api/checkout/quotes"] });
         queryClient.removeQueries({ queryKey: ["/api/payments/methods"] });
@@ -269,6 +284,25 @@ export default function CheckoutPaymentPage() {
   const cashSelected = selectedMethod === "cash";
   const selectedOnlineMethod =
     selectedMethod && selectedMethod !== "cash" ? selectedMethod : undefined;
+  const turnstileSiteKey = configQuery.data?.turnstileSiteKey?.trim() || "";
+  const fulfilmentEntries = Array.from(
+    new Map(
+      quote.items.map((item) => [
+        item.farmerId,
+        {
+          farmerId: item.farmerId,
+          farmerName: item.farmerName,
+          choice: quote.shippingChoices[item.farmerId],
+        },
+      ]),
+    ).values(),
+  );
+
+  const fulfilmentLabel = (partnerId?: string) => {
+    if (partnerId === "buyer-collection") return "Collect from farmer";
+    if (partnerId === "farmer-delivery") return "Farmer door delivery";
+    return "Carrier door delivery";
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -342,10 +376,56 @@ export default function CheckoutPaymentPage() {
                     Cash orders are not protected by Stripe and do not support automatic online refunds.
                   </div>
                 )}
+                <div className="mt-6 space-y-4 rounded-2xl border-2 border-border/70 bg-muted/10 p-5">
+                  <div>
+                    <h2 className="text-lg font-black text-foreground">Final order review</h2>
+                    <p className="mt-1 text-sm font-bold text-muted-foreground">
+                      Confirm the address, fulfilment, total, and payment method before placing the order.
+                    </p>
+                  </div>
+                  {quote.deliveryAddressStruct && (
+                    <div className="rounded-xl border bg-background p-4">
+                      <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Delivery address</p>
+                      <p className="mt-1 font-black text-foreground">{quote.deliveryAddressStruct.name}</p>
+                      <p className="mt-1 text-sm font-bold text-foreground/80">
+                        {[
+                          quote.deliveryAddressStruct.line1,
+                          quote.deliveryAddressStruct.line2,
+                          quote.deliveryAddressStruct.city,
+                          quote.deliveryAddressStruct.county,
+                          quote.deliveryAddressStruct.postcode,
+                          quote.deliveryAddressStruct.country,
+                        ].filter(Boolean).join(", ")}
+                      </p>
+                    </div>
+                  )}
+                  <div className="space-y-2 rounded-xl border bg-background p-4">
+                    <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Seller fulfilment</p>
+                    {fulfilmentEntries.map((entry) => (
+                      <div key={entry.farmerId} className="flex items-center justify-between gap-4 text-sm">
+                        <span className="font-black text-foreground">{entry.farmerName}</span>
+                        <span className="text-right font-bold text-muted-foreground">
+                          {fulfilmentLabel(entry.choice?.partnerId)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {turnstileSiteKey ? (
+                    <TurnstileWidget
+                      siteKey={turnstileSiteKey}
+                      resetKey={captchaResetKey}
+                      onTokenChange={handleCaptchaToken}
+                    />
+                  ) : (
+                    <div className="rounded-xl border-2 border-destructive/40 bg-destructive/5 p-4 text-sm font-bold text-destructive">
+                      Secure checkout verification is not configured. Add the Turnstile site key before accepting orders.
+                    </div>
+                  )}
+                </div>
                 <Button
                   className="mt-8 h-14 sm:h-16 w-full text-base sm:text-lg font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg transition-transform hover:scale-[1.01]"
                   size="lg"
-                  disabled={!selectedMethod || paymentMutation.isPending}
+                  disabled={!selectedMethod || !captchaToken || !turnstileSiteKey || paymentMutation.isPending}
                   onClick={() => paymentMutation.mutate()}
                 >
                   {paymentMutation.isPending ? (

@@ -177,6 +177,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
     if (category.subcategories.some((subcategory) => subcategory.id === product.subcategoryId)) {
       params.set("subcategory", product.subcategoryId);
     }
+    params.set("search", query);
 
     setInputVal(query);
     onChange(query);
@@ -200,7 +201,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
     closeSearch();
   };
 
-  const handleSelect = async (query: string) => {
+  const handleSelect = (query: string) => {
     if (query.startsWith("?category=")) {
       setInputVal("");
       onChange("");
@@ -211,43 +212,19 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
     }
 
     const trimmedQuery = query.trim();
-    const normalizedQuery = trimmedQuery.toLocaleLowerCase();
-    const localMatch =
-      suggestions.find((product) => product.name.trim().toLocaleLowerCase() === normalizedQuery) ??
-      suggestions.find((product) => product.name.trim().toLocaleLowerCase().startsWith(normalizedQuery)) ??
-      suggestions.find((product) => product.name.trim().toLocaleLowerCase().includes(normalizedQuery));
-
-    if (localMatch && navigateToProductCategory(localMatch)) return;
-
-    try {
-      const response = await fetch(`/api/products?search=${encodeURIComponent(trimmedQuery)}`, {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const matchingProducts = (await response.json()) as Product[];
-        const product =
-          matchingProducts.find((item) => item.name.trim().toLocaleLowerCase() === normalizedQuery) ??
-          matchingProducts.find((item) => item.name.trim().toLocaleLowerCase().startsWith(normalizedQuery)) ??
-          matchingProducts.find((item) => item.name.trim().toLocaleLowerCase().includes(normalizedQuery)) ??
-          matchingProducts[0];
-        if (product && navigateToProductCategory(product)) return;
-      }
-    } catch {
-      // Preserve ordinary text-search behavior when catalog resolution is unavailable.
-    }
-
     setInputVal(trimmedQuery);
     onChange(trimmedQuery);
     addRecentSearch(trimmedQuery);
     setRecentSearches(getRecentSearches());
     onSearch(trimmedQuery);
+    setLocation(`/?search=${encodeURIComponent(trimmedQuery)}`);
     closeSearch();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputVal.trim()) {
-      void handleSelect(inputVal.trim());
+      handleSelect(inputVal.trim());
     }
   };
 

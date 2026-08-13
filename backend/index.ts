@@ -12,6 +12,8 @@ import { providerActivationService } from "./payments/provider-activation-servic
 import { paymentMaintenanceService } from "./payments/maintenance-service";
 import { registerCurrencyRoutes } from "./currency/routes";
 import { ensureBootstrapSuperAdmins } from "./organisations/repository";
+import { opportunityMonitor } from "./regional-marketplace/opportunity-monitor";
+import { getTurnstileSiteKey } from "./security/turnstile";
 
 const app = express();
 const httpServer = createServer(app);
@@ -27,6 +29,7 @@ void paymentRuntimeConfig;
 capabilityMonitor.start(paymentRuntimeConfig.reconciliationIntervalMinutes);
 providerActivationService.start(paymentRuntimeConfig.providerReviewIntervalMinutes);
 paymentMaintenanceService.start(paymentRuntimeConfig.maintenanceIntervalHours);
+opportunityMonitor.start();
 
 declare module "http" {
   interface IncomingMessage {
@@ -40,6 +43,10 @@ const isProd = process.env.NODE_ENV === "production";
 const enableApiRateLimit = process.env.ENABLE_API_RATE_LIMIT === "true";
 const apiRateLimitWindowMs = Number(process.env.API_RATE_LIMIT_WINDOW_MS ?? (isProd ? 15 * 60 * 1000 : 60 * 1000));
 const apiRateLimitMax = Number(process.env.API_RATE_LIMIT_MAX ?? (isProd ? 100 : 5000));
+const configuredMapTileOrigin = (() => {
+  try { return new URL(process.env.MAP_TILE_URL || "https://tile.openstreetmap.org").origin; }
+  catch { return "https://tile.openstreetmap.org"; }
+})();
 
 app.use(helmet({
   // Google and payment-provider popup SDKs communicate with their opener by
@@ -59,15 +66,17 @@ app.use(helmet({
             "'self'",
             "https://accounts.google.com",
             "https://apis.google.com",
+            "https://maps.googleapis.com",
             "https://js.stripe.com",
             "https://www.paypal.com",
             "https://www.paypalobjects.com",
             "https://checkout.razorpay.com",
             "https://cdn.razorpay.com",
+            "https://challenges.cloudflare.com",
           ],
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-          fontSrc: ["'self'", "https://fonts.gstatic.com"],
-          imgSrc: ["'self'", "data:", "https:", "blob:"],
+          fontSrc: ["'self'", "https://fonts.gstatic.com", "https://maps.gstatic.com"],
+          imgSrc: ["'self'", "data:", "https:", "blob:", configuredMapTileOrigin],
           connectSrc: [
             "'self'",
             "https://api.sendgrid.com",
@@ -80,6 +89,10 @@ app.use(helmet({
             "https://api-m.sandbox.paypal.com",
             "https://api.razorpay.com",
             "https://lumberjack.razorpay.com",
+            "https://challenges.cloudflare.com",
+            configuredMapTileOrigin,
+            "https://maps.googleapis.com",
+            "https://maps.gstatic.com",
           ],
           frameSrc: [
             "https://accounts.google.com",
@@ -88,6 +101,7 @@ app.use(helmet({
             "https://www.paypal.com",
             "https://checkout.razorpay.com",
             "https://api.razorpay.com",
+            "https://challenges.cloudflare.com",
           ],
           frameAncestors: ["'none'"],
           baseUri: ["'self'"],
@@ -136,6 +150,8 @@ if (enableApiRateLimit) {
     "/api/dashboard",
     "/api/logistics",
     "/api/admin",
+    "/api/account",
+    "/api/marketplace",
   ], apiLimiter);
 }
 
@@ -185,6 +201,16 @@ app.use(
       next();
     });
   },
+);
+
+app.use(
+  "/api/seller/verification/documents",
+  express.json({
+    limit: "7mb",
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
 );
 
 app.use(
@@ -252,6 +278,7 @@ app.use((req, res, next) => {
   app.get("/api/config", (_req, res) => {
     res.json({
       googleClientId: process.env.GOOGLE_CLIENT_ID || "",
+      turnstileSiteKey: getTurnstileSiteKey(),
     });
   });
 

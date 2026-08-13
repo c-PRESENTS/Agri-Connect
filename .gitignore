@@ -11,6 +11,7 @@ log-query.db
 logs/
 test-results/
 playwright-report/
+.data/
 .npm-cache/
 .npm-cache/
 .npm-cache/

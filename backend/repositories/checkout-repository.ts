@@ -18,7 +18,7 @@ export interface CreateCheckoutRecordsInput {
 export interface CreateCashOrderInput {
   order: Order;
   quoteId: string;
-  currency: "GBP";
+  currency: "GBP" | "INR";
   idempotencyKey: string;
   reservationExpiresAt: Date;
 }

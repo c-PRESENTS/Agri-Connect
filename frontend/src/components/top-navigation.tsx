@@ -17,6 +17,7 @@ import {
   ShoppingBag,
   MoreHorizontal,
   Heart,
+  LocateFixed,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,15 +41,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useLiveLocation } from "@/contexts/live-location-context";
 
 interface TopNavigationProps {
   cartItemCount?: number;
+  searchValue?: string;
   onSearch?: (query: string) => void;
   onHome?: () => void;
   onBack?: () => void;
 }
 
-export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNavigationProps) {
+export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome, onBack }: TopNavigationProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
@@ -73,6 +76,11 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
   const { itemCount } = useCart();
   const cartCount = cartItemCount ?? itemCount;
   const { t } = useTranslation();
+  const { location: liveLocation, status: liveLocationStatus, refresh: refreshLiveLocation } = useLiveLocation();
+
+  useEffect(() => {
+    if (searchValue !== undefined) setSearchQuery(searchValue);
+  }, [searchValue]);
 
   useEffect(() => {
     const THRESHOLD = 8;
@@ -221,6 +229,21 @@ export function TopNavigation({ cartItemCount, onSearch, onHome, onBack }: TopNa
         </div>
 
         <div className="flex items-center gap-1.5 ml-auto shrink-0 relative z-10">
+          {isAuthenticated && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={refreshLiveLocation}
+              className={`hidden md:inline-flex h-9 w-9 rounded-xl ${
+                liveLocation?.source === "device" ? "bg-blue-500/10 text-blue-600" : "text-muted-foreground"
+              }`}
+              title={liveLocation?.label || "Enable live location"}
+              aria-label={liveLocation?.label || "Enable live location"}
+              data-testid="button-live-location-status"
+            >
+              <LocateFixed className={`h-4.5 w-4.5 ${liveLocationStatus === "requesting" ? "animate-pulse" : ""}`} />
+            </Button>
+          )}
           <div className="hidden sm:flex items-center gap-1">
             <VoiceCommand onSearch={handleSearch} />
             <LanguageSwitcher />

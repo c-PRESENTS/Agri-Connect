@@ -10,6 +10,11 @@ export * from "./models/payments";
 export * from "./models/payment-operations";
 export * from "./models/community";
 export * from "./models/organisations";
+export * from "./models/messaging";
+export * from "./models/user-addresses";
+export * from "./models/seller-verification";
+export * from "./models/logistics-collaboration";
+export * from "./models/regional-marketplace";
 
 // Categories
 export interface Category {
@@ -188,6 +193,24 @@ export interface Product {
   reviewCount: number;
   createdAt: string;
   dietaryTags?: string[];
+  publicationStatus?: "draft" | "published" | "suspended";
+  publicationReason?: string;
+  regionId?: string;
+  regionName?: string;
+  localFulfilmentEligible?: boolean;
+  qualityGrade?: "A" | "B" | "C";
+}
+
+export interface HomeProductRecommendations {
+  location: {
+    label: string;
+    latitude: number;
+    longitude: number;
+  };
+  nearbyRadiusKm: number;
+  freshnessWindowDays: number;
+  freshPicks: Product[];
+  featuredProducts: Product[];
 }
 
 export interface InsertProduct {
@@ -202,6 +225,8 @@ export interface InsertProduct {
   farmerId: string;
   images: string[];
   isOrganic?: boolean;
+  regionId?: string;
+  qualityGrade?: "A" | "B" | "C";
 }
 
 // Cart
@@ -348,6 +373,9 @@ export const insertProductSchema = z.object({
   subcategoryId: z.string().min(1),
   images: z.array(sellerProductImageSchema).min(1, "Add at least one genuine product image.").max(10),
   isOrganic: z.boolean().optional(),
+  regionId: z.string().uuid().optional(),
+  opportunityId: z.string().uuid().optional(),
+  qualityGrade: z.enum(["A", "B", "C"]).optional(),
 });
 
 export const cartItemInputSchema = z.object({
@@ -581,6 +609,7 @@ export interface ProductFilters {
   sortBy?: "price_asc" | "price_desc" | "rating" | "distance" | "newest";
   search?: string;
   dietaryTags?: string[];
+  qualityGrade?: "A" | "B" | "C";
 }
 
 // Logistics Partners

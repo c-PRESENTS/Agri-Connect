@@ -96,6 +96,7 @@ export default function PhotoSell() {
       categoryId: data.suggestedCategory,
       subcategoryId: data.suggestedSubcategory,
       images: [listingImage],
+      qualityGrade: data.qualityGrade,
     });
     const product = (await response.json()) as Product;
     queryClient.invalidateQueries({
