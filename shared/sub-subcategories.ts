@@ -486,6 +486,22 @@ export const subSubcategoryData: Record<string, SubSubItem[]> = {
     { title: "Costumes", items: ["Masks", "Hats", "Wigs", "Props"] }
   ],
 
+  // TECH ACCESSORIES & ELECTRONICS
+  "tech-accessories": [
+    { title: "Mobile Accessories", items: ["Power Bank", "USB-C Charging Cable", "Fast Wall Charger", "Wireless Charger"] },
+    { title: "Computer Accessories", items: ["Wireless Mouse", "Mechanical Keyboard", "USB Hub", "Laptop Stand"] },
+    { title: "Smart Electronics", items: ["Bluetooth Speaker", "Wireless Earbuds", "Smartwatch", "Wi-Fi Router"] },
+    { title: "Farm & Outdoor Electronics", items: ["Solar Power Bank", "Rechargeable Torch", "Digital Weighing Scale", "Weather Station"] }
+  ],
+
+  // ALLIED PRODUCTS
+  "allied-products": [
+    { title: "Packaging & Storage", items: ["Plastic Produce Crate", "Jute Storage Bag", "Corrugated Packaging Box", "Vacuum Storage Bag"] },
+    { title: "Utility & Hardware", items: ["Nylon Rope", "Cotton Twine", "Tarpaulin Sheet", "Multi-Purpose Bucket"] },
+    { title: "Market & Shop Supplies", items: ["Digital Price Label", "Reusable Shopping Bag", "Hand Trolley", "Storage Rack"] },
+    { title: "Farm Allied Essentials", items: ["Shade Net", "Mulch Film", "Bird Net", "Coir Rope"] }
+  ],
+
   // SERVICES - FARMING
   "farming-services": [
     { title: "Land Preparation", items: ["Ploughing", "Levelling", "Tilling", "Bunding"] },
