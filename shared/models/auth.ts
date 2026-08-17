@@ -78,13 +78,28 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+const remoteAvatarSchema = z
+  .string()
+  .url()
+  .max(2_048)
+  .refine((value) => /^https?:\/\//i.test(value), "Avatar URL must use HTTP or HTTPS.");
+const uploadedAvatarSchema = z
+  .string()
+  .max(85_000)
+  .regex(
+    /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/i,
+    "Uploaded avatar must be a valid JPEG, PNG, or WebP image.",
+  );
+
+export const profileAvatarSchema = z.union([remoteAvatarSchema, uploadedAvatarSchema]);
+
 export const updateProfileSchema = z.object({
   role: z.enum(["buyer", "farmer", "logistics", "admin"]).optional(),
   firstName: z.string().min(1).max(80).optional(),
   lastName: z.string().max(80).optional().nullable(),
   name: z.string().min(1).max(120).optional(),
   phone: z.string().max(40).optional().nullable(),
-  avatar: z.string().url().optional().nullable(),
+  avatar: profileAvatarSchema.optional().nullable(),
   location: z.string().max(200).optional().nullable(),
   latitude: z.number().min(-90).max(90).optional().nullable(),
   longitude: z.number().min(-180).max(180).optional().nullable(),
