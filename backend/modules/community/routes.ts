@@ -214,17 +214,20 @@ export function registerShareCareRoutes(app: Express): void {
 
   app.get("/api/platform/stats", async (_req, res) => {
     try {
-      const products = await storage.getProducts();
+      const [products, freeItems, buyers] = await Promise.all([
+        storage.getProducts(),
+        shareCareRepository.countAvailableFree(),
+        authStorage.countUsersByRole("buyer"),
+      ]);
       const services = products.filter((product) => product.categoryId === "services").length;
       const productListings = products.length - services;
-      const freeItems = await shareCareRepository.countAvailableFree();
 
       res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
       res.json({
         farmers: 1284,
         products: productListings,
         freeItems,
-        buyers: 3642,
+        buyers,
         students: 876,
         services,
         demoFields: ["farmers", "buyers", "students"],

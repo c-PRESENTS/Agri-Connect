@@ -1,6 +1,6 @@
 import { users, type User, type UpsertUser, type UpdateProfileInput } from "@shared/models/auth";
 import { db } from "../config/db";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 
 export interface IAuthStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -11,6 +11,7 @@ export interface IAuthStorage {
   createUser(user: UpsertUser): Promise<User>;
   updateProfile(id: string, updates: UpdateProfileInput): Promise<User | undefined>;
   switchAccountMode(id: string, mode: "buyer" | "seller"): Promise<User | undefined>;
+  countUsersByRole(role: "buyer" | "farmer" | "logistics" | "admin"): Promise<number>;
 }
 
 class AuthStorage implements IAuthStorage {
@@ -32,6 +33,14 @@ class AuthStorage implements IAuthStorage {
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
     return user;
+  }
+
+  async countUsersByRole(role: "buyer" | "farmer" | "logistics" | "admin"): Promise<number> {
+    const [result] = await db
+      .select({ value: count() })
+      .from(users)
+      .where(eq(users.role, role));
+    return result?.value ?? 0;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {

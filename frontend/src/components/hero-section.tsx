@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowRight, Star, Users, Leaf,
   ShieldCheck, Truck, Sprout, Globe, Activity, Satellite,
-  ShoppingCart,
+  ShoppingBag, ShoppingCart,
 } from "lucide-react";
 import { LeafletFarmerMap } from "./leaflet-farmer-map";
 import { HeroServiceGrid } from "./hero-service-grid";
@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLiveLocation } from "@/contexts/live-location-context";
 
 type ShareCareItem = { id: string; name: string; unit: string; qty: number; donor: string; location: string; emoji: string; postedAgo: string; category: string };
+type PlatformStatistics = { buyers: number };
 
 interface HeroSectionProps {
   onBrowse: () => void;
@@ -127,6 +128,11 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
   // Share & Care live items (live query)
   const { data: shareCareItems = [] } = useQuery<ShareCareItem[]>({
     queryKey: ["/api/share-care"],
+  });
+  const { data: platformStats } = useQuery<PlatformStatistics>({
+    queryKey: ["/api/platform/stats"],
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   });
   const { data: homeRecommendations } = useQuery<HomeProductRecommendations>({
     queryKey: [
@@ -232,6 +238,8 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
               <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{products.length}</span> {t("home.products")}</span>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
               <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{shareCareItems.length}</span> {t("home.free_items")}</span>
+              <span className="text-[9px] text-white/40 shrink-0">·</span>
+              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{platformStats?.buyers ?? "—"}</span> {t("platform_stats.buyers", "Buyers")}</span>
             </div>
 
             {/* Compact headline — one tight block */}
@@ -286,11 +294,12 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
               {t("home.hero_description")}
             </p>
 
-            <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6">
               {[
                 { value: `${farmerCount}`, label: t("home.farmers"), icon: Users, color: "text-primary bg-primary/25" },
                 { value: `${products.length}`, label: t("home.products"), icon: Sprout, color: "text-emerald-400 bg-emerald-900/60" },
                 { value: `${shareCareItems.length}`, label: t("home.free_items"), icon: Activity, color: "text-amber-400 bg-amber-900/60" },
+                { value: platformStats?.buyers === undefined ? "—" : `${platformStats.buyers}`, label: t("platform_stats.buyers", "Buyers"), icon: ShoppingBag, color: "text-sky-300 bg-sky-900/60" },
               ].map(({ value, label, icon: Icon, color }) => (
                 <div key={label} className="bg-white/15 backdrop-blur-md border-2 border-white/25 rounded-2xl p-4 sm:p-5 flex flex-col items-center text-center shadow-lg hover:bg-white/20 transition-all">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 ${color}`}>
