@@ -187,8 +187,8 @@
   html {
     scroll-behavior: smooth;
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
-    /* Base 16px — standard readable size, nothing falls below 12px */
-    font-size: 16px;
+    /* Keep the standard scale for touch-first and compact layouts. */
+    font-size: 100%;
     overflow-x: hidden;
     max-width: 100vw;
   }
@@ -304,6 +304,14 @@
     font-size: 1rem;
     font-weight: 500;
     line-height: 1.4;
+  }
+}
+
+/* Desktop density pass: Tailwind dimensions are rem-based, so reducing the
+   root by 20% scales pages, controls, buttons, icons and spacing consistently. */
+@media (min-width: 1024px) {
+  html {
+    font-size: 80%;
   }
 }
 

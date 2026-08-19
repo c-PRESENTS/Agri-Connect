@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { getData } from "country-list";
 
 type Address = { line1: string; line2: string; city: string; region: string; postalCode: string; country: string };
 type VerificationState = {
@@ -33,6 +34,13 @@ const initialProfile = { country: "IN", entityType: "individual", legalName: "",
 const activityOptions = [
   ["fresh_produce", "Fresh produce"], ["food", "Food"], ["processed_food", "Processed food"], ["dairy", "Dairy"], ["meat", "Meat or poultry"], ["seeds", "Seeds"], ["fertilizer", "Fertilizer"], ["agricultural_tools", "Agricultural tools"],
 ] as const;
+const countryOptions = getData().sort((first, second) => first.name.localeCompare(second.name));
+
+function defaultTaxType(country: string): string {
+  if (country === "IN") return "pan";
+  if (country === "GB") return "company_registration";
+  return "tax_id";
+}
 
 function statusStyle(status = "not_started") {
   if (status === "verified") return "bg-emerald-100 text-emerald-800";
@@ -72,6 +80,7 @@ export function SellerVerificationCenter() {
         registrationNumber: data.profile.registrationNumber ?? "",
         website: data.profile.website ?? "",
       });
+      setTaxType(defaultTaxType(data.profile.country));
       setPerson((current) => ({ ...current, country: data.profile!.country }));
     } else if (user) {
       setProfile((current) => ({ ...current, legalName: user.name || [user.firstName, user.lastName].filter(Boolean).join(" "), contactEmail: user.email ?? "", contactPhone: user.phone ?? "" }));
@@ -111,7 +120,11 @@ export function SellerVerificationCenter() {
   const completed = required.filter((item) => item.complete).length;
   const progress = required.length ? Math.round(completed / required.length * 100) : 0;
   const locked = data?.case?.status === "pending_review";
-  const availableTaxTypes = profile.country === "IN" ? [["pan", "PAN"], ["gstin", "GSTIN (when applicable)"]] : [["company_registration", "Companies House number"], ["vat", "VAT number (when applicable)"]];
+  const availableTaxTypes = profile.country === "IN"
+    ? [["pan", "PAN"], ["gstin", "GSTIN (when applicable)"]]
+    : profile.country === "GB"
+      ? [["company_registration", "Companies House number"], ["vat", "VAT number (when applicable)"]]
+      : [["tax_id", "Tax identification number"], ["vat", "VAT / GST number (when applicable)"]];
 
   if (isLoading) return <Card><CardContent className="flex items-center gap-2 p-8"><Loader2 className="h-5 w-5 animate-spin" />Loading verification centre</CardContent></Card>;
 
@@ -128,9 +141,9 @@ export function SellerVerificationCenter() {
     </Card>
 
     <Card><CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-primary" />1. Business profile</CardTitle></CardHeader><CardContent className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2"><div><Label>Business country</Label><Select disabled={locked} value={profile.country} onValueChange={(country) => { setProfile((current) => ({ ...current, country, registeredAddress: { ...current.registeredAddress, country }, operatingAddress: { ...current.operatingAddress, country } })); setTaxType(country === "IN" ? "pan" : "company_registration"); setPerson((current) => ({ ...current, country })); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="IN">India</SelectItem><SelectItem value="GB">United Kingdom</SelectItem></SelectContent></Select></div><div><Label>Business type</Label><Select disabled={locked} value={profile.entityType} onValueChange={(entityType) => setProfile((current) => ({ ...current, entityType }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["individual", "sole_proprietor", "partnership", "company", "cooperative", "nonprofit"].map((value) => <SelectItem key={value} value={value}>{value.replaceAll("_", " ")}</SelectItem>)}</SelectContent></Select></div></div>
+      <div className="grid gap-4 sm:grid-cols-2"><div><Label>Business country</Label><Select disabled={locked} value={profile.country} onValueChange={(country) => { setProfile((current) => ({ ...current, country, registeredAddress: { ...current.registeredAddress, country }, operatingAddress: { ...current.operatingAddress, country } })); setTaxType(defaultTaxType(country)); setTaxValue(""); setPerson((current) => ({ ...current, country })); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{countryOptions.map((country) => <SelectItem key={country.code} value={country.code}>{country.name}</SelectItem>)}</SelectContent></Select></div><div><Label>Business type</Label><Select disabled={locked} value={profile.entityType} onValueChange={(entityType) => setProfile((current) => ({ ...current, entityType }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["individual", "sole_proprietor", "partnership", "company", "cooperative", "nonprofit"].map((value) => <SelectItem key={value} value={value}>{value.replaceAll("_", " ")}</SelectItem>)}</SelectContent></Select></div></div>
       <div className="grid gap-4 sm:grid-cols-2"><div><Label>Legal name</Label><Input disabled={locked} value={profile.legalName} onChange={(event) => setProfile((current) => ({ ...current, legalName: event.target.value }))} /></div><div><Label>Trading name</Label><Input disabled={locked} value={profile.tradingName} onChange={(event) => setProfile((current) => ({ ...current, tradingName: event.target.value }))} /></div></div>
-      <div><Label>Registration number (when applicable)</Label><Input disabled={locked} value={profile.registrationNumber} onChange={(event) => setProfile((current) => ({ ...current, registrationNumber: event.target.value }))} /></div>
+      <div><Label>{profile.country === "IN" ? "GSTIN number (when applicable)" : "Business registration number (when applicable)"}</Label><Input disabled={locked} value={profile.registrationNumber} onChange={(event) => setProfile((current) => ({ ...current, registrationNumber: event.target.value }))} /></div>
       <AddressFields title="Registered address" value={profile.registeredAddress} disabled={locked} onChange={(registeredAddress) => setProfile((current) => ({ ...current, registeredAddress }))} />
       <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" disabled={locked} checked={sameAddress} onChange={(event) => setSameAddress(event.target.checked)} />Operating address is the same</label>
       {!sameAddress && <AddressFields title="Operating address" value={profile.operatingAddress} disabled={locked} onChange={(operatingAddress) => setProfile((current) => ({ ...current, operatingAddress }))} />}

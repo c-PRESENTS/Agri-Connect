@@ -33,6 +33,8 @@ const AGRICONNECT_HOSTS = new Set([
   "www.agriconnect.group",
   "agri-connect-group-02we.onrender.com",
 ]);
+const AGRICONNECT_RENDER_HOST_PATTERN =
+  /^agri-connect(?:-group)?-[a-z0-9]+\.onrender\.com$/;
 
 const COLORS = [
   "bg-sky-500","bg-violet-500","bg-emerald-500","bg-amber-500",
@@ -68,13 +70,19 @@ function readBookmarks(): Bookmark[] {
 }
 function saveBookmarks(b: Bookmark[]) { localStorage.setItem(LS_KEY, JSON.stringify(b)); }
 
+function isAgriConnectHost(hostname: string) {
+  const normalizedHostname = hostname.toLowerCase();
+  return (
+    normalizedHostname === window.location.hostname.toLowerCase() ||
+    AGRICONNECT_HOSTS.has(normalizedHostname) ||
+    AGRICONNECT_RENDER_HOST_PATTERN.test(normalizedHostname)
+  );
+}
+
 function getFavicon(url: string) {
   try {
     const u = new URL(normalizeUrl(url));
-    if (
-      AGRICONNECT_HOSTS.has(u.hostname.toLowerCase()) ||
-      u.hostname.toLowerCase() === window.location.hostname.toLowerCase()
-    ) {
+    if (isAgriConnectHost(u.hostname)) {
       return LOCAL_BOOKMARK_FALLBACK_ICON;
     }
     return LOCAL_BOOKMARK_ICONS[u.hostname] ?? `${u.origin}/favicon.ico`;
@@ -109,7 +117,7 @@ function canUseInlinePreview(url: string) {
 function isFirstPartyAgriConnectUrl(url: string) {
   try {
     const hostname = new URL(normalizeUrl(url)).hostname.toLowerCase();
-    return hostname === window.location.hostname.toLowerCase() || AGRICONNECT_HOSTS.has(hostname);
+    return isAgriConnectHost(hostname);
   } catch {
     return false;
   }

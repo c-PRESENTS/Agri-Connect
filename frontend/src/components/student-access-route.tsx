@@ -1,17 +1,13 @@
-import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useLocation } from "wouter";
 
 type StudentStatus = { enabled: boolean; verified: boolean; demo?: boolean };
+const STUDENT_MVP_DEMO_OPEN = true;
 
 export function StudentAccessRoute({ children }: { children: React.ReactNode }) {
-  const [, setLocation] = useLocation();
   const { data, isLoading, isError } = useQuery<StudentStatus>({ queryKey: ["/api/student-auth/status"] });
 
-  useEffect(() => {
-    if (!isLoading && data?.enabled && !data.verified) setLocation("/student/login");
-  }, [data, isLoading, setLocation]);
+  if (STUDENT_MVP_DEMO_OPEN) return <>{children}</>;
 
   if (isLoading || (data?.enabled && !data.verified)) {
     return <div className="flex min-h-screen items-center justify-center" data-testid="loading-student-access"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;

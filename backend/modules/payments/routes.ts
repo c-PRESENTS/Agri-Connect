@@ -9,6 +9,7 @@ import { paymentRepository } from "../../repositories/payment-repository";
 import { eligibilityService } from "../../payments/eligibility-service";
 import { paymentRuntimeConfig } from "../../payments/config";
 import { paymentService } from "../../payments/payment-service";
+import { logPaymentFailure } from "../../payments/security";
 import { pricingService } from "../../payments/pricing-service";
 import { reconciliationService } from "../../payments/reconciliation-service";
 import { paymentOperationsRepository } from "../../repositories/payment-operations-repository";
@@ -82,6 +83,29 @@ const clientConfirmationSchema = z.object({
 
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const orderNumber = () => `AGC${new Date().getFullYear().toString().slice(-2)}-${Math.floor(100000 + Math.random() * 900000)}`;
+
+function respondToUnexpectedCheckoutFailure(
+  res: Response,
+  error: unknown,
+  operation: "cash checkout failed" | "checkout intent failed",
+  stage: string,
+): Response {
+  const message = error instanceof Error ? error.message : "";
+  if (/Idempotency|stock|Product/.test(message)) {
+    return res.status(409).json({ error: message });
+  }
+
+  logPaymentFailure(operation, error, { stage });
+  const providerFailure = stage === "create_provider_checkout";
+  return res.status(503).json({
+    error: providerFailure
+      ? "The selected payment provider is temporarily unavailable. Please try again."
+      : "Checkout is temporarily unavailable. Please try again.",
+    code: providerFailure
+      ? "payment_provider_unavailable"
+      : "checkout_service_unavailable",
+  });
+}
 
 function respondToCaptchaFailure(
   verification: Exclude<TurnstileVerification, { success: true }>,
@@ -524,13 +548,22 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
   });
 
   app.post("/api/checkout/cash-orders", isAuthenticated, async (req, res) => {
+    let stage = "validate_request";
     try {
       const userId = deps.getUserId(req)!;
       const idempotencyKey = req.get("Idempotency-Key")?.trim();
       if (!idempotencyKey || idempotencyKey.length > 160) {
         return res.status(400).json({ error: "A valid Idempotency-Key header is required" });
       }
-      const input = cashOrderSchema.parse(req.body);
+      const parsedInput = cashOrderSchema.safeParse(req.body);
+      if (!parsedInput.success) {
+        return res.status(400).json({
+          error: "A valid cash checkout request is required",
+          code: "invalid_checkout_request",
+        });
+      }
+      const input = parsedInput.data;
+      stage = "lookup_cash_idempotency";
       const existingCashOrder = await checkoutRepository.getCashOrderByIdempotency(
         userId,
         idempotencyKey,
@@ -546,6 +579,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         }
         return res.status(409).json({ error: "Cash checkout is still being created" });
       }
+      stage = "load_quote";
       const quote = await paymentRepository.getQuote(input.quoteId);
       if (!quote || quote.buyerId !== userId) {
         return res.status(404).json({ error: "Checkout quote not found" });
@@ -553,6 +587,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       if (quote.expiresAt <= new Date()) {
         return res.status(409).json({ error: "Checkout quote expired", code: "quote_required" });
       }
+      stage = "load_quote_usage";
       const usedQuote = await checkoutRepository.getQuoteUsage(quote.id);
       if (usedQuote) {
         return res.status(409).json({
@@ -562,12 +597,11 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
           attemptId: usedQuote.attemptId,
         });
       }
-      const captcha = await verifyCheckoutTurnstile(input.captchaToken, req.ip);
-      if (!captcha.success) return respondToCaptchaFailure(captcha, res);
       if (!paymentRuntimeConfig.mvpModeEnabled && quote.currency !== "GBP") {
         return res.status(409).json({ error: "Cash checkout is available for GBP orders only" });
       }
       const data = quote.quoteData as QuoteData;
+      stage = "load_cart";
       const cart = await storage.getCart(userId);
       const selectedCart = selectQuotedCart(cart, data);
       if (!selectedCart.length || cartFingerprint(selectedCart) !== quote.cartFingerprint) {
@@ -576,6 +610,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       if (selectedCart.some((item) => item.product.farmerId === userId)) {
         return res.status(400).json({ error: "You cannot order your own product" });
       }
+      stage = "evaluate_cash_eligibility";
       const eligibility = await cashEligibility(quote);
       if (!eligibility.available) {
         return res.status(409).json({
@@ -586,6 +621,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       if (!data.deliveryAddress || !data.deliveryAddressStruct || !data.shippingChoices) {
         return res.status(409).json({ error: "Checkout quote is incomplete", code: "quote_required" });
       }
+      stage = "load_buyer";
       const user = await authStorage.getUser(userId);
       const now = new Date();
       const order: Order = {
@@ -622,6 +658,10 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         deliveryAddressStruct: data.deliveryAddressStruct,
         createdAt: now.toISOString(),
       };
+      stage = "verify_captcha";
+      const captcha = await verifyCheckoutTurnstile(input.captchaToken, req.ip);
+      if (!captcha.success) return respondToCaptchaFailure(captcha, res);
+      stage = "create_cash_order";
       const result = await checkoutRepository.createCashOrder({
         order,
         quoteId: quote.id,
@@ -629,6 +669,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         idempotencyKey,
         reservationExpiresAt: now,
       });
+      stage = "load_created_order";
       const persisted = await storage.getOrder(result.orderId);
       if (!persisted) throw new Error("Cash order was not persisted");
       if (!result.replayed) {
@@ -639,23 +680,33 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         replayed: result.replayed,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to place cash order";
-      if (/Idempotency|stock|Product/.test(message)) {
-        return res.status(409).json({ error: message });
-      }
-      return res.status(400).json({ error: "Unable to place cash order" });
+      return respondToUnexpectedCheckoutFailure(
+        res,
+        error,
+        "cash checkout failed",
+        stage,
+      );
     }
   });
 
   app.post("/api/checkout/intents", isAuthenticated, async (req, res) => {
+    let stage = "validate_request";
     try {
       const userId = deps.getUserId(req)!;
       const idempotencyKey = req.get("Idempotency-Key")?.trim();
       if (!idempotencyKey || idempotencyKey.length > 160) {
         return res.status(400).json({ error: "A valid Idempotency-Key header is required" });
       }
-      const input = intentSchema.parse(req.body);
+      const parsedInput = intentSchema.safeParse(req.body);
+      if (!parsedInput.success) {
+        return res.status(400).json({
+          error: "A valid checkout intent request is required",
+          code: "invalid_checkout_request",
+        });
+      }
+      const input = parsedInput.data;
       const idempotencyReference = `${userId}:${idempotencyKey}`;
+      stage = "lookup_payment_idempotency";
       const existingAttempt = await paymentRepository.getAttemptByIdempotency(input.provider, idempotencyReference);
       if (existingAttempt) {
         return res.status(200).json({
@@ -665,9 +716,11 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
           idempotentReplay: true,
         });
       }
+      stage = "load_quote";
       const quote = await paymentRepository.getQuote(input.quoteId);
       if (!quote || quote.buyerId !== userId) return res.status(404).json({ error: "Checkout quote not found" });
       if (quote.expiresAt <= new Date()) return res.status(409).json({ error: "Checkout quote expired", code: "quote_required" });
+      stage = "load_quote_usage";
       const usedQuote = await checkoutRepository.getQuoteUsage(quote.id);
       if (usedQuote) {
         return res.status(409).json({
@@ -677,17 +730,18 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
           attemptId: usedQuote.attemptId,
         });
       }
-      const captcha = await verifyCheckoutTurnstile(input.captchaToken, req.ip);
-      if (!captcha.success) return respondToCaptchaFailure(captcha, res);
       const quoteData = quote.quoteData as QuoteData;
+      stage = "load_cart";
       const cart = await storage.getCart(userId);
       const selectedCart = selectQuotedCart(cart, quoteData);
       const fingerprint = cartFingerprint(selectedCart);
       if (!selectedCart.length) return res.status(409).json({ error: "Cart changed", code: "quote_required" });
       if (fingerprint !== quote.cartFingerprint) return res.status(409).json({ error: "Cart changed", code: "quote_required" });
       const sellerIds = quoteData.sellerIds ?? [];
+      stage = "evaluate_payment_eligibility";
       const eligibility = await eligibilityService.evaluate(input.provider, quote.currency as "GBP" | "INR", sellerIds, sellerIds.length);
       if (!eligibility.eligible) return res.status(409).json({ error: "Payment method unavailable", reasons: eligibility.reasons });
+      stage = "load_buyer";
       const user = await authStorage.getUser(userId);
       const now = new Date();
       const deliveryAddress = quoteData.deliveryAddress ?? input.deliveryAddress;
@@ -728,6 +782,10 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         deliveryAddressStruct: quoteData.deliveryAddressStruct,
         createdAt: now.toISOString(),
       };
+      stage = "verify_captcha";
+      const captcha = await verifyCheckoutTurnstile(input.captchaToken, req.ip);
+      if (!captcha.success) return respondToCaptchaFailure(captcha, res);
+      stage = "create_checkout_records";
       const records = await checkoutRepository.create({
         order,
         quoteId: quote.id,
@@ -743,8 +801,9 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
         }),
         expiresAt: new Date(Date.now() + paymentRuntimeConfig.reservationTtlMinutes * 60_000),
       });
+      stage = "load_seller_payment_accounts";
       const sellerAccounts =
-        input.provider === "mock"
+        input.provider === "mock" || paymentRuntimeConfig.mvpModeEnabled
           ? []
           : await paymentOperationsRepository.getSellerPaymentAccounts(input.provider, sellerIds);
       const accountBySeller = new Map(
@@ -795,6 +854,7 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       ).replace(/\/$/, "");
       let result;
       try {
+        stage = "create_provider_checkout";
         result = await paymentService.executeProviderCall(input.provider, {
           attemptId: records.attemptId,
           orderId: order.id,
@@ -832,7 +892,12 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       }
       res.status(201).json({ orderId: order.id, attemptId: records.attemptId, nextAction: result.nextAction });
     } catch (error) {
-      res.status(400).json({ error: "Unable to create checkout intent" });
+      return respondToUnexpectedCheckoutFailure(
+        res,
+        error,
+        "checkout intent failed",
+        stage,
+      );
     }
   });
 

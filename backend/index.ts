@@ -74,7 +74,12 @@ app.use(helmet({
             "https://cdn.razorpay.com",
             "https://challenges.cloudflare.com",
           ],
-          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "https://fonts.googleapis.com",
+            "https://accounts.google.com",
+          ],
           fontSrc: ["'self'", "https://fonts.gstatic.com", "https://maps.gstatic.com"],
           imgSrc: ["'self'", "data:", "https:", "blob:", configuredMapTileOrigin],
           connectSrc: [

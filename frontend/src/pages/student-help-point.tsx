@@ -25,6 +25,53 @@ type StudentProfile = {
 };
 
 const categories = ["Academic support", "Fees and funding", "IT and account access", "Library and research", "Wellbeing", "Accessibility", "Careers", "International student support"];
+const mvpDemoProfile: StudentProfile = {
+  studentNumber: "MVP-DEMO",
+  institutionalEmail: "student.preview@agriconnect.edu",
+  studyLevel: "UG",
+  programme: "AgriConnect Student Help Point Preview",
+  department: "Student Support",
+  accessExpiresAt: new Date(Date.now() + 24 * 60 * 60_000).toISOString(),
+  demo: true,
+};
+const mvpDemoResources: StudentResource[] = [
+  {
+    id: "mvp-demo-academic-support",
+    title: "Academic skills and study planning",
+    summary: "Study planning, assessment preparation, academic writing, and practical learning support.",
+    url: "/farmers-help/student/support",
+    category: "Academic support",
+    studyLevels: ["UG", "PG", "PhD"],
+    published: true,
+    sortOrder: 1,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+  },
+  {
+    id: "mvp-demo-library-research",
+    title: "Library and research guidance",
+    summary: "Support for literature searches, referencing, datasets, journals, and research consultations.",
+    url: "/farmers-help/student/support",
+    category: "Library and research",
+    studyLevels: ["UG", "PG", "PhD"],
+    published: true,
+    sortOrder: 2,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+  },
+  {
+    id: "mvp-demo-wellbeing",
+    title: "Wellbeing and accessibility support",
+    summary: "A single place for wellbeing, accessibility, and student-support service requests.",
+    url: "/farmers-help/student/support",
+    category: "Wellbeing",
+    studyLevels: ["UG", "PG", "PhD"],
+    published: true,
+    sortOrder: 3,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+  },
+];
 
 function PageState({ message, retry }: { message: string; retry?: () => void }) {
   return <Card><CardContent className="p-10 text-center"><p className="text-sm text-muted-foreground">{message}</p>{retry && <Button variant="outline" className="mt-4" onClick={retry}><RefreshCw className="mr-2 h-4 w-4" />Try again</Button>}</CardContent></Card>;
@@ -36,10 +83,15 @@ export default function StudentHelpPointPage() {
   const profileQuery = useQuery<StudentProfile>({ queryKey: ["/api/student/profile"] });
   const resourcesQuery = useQuery<StudentResource[]>({ queryKey: ["/api/student/resources"] });
   const requestsQuery = useQuery<StudentSupportRequest[]>({ queryKey: ["/api/student/support-requests"] });
+  const [demoRequests, setDemoRequests] = useState<StudentSupportRequest[]>([]);
   const [search, setSearch] = useState("");
   const [resourceCategory, setResourceCategory] = useState("all");
   const [form, setForm] = useState({ category: categories[0], subject: "", description: "", preferredContact: "institutional_email", privacyAcknowledged: false });
   const [formError, setFormError] = useState("");
+  const profile = profileQuery.data ?? mvpDemoProfile;
+  const isMvpDemoAccess = !profileQuery.data || profile.demo;
+  const resources = resourcesQuery.data?.length ? resourcesQuery.data : mvpDemoResources;
+  const requests = requestsQuery.data ?? demoRequests;
   const changeDemoLevel = useMutation({
     mutationFn: async (level: StudentProfile["studyLevel"]) => {
       const response = await apiRequest("POST", "/api/student-demo/level", { level });
@@ -53,27 +105,42 @@ export default function StudentHelpPointPage() {
     },
   });
 
-  const filteredResources = useMemo(() => (resourcesQuery.data || []).filter((resource) => {
+  const filteredResources = useMemo(() => resources.filter((resource) => {
     const matchesSearch = `${resource.title} ${resource.summary}`.toLowerCase().includes(search.toLowerCase());
     return matchesSearch && (resourceCategory === "all" || resource.category === resourceCategory);
-  }), [resourceCategory, resourcesQuery.data, search]);
+  }), [resourceCategory, resources, search]);
 
   const createRequest = useMutation({
     mutationFn: async () => {
+      if (isMvpDemoAccess) {
+        const now = new Date();
+        return {
+          id: `mvp-demo-request-${now.getTime()}`,
+          studentUserId: "mvp-demo-student",
+          category: form.category,
+          subject: form.subject.trim(),
+          description: form.description.trim(),
+          preferredContact: form.preferredContact,
+          status: "submitted",
+          createdAt: now,
+          updatedAt: now,
+          resolvedAt: null,
+        } satisfies StudentSupportRequest;
+      }
       const response = await apiRequest("POST", "/api/student/support-requests", form);
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/student/support-requests"] });
+    onSuccess: (request) => {
+      if (isMvpDemoAccess) {
+        setDemoRequests((current) => [request, ...current]);
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/student/support-requests"] });
+      }
       setForm({ category: categories[0], subject: "", description: "", preferredContact: "institutional_email", privacyAcknowledged: false });
       setLocation("/farmers-help/student/requests");
     },
     onError: (error: Error) => setFormError(error.message.replace(/^\d+:\s*/, "")),
   });
-
-  if (profileQuery.isLoading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  if (profileQuery.isError || !profileQuery.data) return <PageState message="Unable to load your verified student profile." retry={() => profileQuery.refetch()} />;
-  const profile = profileQuery.data;
 
   return <div className="min-h-screen bg-background"><TopNavigation /><StudentToolbar /><main id="main-content" className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
     <header className="mb-8">
@@ -82,12 +149,12 @@ export default function StudentHelpPointPage() {
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tight">Student Help Point</h1>
         <ComingSoonBadge />
         <Badge className="text-xs sm:text-sm font-black px-3 py-1 bg-primary text-primary-foreground">{profile.studyLevel}</Badge>
-        {profile.demo && <Badge variant="outline" className="text-xs sm:text-sm font-black px-3 py-1 border-2 border-primary/40">Demo preview</Badge>}
+        {isMvpDemoAccess && <Badge variant="outline" className="text-xs sm:text-sm font-black px-3 py-1 border-2 border-primary/40">Demo preview</Badge>}
       </div>
       <p className="mt-3 text-base sm:text-lg font-bold text-foreground/85">
         Support and published resources for {profile.programme}. Your marketplace role is unchanged.
       </p>
-      {profile.demo && (
+      {isMvpDemoAccess && (
         <div className="mt-4 rounded-2xl border-2 border-amber-300 dark:border-amber-700 bg-amber-50/90 dark:bg-amber-950/40 p-5 sm:p-6 shadow-sm">
           <p className="text-sm sm:text-base md:text-lg font-bold text-amber-950 dark:text-amber-200 leading-relaxed">
             Preview mode uses illustrative student data and temporary in-memory requests. Strict registry and email verification remain enforced in production.
@@ -124,7 +191,7 @@ export default function StudentHelpPointPage() {
                 <BookOpen className="h-8 w-8 sm:h-10 sm:w-10 text-primary flex-shrink-0" />
                 <p className="text-sm sm:text-base font-black uppercase tracking-wide text-foreground">Available resources</p>
               </div>
-              <p className="mt-4 text-4xl sm:text-5xl font-black text-primary">{resourcesQuery.data?.length ?? 0}</p>
+              <p className="mt-4 text-4xl sm:text-5xl font-black text-primary">{resources.length}</p>
             </CardContent>
           </Card>
           <Card className="rounded-2xl border-2 border-border/70 shadow-md hover:shadow-xl transition-all">
@@ -133,7 +200,7 @@ export default function StudentHelpPointPage() {
                 <Inbox className="h-8 w-8 sm:h-10 sm:w-10 text-primary flex-shrink-0" />
                 <p className="text-sm sm:text-base font-black uppercase tracking-wide text-foreground">My help requests</p>
               </div>
-              <p className="mt-4 text-4xl sm:text-5xl font-black text-primary">{requestsQuery.data?.length ?? 0}</p>
+              <p className="mt-4 text-4xl sm:text-5xl font-black text-primary">{requests.length}</p>
             </CardContent>
           </Card>
           <Card className="rounded-2xl border-2 border-amber-300 dark:border-amber-700 bg-amber-50/40 dark:bg-amber-950/20 shadow-md hover:shadow-xl transition-all">
@@ -155,7 +222,7 @@ export default function StudentHelpPointPage() {
         <Card className="rounded-2xl border-2 border-primary/30 shadow-md p-2">
           <CardHeader className="pb-3">
             <CardTitle className="text-xl sm:text-2xl font-black uppercase tracking-wider text-foreground">
-              {profile.demo ? "Student profile preview" : "Verified student profile"}
+              {isMvpDemoAccess ? "Student profile preview" : "Verified student profile"}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 text-base sm:grid-cols-2 p-6 pt-2">
@@ -197,7 +264,7 @@ export default function StudentHelpPointPage() {
             </select>
           </Label>
         </div>
-        {resourcesQuery.isLoading ? <PageState message="Loading student resources…" /> : resourcesQuery.isError ? <PageState message="Unable to load resources." retry={() => resourcesQuery.refetch()} /> : filteredResources.length === 0 ? <PageState message={resourcesQuery.data?.length ? "No resources match these filters." : "No published resources are available for your study level yet."} /> : (
+        {filteredResources.length === 0 ? <PageState message={resources.length ? "No resources match these filters." : "No published resources are available for your study level yet."} /> : (
           <div className="grid gap-5 md:grid-cols-2">
             {filteredResources.map((resource) => (
               <Card key={resource.id} className="rounded-2xl border-2 shadow-md hover:shadow-lg transition-all p-2">
@@ -260,9 +327,9 @@ export default function StudentHelpPointPage() {
       <section aria-labelledby="requests-heading">
         <h2 id="requests-heading" className="text-2xl sm:text-3xl font-black uppercase tracking-wider text-foreground">My support requests</h2>
         <div className="mt-6">
-          {requestsQuery.isLoading ? <PageState message="Loading your requests…" /> : requestsQuery.isError ? <PageState message="Unable to load your requests." retry={() => requestsQuery.refetch()} /> : !requestsQuery.data?.length ? <PageState message="You have not submitted a student support request yet." /> : (
+          {!requests.length ? <PageState message="You have not submitted a student support request yet." /> : (
             <div className="space-y-4">
-              {requestsQuery.data.map((request) => (
+              {requests.map((request) => (
                 <Card key={request.id} className="rounded-2xl border-2 shadow-md p-2">
                   <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
                     <div>

@@ -190,10 +190,11 @@ export default function CheckoutPaymentPage() {
       throw new Error("Choose a payment method");
     },
     onError: (error: PaymentClientError) => {
-      if (error.code?.startsWith("captcha_")) {
-        setCaptchaToken("");
-        setCaptchaResetKey((current) => current + 1);
-      }
+      // Turnstile tokens are single-use. The server may have consumed the
+      // token before a database or provider error was returned, so every
+      // failed submission must request a fresh verification before retrying.
+      setCaptchaToken("");
+      setCaptchaResetKey((current) => current + 1);
       if (error.code === "quote_consumed" && error.orderId) {
         queryClient.removeQueries({ queryKey: ["/api/checkout/quotes"] });
         queryClient.removeQueries({ queryKey: ["/api/payments/methods"] });

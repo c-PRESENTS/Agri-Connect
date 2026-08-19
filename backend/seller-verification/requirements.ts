@@ -1,9 +1,9 @@
 import type {
   SellerVerificationRequirement,
 } from "@shared/schema";
+import { getName } from "country-list";
 
-export const SELLER_REQUIREMENTS_VERSION = "2026-08-mvp-1";
-export const MVP_SELLER_COUNTRIES = ["IN", "GB"] as const;
+export const SELLER_REQUIREMENTS_VERSION = "2026-08-global-2";
 
 type RequirementContext = {
   country: string;
@@ -148,19 +148,58 @@ function ukRequirements(context: RequirementContext): SellerVerificationRequirem
   ];
 }
 
+function internationalRequirements(context: RequirementContext): SellerVerificationRequirement[] {
+  const registeredEntity = !["individual", "sole_proprietor"].includes(context.entityType);
+  return [
+    {
+      code: "tax_id",
+      label: "Tax identification number",
+      description: "The seller's national tax identification number, when issued in the selected country.",
+      kind: "tax_id",
+      required: false,
+      condition: "Required when a national tax identifier has been issued",
+    },
+    {
+      code: "vat",
+      label: "VAT / GST registration number",
+      description: "Provide when the seller is registered for VAT, GST or an equivalent consumption tax.",
+      kind: "tax_id",
+      required: false,
+      condition: "Required when VAT or GST registration applies",
+    },
+    {
+      code: "formation_evidence",
+      label: "Business formation evidence",
+      description: "Official incorporation, partnership, cooperative, charity or other business registration evidence.",
+      kind: "document",
+      required: registeredEntity,
+      acceptedDocumentTypes: [
+        "incorporation_certificate",
+        "business_registration_certificate",
+        "partnership_registration",
+        "cooperative_registration",
+        "charity_registration",
+      ],
+    },
+  ];
+}
+
 export function sellerRequirements(context: RequirementContext): {
   supported: boolean;
   version: string;
   requirements: SellerVerificationRequirement[];
 } {
   const country = context.country.toUpperCase();
-  const countryRequirements = country === "IN"
-    ? indiaRequirements(context)
-    : country === "GB"
-      ? ukRequirements(context)
-      : [];
+  const supported = Boolean(getName(country));
+  const countryRequirements = !supported
+    ? []
+    : country === "IN"
+      ? indiaRequirements(context)
+      : country === "GB"
+        ? ukRequirements(context)
+        : internationalRequirements(context);
   return {
-    supported: (MVP_SELLER_COUNTRIES as readonly string[]).includes(country),
+    supported,
     version: SELLER_REQUIREMENTS_VERSION,
     requirements: [...baseRequirements, ...ownershipRequirement(context.entityType), ...countryRequirements],
   };

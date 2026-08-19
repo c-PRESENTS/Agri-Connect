@@ -139,7 +139,7 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome, on
       }`}
     >
       {/* ── Row 1: main bar (all screen sizes) ── */}
-      <div className="flex h-12 items-center gap-1.5 px-3">
+      <div className="flex h-12 items-center gap-1.5 py-0.5 pl-3 pr-4">
         {hasSidebar && (
           <Button
             variant="ghost"
@@ -254,8 +254,10 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome, on
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 sm:h-10 sm:w-10 relative hover:bg-primary/10 transition-all rounded-xl"
+            className="relative mx-1 h-9 w-9 overflow-visible rounded-xl transition-all hover:bg-primary/10 sm:h-10 sm:w-10"
             onClick={() => setLocation("/cart")}
+            aria-label={`Shopping cart with ${cartCount} ${cartCount === 1 ? "item" : "items"}`}
+            title={`Shopping cart (${cartCount})`}
             data-testid="button-cart-nav"
           >
             <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
@@ -263,7 +265,7 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome, on
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-amber-400 text-black text-xs font-black flex items-center justify-center border-2 border-background shadow-md"
+                className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-background bg-amber-400 px-1 text-[10px] font-black leading-none text-black shadow-md"
                 data-testid="badge-cart-count"
               >
                 {cartCount > 9 ? "9+" : cartCount}
