@@ -18,6 +18,7 @@ import {
   MoreHorizontal,
   Heart,
   LocateFixed,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -123,11 +124,12 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome, on
 
   const navLinks = [
     { id: "help", path: "/farmers-help", icon: Sprout, label: t("nav.help") },
+    { id: "student-help", path: "/student-help-point", icon: GraduationCap, label: t("nav.student_help", "Student Help Point") },
     { id: "agritech", path: "/agritech", icon: Cpu, label: t("home.agritech") },
     { id: "map", path: "/map", icon: MapPin, label: t("nav.map", "Smart Map") },
     { id: "land", path: "/land-leasing", icon: MapPin, label: t("nav.land", "Land") },
     { id: "share", path: "/share-care", icon: HeartHandshake, label: t("nav.share", "Share") },
-    { id: "ship", path: "/ship", icon: Truck, label: t("nav.ship", "Ship") },
+    { id: "ship", path: "/logistics?tab=shipping", icon: Truck, label: t("nav.ship", "Ship") },
   ];
 
   return (
@@ -220,7 +222,7 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome, on
           ))}
         </nav>
 
-        <div className="flex-1 min-w-0 max-w-[min(42vw,34rem)] flex items-center justify-center px-1 sm:px-2 relative z-0">
+        <div className="flex-1 min-w-0 max-w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex items-center justify-center px-1 sm:px-2 relative z-0">
           <SearchAutocomplete
             value={searchQuery}
             onChange={setSearchQuery}

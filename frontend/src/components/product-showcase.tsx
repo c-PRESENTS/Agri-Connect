@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getShoppableCategories } from "@/lib/categories";
+import { getShoppableCategories, categoryImages } from "@/lib/categories";
 import { getSubSubcategories } from "@/lib/sub-subcategories";
 import { motion } from "framer-motion";
 import type { Product } from "@shared/schema";
@@ -309,7 +309,7 @@ export function ProductShowcase({
           <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
             <Package className="h-10 w-10 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">{t("category.browse_by_category")}</h3>
+          <h3 className="text-xl sm:text-2xl font-black text-foreground mb-2">{t("category.browse_by_category")}</h3>
           <p className="text-muted-foreground text-sm">
             {t("category.explore_description")}
           </p>
@@ -361,17 +361,31 @@ export function ProductShowcase({
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-primary/15 via-background to-emerald-500/10 border-2 border-primary/30 shadow-md">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight leading-tight mb-2">{displayName}</h1>
-              <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm font-black">
-                <span className="px-3 py-1 rounded-lg bg-primary/15 border border-primary/30 text-primary font-black shadow-2xs">
-                  {content.length} categories
-                </span>
-                <span className="text-foreground/40 font-bold">•</span>
-                <span className="px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-black shadow-2xs">
-                  {content.reduce((acc, c) => acc + c.products.length, 0)} items
-                </span>
+          <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-50 via-background to-amber-50/50 dark:from-emerald-950/30 dark:via-background dark:to-amber-950/20 border-2 border-emerald-300 shadow-md">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              {categoryId && (
+                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl overflow-hidden shadow-xs ring-2 ring-emerald-400/50 bg-emerald-500/10 shrink-0 flex items-center justify-center">
+                  <img
+                    src={categoryImages[categoryId] || `/category-logos/${categoryId}.svg`}
+                    alt={displayName}
+                    className="h-full w-full object-cover rounded-2xl"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight leading-tight mb-2 truncate">{displayName}</h1>
+                <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm font-black">
+                  <span className="px-3 py-1 rounded-lg bg-amber-400 text-amber-950 font-black shadow-2xs border border-amber-500/50">
+                    {content.length} {content.length === 1 ? "category" : "categories"}
+                  </span>
+                  <span className="text-foreground/40 font-bold">•</span>
+                  <span className="px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-black shadow-2xs">
+                    {content.reduce((acc, c) => acc + c.products.length, 0)} items
+                  </span>
+                </div>
               </div>
             </div>
           </div>

@@ -81,7 +81,7 @@ function SortableCategory({ category, isSelected, isExpanded, isCollapsed, onTap
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
-  const image = getCategoryImage(category.id);
+  const image = getCategoryImage(category.id) || `/category-logos/${category.id}.svg`;
   const IconComponent = getCategoryIconComponent(category.icon);
 
   if (isCollapsed) {
@@ -91,10 +91,10 @@ function SortableCategory({ category, isSelected, isExpanded, isCollapsed, onTap
           onClick={() => onTap(category)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.92 }}
-          className={`w-full flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl transition-all duration-150 group ${
+          className={`w-full flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl transition-all duration-150 group border-2 ${
             isExpanded || isSelected
-              ? "bg-primary shadow-md shadow-primary/20 ring-1 ring-primary/40"
-              : "hover:bg-muted"
+              ? "bg-amber-400 text-amber-950 shadow-md ring-2 ring-amber-500 border-amber-500 font-black dark:bg-amber-400 dark:text-amber-950"
+              : "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300/80 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
           }`}
           style={{ touchAction: "manipulation" }}
           data-testid={`button-category-collapsed-${category.id}`}
@@ -103,20 +103,23 @@ function SortableCategory({ category, isSelected, isExpanded, isCollapsed, onTap
             <img
               src={image}
               alt={category.name}
-              className={`w-[52px] h-[52px] rounded-xl object-cover transition-transform group-hover:scale-110 shadow-sm ${
-                isExpanded || isSelected ? "ring-2 ring-white/40" : ""
+              className={`w-[52px] h-[52px] rounded-xl object-cover transition-transform group-hover:scale-110 shadow-xs ${
+                isExpanded || isSelected ? "ring-2 ring-amber-600/60" : ""
               }`}
               loading="lazy"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
             />
           ) : (
             <div className={`w-[52px] h-[52px] flex items-center justify-center rounded-xl ${
-              isExpanded || isSelected ? "bg-white/20 text-white" : "bg-muted/60 text-muted-foreground"
+              isExpanded || isSelected ? "bg-amber-500/20 text-amber-950" : "bg-emerald-100 text-emerald-800"
             }`}>
               <IconComponent className="h-7 w-7" />
             </div>
           )}
-          <span className={`text-[10px] font-bold leading-tight text-center uppercase tracking-tight w-full px-1 truncate ${
-            isExpanded || isSelected ? "text-white" : "text-muted-foreground group-hover:text-foreground"
+          <span className={`text-[10px] font-black leading-tight text-center uppercase tracking-tight w-full px-1 truncate ${
+            isExpanded || isSelected ? "text-amber-950" : "text-emerald-900 dark:text-emerald-200 group-hover:text-emerald-950"
           }`}>
             {category.name.split(" ")[0]}
           </span>
@@ -129,28 +132,36 @@ function SortableCategory({ category, isSelected, isExpanded, isCollapsed, onTap
     <div ref={setNodeRef} style={style} className="relative group/drag">
       <button
         onClick={() => onTap(category)}
-        className={`w-full flex flex-col items-center justify-center p-2 rounded-xl cursor-pointer min-h-[68px] transition-all duration-200 group border border-transparent ${
-          isExpanded
-            ? "bg-primary/10 ring-1 ring-primary/40 shadow-sm shadow-primary/5 border-primary/20"
-            : isSelected
-            ? "bg-primary/5 ring-1 ring-primary/20"
-            : "bg-muted/30 hover:bg-muted/60"
+        className={`w-full flex flex-col items-center justify-center p-2 rounded-xl cursor-pointer min-h-[68px] transition-all duration-200 group border-2 ${
+          isExpanded || isSelected
+            ? "bg-amber-400 text-amber-950 ring-2 ring-amber-500 border-amber-500 shadow-md font-black dark:bg-amber-400 dark:text-amber-950"
+            : "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300/80 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
         }`}
         style={{ touchAction: "manipulation" }}
         data-testid={`button-category-${category.id}`}
       >
-        <div className="relative overflow-hidden rounded-lg mb-1 shadow-sm">
+        <div className="relative overflow-hidden rounded-lg mb-1 shadow-xs">
           {image ? (
-            <img src={image} alt={category.name} className="w-[52px] h-[52px] object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy" />
+            <img 
+              src={image} 
+              alt={category.name} 
+              className="w-[52px] h-[52px] object-cover transition-transform duration-300 group-hover:scale-110 rounded-lg" 
+              loading="lazy" 
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
           ) : (
             <div className={`w-[52px] h-[52px] flex items-center justify-center transition-colors rounded-lg ${
-              isExpanded || isSelected ? "bg-primary text-white" : "bg-muted/50"
+              isExpanded || isSelected ? "bg-amber-500/20 text-amber-950" : "bg-emerald-100 text-emerald-800"
             }`}>
               <IconComponent className="h-7 w-7" />
             </div>
           )}
         </div>
-        <span className={`text-[10px] font-bold text-center leading-tight line-clamp-2 uppercase tracking-tight transition-colors ${isExpanded ? "text-primary" : ""}`}>
+        <span className={`text-[10px] font-black text-center leading-tight line-clamp-2 uppercase tracking-tight transition-colors ${
+          isExpanded || isSelected ? "text-amber-950" : "text-emerald-900 dark:text-emerald-200"
+        }`}>
           {category.name.split(" ").slice(0, 2).join(" ")}
         </span>
       </button>

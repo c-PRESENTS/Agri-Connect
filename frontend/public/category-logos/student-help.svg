@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-shelp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7" />
+      <stop offset="50%" stop-color="#0369A1" />
+      <stop offset="100%" stop-color="#0C4A6E" />
+    </linearGradient>
+    <linearGradient id="gold-cap" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="100%" stop-color="#EAB308" />
+    </linearGradient>
+    <filter id="shadow-shelp" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-shelp)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-shelp)">
+    <!-- Graduation Cap Top Diamond -->
+    <polygon points="64,32 104,46 64,60 24,46" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" />
+    <!-- Cap Skull -->
+    <path d="M40 52 V66 C40 76 64 82 64 82 C64 82 88 76 88 66 V52" fill="#E2E8F0" stroke="#0F172A" stroke-width="2" />
+    <!-- Tassel -->
+    <path d="M64 46 L96 56 V74" stroke="url(#gold-cap)" stroke-width="2.5" fill="none" stroke-linecap="round" />
+    <circle cx="96" cy="76" r="3.5" fill="url(#gold-cap)" />
+    <!-- Open Book / Research Base -->
+    <path d="M30 84 Q64 78 64 96 Q64 78 98 84 V100 Q64 92 64 104 Q64 92 30 100 Z" fill="#F8FAFC" stroke="#0F172A" stroke-width="2" />
+    <line x1="64" y1="96" x2="64" y2="104" stroke="#0F172A" stroke-width="2" />
+    <!-- Green Sprout of Knowledge Growing from Book -->
+    <path d="M64 84 C64 76 58 72 54 74 C54 80 60 84 64 84 Z" fill="#4ADE80" stroke="#166534" stroke-width="1" />
+    <path d="M64 84 C64 76 70 72 74 74 C74 80 68 84 64 84 Z" fill="#4ADE80" stroke="#166534" stroke-width="1" />
+  </g>
+</svg>

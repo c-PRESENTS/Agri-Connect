@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-inputs" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="50%" stop-color="#1E40AF" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="gear-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#EA580C" />
+    </linearGradient>
+    <linearGradient id="steel-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#94A3B8" />
+    </linearGradient>
+    <filter id="shadow-inputs" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-inputs)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-inputs)">
+    <!-- Industrial Cog Gear Behind -->
+    <path d="M64 34 L68 34 L70 38 L74 39 L78 36 L81 39 L78 43 L80 47 L84 48 L84 52 L80 54 L78 58 L81 61 L78 64 L74 62 L70 63 L68 67 L64 67 L62 63 L58 62 L54 64 L51 61 L54 58 L52 54 L48 52 L48 48 L52 47 L54 43 L51 39 L54 36 L58 39 L62 38 Z" fill="url(#gear-grad)" stroke="#9A3412" stroke-width="1.5" />
+    <circle cx="66" cy="50" r="8" fill="#1E293B" />
+    <!-- Tractor Silhouette -->
+    <!-- Large Rear Wheel -->
+    <circle cx="48" cy="84" r="16" fill="#1E293B" stroke="#F1F5F9" stroke-width="3" />
+    <circle cx="48" cy="84" r="9" fill="#94A3B8" />
+    <circle cx="48" cy="84" r="4" fill="#F97316" />
+    <!-- Front Wheel -->
+    <circle cx="86" cy="89" r="10" fill="#1E293B" stroke="#F1F5F9" stroke-width="2.5" />
+    <circle cx="86" cy="89" r="5" fill="#94A3B8" />
+    <!-- Tractor Body / Hood / Cabin -->
+    <path d="M48 68 H62 L66 60 H76 L78 72 H92 V84 H76 L66 84" fill="url(#steel-grad)" stroke="#0F172A" stroke-width="2" stroke-linejoin="round" />
+    <!-- Cabin Window -->
+    <path d="M66 62 H74 V70 H66 Z" fill="#38BDF8" stroke="#0F172A" stroke-width="1" />
+    <!-- Exhaust Stack with puff -->
+    <rect x="80" y="52" width="3" height="10" fill="#475569" />
+    <!-- Wrench Tool Cross -->
+    <path d="M84 32 L94 42 M88 28 L98 38 M86 30 C84 32 84 36 87 38 L98 49 C100 51 103 51 105 49 C107 47 107 44 105 42 L94 31 C92 28 88 28 86 30 Z" fill="#E2E8F0" stroke="#0F172A" stroke-width="1" />
+  </g>
+</svg>

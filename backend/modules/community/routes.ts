@@ -23,6 +23,10 @@ import {
   updateShareCareListingSchema,
 } from "@shared/schema";
 
+import { db } from "../../config/db";
+import { count } from "drizzle-orm";
+import { studentRegistry } from "@shared/schema";
+
 export function registerLocalNeedsRoutes(app: Express): void {
   app.get("/api/local-needs", async (req, res) => {
     try {
@@ -214,23 +218,34 @@ export function registerShareCareRoutes(app: Express): void {
 
   app.get("/api/platform/stats", async (_req, res) => {
     try {
-      const [products, freeItems, buyers] = await Promise.all([
+      const [products, freeItems, buyers, farmersByRole] = await Promise.all([
         storage.getProducts(),
         shareCareRepository.countAvailableFree(),
         authStorage.countUsersByRole("buyer"),
+        authStorage.countUsersByRole("farmer"),
       ]);
       const services = products.filter((product) => product.categoryId === "services").length;
       const productListings = products.length - services;
+      const distinctSellerFarmers = new Set(products.map((p) => p.farmerId).filter(Boolean)).size;
+      const totalFarmers = Math.max(farmersByRole, distinctSellerFarmers);
 
-      res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
+      let students = 0;
+      try {
+        const [studentResult] = await db.select({ value: count() }).from(studentRegistry);
+        students = studentResult?.value ?? 0;
+      } catch {
+        students = 0;
+      }
+
+      res.set("Cache-Control", "public, max-age=10, stale-while-revalidate=30");
       res.json({
-        farmers: 1284,
+        farmers: totalFarmers,
         products: productListings,
         freeItems,
         buyers,
-        students: 876,
+        students,
         services,
-        demoFields: ["farmers", "buyers", "students"],
+        demoFields: [],
         updatedAt: new Date().toISOString(),
       });
     } catch (error) {

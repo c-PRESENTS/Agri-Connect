@@ -10,35 +10,72 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
+const SERVICE_LOGOS: Record<string, string> = {
+  home: "/category-logos/daily-needs.svg",
+  help: "/category-logos/farmers-help.svg",
+  "student-help": "/category-logos/student-help.svg",
+  agritech: "/category-logos/agritech.svg",
+  map: "/category-logos/smart-map.svg",
+  land: "/category-logos/land-leasing.svg",
+  share: "/category-logos/share-care.svg",
+  logistics: "/category-logos/logistics.svg",
+  "regional-marketplace": "/category-logos/smart-map.svg",
+  schemes: "/category-logos/government.svg",
+  sell: "/category-logos/photo-sell.svg",
+  seller: "/category-logos/photo-sell.svg",
+  cart: "/category-logos/cart.svg",
+  dash: "/category-logos/dashboard.svg",
+  settings: "/category-logos/settings.svg",
+  // Categories
+  daily: "/category-logos/daily-needs.svg",
+  "daily-needs": "/category-logos/daily-needs.svg",
+  "fresh-produce": "/category-logos/fresh-produce.svg",
+  livestock: "/category-logos/livestock.svg",
+  inputs: "/category-logos/inputs-tools.svg",
+  "inputs-tools": "/category-logos/inputs-tools.svg",
+  processed: "/category-logos/processed.svg",
+  specialty: "/category-logos/specialty.svg",
+  other: "/category-logos/other-agri.svg",
+  "other-agri": "/category-logos/other-agri.svg",
+  super: "/category-logos/supermarket.svg",
+  supermarket: "/category-logos/supermarket.svg",
+  dietary: "/category-logos/dietary.svg",
+  commercial: "/category-logos/commercial-crops.svg",
+  "commercial-crops": "/category-logos/commercial-crops.svg",
+  bio: "/category-logos/bio-products.svg",
+  "bio-products": "/category-logos/bio-products.svg",
+  services: "/category-logos/services.svg",
+};
+
 const ALL_ITEMS = [
-  { id: "seller",     path: "/seller",                    icon: BadgeDollarSign, label: "home.seller_hub",    fallbackLabel: "Seller Hub",   color: "text-yellow-400",  public: true  },
-  { id: "sell",       path: "/dashboard/photo-sell",      icon: Camera,          label: "home.sell_list",     fallbackLabel: "Sell / List",  color: "text-emerald-400", public: false },
-  { id: "daily",      path: "/?category=daily-needs",      icon: ShoppingBasket,  label: "category.daily",     fallbackLabel: "Daily",        color: "text-green-400",   public: true  },
-  { id: "map",        path: "/map",                        icon: Map,             label: "home.smart_map",     fallbackLabel: "Smart Map",    color: "text-sky-400",     public: true  },
   { id: "help",       path: "/farmers-help",               icon: Sprout,          label: "nav.help",           fallbackLabel: "Help",         color: "text-lime-400",    public: true  },
-  { id: "dash",       path: "/dashboard",                  icon: LayoutDashboard, label: "nav.dashboard",      fallbackLabel: "Dashboard",    color: "text-violet-400",  public: false },
-  { id: "settings",   path: "/settings",                   icon: Settings,        label: "nav.settings",       fallbackLabel: "Settings",     color: "text-slate-300",   public: false },
-  { id: "inputs",     path: "/?category=inputs-tools",     icon: Wrench,          label: "category.inputs",    fallbackLabel: "Inputs",       color: "text-blue-400",    public: true  },
-  { id: "processed",  path: "/?category=processed",        icon: Package,         label: "category.processed", fallbackLabel: "Processed",    color: "text-amber-400",   public: true  },
-  { id: "specialty",  path: "/?category=specialty",        icon: Star,            label: "category.specialty", fallbackLabel: "Specialty",    color: "text-yellow-400",  public: true  },
-  { id: "other",      path: "/?category=other-agri",       icon: Wheat,           label: "category.other_agri",fallbackLabel: "Other Agri",   color: "text-yellow-300",  public: true  },
-  { id: "super",      path: "/?category=supermarket",      icon: Store,           label: "home.supermarket",   fallbackLabel: "Supermarket",  color: "text-purple-400",  public: true  },
-  { id: "services",   path: "/?category=services",         icon: Cog,             label: "category.services",  fallbackLabel: "Services",     color: "text-gray-300",    public: true  },
-  { id: "schemes",    path: "/government-schemes",         icon: Building2,       label: "home.govt_schemes",  fallbackLabel: "Govt Schemes", color: "text-indigo-400",  public: true  },
   { id: "agritech",   path: "/agritech",                   icon: Cpu,             label: "home.agritech",      fallbackLabel: "AgriTech",     color: "text-cyan-400",    public: true  },
-  { id: "dietary",    path: "/?category=dietary",          icon: Heart,           label: "category.dietary",   fallbackLabel: "Dietary",      color: "text-pink-400",    public: true  },
+  { id: "map",        path: "/map",                        icon: Map,             label: "home.smart_map",     fallbackLabel: "Smart Map",    color: "text-sky-400",     public: true  },
   { id: "land",       path: "/land-leasing",               icon: Landmark,        label: "nav.land",           fallbackLabel: "Land",         color: "text-emerald-300", public: true  },
-  { id: "logistics",  path: "/logistics",                  icon: Truck,           label: "home.logistics",     fallbackLabel: "Logistics",    color: "text-blue-300",    public: true  },
   { id: "share",      path: "/share-care",                 icon: HeartHandshake,  label: "nav.share",          fallbackLabel: "Share",        color: "text-rose-400",    public: true  },
-  { id: "commercial", path: "/?category=commercial-crops", icon: Factory,         label: "category.commercial",fallbackLabel: "Commercial",   color: "text-slate-400",   public: true  },
-  { id: "bio",        path: "/?category=bio-products",     icon: Leaf,            label: "category.bio",       fallbackLabel: "Bio",          color: "text-teal-400",    public: true  },
+  { id: "logistics",  path: "/logistics",                  icon: Truck,           label: "home.logistics",     fallbackLabel: "Logistics",    color: "text-blue-300",    public: true  },
+  { id: "schemes",    path: "/government-schemes",         icon: Building2,       label: "home.govt_schemes",  fallbackLabel: "Govt Schemes", color: "text-indigo-400",  public: true  },
+  { id: "dash",       path: "/dashboard",                  icon: LayoutDashboard, label: "nav.dashboard",      fallbackLabel: "Dashboard",    color: "text-violet-400",  public: false },
+  { id: "sell",       path: "/dashboard/photo-sell",       icon: Camera,          label: "home.sell_list",     fallbackLabel: "Sell / List",  color: "text-emerald-400", public: false },
+  { id: "settings",   path: "/settings",                   icon: Settings,        label: "nav.settings",       fallbackLabel: "Account Settings", color: "text-slate-300", public: false },
+  { id: "seller",     path: "/seller",                     icon: BadgeDollarSign, label: "home.seller_hub",    fallbackLabel: "Seller Hub",   color: "text-yellow-400",  public: true  },
+  { id: "daily",      path: "/?category=daily-needs",      icon: ShoppingBasket,  label: "category.daily",     fallbackLabel: "Daily",        color: "text-green-400",   public: true, category: "daily-needs" },
+  { id: "inputs",     path: "/?category=inputs-tools",     icon: Wrench,          label: "category.inputs",    fallbackLabel: "Inputs",       color: "text-blue-400",    public: true, category: "inputs-tools" },
+  { id: "processed",  path: "/?category=processed",        icon: Package,         label: "category.processed", fallbackLabel: "Processed",    color: "text-amber-400",   public: true, category: "processed" },
+  { id: "specialty",  path: "/?category=specialty",        icon: Star,            label: "category.specialty", fallbackLabel: "Specialty",    color: "text-yellow-400",  public: true, category: "specialty" },
+  { id: "other",      path: "/?category=other-agri",       icon: Wheat,           label: "category.other_agri",fallbackLabel: "Other Agri",   color: "text-yellow-300",  public: true, category: "other-agri" },
+  { id: "super",      path: "/?category=supermarket",      icon: Store,           label: "home.supermarket",   fallbackLabel: "Supermarket",  color: "text-purple-400",  public: true, category: "supermarket" },
+  { id: "dietary",    path: "/?category=dietary",          icon: Heart,           label: "category.dietary",   fallbackLabel: "Dietary",      color: "text-pink-400",    public: true, category: "dietary" },
+  { id: "commercial", path: "/?category=commercial-crops", icon: Factory,         label: "category.commercial",fallbackLabel: "Commercial",   color: "text-slate-400",   public: true, category: "commercial-crops" },
+  { id: "bio",        path: "/?category=bio-products",     icon: Leaf,            label: "category.bio",       fallbackLabel: "Bio",          color: "text-teal-400",    public: true, category: "bio-products" },
+  { id: "services",   path: "/?category=services",         icon: Cog,             label: "category.services",  fallbackLabel: "Services",     color: "text-gray-300",    public: true, category: "services" },
 ];
 
 const LS_ORDER  = "agri-nav-order";
 const LS_HIDDEN = "agri-nav-hidden";
 const LS_EMOJIS = "agri-nav-emojis";
 const LS_VER    = "agri-nav-ver";
-const ITEMS_VER = "v5";
+const ITEMS_VER = "v6";
 
 if (typeof localStorage !== "undefined" && localStorage.getItem(LS_VER) !== ITEMS_VER) {
   localStorage.removeItem(LS_ORDER);
@@ -107,7 +144,7 @@ export const HeroServiceGrid = memo(function HeroServiceGrid() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2.5 sm:mb-3 px-0.5">
-        <span className="text-xs sm:text-sm font-black uppercase tracking-[0.18em] text-white/70">{t("home.quick_access")}</span>
+        <span className="text-base sm:text-lg md:text-xl font-black uppercase tracking-[0.18em] text-white drop-shadow-md">{t("home.quick_access")}</span>
         <div className="flex items-center gap-2">
           {editMode && (
             <button
@@ -134,26 +171,43 @@ export const HeroServiceGrid = memo(function HeroServiceGrid() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-10 gap-2 sm:gap-2.5">
+      <div className="grid grid-cols-2 gap-2 min-[420px]:grid-cols-3 sm:grid-cols-5 sm:gap-2.5 lg:grid-cols-10">
         {visibleItems.map((item, idx) => {
           const Icon = item.icon;
           const customEmoji = emojis[item.id];
           const isEditingThis = editingEmoji === item.id;
+          const logoSrc = SERVICE_LOGOS[item.id] || ((item as any).category ? SERVICE_LOGOS[(item as any).category] : undefined);
           return (
             <div key={item.id} className="relative group min-w-0">
               <button
-                onClick={() => { if (!editMode) setLocation(item.path); }}
+                onClick={() => {
+                  if (editMode) return;
+                  if ((item as any).category) {
+                    setLocation(item.path);
+                    window.dispatchEvent(new CustomEvent("agri-subcategory-open", { detail: (item as any).category }));
+                  } else {
+                    setLocation(item.path);
+                  }
+                }}
                 data-testid={`nav-${item.id}`}
-                className={`w-full h-[72px] sm:h-[82px] flex flex-col items-center justify-center gap-1.5 rounded-xl sm:rounded-2xl border transition-all duration-150 py-2 px-1 bg-white/[0.09] ${
+                className={`w-full h-[74px] sm:h-[84px] flex flex-col items-center justify-center gap-1.5 rounded-xl sm:rounded-2xl border transition-all duration-150 py-2 px-1 bg-white/[0.09] ${
                   editMode
                     ? "border-white/10 cursor-default"
                     : "border-white/15 hover:border-white/40 hover:bg-white/[0.16] hover:scale-[1.05] active:scale-95 cursor-pointer shadow-md"
                 }`}
               >
-                {customEmoji
-                  ? <span className="text-xl sm:text-2xl leading-none drop-shadow flex-shrink-0">{customEmoji}</span>
-                  : <Icon className={`h-6 w-6 sm:h-7 sm:w-7 drop-shadow flex-shrink-0 ${item.color}`} />
-                }
+                {customEmoji ? (
+                  <span className="text-xl sm:text-2xl leading-none drop-shadow flex-shrink-0">{customEmoji}</span>
+                ) : logoSrc ? (
+                  <img
+                    src={logoSrc}
+                    alt=""
+                    className="h-7 w-7 sm:h-8 sm:w-8 object-contain drop-shadow flex-shrink-0"
+                    loading="lazy"
+                  />
+                ) : (
+                  <Icon className={`h-6 w-6 sm:h-7 sm:w-7 drop-shadow flex-shrink-0 ${item.color}`} />
+                )}
                 <span className="text-xs sm:text-xs font-black text-white text-center leading-tight w-full truncate drop-shadow px-0.5">
                   {t(item.label, { defaultValue: item.fallbackLabel })}
                 </span>

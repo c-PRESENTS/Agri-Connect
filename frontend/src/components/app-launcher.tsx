@@ -24,11 +24,11 @@ interface AppItem {
 
 const ALL_APPS: AppItem[] = [
   { id: "home",          path: "/",                       icon: Home,            label: "nav.home",             fallbackLabel: "Home",             color: "from-green-500 to-emerald-600",    public: true },
-  { id: "marketplace",   path: "/marketplace",             icon: ShoppingBasket,  label: "marketplace.regional_title", fallbackLabel: "Regional Marketplace", color: "from-blue-500 to-indigo-600", public: true },
+  { id: "marketplace",   path: "/map?tab=marketplace",     icon: ShoppingBasket,  label: "marketplace.regional_title", fallbackLabel: "Regional Marketplace", color: "from-blue-500 to-indigo-600", public: true },
   { id: "smart-map",     path: "/map",                    icon: Map,             label: "home.smart_map",        fallbackLabel: "Smart Map",        color: "from-cyan-500 to-teal-600",        public: true },
   { id: "land",          path: "/land-leasing",            icon: Landmark,        label: "land.title",            fallbackLabel: "Land",             color: "from-amber-500 to-orange-600",     public: true },
   { id: "share",         path: "/share-care",              icon: HeartHandshake,  label: "share.title",           fallbackLabel: "Share",            color: "from-rose-500 to-pink-600",        public: true },
-  { id: "ship",          path: "/ship",                    icon: Truck,           label: "ship.title",            fallbackLabel: "Ship",             color: "from-violet-500 to-purple-600",    public: true },
+  { id: "logistics",     path: "/logistics",               icon: Truck,           label: "ship.title",            fallbackLabel: "Logistics & Delivery", color: "from-violet-500 to-purple-600",    public: true },
   { id: "agritech",      path: "/agritech",                icon: Cpu,             label: "home.agritech",         fallbackLabel: "AgriTech",         color: "from-sky-500 to-blue-600",        public: true },
   { id: "schemes",       path: "/government-schemes",      icon: FileText,        label: "home.govt_schemes",     fallbackLabel: "Govt Schemes",     color: "from-emerald-500 to-green-600",    public: true },
   { id: "learn",         path: "/farmers-help",            icon: Sprout,          label: "help.title",            fallbackLabel: "Help",             color: "from-lime-500 to-green-600",       public: true },

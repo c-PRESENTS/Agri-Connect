@@ -9,7 +9,6 @@ const Home = lazy(() => import("@/pages/home"));
 const CategoriesPage = lazy(() => import("@/pages/categories"));
 const AboutPage = lazy(() => import("@/pages/about"));
 const LogisticsPage = lazy(() => import("@/pages/logistics"));
-const LogisticsCollaborationPage = lazy(() => import("@/pages/logistics-collaboration"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const PhotoSell = lazy(() => import("@/pages/photo-sell"));
 const ProductListingPage = lazy(() => import("@/pages/product-listing"));
@@ -17,7 +16,6 @@ const CartPage = lazy(() => import("@/pages/cart"));
 const GovernmentSchemes = lazy(() => import("@/pages/government-schemes"));
 const FarmersHelp = lazy(() => import("@/pages/farmers-help"));
 const LandLeasingPage = lazy(() => import("@/pages/land-leasing"));
-const ShipPage = lazy(() => import("@/pages/ship"));
 const ShipTrackPage = lazy(() => import("@/pages/ship-track"));
 const ShareCarePage = lazy(() => import("@/pages/share-care"));
 const LoginPage = lazy(() => import("@/pages/login"));
@@ -59,7 +57,7 @@ export function AppRoutes() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/categories" component={CategoriesPage} />
-      <Route path="/marketplace" component={MarketplacePage} />
+      <Route path="/marketplace" component={SmartMapPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/dashboard">
         <ProtectedRoute><Dashboard /></ProtectedRoute>
@@ -102,9 +100,9 @@ export function AppRoutes() {
       <Route path="/farmers-help" component={FarmersHelp} />
       <Route path="/land-leasing" component={LandLeasingPage} />
       <Route path="/logistics" component={LogisticsPage} />
-      <Route path="/logistics-collaboration" component={LogisticsCollaborationPage} />
+      <Route path="/logistics-collaboration" component={LogisticsPage} />
       <Route path="/ship/track/:trackingId" component={ShipTrackPage} />
-      <Route path="/ship" component={ShipPage} />
+      <Route path="/ship" component={LogisticsPage} />
       <Route path="/share-care" component={ShareCarePage} />
       <Route path="/cart" component={CartPage} />
       <Route path="/agritech" component={AgriTechPage} />

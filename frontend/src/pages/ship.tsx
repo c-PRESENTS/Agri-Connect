@@ -40,7 +40,7 @@ const statusLabel: Record<ShipmentStatus, string> = {
 };
 
 const shipTabClass =
-  "flex-col sm:flex-row gap-2 rounded-xl py-3 px-4 text-sm sm:text-base font-black text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md uppercase tracking-wide";
+  "flex-col sm:flex-row gap-2 rounded-xl py-3 px-4 text-sm sm:text-base font-black text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 uppercase tracking-wide";
 
 export default function ShipPage() {
   const { format } = useCurrency();
@@ -107,7 +107,7 @@ export default function ShipPage() {
       </Card>
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-        <TabsList className="grid h-auto w-full grid-cols-5 gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm sm:grid-cols-3 lg:grid-cols-5">
           <TabsTrigger value="track" className={shipTabClass} data-testid="tab-track"><Package className="h-5 w-5" />Track</TabsTrigger>
           <TabsTrigger value="orders" className={shipTabClass} data-testid="tab-orders"><Truck className="h-5 w-5" />{t("ship.parcels_tab")}</TabsTrigger>
           <TabsTrigger value="send" className={shipTabClass} data-testid="tab-send"><Send className="h-5 w-5" />{t("ship.send_parcel_button")}</TabsTrigger>

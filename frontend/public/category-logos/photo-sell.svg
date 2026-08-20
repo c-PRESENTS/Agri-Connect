@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-sell" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#78350F" />
+    </linearGradient>
+    <linearGradient id="lens-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0369A1" />
+    </linearGradient>
+    <filter id="shadow-sell" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-sell)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-sell)">
+    <!-- Camera Body -->
+    <rect x="28" y="44" width="72" height="52" rx="12" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.5" />
+    <!-- Flash / Viewfinder Mount -->
+    <path d="M46 44 L52 34 H76 L82 44 Z" fill="#E2E8F0" stroke="#0F172A" stroke-width="2" />
+    <circle cx="56" cy="39" r="2.5" fill="#EF4444" />
+    <rect x="68" y="37" width="8" height="4" rx="1" fill="#0F172A" />
+    <!-- Camera Lens Ring -->
+    <circle cx="64" cy="70" r="20" fill="#1E293B" stroke="#FBBF24" stroke-width="3" />
+    <circle cx="64" cy="70" r="14" fill="url(#lens-blue)" />
+    <!-- Lens reflection -->
+    <path d="M56 62 Q64 58 72 64" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8" />
+    <!-- Sprout / Listing Sparkle -->
+    <path d="M64 78 V68 M64 68 C64 62 58 60 55 62 C55 68 61 68 64 68 Z" fill="#4ADE80" stroke="#15803D" stroke-width="1" />
+    <path d="M64 70 C64 64 70 62 73 64 C73 70 67 70 64 70 Z" fill="#4ADE80" stroke="#15803D" stroke-width="1" />
+    <!-- AI Instant Listing Tag -->
+    <rect x="74" y="78" width="28" height="16" rx="8" fill="#10B981" stroke="#FFFFFF" stroke-width="1.5" />
+    <text x="88" y="89" font-size="9" font-weight="900" fill="#FFFFFF" text-anchor="middle" font-family="system-ui, sans-serif">SELL</text>
+  </g>
+</svg>

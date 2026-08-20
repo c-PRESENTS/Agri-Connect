@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-proc" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E11D48" />
+      <stop offset="50%" stop-color="#BE123C" />
+      <stop offset="100%" stop-color="#4C0519" />
+    </linearGradient>
+    <linearGradient id="jar-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="100%" stop-color="#EAB308" />
+    </linearGradient>
+    <linearGradient id="oil-bottle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FED7AA" />
+      <stop offset="100%" stop-color="#F97316" />
+    </linearGradient>
+    <filter id="shadow-proc" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-proc)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-proc)">
+    <!-- Food Processing / Mill Factory Cog Crest -->
+    <circle cx="64" cy="50" r="28" fill="white" opacity="0.1" />
+    <!-- Glass Jar (Honey / Jam / Pickle / Spices) -->
+    <rect x="36" y="52" width="28" height="42" rx="6" fill="url(#jar-gold)" stroke="#FFFFFF" stroke-width="2" />
+    <!-- Jar Lid -->
+    <rect x="38" y="44" width="24" height="8" rx="3" fill="#B91C1C" stroke="#FFFFFF" stroke-width="1.5" />
+    <!-- Jar Label -->
+    <rect x="40" y="62" width="20" height="18" rx="2" fill="#FFFFFF" opacity="0.85" />
+    <line x1="44" y1="68" x2="56" y2="68" stroke="#991B1B" stroke-width="2" />
+    <line x1="44" y1="74" x2="52" y2="74" stroke="#991B1B" stroke-width="1.5" />
+    <!-- Cold-Pressed Oil Bottle -->
+    <path d="M76 42 H84 V50 L90 58 V94 H70 V58 L76 50 Z" fill="url(#oil-bottle)" stroke="#FFFFFF" stroke-width="2" />
+    <!-- Bottle Cap -->
+    <rect x="75" y="36" width="10" height="6" rx="2" fill="#FDE047" stroke="#92400E" stroke-width="1" />
+    <!-- Bottle Label -->
+    <rect x="74" y="66" width="12" height="18" rx="2" fill="#FFFFFF" opacity="0.85" />
+    <circle cx="80" cy="74" r="3" fill="#15803D" />
+    <!-- Value-Added Quality Seal Badge -->
+    <circle cx="88" cy="40" r="12" fill="#FACC15" stroke="#78350F" stroke-width="1.5" />
+    <path d="M88 33 L90 38 L95 38 L91 41 L93 46 L88 43 L83 46 L85 41 L81 38 L86 38 Z" fill="#B45309" />
+  </g>
+</svg>

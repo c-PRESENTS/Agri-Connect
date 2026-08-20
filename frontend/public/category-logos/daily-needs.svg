@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-daily" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="50%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+    <linearGradient id="gold-grain" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FEF3C7" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+    <linearGradient id="leaf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#86EFAC" />
+      <stop offset="100%" stop-color="#16A34A" />
+    </linearGradient>
+    <filter id="shadow-daily" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.25" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-daily)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-daily)">
+    <!-- Sunburst behind grains -->
+    <circle cx="64" cy="58" r="32" fill="white" opacity="0.12" />
+    <!-- Wheat Sheaves / Grain heads -->
+    <path d="M64 88 V44 M64 44 C60 38 52 38 48 44 C52 50 60 50 64 44 Z M64 54 C58 50 50 52 48 58 C54 62 60 60 64 54 Z M64 66 C58 62 50 64 48 70 C54 74 60 72 64 66 Z M64 44 C68 38 76 38 80 44 C76 50 68 50 64 44 Z M64 54 C70 50 78 52 80 58 C74 62 68 60 64 54 Z M64 66 C70 62 78 64 80 70 C74 74 68 72 64 66 Z" fill="url(#gold-grain)" stroke="#78350F" stroke-width="1.5" stroke-linejoin="round" />
+    <!-- Farm Fresh Woven Basket / Sack Base -->
+    <path d="M36 78 Q64 74 92 78 L86 98 Q64 104 42 98 Z" fill="#FEF3C7" stroke="#92400E" stroke-width="2" />
+    <path d="M42 84 Q64 80 86 84 M44 91 Q64 87 84 91" stroke="#D97706" stroke-width="1.5" fill="none" stroke-linecap="round" />
+    <!-- Green Sprout Accent on basket -->
+    <path d="M64 76 C64 68 56 64 52 66 C52 74 60 76 64 76 Z" fill="url(#leaf-grad)" stroke="#15803D" stroke-width="1" />
+    <path d="M64 76 C64 68 72 64 76 66 C76 74 68 76 64 76 Z" fill="url(#leaf-grad)" stroke="#15803D" stroke-width="1" />
+  </g>
+</svg>

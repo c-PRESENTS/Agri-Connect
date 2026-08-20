@@ -239,7 +239,7 @@ export const UserBookmarks = memo(function UserBookmarks() {
     <>
       <div className="space-y-3">
         <div className="flex items-center px-0.5">
-          <span className="text-xs sm:text-sm font-black uppercase tracking-[0.18em] text-white/70">{t("home.my_sites")}</span>
+          <span className="text-base sm:text-lg md:text-xl font-black uppercase tracking-[0.18em] text-white drop-shadow-md">{t("home.my_sites")}</span>
         </div>
 
         <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar sm:flex-wrap">

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-modern" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="tech-sprout" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A7F3D0" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+    <linearGradient id="glow-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67E8F9" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+    <filter id="shadow-modern" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-modern)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-modern)">
+    <!-- Digital Circuit Grid Lines -->
+    <path d="M30 40 H46 L54 48 H74 L82 40 H98" stroke="url(#glow-cyan)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6" />
+    <path d="M36 88 H50 L58 80 H70 L78 88 H92" stroke="url(#glow-cyan)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6" />
+    <circle cx="46" cy="40" r="2.5" fill="#67E8F9" />
+    <circle cx="82" cy="40" r="2.5" fill="#67E8F9" />
+    <circle cx="50" cy="88" r="2.5" fill="#67E8F9" />
+    <circle cx="78" cy="88" r="2.5" fill="#67E8F9" />
+    <!-- Hydroponic NFT Channel System / Smart Rack -->
+    <rect x="32" y="68" width="64" height="12" rx="4" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" />
+    <!-- Nutrient Pipe Ports -->
+    <circle cx="44" cy="74" r="3" fill="#0284C7" />
+    <circle cx="64" cy="74" r="3" fill="#0284C7" />
+    <circle cx="84" cy="74" r="3" fill="#0284C7" />
+    <!-- Glowing Agritech Sprout / Plant -->
+    <path d="M64 68 V46 M64 46 C64 34 52 32 46 36 C44 48 56 46 64 46 Z" fill="url(#tech-sprout)" stroke="#065F46" stroke-width="1.5" stroke-linejoin="round" />
+    <path d="M64 52 C64 42 74 38 80 42 C82 52 72 52 64 52 Z" fill="url(#tech-sprout)" stroke="#065F46" stroke-width="1.5" stroke-linejoin="round" />
+    <!-- Drone / IoT Sensor Wave Signal -->
+    <path d="M54 28 C60 24 68 24 74 28" stroke="#FDE047" stroke-width="2" stroke-linecap="round" fill="none" />
+    <path d="M58 32 C62 30 66 30 70 32" stroke="#FDE047" stroke-width="2" stroke-linecap="round" fill="none" />
+    <circle cx="64" cy="35" r="1.5" fill="#FDE047" />
+  </g>
+</svg>

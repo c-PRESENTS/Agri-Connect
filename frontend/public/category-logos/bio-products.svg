@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-bio" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#84CC16" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#064E3B" />
+    </linearGradient>
+    <linearGradient id="dna-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A7F3D0" />
+      <stop offset="100%" stop-color="#34D399" />
+    </linearGradient>
+    <linearGradient id="flask-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ECFCCB" />
+      <stop offset="100%" stop-color="#BEF264" />
+    </linearGradient>
+    <filter id="shadow-bio" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-bio)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-bio)">
+    <!-- Bio-Fermentation Flask / Beaker Outline -->
+    <path d="M58 34 H70 V48 L86 82 C89 88 85 96 78 96 H50 C43 96 39 88 42 82 L58 48 Z" fill="url(#flask-grad)" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round" />
+    <!-- Flask Lip -->
+    <rect x="54" y="30" width="20" height="5" rx="2" fill="#FFFFFF" />
+    <!-- Liquid Surface / Bio Enzymes -->
+    <path d="M48 76 Q64 82 80 76 L84 84 C86 88 83 94 77 94 H51 C45 94 42 88 44 84 Z" fill="#65A30D" />
+    <circle cx="56" cy="84" r="2" fill="#FEF08A" />
+    <circle cx="66" cy="80" r="3" fill="#FEF08A" />
+    <circle cx="74" cy="86" r="2.5" fill="#FEF08A" />
+    <circle cx="62" cy="70" r="2" fill="#FEF08A" />
+    <!-- Natural Eco-Leaf Emerging From Flask -->
+    <path d="M64 54 C64 36 78 28 86 30 C88 46 76 56 64 54 Z" fill="#22C55E" stroke="#14532D" stroke-width="1.5" />
+    <path d="M68 44 Q74 42 80 34" stroke="#DCFCE7" stroke-width="1" fill="none" />
+    <!-- DNA Strand / Bio Molecule Rings -->
+    <circle cx="34" cy="46" r="4.5" fill="#FEF08A" stroke="#166534" stroke-width="1.5" />
+    <circle cx="44" cy="36" r="3.5" fill="#67E8F9" stroke="#166534" stroke-width="1.5" />
+    <line x1="34" y1="46" x2="44" y2="36" stroke="#FFFFFF" stroke-width="2" />
+    <circle cx="94" cy="52" r="4.5" fill="#FEF08A" stroke="#166534" stroke-width="1.5" />
+    <circle cx="86" cy="62" r="3.5" fill="#67E8F9" stroke="#166534" stroke-width="1.5" />
+    <line x1="94" y1="52" x2="86" y2="62" stroke="#FFFFFF" stroke-width="2" />
+  </g>
+</svg>

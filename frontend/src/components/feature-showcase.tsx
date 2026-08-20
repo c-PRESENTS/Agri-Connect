@@ -24,7 +24,7 @@ interface PlatformStatistics {
   buyers: number;
   students: number;
   services: number;
-  demoFields: Array<"farmers" | "buyers" | "students">;
+  demoFields?: string[];
   updatedAt: string;
 }
 

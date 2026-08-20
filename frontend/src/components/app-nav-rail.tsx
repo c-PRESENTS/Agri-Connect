@@ -32,6 +32,23 @@ import { categories as defaultCategories, categoryImages, isShoppableCategory } 
 import { AppLauncher } from "./app-launcher";
 import { useTranslation } from "react-i18next";
 
+const SERVICE_LOGOS: Record<string, string> = {
+  home: "/category-logos/daily-needs.svg",
+  help: "/category-logos/farmers-help.svg",
+  "student-help": "/category-logos/student-help.svg",
+  agritech: "/category-logos/agritech.svg",
+  map: "/category-logos/smart-map.svg",
+  land: "/category-logos/land-leasing.svg",
+  share: "/category-logos/share-care.svg",
+  logistics: "/category-logos/logistics.svg",
+  "regional-marketplace": "/category-logos/smart-map.svg",
+  schemes: "/category-logos/government.svg",
+  sell: "/category-logos/photo-sell.svg",
+  cart: "/category-logos/cart.svg",
+  dash: "/category-logos/dashboard.svg",
+  settings: "/category-logos/settings.svg",
+};
+
 function getCategoryImage(categoryId: string): string | undefined {
   if (categoryImages[categoryId]) return categoryImages[categoryId];
   const cat = defaultCategories.find(c => c.id === categoryId);
@@ -43,22 +60,26 @@ function getCategoryImage(categoryId: string): string | undefined {
   return undefined;
 }
 
+function getItemLogo(item: ServiceItem): string | undefined {
+  if (SERVICE_LOGOS[item.id]) return SERVICE_LOGOS[item.id];
+  if ("category" in item && item.category) {
+    return getCategoryImage(item.category);
+  }
+  return undefined;
+}
+
 const ALL_SERVICES = [
   { id: "home",         path: "/",                     icon: Home,            label: "Home",         public: true  },
   // Shopping categories (merged from the old front sidebar) — link to home with ?category=
   { id: "cat-daily",    path: "/?category=daily-needs",     icon: ShoppingBasket, label: "Daily",      public: true, category: "daily-needs"     },
-  { id: "cat-fresh",    path: "/?category=fresh-produce",    icon: Salad,          label: "Fresh",      public: true, category: "fresh-produce"    },
+  { id: "cat-fresh",    path: "/?category=fresh-produce",    icon: Salad,          label: "Bulk & Wholesale", public: true, category: "fresh-produce" },
   { id: "cat-livestock",path: "/?category=livestock",        icon: Beef,           label: "Livestock",  public: true, category: "livestock"        },
   { id: "cat-inputs",   path: "/?category=inputs-tools",    icon: Wrench,         label: "Inputs",     public: true, category: "inputs-tools"    },
-  { id: "cat-processed",path: "/?category=processed",       icon: Package,        label: "Processed",  public: true, category: "processed"       },
-  { id: "cat-specialty",path: "/?category=specialty",       icon: Award,          label: "Specialty",  public: true, category: "specialty"       },
-  { id: "cat-other",    path: "/?category=other-agri",      icon: Wheat,          label: "Other Agri", public: true, category: "other-agri"      },
   { id: "cat-super",    path: "/?category=supermarket",     icon: Store,          label: "Complete Supermarket", public: true, category: "supermarket"     },
-  { id: "regional-marketplace", path: "/marketplace",       icon: MapPinned,      label: "Regional Marketplace", public: true },
+  { id: "regional-marketplace", path: "/map?tab=marketplace", icon: MapPinned, label: "Regional Marketplace", public: true },
   { id: "cat-dietary",  path: "/?category=dietary",         icon: Salad,          label: "Dietary",    public: true, category: "dietary"         },
   { id: "cat-modern",   path: "/?category=modern-farming",  icon: Sparkles,       label: "Modern",     public: true, category: "modern-farming"  },
   { id: "cat-services", path: "/?category=services",        icon: Briefcase,      label: "Services",   public: true, category: "services"        },
-  { id: "cat-commerc",  path: "/?category=commercial-crops",icon: Factory,        label: "Commercial", public: true, category: "commercial-crops"},
   { id: "cat-bio",      path: "/?category=bio-products",    icon: Leaf,           label: "Bio",        public: true, category: "bio-products"    },
   // App services (existing)
   { id: "help",     path: "/farmers-help",         icon: Sprout,          label: "Learn",     public: true  },
@@ -67,9 +88,7 @@ const ALL_SERVICES = [
   { id: "map",      path: "/map",                  icon: Map,             label: "Smart Map", public: true  },
   { id: "land",     path: "/land-leasing",         icon: Landmark,        label: "Land",      public: true  },
   { id: "share",    path: "/share-care",           icon: HeartHandshake,  label: "Share",     public: true  },
-  { id: "ship",     path: "/ship",                 icon: Truck,           label: "Ship",      public: true  },
-  { id: "logistics",path: "/logistics",            icon: Package,         label: "Delivery",  public: true  },
-  { id: "logistics-collaboration", path: "/logistics-collaboration", icon: Handshake, label: "Collaborate", public: true },
+  { id: "logistics",path: "/logistics",                   icon: Truck,           label: "Delivery",  public: true  },
   { id: "schemes",  path: "/government-schemes",   icon: FileText,        label: "Schemes",   public: true  },
   { id: "cart",     path: "/cart",                 icon: ShoppingCart,    label: "Cart",      public: true  },
   { id: "dash",     path: "/dashboard",            icon: LayoutDashboard, label: "Dashboard", public: false },
@@ -88,9 +107,7 @@ const COMING_SOON_SERVICE_IDS = new Set([
   "agritech",
   "land",
   "share",
-  "ship",
   "logistics",
-  "logistics-collaboration",
   "schemes",
   "cat-dietary",
 ]);
@@ -106,9 +123,7 @@ const FULL_SERVICE_LABELS: Record<string, string> = {
   map: "Smart Map",
   land: "Land Leasing Marketplace",
   share: "Share & Care Community",
-  ship: "Shipping Management",
   logistics: "Logistics & Delivery",
-  "logistics-collaboration": "Logistics Collaboration",
   "regional-marketplace": "Regional Marketplace",
   schemes: "Government Schemes",
   cart: "Shopping Cart",
@@ -379,6 +394,11 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                       window.history.pushState({}, "", "/");
                     }
                     setLocation("/");
+                  } else if (item.id === "regional-marketplace") {
+                    window.dispatchEvent(new Event("agri-subcategory-close"));
+                    window.history.pushState({}, "", "/map?tab=marketplace");
+                    window.dispatchEvent(new Event("popstate"));
+                    setLocation("/map?tab=marketplace");
                   } else {
                     window.dispatchEvent(new Event("agri-subcategory-close"));
                     setLocation(item.path);
@@ -392,22 +412,20 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                     ? "items-center gap-3 py-2.5 px-3"
                     : "flex-col items-center justify-center gap-1.5 py-2.5 px-1.5"
                 } ${
-                  isComingSoon && !editMode
-                    ? "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-700 dark:hover:bg-emerald-950/60 shadow-2xs"
-                    : isActive && !editMode
-                    ? "bg-gradient-to-r from-primary/30 via-primary/20 to-primary/10 text-primary font-black shadow-[inset_0_0_0_1.5px_hsl(var(--primary)/0.5)] ring-1 ring-primary/40"
+                  isActive && !editMode
+                    ? "bg-amber-400 text-amber-950 font-black shadow-md ring-2 ring-amber-500 hover:bg-amber-300 dark:bg-amber-400 dark:text-amber-950"
                     : editMode
-                      ? "bg-muted/40 text-muted-foreground cursor-grab active:cursor-grabbing"
-                      : "text-foreground/90 hover:bg-muted/80 hover:text-foreground font-extrabold"
+                    ? "bg-muted/40 text-muted-foreground cursor-grab active:cursor-grabbing"
+                    : "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-700 dark:hover:bg-emerald-950/60 shadow-2xs font-extrabold"
                 }`}
                 data-testid={`nav-rail-${item.id}`}
               >
                 {isActive && !editMode && (
                   <>
                     {/* Big visible left bar that extends well past the rail edge */}
-                    <span className="absolute -left-1 top-1 bottom-1 w-2 rounded-r-full bg-primary shadow-[0_0_12px_hsl(var(--primary)/0.7)]" />
+                    <span className="absolute -left-1 top-1 bottom-1 w-2 rounded-r-full bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.9)]" />
                     {/* Soft glow extending leftward for stronger visual cue */}
-                    <span className="absolute -left-2 top-1/2 -translate-y-1/2 h-9 w-2.5 rounded-full bg-primary/50 blur-[6px]" />
+                    <span className="absolute -left-2 top-1/2 -translate-y-1/2 h-9 w-2.5 rounded-full bg-amber-500/50 blur-[6px]" />
                   </>
                 )}
                 {/* Drag handle visible on left when editing + expanded */}
@@ -421,14 +439,14 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                     <span className={expanded ? "text-[28px] leading-none" : "text-[34px] leading-none"}>
                       {emojis[item.id]}
                     </span>
-                  ) : itemCat && getCategoryImage(itemCat) ? (
+                  ) : getItemLogo(item) ? (
                     <img
-                      src={getCategoryImage(itemCat)}
+                      src={getItemLogo(item)}
                       alt={getExpandedItemLabel(item)}
                       loading="lazy"
                       className={`object-cover rounded-xl shadow-sm ring-1 ring-black/10 dark:ring-white/15 ${
                         expanded ? "h-10 w-10" : "h-13 w-13"
-                      } ${isActive && !editMode ? "ring-2 ring-primary" : ""}`}
+                      } ${isActive && !editMode ? "ring-2 ring-amber-500" : ""}`}
                     />
                   ) : (
                     <Icon className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={2.2} />

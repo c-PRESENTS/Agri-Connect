@@ -216,18 +216,32 @@ export function resolveProductImage(input: ProductImageResolverInput): ProductIm
   }
 
   const aliasMatches = productImageAliasIndex[normalizedName] ?? [];
-  if (aliasMatches.length === 1) {
+  if (aliasMatches.length >= 1) {
     const match = productImageRegistry[aliasMatches[0]];
+    if (match) {
+      return {
+        src: match.localAssetPath,
+        source: "alias",
+        reason: `Matched approved alias to ${match.name}`,
+        normalizedName,
+        matchedSlug: match.slug,
+        attribution: match.attribution,
+        reviewRequired: false,
+        ambiguousMatches: [],
+        ignoredProvidedImage,
+      };
+    }
+  }
+
+  // If local registry doesn't have an asset, but providedImage is a valid photo (not legacy generic placeholder), use providedImage!
+  if (providedImage && !replaceableLegacyImage && providedImage.startsWith("http")) {
     return {
-      src: match.localAssetPath,
-      source: "alias",
-      reason: `Matched approved alias to ${match.name}`,
+      src: providedImage,
+      source: "exact-product",
+      reason: "Used provided product photo",
       normalizedName,
-      matchedSlug: match.slug,
-      attribution: match.attribution,
       reviewRequired: false,
       ambiguousMatches: [],
-      ignoredProvidedImage,
     };
   }
 

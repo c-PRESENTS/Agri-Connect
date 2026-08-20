@@ -28,6 +28,7 @@ import {
   Mail,
 } from "lucide-react";
 import { Link } from "wouter";
+import { ComingSoonBadge } from "@/components/coming-soon-badge";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -446,7 +447,7 @@ export default function SettingsPage() {
               </CardTitle>
               <CardDescription className="text-base font-bold text-foreground/70 mt-1">Password and two-factor authentication controls.</CardDescription>
             </div>
-            <Badge className="shrink-0 text-sm font-black px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-600 shadow-md">Coming soon</Badge>
+            <ComingSoonBadge />
           </CardHeader>
         </Card>
 

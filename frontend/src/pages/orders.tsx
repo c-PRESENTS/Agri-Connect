@@ -90,7 +90,7 @@ export default function OrdersPage() {
 
         {/* Filters */}
         <div className="flex gap-3 mb-6 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative min-w-0 flex-[1_1_14rem]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
@@ -101,7 +101,7 @@ export default function OrdersPage() {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]" data-testid="select-status-filter">
+            <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-status-filter">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder={t("orders.tab_all")} />
             </SelectTrigger>

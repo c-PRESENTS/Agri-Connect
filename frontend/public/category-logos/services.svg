@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-serv" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="50%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="wrench-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="100%" stop-color="#EAB308" />
+    </linearGradient>
+    <filter id="shadow-serv" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-serv)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-serv)">
+    <!-- Cog Gear -->
+    <circle cx="64" cy="64" r="28" fill="#1E293B" stroke="#94A3B8" stroke-width="3" />
+    <circle cx="64" cy="64" r="14" fill="#0F172A" stroke="url(#wrench-gold)" stroke-width="2" />
+    <!-- Crossed Industrial Tools -->
+    <path d="M42 42 L86 86 M86 42 L42 86" stroke="url(#wrench-gold)" stroke-width="6" stroke-linecap="round" />
+    <circle cx="64" cy="64" r="6" fill="#F8FAFC" />
+  </g>
+</svg>
