@@ -1,5 +1,5 @@
 import "leaflet/dist/leaflet.css";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   MapContainer, TileLayer, Marker, Popup, Circle, Polygon, useMapEvents, useMap
@@ -11,21 +11,25 @@ import {
   Download, Upload, Search, ZoomIn, ZoomOut, X, Plus,
   Clock, Users, ShoppingBag, ChevronRight, ChevronLeft, ChevronDown,
   RefreshCw, FileText, Globe, Crosshair, Radio, Wheat, Package,
-  Star, Leaf, AlertTriangle
+  Star, Leaf, AlertTriangle, Store, ShieldCheck, Filter, SlidersHorizontal,
+  Globe2, Loader2, CheckCircle2, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TopNavigation } from "@/components/top-navigation";
 import { SafeProductImage } from "@/components/safe-product-image";
+import { ProductCard } from "@/components/product-card";
+import { getShoppableCategories } from "@/lib/categories";
 import { useTranslation } from "react-i18next";
 import { useLocation, useSearch } from "wouter";
 
@@ -43,6 +47,37 @@ L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
+type Region = { id: string; parentId: string | null; code: string; name: string; countryCode: string; type: string; latitude: number | null; longitude: number | null; activeSellerCount: number };
+type Organisation = { id: string; name: string; slug: string; regionId: string; regionName: string };
+type MarketplaceMarker = {
+  sellerId: string;
+  sellerName: string;
+  latitude: number;
+  longitude: number;
+  location: string;
+  productCount: number;
+  minimumPrice: number;
+  rating: number;
+  productIds: string[];
+  isLocal?: boolean;
+};
+type MarketplaceResponse = {
+  products: Product[];
+  markers: MarketplaceMarker[];
+  pagination: { page: number; pageSize: number; total: number; pageCount: number };
+  summary: { localCount: number; globalCount: number };
+};
+
+const marketplaceSellerIcon = (isLocal: boolean) => L.divIcon({
+  html: `<div style="width:34px;height:34px;border-radius:50%;background:${isLocal ? '#059669' : '#2563eb'};border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;color:white;">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg>
+  </div>`,
+  className: "",
+  iconSize: [34, 34],
+  iconAnchor: [17, 34],
+  popupAnchor: [0, -36],
 });
 
 const farmerIcon = (online: boolean) => L.divIcon({
@@ -89,7 +124,7 @@ const IRRIGATION_ZONES = [
 ];
 
 type DrawMode = "none" | "polygon";
-type RightPanelType = "farmers" | "food" | "needs" | "all" | "post" | "shapes";
+type RightPanelType = "marketplace" | "farmers" | "food" | "needs" | "all" | "post" | "shapes";
 type NearbyRadius = 10 | 25 | 50 | 100 | "all";
 
 function InvalidateSizeOnMount() {
@@ -151,6 +186,7 @@ const URGENCY_COLORS = { high: "bg-red-100 text-red-700 border-red-200", medium:
 const BUYER_ICONS: Record<string, string> = { restaurant: "🍽️", retailer: "🏪", individual: "👤", processor: "🏭", school: "🏫", hospital: "🏥" };
 
 const RIGHT_PANEL_TABS: { id: RightPanelType; icon: any; labelKey: string; shortLabelKey: string; color: string }[] = [
+  { id: "marketplace", icon: Store, labelKey: "map.tab_marketplace", shortLabelKey: "map.tab_marketplace_short", color: "text-emerald-600" },
   { id: "farmers", icon: Users, labelKey: "map.tab_farmers", shortLabelKey: "map.tab_farmers_short", color: "text-green-600" },
   { id: "food", icon: Wheat, labelKey: "map.tab_food", shortLabelKey: "map.tab_food_short", color: "text-amber-600" },
   { id: "needs", icon: Radio, labelKey: "map.tab_needs", shortLabelKey: "map.tab_needs_short", color: "text-red-500" },
@@ -176,16 +212,9 @@ export default function SmartMapPage() {
   const [drawMode, setDrawMode] = useState<DrawMode>("none");
   const [drawnPoints, setDrawnPoints] = useState<[number, number][]>([]);
   const [savedPolygons, setSavedPolygons] = useState<{ id: string; coords: [number, number][]; label: string; area: number; color: string }[]>([]);
-  const [rightPanel, setRightPanel] = useState<RightPanelType>("farmers");
-  const [rightPanelWidth, setRightPanelWidth] = useState(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 1024) {
-      // Roughly half of remaining width after vertical tab rail (~36px) + handle (~6px)
-      return Math.max(150, Math.floor((window.innerWidth - 44) / 2));
-    }
-    return 360;
-  });
-  const draggingRight = useRef<{ startX: number; startW: number } | null>(null);
-  const rightPanelRef = useRef<HTMLDivElement | null>(null);
+  const initialParams = useMemo(() => new URLSearchParams(window.location.search), [routeSearch]);
+  const isMarketplaceRoute = typeof window !== "undefined" && (window.location.pathname.startsWith("/marketplace") || initialParams.get("tab") === "marketplace" || !!initialParams.get("category") || !!initialParams.get("regionId"));
+
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [usingDeviceLocation, setUsingDeviceLocation] = useState(false);
   const [nearbyRadius, setNearbyRadius] = useState<NearbyRadius>(50);
@@ -198,6 +227,110 @@ export default function SmartMapPage() {
   const mapRef = useRef<L.Map | null>(null);
   const lastFocusedFarmerId = useRef<string | null>(null);
   const roleDefaultsApplied = useRef(false);
+
+  const [rightPanelWidth, setRightPanelWidth] = useState(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      // Roughly half of remaining width after vertical tab rail (~36px) + handle (~6px)
+      return Math.max(150, Math.floor((window.innerWidth - 44) / 2));
+    }
+    return 360;
+  });
+  const draggingRight = useRef<{ startX: number; startW: number } | null>(null);
+  const rightPanelRef = useRef<HTMLDivElement | null>(null);
+
+  const [marketFilters, setMarketFilters] = useState({
+    search: initialParams.get("search") || "",
+    categoryId: initialParams.get("category") || "",
+    subcategoryId: initialParams.get("subcategory") || "",
+    regionId: initialParams.get("regionId") || "",
+    quantity: "",
+    qualityGrade: "",
+    minPrice: "",
+    maxPrice: "",
+    minRating: "",
+    scope: "global",
+    sortBy: initialParams.get("sortBy") || "distance",
+  });
+
+  const [rightPanel, setRightPanel] = useState<RightPanelType>(() => {
+    if (isMarketplaceRoute) return "marketplace";
+    const tab = initialParams.get("tab") as RightPanelType;
+    if (tab && ["marketplace", "farmers", "food", "needs", "all", "post", "shapes"].includes(tab)) return tab;
+    return "marketplace";
+  });
+
+  const { data: marketplaceRegions = [] } = useQuery<Region[]>({ queryKey: ["/api/marketplace/regions"] });
+  const { data: marketplaceOrganisations = [] } = useQuery<Organisation[]>({
+    queryKey: [`/api/marketplace/organisations${marketFilters.regionId ? `?regionId=${marketFilters.regionId}` : ""}`],
+  });
+
+  const marketQuery = new URLSearchParams();
+  Object.entries(marketFilters).forEach(([key, value]) => {
+    if (value) marketQuery.set(key === "minRating" ? "rating" : key, value);
+  });
+  if (userLocation) {
+    marketQuery.set("latitude", String(userLocation[0]));
+    marketQuery.set("longitude", String(userLocation[1]));
+  }
+  const marketResultKey = `/api/marketplace/search?${marketQuery.toString()}`;
+  const { data: marketData, isLoading: isMarketLoading } = useQuery<MarketplaceResponse>({
+    queryKey: [marketResultKey],
+  });
+
+  const addToCart = useMutation({
+    mutationFn: async (product: Product) => {
+      await apiRequest("POST", "/api/cart", { productId: product.id, quantity: 1 });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+      toast({ title: "Added to cart" });
+    },
+    onError: () => toast({ title: "Sign in to add this product", variant: "destructive" }),
+  });
+
+  useEffect(() => {
+    if (!marketFilters.regionId) return;
+    const reg = marketplaceRegions.find((r) => r.id === marketFilters.regionId);
+    if (reg && reg.latitude && reg.longitude) {
+      setFlyTo([reg.latitude, reg.longitude]);
+      setMapCenter([reg.latitude, reg.longitude]);
+      mapRef.current?.flyTo([reg.latitude, reg.longitude], 10, { duration: 1.5 });
+    }
+  }, [marketFilters.regionId, marketplaceRegions]);
+
+  useEffect(() => {
+    const next = new URLSearchParams(window.location.search);
+    next.set("tab", rightPanel);
+    if (rightPanel === "marketplace") {
+      if (marketFilters.search) next.set("search", marketFilters.search); else next.delete("search");
+      if (marketFilters.categoryId) next.set("category", marketFilters.categoryId); else next.delete("category");
+      if (marketFilters.subcategoryId) next.set("subcategory", marketFilters.subcategoryId); else next.delete("subcategory");
+      if (marketFilters.regionId) next.set("regionId", marketFilters.regionId); else next.delete("regionId");
+      if (marketFilters.sortBy && marketFilters.sortBy !== "distance") next.set("sortBy", marketFilters.sortBy); else next.delete("sortBy");
+    }
+    const currentPath = window.location.pathname.startsWith("/marketplace") ? "/map" : window.location.pathname;
+    window.history.replaceState(null, "", `${currentPath}${next.size ? `?${next.toString()}` : ""}`);
+  }, [rightPanel, marketFilters]);
+
+  useEffect(() => {
+    const handleUrlSync = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab") as RightPanelType | null;
+      const isMarket = typeof window !== "undefined" && (window.location.pathname.startsWith("/marketplace") || tabParam === "marketplace" || !!params.get("category") || !!params.get("regionId"));
+      if (isMarket) {
+        setRightPanel("marketplace");
+        if (params.get("search")) setMarketFilters((prev) => ({ ...prev, search: params.get("search") || "" }));
+        if (params.get("category")) setMarketFilters((prev) => ({ ...prev, categoryId: params.get("category") || "" }));
+        if (params.get("subcategory")) setMarketFilters((prev) => ({ ...prev, subcategoryId: params.get("subcategory") || "" }));
+        if (params.get("regionId")) setMarketFilters((prev) => ({ ...prev, regionId: params.get("regionId") || "" }));
+      } else if (tabParam && ["farmers", "food", "needs", "all", "post", "shapes"].includes(tabParam)) {
+        setRightPanel(tabParam);
+      }
+    };
+    handleUrlSync();
+    window.addEventListener("popstate", handleUrlSync);
+    return () => window.removeEventListener("popstate", handleUrlSync);
+  }, [routeSearch]);
 
   useEffect(() => {
     if (!liveLocation) return;
@@ -229,7 +362,11 @@ export default function SmartMapPage() {
   useEffect(() => {
     if (!user) return;
     if (!roleDefaultsApplied.current) {
-      setRightPanel(user.role === "farmer" ? "needs" : "farmers");
+      const currentParams = new URLSearchParams(window.location.search);
+      const hasExplicitTab = currentParams.has("tab") || currentParams.has("category") || currentParams.has("regionId") || (typeof window !== "undefined" && window.location.pathname.startsWith("/marketplace"));
+      if (!hasExplicitTab) {
+        setRightPanel(user.role === "farmer" ? "needs" : "farmers");
+      }
       roleDefaultsApplied.current = true;
     }
     if (
@@ -295,7 +432,7 @@ export default function SmartMapPage() {
 
   const farmerMarkers: FarmerMarker[] = activeProducts.reduce((acc, product) => {
     if (!hasValidPublicCoordinates(product.farmerLatitude, product.farmerLongitude)) return acc;
-    const existing = acc.find(m => m.id === product.farmerId);
+    const existing = acc.find((m) => m.id === product.farmerId);
     if (existing) {
       if (!existing.products.includes(product.name)) {
         existing.products.push(product.name);
@@ -768,6 +905,43 @@ export default function SmartMapPage() {
               </Marker>
             ))}
 
+            {/* Approved Marketplace Seller Markers */}
+            {(rightPanel === "marketplace" || rightPanel === "all") && marketData?.markers?.map((marker) => (
+              <Marker
+                key={`market-${marker.sellerId}`}
+                position={[marker.latitude, marker.longitude]}
+                icon={marketplaceSellerIcon(marker.isLocal ?? true)}
+              >
+                <Popup minWidth={220}>
+                  <div className="p-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-sm">
+                        <Store className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-sm text-foreground">{marker.sellerName}</div>
+                        <div className="text-xs text-muted-foreground">⭐ {(marker.rating ?? 5).toFixed(1)} · Approved Seller</div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground mb-1">📍 {marker.location}</div>
+                    <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-2">
+                      🛒 {marker.productCount} approved product{marker.productCount !== 1 ? "s" : ""}
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full h-8 text-xs font-black uppercase bg-emerald-600 hover:bg-emerald-700 text-white"
+                      onClick={() => {
+                        setRightPanel("marketplace");
+                        setMarketFilters((prev) => ({ ...prev, search: marker.sellerName }));
+                      }}
+                    >
+                      View Seller Listings
+                    </Button>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+
             {showSurveyLayer && SURVEY_PARCELS.map(parcel => (
               <Polygon key={parcel.id} positions={parcel.coords}
                 pathOptions={{ color: parcel.type === "arable" ? "#8b5cf6" : parcel.type === "horticultural" ? "#ec4899" : "#f59e0b", fillColor: parcel.type === "arable" ? "#8b5cf6" : parcel.type === "horticultural" ? "#ec4899" : "#f59e0b", fillOpacity: 0.2, weight: 2, dashArray: "6 3" }}>
@@ -798,6 +972,9 @@ export default function SmartMapPage() {
           {/* Map legend */}
           <div className="absolute bottom-3 left-3 z-[1000] bg-background/95 backdrop-blur-md border-2 border-border/80 rounded-2xl p-3 shadow-xl text-xs sm:text-sm space-y-1.5">
             <div className="font-black text-xs uppercase tracking-wider text-foreground mb-1.5 pb-1 border-b">Legend</div>
+            {(rightPanel === "marketplace" || rightPanel === "all") && (
+              <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded-full bg-emerald-600 border border-white shadow-xs" /><span>Approved Seller</span></div>
+            )}
             {showFarmers && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded-full bg-green-500 border border-white shadow-xs" /><span>Online</span></div>}
             {showFarmers && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded-full bg-gray-400 border border-white shadow-xs" /><span>Offline</span></div>}
             {showDemand && <div className="flex items-center gap-2.5 font-bold"><div className="w-3.5 h-3.5 rounded-full bg-red-500 border border-white shadow-xs" /><span>High Need</span></div>}
@@ -848,10 +1025,14 @@ export default function SmartMapPage() {
                   key={tab.id}
                   onClick={() => setRightPanel(tab.id)}
                   title={t(tab.labelKey)}
-                  className={`flex flex-col items-center justify-center gap-1 w-10 lg:w-14 py-2 lg:py-3.5 rounded-xl lg:rounded-2xl text-[9px] lg:text-xs font-black transition-all ${active ? "bg-primary text-primary-foreground shadow-md scale-105" : "hover:bg-muted text-muted-foreground"}`}
+                  className={`flex flex-col items-center justify-center gap-1 w-10 lg:w-14 py-2 lg:py-3.5 rounded-xl lg:rounded-2xl text-[9px] lg:text-xs font-black transition-all ${
+                    active 
+                      ? "bg-amber-400 text-amber-950 shadow-md scale-105 ring-2 ring-amber-500/80" 
+                      : "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200"
+                  }`}
                   data-testid={`tab-${tab.id}`}
                 >
-                  <Icon className={`h-4.5 w-4.5 lg:h-5 lg:w-5 stroke-[2.2] ${active ? "" : tab.color}`} />
+                  <Icon className={`h-4.5 w-4.5 lg:h-5 lg:w-5 stroke-[2.2] ${active ? "text-amber-950" : tab.color}`} />
                   <span className="leading-tight text-center w-full lg:hidden font-black">{t(tab.shortLabelKey)}</span>
                   <span className="leading-tight text-center hidden lg:block font-black" style={{ maxWidth: 50 }}>{t(tab.labelKey).split(" ").map((w, i) => <span key={i} className="block">{w}</span>)}</span>
                 </button>
@@ -865,6 +1046,384 @@ export default function SmartMapPage() {
             className="h-full bg-background flex flex-col overflow-hidden flex-shrink-0"
             style={{ width: rightPanelWidth }}
           >
+            {/* ── REGIONAL MARKETPLACE panel ── */}
+            {rightPanel === "marketplace" && (
+              <div className="flex h-full flex-col">
+                <div className="flex-shrink-0 border-b-2 border-border/80 p-3 lg:p-4 bg-card">
+                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                    <div>
+                      <h2 className="flex items-center gap-2 text-sm lg:text-base font-black uppercase tracking-wider text-foreground">
+                        <Store className="h-4.5 w-4.5 text-emerald-600 stroke-[2.5]" />
+                        {t("map.tab_marketplace", "Regional Marketplace")}
+                      </h2>
+                      <p className="text-[11px] sm:text-xs font-bold text-muted-foreground mt-0.5">
+                        {t("map.approved_sellers_near_you", "Approved sellers & regional inventory")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button size="sm" variant="outline" className="h-8 px-2.5 text-xs font-black uppercase border-2">
+                            <Filter className="h-3.5 w-3.5 mr-1" /> Filters
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="w-[320px] sm:w-[380px] overflow-y-auto">
+                          <SheetHeader>
+                            <SheetTitle className="text-base font-black uppercase tracking-wider">Advanced Filters</SheetTitle>
+                          </SheetHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-black uppercase">Quantity</Label>
+                              <Input
+                                type="number"
+                                min="1"
+                                placeholder="e.g. 50"
+                                value={marketFilters.quantity}
+                                onChange={(e) => setMarketFilters((prev) => ({ ...prev, quantity: e.target.value }))}
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-black uppercase">Quality Grade</Label>
+                              <Select
+                                value={marketFilters.qualityGrade || "any"}
+                                onValueChange={(val) => setMarketFilters((prev) => ({ ...prev, qualityGrade: val === "any" ? "" : val }))}
+                              >
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="any">Any Grade</SelectItem>
+                                  <SelectItem value="A">Grade A (Premium)</SelectItem>
+                                  <SelectItem value="B">Grade B (Standard)</SelectItem>
+                                  <SelectItem value="C">Grade C (Processing)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1.5">
+                                <Label className="text-xs font-black uppercase">Min Price</Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={marketFilters.minPrice}
+                                  onChange={(e) => setMarketFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-xs font-black uppercase">Max Price</Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={marketFilters.maxPrice}
+                                  onChange={(e) => setMarketFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-black uppercase">Seller Rating</Label>
+                              <Select
+                                value={marketFilters.minRating || "any"}
+                                onValueChange={(val) => setMarketFilters((prev) => ({ ...prev, minRating: val === "any" ? "" : val }))}
+                              >
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="any">Any Rating</SelectItem>
+                                  <SelectItem value="4">4+ Stars</SelectItem>
+                                  <SelectItem value="4.5">4.5+ Stars</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-black uppercase">Visibility &amp; Fulfilment</Label>
+                              <Select
+                                value={marketFilters.scope}
+                                onValueChange={(val) => setMarketFilters((prev) => ({ ...prev, scope: val }))}
+                              >
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="global">Local First + Global Discovery</SelectItem>
+                                  <SelectItem value="local">Local Fulfilment Only</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Button
+                              variant="outline"
+                              className="w-full text-xs font-black uppercase"
+                              onClick={() => setMarketFilters({
+                                search: "",
+                                categoryId: "",
+                                subcategoryId: "",
+                                regionId: "",
+                                quantity: "",
+                                qualityGrade: "",
+                                minPrice: "",
+                                maxPrice: "",
+                                minRating: "",
+                                scope: "global",
+                                sortBy: "distance",
+                              })}
+                            >
+                              Reset All Filters
+                            </Button>
+                          </div>
+                        </SheetContent>
+                      </Sheet>
+                    </div>
+                  </div>
+
+                  {/* Search input */}
+                  <div className="relative mb-2.5">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search Rice, Tomato, Seeds, Seller..."
+                      value={marketFilters.search}
+                      onChange={(e) => setMarketFilters((prev) => ({ ...prev, search: e.target.value }))}
+                      className="pl-9 h-9 text-xs sm:text-sm font-bold rounded-xl border-2"
+                    />
+                  </div>
+
+                  {/* Region & Sort controls */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select
+                      value={marketFilters.regionId || "global"}
+                      onValueChange={(val) => setMarketFilters((prev) => ({ ...prev, regionId: val === "global" ? "" : val }))}
+                    >
+                      <SelectTrigger className="h-8.5 text-[11px] font-bold rounded-xl border-2">
+                        <SelectValue placeholder="Region" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60 rounded-xl border-2">
+                        <SelectItem value="global" className="font-bold">🌍 Global Marketplace</SelectItem>
+                        {marketplaceRegions.map((region) => (
+                          <SelectItem key={region.id} value={region.id} className="font-bold">
+                            📍 {region.name}, {region.countryCode} ({region.activeSellerCount || 0})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={marketFilters.sortBy}
+                      onValueChange={(val) => setMarketFilters((prev) => ({ ...prev, sortBy: val }))}
+                    >
+                      <SelectTrigger className="h-8.5 text-[11px] font-bold rounded-xl border-2">
+                        <SelectValue placeholder="Sort" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-2">
+                        <SelectItem value="distance" className="font-bold">Nearest First</SelectItem>
+                        <SelectItem value="price_asc" className="font-bold">Price: Low to High</SelectItem>
+                        <SelectItem value="price_desc" className="font-bold">Price: High to Low</SelectItem>
+                        <SelectItem value="rating" className="font-bold">Highest Rating</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Category Selection: ALL Button + Select Dropdown */}
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={!marketFilters.categoryId ? "default" : "outline"}
+                      className={`h-9 px-3.5 text-xs font-black uppercase tracking-wider rounded-xl border-2 flex-shrink-0 transition-all ${!marketFilters.categoryId ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-xs" : "border-border/80 text-foreground hover:bg-muted"}`}
+                      onClick={() => setMarketFilters((prev) => ({ ...prev, categoryId: "", subcategoryId: "" }))}
+                      data-testid="category-btn-all"
+                    >
+                      ALL
+                    </Button>
+                    <Select
+                      value={marketFilters.categoryId || "all"}
+                      onValueChange={(val) => setMarketFilters((prev) => ({
+                        ...prev,
+                        categoryId: val === "all" ? "" : val,
+                        subcategoryId: "",
+                      }))}
+                    >
+                      <SelectTrigger className="h-9 flex-1 text-xs font-bold rounded-xl border-2 bg-background shadow-2xs">
+                        <SelectValue placeholder="Select Category" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-80 rounded-xl border-2">
+                        <SelectItem value="all" className="font-bold">
+                          All Categories (Complete Catalogue)
+                        </SelectItem>
+                        {getShoppableCategories().map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id} className="font-bold">
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Subcategories if category selected */}
+                  {(() => {
+                    const selectedCat = getShoppableCategories().find((c) => c.id === marketFilters.categoryId);
+                    if (!selectedCat || !selectedCat.subcategories?.length) return null;
+                    return (
+                      <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                        <Button
+                          size="sm"
+                          variant={!marketFilters.subcategoryId ? "default" : "outline"}
+                          className={`h-6.5 px-2 text-[10px] font-black uppercase rounded-lg border flex-shrink-0 ${!marketFilters.subcategoryId ? "bg-emerald-600 text-white" : ""}`}
+                          onClick={() => setMarketFilters((prev) => ({ ...prev, subcategoryId: "" }))}
+                        >
+                          All {selectedCat.name.split(" ")[0]}
+                        </Button>
+                        {selectedCat.subcategories.map((sub) => (
+                          <Button
+                            key={sub.id}
+                            size="sm"
+                            variant={marketFilters.subcategoryId === sub.id ? "default" : "outline"}
+                            className={`h-6.5 px-2 text-[10px] font-black uppercase rounded-lg border flex-shrink-0 ${marketFilters.subcategoryId === sub.id ? "bg-emerald-600 text-white" : ""}`}
+                            onClick={() => setMarketFilters((prev) => ({
+                              ...prev,
+                              subcategoryId: prev.subcategoryId === sub.id ? "" : sub.id,
+                            }))}
+                          >
+                            {sub.name}
+                          </Button>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Summary badges */}
+                  <div className="mt-2.5 flex items-center justify-between text-[11px] font-bold text-muted-foreground border-t border-border/50 pt-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px] font-black px-2 py-0.5 border-emerald-300 text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30">
+                        <CheckCircle2 className="mr-1 h-3 w-3" />
+                        {marketData?.summary?.localCount ?? 0} Local
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px] font-black px-2 py-0.5 border-blue-300 text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30">
+                        <Globe2 className="mr-1 h-3 w-3" />
+                        {marketData?.summary?.globalCount ?? 0} Global
+                      </Badge>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-foreground/80">
+                      {marketData?.pagination?.total ?? 0} products
+                    </span>
+                  </div>
+                </div>
+
+                {/* Trusted regional partners list if present */}
+                {marketplaceOrganisations.length > 0 && (
+                  <div className="px-3 py-2 bg-muted/40 border-b border-border/60">
+                    <div className="flex items-center gap-1.5 text-[11px] font-black text-foreground mb-1">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Trusted Regional Partners</span>
+                    </div>
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                      {marketplaceOrganisations.map((org) => (
+                        <div key={org.id} className="flex-shrink-0 rounded-lg border bg-background px-2.5 py-1 text-[10px] font-bold shadow-2xs">
+                          <span className="text-foreground">{org.name}</span>
+                          <span className="text-muted-foreground ml-1.5 text-[9px]">({org.regionName})</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Marketplace Products List */}
+                <ScrollArea className="flex-1 p-2 lg:p-3">
+                  {isMarketLoading ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                      <Loader2 className="h-8 w-8 animate-spin text-emerald-600 mb-2" />
+                      <p className="text-xs font-bold">Loading approved regional listings...</p>
+                    </div>
+                  ) : marketData?.products && marketData.products.length > 0 ? (
+                    <div className="space-y-3">
+                      {marketData.products.map((product) => (
+                        <div
+                          key={product.id}
+                          className={`rounded-2xl border-2 transition-all p-3 bg-card ${product.localFulfilmentEligible ? "border-emerald-300 dark:border-emerald-800 shadow-sm hover:shadow-md" : "border-border/70 hover:border-primary/40 shadow-2xs"}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <SafeProductImage
+                              src={resolveProductImageForProduct(product).src}
+                              fallbackSrc={resolveProductImageForProduct(product).fallbackSrc}
+                              alt={product.name}
+                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover flex-shrink-0 border"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-1">
+                                <Badge className={`text-[9px] font-black px-1.5 py-0.5 uppercase ${product.localFulfilmentEligible ? "bg-emerald-600 text-white" : "bg-slate-600 text-white"}`}>
+                                  {product.localFulfilmentEligible ? "Local Fulfilment" : "Global Discovery"}
+                                </Badge>
+                                {product.regionName && (
+                                  <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">
+                                    📍 {product.regionName}
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                className="font-black text-sm text-foreground hover:underline text-left mt-1 block truncate w-full"
+                                onClick={() => setLocation(`/products/${product.id}`)}
+                              >
+                                {product.name}
+                              </button>
+                              <div className="text-xs font-black text-emerald-700 dark:text-emerald-400 mt-0.5">
+                                {format(product.price, { sourceCurrency: product.currency || "GBP" })}
+                                <span className="text-[10px] font-bold text-muted-foreground">/{product.unit}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground mt-1">
+                                <span>{product.farmerName}</span>
+                                <span>{product.stock} in stock</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex items-center gap-2 pt-2 border-t border-border/50">
+                            <Button
+                              size="sm"
+                              className="flex-1 h-8 text-xs font-black uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                              onClick={() => addToCart.mutate(product)}
+                              disabled={addToCart.isPending}
+                            >
+                              {addToCart.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                              Add to Cart
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-3 text-xs font-black uppercase border-2"
+                              onClick={() => setLocation(`/products/${product.id}`)}
+                            >
+                              Details
+                            </Button>
+                            <FavoriteProductButton
+                              productId={product.id}
+                              productName={product.name}
+                              className="h-8 w-8 bg-background border-2 shadow-xs"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-16 text-center text-muted-foreground">
+                      <Store className="mx-auto mb-3 h-10 w-10 opacity-30 text-emerald-600" />
+                      <p className="text-sm font-black text-foreground">No approved products match these filters</p>
+                      <p className="text-xs mt-1 text-muted-foreground">Try selecting another category, changing the region, or clearing search filters.</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-4 text-xs font-black uppercase border-2"
+                        onClick={() => setMarketFilters({
+                          search: "",
+                          categoryId: "",
+                          subcategoryId: "",
+                          regionId: "",
+                          quantity: "",
+                          qualityGrade: "",
+                          minPrice: "",
+                          maxPrice: "",
+                          minRating: "",
+                          scope: "global",
+                          sortBy: "distance",
+                        })}
+                      >
+                        Reset All Filters
+                      </Button>
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+            )}
             {rightPanel === "all" && (
               <div className="flex h-full flex-col">
                 <div className="flex-shrink-0 border-b border-border/50 p-3 lg:p-4">

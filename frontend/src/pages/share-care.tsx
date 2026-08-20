@@ -241,23 +241,23 @@ export default function ShareCarePage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid h-auto grid-cols-2 border border-emerald-200 bg-emerald-50 p-1.5 shadow-sm md:grid-cols-4 lg:grid-cols-5">
-            <TabsTrigger value="marketplace" className="py-3 font-bold text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <TabsTrigger value="marketplace" className="py-3 font-bold text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60">
               <Store className="mr-2 h-5 w-5" />
               {t("share_care.marketplace_tab", "Marketplace")}
             </TabsTrigger>
-            <TabsTrigger value="list" className="py-3 font-bold text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <TabsTrigger value="list" className="py-3 font-bold text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60">
               <Gift className="mr-2 h-5 w-5" />
               {t("share_care.share_food_tab", "Share Food")}
             </TabsTrigger>
-            <TabsTrigger value="ngo" className="py-3 font-bold text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <TabsTrigger value="ngo" className="py-3 font-bold text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60">
               <Users className="mr-2 h-5 w-5" />
               {t("share_care.charity_tab", "Charity Portal")}
             </TabsTrigger>
-            <TabsTrigger value="impact" className="py-3 font-bold text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <TabsTrigger value="impact" className="py-3 font-bold text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60">
               <TrendingUp className="mr-2 h-5 w-5" />
               {t("share_care.sdg_impact_tab", "SDG Impact")}
             </TabsTrigger>
-            <TabsTrigger value="safety" className="hidden py-3 font-bold text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md lg:flex">
+            <TabsTrigger value="safety" className="hidden py-3 font-bold text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 lg:flex">
               <ShieldCheck className="mr-2 h-5 w-5" />
               {t("share_care.safety_tab", "Safety Rules")}
             </TabsTrigger>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-agtech" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#1E1B4B" />
+    </linearGradient>
+    <linearGradient id="chip-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+    <filter id="shadow-agtech" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-agtech)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-agtech)">
+    <!-- Microprocessor Chip Body -->
+    <rect x="38" y="38" width="52" height="52" rx="10" fill="#0F172A" stroke="url(#chip-gold)" stroke-width="2.5" />
+    <!-- Chip Pins -->
+    <line x1="48" y1="28" x2="48" y2="38" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="64" y1="28" x2="64" y2="38" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="80" y1="28" x2="80" y2="38" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="48" y1="90" x2="48" y2="100" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="64" y1="90" x2="64" y2="100" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="80" y1="90" x2="80" y2="100" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="28" y1="48" x2="38" y2="48" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="28" y1="64" x2="38" y2="64" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="28" y1="80" x2="38" y2="80" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="90" y1="48" x2="100" y2="48" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="90" y1="64" x2="100" y2="64" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="90" y1="80" x2="100" y2="80" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+    <!-- Glowing AI Agricultural Sprout inside Chip -->
+    <path d="M64 74 V52 M64 52 C64 42 54 40 48 44 C48 54 58 54 64 52 Z" fill="#4ADE80" stroke="#22C55E" stroke-width="1.5" />
+    <path d="M64 58 C64 48 74 44 80 48 C80 58 70 58 64 58 Z" fill="#4ADE80" stroke="#22C55E" stroke-width="1.5" />
+    <!-- Smart Sensor Wave Indicator -->
+    <circle cx="64" cy="46" r="3" fill="#67E8F9" />
+  </g>
+</svg>

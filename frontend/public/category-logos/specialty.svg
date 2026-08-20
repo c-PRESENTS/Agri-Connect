@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-spec" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#CA8A04" />
+      <stop offset="40%" stop-color="#854D0E" />
+      <stop offset="100%" stop-color="#18181B" />
+    </linearGradient>
+    <linearGradient id="gold-crown" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="50%" stop-color="#FACC15" />
+      <stop offset="100%" stop-color="#CA8A04" />
+    </linearGradient>
+    <linearGradient id="diamond-gem" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67E8F9" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+    <filter id="shadow-spec" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.35" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-spec)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-spec)">
+    <!-- Premium Diamond Star Glow -->
+    <path d="M64 26 L67 36 L77 39 L67 42 L64 52 L61 42 L51 39 L61 36 Z" fill="#FEF08A" />
+    <!-- 5-Star Ribbon / Crown Crest -->
+    <path d="M34 76 L40 44 L54 60 L64 38 L74 60 L88 44 L94 76 Z" fill="url(#gold-crown)" stroke="#FEF08A" stroke-width="2" stroke-linejoin="round" />
+    <!-- Crown Base Band with Jewels -->
+    <rect x="34" y="74" width="60" height="14" rx="4" fill="#A16207" stroke="#FEF08A" stroke-width="1.5" />
+    <circle cx="44" cy="81" r="3" fill="url(#diamond-gem)" />
+    <circle cx="54" cy="81" r="3" fill="#F43F5E" />
+    <circle cx="64" cy="81" r="4" fill="url(#diamond-gem)" />
+    <circle cx="74" cy="81" r="3" fill="#F43F5E" />
+    <circle cx="84" cy="81" r="3" fill="url(#diamond-gem)" />
+    <!-- Organic Exotic Leaf in Center of Crown -->
+    <path d="M64 54 C64 46 58 42 54 44 C54 50 60 54 64 54 Z" fill="#4ADE80" stroke="#14532D" stroke-width="1" />
+    <path d="M64 54 C64 46 70 42 74 44 C74 50 68 54 64 54 Z" fill="#4ADE80" stroke="#14532D" stroke-width="1" />
+    <!-- Luxury Gourmet Banner Ribbon -->
+    <path d="M28 92 L64 88 L100 92 L94 100 L64 96 L34 100 Z" fill="#FEF08A" stroke="#CA8A04" stroke-width="1.5" />
+    <!-- 5 Small Stars Underneath -->
+    <path d="M48 93 L49 95 L51 95 L49.5 96.5 L50 98.5 L48 97.5 L46 98.5 L46.5 96.5 L45 95 L47 95 Z" fill="#78350F" />
+    <path d="M56 92.5 L57 94.5 L59 94.5 L57.5 96 L58 98 L56 97 L54 98 L54.5 96 L53 94.5 L55 94.5 Z" fill="#78350F" />
+    <path d="M64 92 L65 94 L67 94 L65.5 95.5 L66 97.5 L64 96.5 L62 97.5 L62.5 95.5 L61 94 L63 94 Z" fill="#78350F" />
+    <path d="M72 92.5 L73 94.5 L75 94.5 L73.5 96 L74 98 L72 97 L70 98 L70.5 96 L69 94.5 L71 94.5 Z" fill="#78350F" />
+    <path d="M80 93 L81 95 L83 95 L81.5 96.5 L82 98.5 L80 97.5 L78 98.5 L78.5 96.5 L77 95 L79 95 Z" fill="#78350F" />
+  </g>
+</svg>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-produce" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#064E3B" />
+    </linearGradient>
+    <linearGradient id="crate-wood" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <linearGradient id="apple-red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F87171" />
+      <stop offset="100%" stop-color="#DC2626" />
+    </linearGradient>
+    <linearGradient id="carrot-org" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FB923C" />
+      <stop offset="100%" stop-color="#EA580C" />
+    </linearGradient>
+    <filter id="shadow-produce" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.25" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-produce)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-produce)">
+    <!-- Top Produce: Apple / Tomato -->
+    <circle cx="50" cy="52" r="14" fill="url(#apple-red)" />
+    <path d="M50 38 C52 34 56 32 58 34" stroke="#78350F" stroke-width="2" fill="none" stroke-linecap="round" />
+    <path d="M54 35 C58 35 62 38 60 41 C56 41 53 38 54 35 Z" fill="#4ADE80" />
+    <!-- Carrot -->
+    <path d="M78 40 L68 62 L82 58 Z" fill="url(#carrot-org)" />
+    <path d="M78 40 C78 34 84 32 86 34 M78 40 C82 36 88 38 88 40" stroke="#22C55E" stroke-width="2" fill="none" stroke-linecap="round" />
+    <!-- Cabbage / Leafy Veg -->
+    <circle cx="66" cy="54" r="12" fill="#86EFAC" />
+    <circle cx="66" cy="54" r="9" fill="#4ADE80" />
+    <!-- Wooden Bulk Wholesale Crate -->
+    <rect x="26" y="62" width="76" height="38" rx="5" fill="url(#crate-wood)" stroke="#78350F" stroke-width="2" />
+    <!-- Slats -->
+    <line x1="28" y1="74" x2="100" y2="74" stroke="#78350F" stroke-width="2" />
+    <line x1="28" y1="86" x2="100" y2="86" stroke="#78350F" stroke-width="2" />
+    <!-- Corner reinforcements -->
+    <rect x="26" y="62" width="8" height="38" rx="2" fill="#B45309" stroke="#78350F" stroke-width="1.5" />
+    <rect x="94" y="62" width="8" height="38" rx="2" fill="#B45309" stroke="#78350F" stroke-width="1.5" />
+    <!-- Crate handles -->
+    <rect x="54" y="77" width="20" height="6" rx="3" fill="#78350F" />
+  </g>
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-diet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F43F5E" />
+      <stop offset="50%" stop-color="#0D9488" />
+      <stop offset="100%" stop-color="#042F2E" />
+    </linearGradient>
+    <linearGradient id="heart-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE4E6" />
+      <stop offset="100%" stop-color="#FDA4AF" />
+    </linearGradient>
+    <linearGradient id="leaf-mint" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5EEAD4" />
+      <stop offset="100%" stop-color="#0F766E" />
+    </linearGradient>
+    <filter id="shadow-diet" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-diet)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-diet)">
+    <!-- Shield of Health Outline -->
+    <path d="M64 26 C76 26 94 30 94 44 C94 72 64 96 64 96 C64 96 34 72 34 44 C34 30 52 26 64 26 Z" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2.5" />
+    <!-- Wellness Heart Base -->
+    <path d="M64 42 C56 32 42 34 38 46 C34 60 52 74 64 84 C76 74 94 60 90 46 C86 34 72 32 64 42 Z" fill="url(#heart-glow)" stroke="#E11D48" stroke-width="2" stroke-linejoin="round" />
+    <!-- Avocado / Seed / Leaf Emblem Inside Heart -->
+    <path d="M64 48 C58 48 54 54 54 62 C54 70 58 74 64 74 C70 74 74 70 74 62 C74 54 70 48 64 48 Z" fill="url(#leaf-mint)" stroke="#042F2E" stroke-width="1" />
+    <!-- Center Vital Seed -->
+    <circle cx="64" cy="62" r="5.5" fill="#FDE047" stroke="#854D0E" stroke-width="1" />
+    <!-- Pulse Line / Spark of Vitality -->
+    <path d="M26 62 H38 L42 54 L48 70 L52 62 H56 M72 62 H76 L80 54 L86 70 L90 62 H102" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <!-- Clean Certified Tag Pill -->
+    <rect x="42" y="90" width="44" height="14" rx="7" fill="#14B8A6" stroke="#FFFFFF" stroke-width="1.5" />
+    <text x="64" y="100" font-size="8" font-weight="900" fill="#FFFFFF" text-anchor="middle" font-family="system-ui, sans-serif" letter-spacing="1">WELLNESS</text>
+  </g>
+</svg>

@@ -72,23 +72,23 @@ import specialtyImg from "@assets/AgriConnect Images/Specialty/01_organic_fruits
 
 export const categoryImages: Record<string, string> = {
   // ── Top-level categories ──────────────────────────────────────────
-  "daily-needs": dailyNeedsImg,
-  "fresh-produce": freshProduceImg,
-  "livestock": cowImg,
-  "inputs-tools": inputsToolsImg,
-  "processed": processedImg,
-  "specialty": specialtyImg,
-  "other-agri": otherAgriculturalImg,
-  "supermarket": marketImg,
-  "services": farmServicesImg,
-  "government": governmentImg,
-  "modern-farming": modernFarmingImg,
-  "dietary": dietaryImg,
-  "land-leasing": farmServicesImg,
-  "logistics": machineryImg,
-  "share-care": bakeryImg,
-  "commercial-crops": commercialCropsImg,
-  "bio-products": bioProductsImg,
+  "daily-needs": "/category-logos/daily-needs.svg",
+  "fresh-produce": "/category-logos/fresh-produce.svg",
+  "livestock": "/category-logos/livestock.svg",
+  "inputs-tools": "/category-logos/inputs-tools.svg",
+  "processed": "/category-logos/processed.svg",
+  "specialty": "/category-logos/specialty.svg",
+  "other-agri": "/category-logos/other-agri.svg",
+  "supermarket": "/category-logos/supermarket.svg",
+  "services": "/category-logos/services.svg",
+  "government": "/category-logos/government.svg",
+  "modern-farming": "/category-logos/modern-farming.svg",
+  "dietary": "/category-logos/dietary.svg",
+  "land-leasing": "/category-logos/land-leasing.svg",
+  "logistics": "/category-logos/logistics.svg",
+  "share-care": "/category-logos/share-care.svg",
+  "commercial-crops": "/category-logos/commercial-crops.svg",
+  "bio-products": "/category-logos/bio-products.svg",
 
   // ── Daily Needs ──────────────────────────────────────────────────
   "grains": riceImg,
@@ -407,18 +407,22 @@ export const categories: Category[] = [
   },
   {
     id: "fresh-produce",
-    name: "Fresh Farm Produce",
+    name: "Bulk & Wholesale Produce",
     icon: "Leaf",
     buyerVisible: true,
     subcategories: [
       { id: "wholesale-veg", name: "Vegetables (Wholesale)", parentId: "fresh-produce", buyerVisible: true },
       { id: "wholesale-fruits", name: "Fruits (Wholesale)", parentId: "fresh-produce", buyerVisible: true },
       { id: "flowers", name: "Flowers & Decoratives", parentId: "fresh-produce", buyerVisible: true },
+      { id: "processed", name: "Processed & Value-Added Products", parentId: "fresh-produce", buyerVisible: true },
+      { id: "specialty", name: "Specialty & Premium Products", parentId: "fresh-produce", buyerVisible: true },
+      { id: "commercial-crops", name: "Commercial & Industrial Crops", parentId: "fresh-produce", buyerVisible: true },
+      { id: "other-agri", name: "Other Agricultural Products", parentId: "fresh-produce", buyerVisible: true },
     ],
   },
   {
     id: "livestock",
-    name: "Livestock & Animals",
+    name: "Livestock & Aquaculture",
     icon: "Beef",
     buyerVisible: true,
     subcategories: [
@@ -430,7 +434,7 @@ export const categories: Category[] = [
   },
   {
     id: "inputs-tools",
-    name: "Inputs & Tools",
+    name: "Agri-Inputs & Farm Equipment",
     icon: "Wrench",
     buyerVisible: true,
     subcategories: [
@@ -452,7 +456,7 @@ export const categories: Category[] = [
     id: "processed",
     name: "Processed & Value-Added",
     icon: "Package",
-    buyerVisible: true,
+    buyerVisible: false,
     subcategories: [
       { id: "spice-powders", name: "Spices & Powders", parentId: "processed" },
       { id: "pickles", name: "Pickles & Preserves", parentId: "processed" },
@@ -465,7 +469,7 @@ export const categories: Category[] = [
     id: "specialty",
     name: "Specialty & Premium",
     icon: "Award",
-    buyerVisible: true,
+    buyerVisible: false,
     subcategories: [
       { id: "organic", name: "Organic Products", parentId: "specialty" },
       { id: "medicinal", name: "Medicinal Plants & Herbs", parentId: "specialty" },
@@ -479,7 +483,7 @@ export const categories: Category[] = [
     id: "other-agri",
     name: "Other Agricultural",
     icon: "Wheat",
-    buyerVisible: true,
+    buyerVisible: false,
     subcategories: [
       { id: "plantation", name: "Plantation Crops", parentId: "other-agri" },
       { id: "fibre", name: "Fibre Crops", parentId: "other-agri" },
@@ -619,7 +623,7 @@ export const categories: Category[] = [
     id: "commercial-crops",
     name: "Commercial & Industrial Crops",
     icon: "Factory",
-    buyerVisible: true,
+    buyerVisible: false,
     subcategories: [
       { id: "sugar-crops", name: "Sugar Crops", parentId: "commercial-crops", buyerVisible: true },
       { id: "beverage-crops", name: "Beverage Crops (Tea/Coffee/Cocoa)", parentId: "commercial-crops", buyerVisible: true },

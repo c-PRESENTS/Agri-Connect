@@ -571,8 +571,12 @@ const localAssetCandidates = Object.entries(localCuratedProductImages).reduce<
 }, {});
 
 const automaticAssetEntries: readonly ProductImageRegistryEntry[] = Object.entries(localAssetCandidates)
-  .filter(([slug, candidates]) => !explicitSlugs.has(slug) && candidates.length === 1)
-  .map(([, candidates]) => candidates[0]);
+  .filter(([slug]) => !explicitSlugs.has(slug))
+  .map(([, candidates]) => {
+    // Prefer deeper specific taxonomy assets when available
+    const deepCandidate = candidates.find((c) => (c.attribution?.label ?? "").split("/").length > 3);
+    return deepCandidate || candidates[0];
+  });
 
 const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "amaranth-leaves": ["amaranth"],
@@ -640,9 +644,6 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "tiger-prawn": ["tiger-prawns"],
   tractors: ["tractor"],
   virgin: ["virgin-olive-oil"],
-  // Seed names that include a regional, plural, or specification qualifier.
-  // Each target is an existing local asset; these are exact approved aliases,
-  // never fuzzy matches.
   "apples-kashmir": ["kashmiri-apple"],
   "apples-shimla": ["shimla-apple"],
   apricots: ["apricot"],
@@ -670,7 +671,6 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "urea-46-n": ["urea"],
   "whey-protein-isolate-farm-fresh": ["whey-protein-isolate"],
   "yield-monitor-mapping-system": ["yield-monitor-and-mapping-system"],
-  // Prefer the dedicated subcategory assets over same-name overview images.
   "tulsi-plants": ["tulsi"],
   "aloe-vera-plant": ["aloe-vera"],
   "ashwagandha-root": ["ashwagandha"],
@@ -681,11 +681,209 @@ const localAssetNameAliases: Readonly<Record<string, readonly string[]>> = {
   "shiitake-mushrooms": ["shiitake"],
   "portobello-mushrooms": ["portobello"],
   "enoki-mushrooms": ["enoki"],
-  // Prefer the subfolder's exact visual over the broad meat/leafy aliases.
   "goat-mutton": ["goat-meat"],
   "lamb-mutton": ["lamb-meat"],
   "coriander-leaves": ["coriander"],
   "mint-leaves": ["mint"],
+
+  // Spices & Powders
+  "all-whole-varieties": ["all-whole-varieties", "whole-spices"],
+  "ground-spices": ["all-ground-spices", "powdered-spices"],
+  "powdered-spices": ["powdered-spices", "all-ground-spices"],
+  "all-ground-spices": ["all-ground-spices", "powdered-spices"],
+  "specialty-spices": ["star-anise", "saffron", "whole-spices"],
+  "spice-blends": ["spice-blends", "masala-blends", "curry-powders"],
+  "whole-spices": ["all-whole-varieties", "whole-spices"],
+  saffron: ["saffron", "saffron-premium-grade"],
+  "kashmiri-saffron": ["saffron", "saffron-premium-grade"],
+  vanilla: ["vanilla", "vanilla-beans-grade-a"],
+  "vanilla-beans": ["vanilla-beans-grade-a", "vanilla"],
+  "star-anise": ["star-anise"],
+  truffles: ["truffles", "white-truffle"],
+
+  // Pickles & Preserves
+  "fruit-pickles": ["mixed-fruit-pickle", "mango-pickle"],
+  "vegetable-pickles": ["mixed-vegetable-pickle", "mixed-pickle"],
+  "preserves-jams": ["jams", "marmalades"],
+  preserves: ["jams", "marmalades", "squashes"],
+  jams: ["jams"],
+  marmalades: ["marmalades"],
+  squashes: ["squashes"],
+  syrups: ["syrups"],
+  chutneys: ["coconut-chutney", "tomato-chutney", "mint-chutney", "tamarind-chutney"],
+  "coconut-chutney": ["coconut-chutney"],
+  "tomato-chutney": ["tomato-chutney"],
+  "mint-chutney": ["mint-chutney"],
+  "tamarind-chutney": ["tamarind-chutney"],
+  "amla-pickle": ["amla-pickle"],
+  "chilli-pickle": ["chilli-pickle"],
+  "garlic-pickle": ["garlic-pickle"],
+  "ginger-pickle": ["ginger-pickle"],
+  "mixed-pickle": ["mixed-pickle", "mixed-vegetable-pickle"],
+  "mango-pickle": ["mango-pickle"],
+  "lemon-pickle": ["lemon-pickle"],
+  "mixed-vegetable-pickle": ["mixed-vegetable-pickle", "mixed-pickle"],
+  "tomato-ketchup": ["tomato-ketchup"],
+
+  // Health & Organic Foods
+  "organic-cereals": ["organic-cereals", "organic-grains"],
+  "organic-pulses": ["organic-pulses"],
+  "organic-spices": ["organic-spices"],
+  "millet-products": ["millet-flours", "millet-snacks"],
+  "millet-flours": ["millet-flours", "millet-flour"],
+  "millet-snacks": ["millet-snacks"],
+  "millet-cookies": ["millet-snacks", "cookies"],
+  superfoods: ["chia-seeds", "spirulina", "flax-seeds"],
+  spirulina: ["spirulina"],
+  "chia-seeds": ["chia-seeds"],
+  "flax-seeds": ["flax-seeds"],
+  supplements: ["protein-powders", "herbal-supplements", "vitamins"],
+  "protein-powders": ["protein-powders"],
+  "herbal-supplements": ["herbal-supplements"],
+  vitamins: ["vitamins"],
+
+  // Beverages
+  "green-tea": ["green-tea"],
+  "black-tea": ["black-tea"],
+  "herbal-tea": ["herbal-tea"],
+  "masala-tea": ["masala-tea"],
+  oolong: ["oolong"],
+  "coffee-beans": ["coffee-beans"],
+  "ground-coffee": ["ground-coffee"],
+  "instant-coffee": ["instant-coffee"],
+  "filter-coffee": ["filter-coffee"],
+  "fresh-juices": ["fresh-juices"],
+  "packaged-juices": ["packaged-juices"],
+  concentrates: ["concentrates"],
+  nectars: ["nectars"],
+  "health-drinks": ["herbal-infusions", "ayurvedic-drinks", "malt-drinks"],
+  "herbal-infusions": ["herbal-infusions"],
+  "ayurvedic-drinks": ["ayurvedic-drinks"],
+  "malt-drinks": ["malt-drinks"],
+
+  // Snacks & Ready Foods
+  "traditional-snacks": ["murukku", "mixture", "chakli", "namkeen"],
+  murukku: ["murukku"],
+  mixture: ["mixture"],
+  chakli: ["chakli"],
+  seedai: ["seedai"],
+  namkeen: ["namkeen"],
+  "healthy-snacks": ["roasted-nuts", "diet-snacks", "protein-bars"],
+  "roasted-nuts": ["roasted-nuts"],
+  "diet-snacks": ["diet-snacks"],
+  "protein-bars": ["protein-bars"],
+  sweets: ["traditional-sweets", "ladoo", "barfi", "chocolates"],
+  "traditional-sweets": ["traditional-sweets"],
+  ladoo: ["ladoo"],
+  barfi: ["barfi"],
+  chocolates: ["chocolates"],
+  "instant-mixes": ["idli-mix", "dosa-mix", "vada-mix", "upma-mix"],
+  "idli-mix": ["idli-mix"],
+  "dosa-mix": ["dosa-mix"],
+  "vada-mix": ["vada-mix"],
+  "upma-mix": ["upma-mix"],
+
+  // Specialty & Premium
+  "organic-fruits": ["organic-fruits"],
+  "organic-vegetables": ["organic-vegetables"],
+  "organic-grains": ["organic-grains"],
+  "certified-organic": ["certified-organic-products", "eu-organic-certified", "usda-organic"],
+  "fresh-herbs": ["tulsi-plants", "aloe-vera-plant", "mint"],
+  "dried-herbs": ["ashwagandha-root", "brahmi-leaves", "neem-leaves"],
+  ashwagandha: ["ashwagandha-root", "ashwagandha"],
+  brahmi: ["brahmi-leaves", "brahmi"],
+  giloy: ["ashwagandha-root", "tulsi-plants"],
+  "herbal-powders": ["ashwagandha-extract", "moringa-leaf-powder"],
+  "raw-materials": ["roots", "leaves"],
+  lemongrass: ["lemongrass"],
+  vetiver: ["vetiver"],
+  jasmine: ["jasmine", "jasmine-flowers"],
+  rose: ["rose", "rose-flowers"],
+  lavender: ["lavender"],
+  "aromatic-herbs": ["rosemary", "thyme", "basil", "mint"],
+  "button-mushroom": ["button-mushrooms", "button-mushroom"],
+  "oyster-mushroom": ["oyster-mushrooms", "oyster-mushroom"],
+  shiitake: ["shiitake-mushrooms", "shiitake"],
+  portobello: ["portobello-mushrooms", "portobello"],
+  "dry-mushrooms": ["dehydrated-mushrooms", "sun-dried-varieties"],
+  "natural-honey": ["pure-honey", "forest-honey"],
+  "forest-honey": ["forest-honey"],
+  "organic-honey": ["organic-raw-honey", "pure-honey"],
+  "manuka-honey": ["manuka-honey", "pure-honey"],
+  beeswax: ["beeswax"],
+  "royal-jelly": ["royal-jelly"],
+  "bee-pollen": ["bee-pollen"],
+  "green-cardamom": ["green-cardamom", "cardamom"],
+  "true-cinnamon": ["cinnamon", "cinnamon-sticks"],
+  clove: ["cloves", "clove"],
+  nutmeg: ["nutmeg"],
+
+  // Commercial & Industrial Crops
+  sugarcane: ["sugarcane-jaggery-grade", "sugarcane"],
+  sugarbeet: ["sugar-beet"],
+  stevia: ["stevia-leaves-dried"],
+  "palm-sugar": ["jaggery", "sugarcane-jaggery-grade"],
+  "raw-cotton": ["raw-cotton", "cotton-bales"],
+  "cotton-bales": ["cotton-bales"],
+  "raw-jute": ["raw-jute", "jute-bags"],
+  "jute-bags": ["jute-bags", "jute-products"],
+  hemp: ["hemp"],
+  flax: ["flax"],
+  coir: ["coir-fibre", "coir"],
+  groundnut: ["groundnut-oil", "sunflower-seeds-oil-grade"],
+  mustard: ["mustard-seeds", "rapeseed-canola"],
+  soybean: ["soybean-industrial-grade", "soyabean"],
+  sunflower: ["sunflower-seeds-oil-grade"],
+  sesame: ["sesame-oil", "sesame-seeds"],
+  "castor-seed": ["sunflower-seeds-oil-grade"],
+  "green-leaf-tea": ["tea-leaves-orthodox", "green-tea"],
+  "ctc-tea": ["tea-leaves-orthodox", "black-tea"],
+  "coffee-cherries": ["coffee-arabica-green-beans"],
+  "arabica-coffee": ["coffee-arabica-green-beans"],
+  robusta: ["coffee-arabica-green-beans"],
+  "cocoa-beans": ["cocoa-beans-fermented"],
+  "natural-rubber": ["natural-rubber-latex", "rubber-sheets"],
+  "rubber-sheets": ["rubber-sheets"],
+  "latex-concentrate": ["natural-rubber-latex"],
+  "crepe-rubber": ["natural-rubber-latex"],
+  "flue-cured-tobacco": ["tea-leaves-orthodox"],
+  "bidi-tobacco": ["tea-leaves-orthodox"],
+  "chewing-tobacco": ["tea-leaves-orthodox"],
+  "industrial-tobacco": ["tea-leaves-orthodox"],
+
+  // Other Agricultural
+  "plantation-crops": ["tea-leaves-orthodox", "coffee-arabica-green-beans", "tender-coconut"],
+  tea: ["tea-leaves-orthodox", "green-tea"],
+  coffee: ["coffee-arabica-green-beans", "coffee-beans"],
+  rubber: ["natural-rubber-latex", "rubber-sheets"],
+  coconut: ["tender-coconut", "coconut-oil"],
+  arecanut: ["tender-coconut"],
+  "oil-palm": ["coconut-oil"],
+  cashew: ["roasted-nuts"],
+  "natural-fibres": ["coir-fibre", "flax", "hemp"],
+  "fibre-stalks": ["coir-fibre", "raw-cotton", "raw-jute"],
+  sisal: ["sisal", "coir-fibre"],
+  abaca: ["sisal", "hemp"],
+  "banana-fibre": ["banana-plants", "coir-fibre"],
+  "timber-bamboo": ["teak-wood", "bamboo-poles"],
+  "teak-wood": ["teak-wood", "teak-wood-logs"],
+  eucalyptus: ["eucalyptus-logs", "teak-wood"],
+  mahogany: ["teak-wood"],
+  "bamboo-poles": ["bamboo-poles"],
+  "bamboo-shoots": ["bamboo-poles"],
+  "wood-chips": ["wood-pellets-biomass"],
+  "animal-feed-fodder": ["cattle-feed", "poultry-feed", "green-fodder-napier"],
+  "cattle-feed": ["cattle-feed"],
+  "fish-feed": ["fish-feed-pellets", "floating-pellets"],
+  "dry-fodder": ["agricultural-straw-pellets", "maize-fodder"],
+  silage: ["green-fodder-napier"],
+  "agri-waste-by-products": ["agricultural-straw-pellets", "wood-pellets-biomass"],
+  "rice-husk": ["agricultural-straw-pellets"],
+  "wheat-straw": ["agricultural-straw-pellets"],
+  "sugarcane-bagasse": ["agricultural-straw-pellets"],
+  "corn-stover": ["agricultural-straw-pellets"],
+  "oil-cakes": ["neem-cake"],
+  molasses: ["sugarcane-jaggery-grade"],
 };
 
 /**
@@ -704,14 +902,14 @@ export function getScopedLocalProductImage(
   const subcategoryMatches = subcategoryId
     ? candidates.filter((candidate) => candidate.subcategoryId === subcategoryId)
     : [];
-  if (subcategoryMatches.length === 1) return subcategoryMatches[0];
+  if (subcategoryMatches.length >= 1) return subcategoryMatches[0];
 
   const categoryMatches = categoryId
     ? candidates.filter((candidate) => candidate.categoryId === categoryId)
     : [];
-  if (categoryMatches.length === 1) return categoryMatches[0];
+  if (categoryMatches.length >= 1) return categoryMatches[0];
 
-  return candidates.length === 1 ? candidates[0] : undefined;
+  return candidates[0];
 }
 
 const allEntries = [...entries, ...automaticAssetEntries];

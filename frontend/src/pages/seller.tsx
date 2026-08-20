@@ -214,7 +214,7 @@ export default function SellerPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {[
               { label: t("seller.total_products"),    value: myProducts.length || "0",          icon: Package,    color: "text-emerald-400" },
               { label: t("seller.pending_orders"), value: pendingOrders || "—",              icon: Clock,      color: "text-amber-400" },
@@ -370,7 +370,7 @@ export default function SellerPage() {
                 <Badge variant="secondary">{sellerOrders.length}</Badge>
               </h2>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px] h-8 text-xs" data-testid="select-order-filter">
+                <SelectTrigger className="h-8 w-full text-xs sm:w-[180px]" data-testid="select-order-filter">
                   <Filter className="h-3.5 w-3.5 mr-1.5" />
                   <SelectValue placeholder={t("filters.title")} />
                 </SelectTrigger>

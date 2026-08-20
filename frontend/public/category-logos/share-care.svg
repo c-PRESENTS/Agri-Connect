@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-share" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FB7185" />
+      <stop offset="50%" stop-color="#E11D48" />
+      <stop offset="100%" stop-color="#881337" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-share)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g>
+    <!-- Handshake / Giving Heart -->
+    <path d="M64 42 C56 32 42 34 38 46 C34 60 52 74 64 84 C76 74 94 60 90 46 C86 34 72 32 64 42 Z" fill="#FFE4E6" stroke="#FFFFFF" stroke-width="2" />
+    <!-- Giving Hands -->
+    <path d="M42 66 C48 72 58 76 64 74 L78 60 C80 58 84 58 86 60 C88 62 88 66 86 68 L72 82 C66 88 54 86 46 78 Z" fill="#F43F5E" />
+    <circle cx="64" cy="54" r="7" fill="#FACC15" />
+  </g>
+</svg>

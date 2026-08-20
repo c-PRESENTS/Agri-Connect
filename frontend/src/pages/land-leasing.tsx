@@ -36,7 +36,7 @@ import { Landmark, FileText, Users, Award, ExternalLink, Calendar, CreditCard, A
 import { useCurrency } from "@/contexts/currency-context";
 
 const landTabClass =
-  "gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-base font-black text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md uppercase tracking-wide";
+  "gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-base font-black text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 uppercase tracking-wide";
 
 const landTypeIcons: Record<string, typeof Wheat> = {
   agricultural: Wheat,

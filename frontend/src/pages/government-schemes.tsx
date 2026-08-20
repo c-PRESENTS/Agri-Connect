@@ -324,8 +324,8 @@ export default function GovernmentSchemes() {
         <Tabs defaultValue="browse" className="space-y-6">
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <TabsList className="h-auto flex-wrap gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm" data-testid="tabs-government">
-              <TabsTrigger value="browse" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl data-[state=active]:bg-emerald-700 data-[state=active]:text-white shadow-xs">Browse Schemes</TabsTrigger>
-              <TabsTrigger value="applications" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl data-[state=active]:bg-emerald-700 data-[state=active]:text-white shadow-xs">
+              <TabsTrigger value="browse" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">Browse Schemes</TabsTrigger>
+              <TabsTrigger value="applications" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">
                 My Applications
                 {applications.length > 0 && (
                   <Badge className="ml-2 h-6 w-6 p-0 text-xs font-black flex items-center justify-center rounded-full" variant="secondary">
@@ -333,7 +333,7 @@ export default function GovernmentSchemes() {
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="eligibility" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl data-[state=active]:bg-emerald-700 data-[state=active]:text-white shadow-xs">Eligibility Guide</TabsTrigger>
+              <TabsTrigger value="eligibility" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">Eligibility Guide</TabsTrigger>
             </TabsList>
           </div>
 

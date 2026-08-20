@@ -328,11 +328,11 @@ export default function AgriTechPage() {
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-10">
         <Tabs defaultValue="catalog">
           <div className="overflow-x-auto -mx-4 px-4 mb-6 sm:mb-8 no-scrollbar">
-          <TabsList className="h-10 sm:h-12 p-1 flex w-max min-w-full" data-testid="tabs-agritech">
-            <TabsTrigger value="catalog" className="px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap">{t("agritech.tab_catalog")}</TabsTrigger>
-            <TabsTrigger value="technology" className="px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">{t("agritech.tab_technologies")}</TabsTrigger>
-            <TabsTrigger value="casestudies" className="px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">{t("agritech.tab_case_studies")}</TabsTrigger>
-            <TabsTrigger value="roi" className="px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap">{t("agritech.tab_roi_calculator")}</TabsTrigger>
+          <TabsList className="h-auto flex-wrap gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm" data-testid="tabs-agritech">
+            <TabsTrigger value="catalog" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_catalog")}</TabsTrigger>
+            <TabsTrigger value="technology" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_technologies")}</TabsTrigger>
+            <TabsTrigger value="casestudies" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_case_studies")}</TabsTrigger>
+            <TabsTrigger value="roi" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_roi_calculator")}</TabsTrigger>
           </TabsList>
           </div>
 
@@ -688,36 +688,58 @@ function ROICalculator() {
       <div className="space-y-2">
         <label className="text-sm font-medium">{t("agritech.roi_crop_type_label")}</label>
         <div className="flex flex-wrap gap-2">
-              {Object.keys(cropPrices).map((crop) => {
+          {Object.keys(cropPrices).map((crop) => {
             const cropKey = `roi_crop_${crop}`;
+            const isSelected = cropType === crop;
+            const CROP_FALLBACKS: Record<string, string> = {
+              wheat: "Wheat",
+              barley: "Barley",
+              osr: "Oilseed Rape (OSR)",
+              maize: "Maize / Corn",
+              potatoes: "Potatoes",
+              sugar_beet: "Sugar Beet",
+            };
             return (
-            <Button
-              key={crop}
-              size="sm"
-              variant={cropType === crop ? "default" : "outline"}
-              onClick={() => setCropType(crop)}
-              data-testid={`crop-${crop}`}
-            >
-              {t(`agritech.${cropKey}`)}
-            </Button>
-          );
+              <Button
+                key={crop}
+                size="sm"
+                variant="outline"
+                onClick={() => setCropType(crop)}
+                data-testid={`crop-${crop}`}
+                className={`transition-all rounded-xl font-black ${
+                  isSelected
+                    ? "bg-amber-400 text-amber-950 hover:bg-amber-500 border-2 border-amber-500 shadow-sm"
+                    : "bg-emerald-50/90 text-emerald-900 border-2 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
+                }`}
+              >
+                {t(`agritech.${cropKey}`, CROP_FALLBACKS[crop] || crop.toUpperCase())}
+              </Button>
+            );
           })}
         </div>
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium">{t("agritech.roi_investment_label")}</label>
         <div className="flex flex-wrap gap-2">
-          {Object.entries(bundles).map(([key, b]) => (
-            <Button
-              key={key}
-              size="sm"
-              variant={techBundle === key ? "default" : "outline"}
-              onClick={() => setTechBundle(key)}
-              data-testid={`bundle-${key}`}
-            >
-              {b.name} ({format(b.cost, { includeCode: true })})
-            </Button>
-          ))}
+          {Object.entries(bundles).map(([key, b]) => {
+            const isSelected = techBundle === key;
+            return (
+              <Button
+                key={key}
+                size="sm"
+                variant="outline"
+                onClick={() => setTechBundle(key)}
+                data-testid={`bundle-${key}`}
+                className={`transition-all rounded-xl font-black ${
+                  isSelected
+                    ? "bg-amber-400 text-amber-950 hover:bg-amber-500 border-2 border-amber-500 shadow-sm"
+                    : "bg-emerald-50/90 text-emerald-900 border-2 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
+                }`}
+              >
+                {b.name} ({format(b.cost, { includeCode: true })})
+              </Button>
+            );
+          })}
         </div>
       </div>
 

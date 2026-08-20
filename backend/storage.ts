@@ -63,18 +63,22 @@ const categoriesData: Category[] = [
   },
   {
     id: "fresh-produce",
-    name: "Fresh Farm Produce",
+    name: "Bulk & Wholesale Produce",
     icon: "Leaf",
     buyerVisible: true,
     subcategories: [
       { id: "wholesale-veg", name: "Vegetables (Wholesale)", parentId: "fresh-produce", buyerVisible: true },
       { id: "wholesale-fruits", name: "Fruits (Wholesale)", parentId: "fresh-produce", buyerVisible: true },
       { id: "flowers", name: "Flowers & Decoratives", parentId: "fresh-produce", buyerVisible: true },
+      { id: "processed", name: "Processed & Value-Added Products", parentId: "fresh-produce", buyerVisible: true },
+      { id: "specialty", name: "Specialty & Premium Products", parentId: "fresh-produce", buyerVisible: true },
+      { id: "commercial-crops", name: "Commercial & Industrial Crops", parentId: "fresh-produce", buyerVisible: true },
+      { id: "other-agri", name: "Other Agricultural Products", parentId: "fresh-produce", buyerVisible: true },
     ],
   },
   {
     id: "livestock",
-    name: "Livestock & Animals",
+    name: "Livestock & Aquaculture",
     icon: "Beef",
     buyerVisible: true,
     subcategories: [
@@ -86,7 +90,7 @@ const categoriesData: Category[] = [
   },
   {
     id: "inputs-tools",
-    name: "Inputs & Tools",
+    name: "Agri-Inputs & Farm Equipment",
     icon: "Wrench",
     buyerVisible: true,
     subcategories: [
@@ -108,7 +112,7 @@ const categoriesData: Category[] = [
     id: "processed",
     name: "Processed & Value-Added",
     icon: "Package",
-    buyerVisible: true,
+    buyerVisible: false,
     subcategories: [
       { id: "spice-powders", name: "Spices & Powders", parentId: "processed", buyerVisible: true },
       { id: "pickles", name: "Pickles & Preserves", parentId: "processed", buyerVisible: true },
@@ -121,7 +125,7 @@ const categoriesData: Category[] = [
     id: "specialty",
     name: "Specialty & Premium",
     icon: "Award",
-    buyerVisible: true,
+    buyerVisible: false,
     subcategories: [
       { id: "organic", name: "Organic Products", parentId: "specialty", buyerVisible: true },
       { id: "medicinal", name: "Medicinal Plants & Herbs", parentId: "specialty", buyerVisible: true },
@@ -135,7 +139,7 @@ const categoriesData: Category[] = [
     id: "other-agri",
     name: "Other Agricultural",
     icon: "Wheat",
-    buyerVisible: true,
+    buyerVisible: false,
     subcategories: [
       { id: "plantation", name: "Plantation Crops", parentId: "other-agri", buyerVisible: true },
       { id: "fibre", name: "Fibre Crops", parentId: "other-agri", buyerVisible: true },
@@ -280,7 +284,7 @@ const categoriesData: Category[] = [
     id: "commercial-crops",
     name: "Commercial & Industrial Crops",
     icon: "Factory",
-    buyerVisible: true,
+    buyerVisible: false,
     subcategories: [
       { id: "sugar-crops", name: "Sugar Crops", parentId: "commercial-crops", buyerVisible: true },
       { id: "beverage-crops", name: "Beverage Crops", parentId: "commercial-crops", buyerVisible: true },
@@ -581,7 +585,7 @@ const productSeedData: CatalogSeedProduct[] = [
   { name: "Moringa Leaves", category: "specialty", subcategory: "medicinal", unit: "kg", basePrice: 250, isOrganic: true },
   { name: "Neem Leaves", category: "specialty", subcategory: "medicinal", unit: "kg", basePrice: 100, isOrganic: true },
   
-  // Fresh Farm Produce - Wholesale Vegetables & Fruits
+  // Bulk & Wholesale Produce - Wholesale Vegetables & Fruits
   { name: "Bulk Mixed Vegetables Crate", category: "fresh-produce", subcategory: "wholesale-veg", unit: "crate", basePrice: 1200, isOrganic: false, images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop"] },
   { name: "Bulk Leafy Greens Box", category: "fresh-produce", subcategory: "wholesale-veg", unit: "box", basePrice: 650, isOrganic: true, images: ["https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop"] },
   { name: "Wholesale Root Vegetables Sack", category: "fresh-produce", subcategory: "wholesale-veg", unit: "sack", basePrice: 900, isOrganic: false, images: ["https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop"] },
@@ -979,7 +983,7 @@ const productImages: Record<string, string> = {
   "Squid": "https://images.unsplash.com/photo-1565680018093-ebb6d90c7f2a?w=400&h=300&fit=crop",
   "Dried Fish": "https://images.unsplash.com/photo-1534604973900-c43ab4c2e0ab?w=400&h=300&fit=crop",
 
-  // Spices & Condiments
+  // Spices & Powders
   "Turmeric Powder": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
   "Red Chilli Powder": "https://images.unsplash.com/photo-1588276552401-30058a0fe57b?w=400&h=300&fit=crop",
   "Coriander Powder": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
@@ -998,6 +1002,75 @@ const productImages: Record<string, string> = {
   "Kashmiri Red Chilli": "https://images.unsplash.com/photo-1588276552401-30058a0fe57b?w=400&h=300&fit=crop",
   "Rock Salt": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
   "Jaggery (Organic)": "https://images.unsplash.com/photo-1590779033100-9f60705a2f3b?w=400&h=300&fit=crop",
+  "Saffron": "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=300&fit=crop",
+  "Saffron (Premium Grade)": "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=300&fit=crop",
+  "Kashmiri Saffron": "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=300&fit=crop",
+  "Vanilla": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Vanilla Beans": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "All Whole Varieties": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Whole Spices": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Specialty Spices": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Ground Spices": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "All Ground Spices": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Powdered Spices": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Spice Blends": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Star Anise": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Truffles": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
+
+  // Pickles & Preserves
+  "Fruit Pickles": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Vegetable Pickles": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Preserves & Jams": "https://images.unsplash.com/photo-1561136594-7f68413baa99?w=400&h=300&fit=crop",
+  "Chutneys": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Mango Pickle": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Lemon Pickle": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Amla Pickle": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Mixed Fruit": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Mixed Pickle": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Mixed Vegetable Pickle": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Chilli Pickle": "https://images.unsplash.com/photo-1588276552401-30058a0fe57b?w=400&h=300&fit=crop",
+  "Garlic Pickle": "https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?w=400&h=300&fit=crop",
+  "Ginger Pickle": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Jams": "https://images.unsplash.com/photo-1561136594-7f68413baa99?w=400&h=300&fit=crop",
+  "Marmalades": "https://images.unsplash.com/photo-1561136594-7f68413baa99?w=400&h=300&fit=crop",
+  "Squashes": "https://images.unsplash.com/photo-1561136594-7f68413baa99?w=400&h=300&fit=crop",
+  "Syrups": "https://images.unsplash.com/photo-1561136594-7f68413baa99?w=400&h=300&fit=crop",
+  "Coconut Chutney": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Tomato Chutney": "https://images.unsplash.com/photo-1561136594-7f68413baa99?w=400&h=300&fit=crop",
+  "Mint Chutney": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Tamarind Chutney": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Tomato Ketchup": "https://images.unsplash.com/photo-1561136594-7f68413baa99?w=400&h=300&fit=crop",
+  "Coconut Chutney Powder": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+
+  // Health & Organic Foods
+  "Organic Cereals": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop",
+  "Organic Pulses": "https://images.unsplash.com/photo-1585650909574-e384a287d51a?w=400&h=300&fit=crop",
+  "Organic Spices": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Millet Products": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
+  "Millet Flours": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
+  "Millet Snacks": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
+  "Superfoods": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop",
+  "Spirulina": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Chia Seeds": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop",
+  "Flax Seeds": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop",
+  "Supplements": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop",
+  "Protein Powders": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop",
+
+  // Beverages
+  "Green Tea": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Black Tea": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Herbal Tea": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Coffee Beans": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Ground Coffee": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Fresh Juices": "https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=300&fit=crop",
+  "Health Drinks": "https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=300&fit=crop",
+
+  // Snacks & Ready Foods
+  "Traditional Snacks": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Healthy Snacks": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Roasted Nuts": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Sweets": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Instant Mixes": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
 
   // Seeds & Planting Material
   "Hybrid Seeds Pack": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
@@ -1044,25 +1117,46 @@ const productImages: Record<string, string> = {
   "Pure Honey": "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop",
   "Forest Honey": "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop",
   "Organic Raw Honey": "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop",
+  "Organic Honey": "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop",
+  "Natural Honey": "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop",
+  "Manuka Honey": "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop",
   "Beeswax": "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop",
   "Royal Jelly": "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop",
   "Bee Pollen": "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&h=300&fit=crop",
 
   // Mushrooms
   "Button Mushrooms": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
+  "Button Mushroom": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
   "Oyster Mushrooms": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
+  "Oyster Mushroom": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
   "Shiitake Mushrooms": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
+  "Shiitake": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
   "Portobello Mushrooms": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
+  "Portobello": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
   "Enoki Mushrooms": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
   "Mushroom Spawn": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
+  "Dry Mushrooms": "https://images.unsplash.com/photo-1552825897-bb7edbd22c6e?w=400&h=300&fit=crop",
 
-  // Medicinal Plants & Herbs
+  // Medicinal & Aromatic Plants
   "Tulsi Plants": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
   "Aloe Vera Plant": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
   "Ashwagandha Root": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Ashwagandha": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
   "Brahmi Leaves": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Brahmi": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Giloy": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
   "Moringa Leaves": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
   "Neem Leaves": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Fresh Herbs": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Dried Herbs": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Herbal Powders": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  "Raw Materials": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Lemongrass": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Vetiver": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Jasmine": "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=300&fit=crop",
+  "Rose": "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=300&fit=crop",
+  "Lavender": "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=300&fit=crop",
+  "Aromatic Herbs": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
 
   // Flowers & Decoratives
   "Jasmine Flowers": "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=300&fit=crop",
@@ -1072,40 +1166,80 @@ const productImages: Record<string, string> = {
   "Tuberose": "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=300&fit=crop",
   "Orchids": "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400&h=300&fit=crop",
 
-  // Processed Foods & Pickles
-  "Mango Pickle": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
-  "Lemon Pickle": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
-  "Mixed Vegetable Pickle": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
-  "Tomato Ketchup": "https://images.unsplash.com/photo-1561136594-7f68413baa99?w=400&h=300&fit=crop",
-  "Coconut Chutney Powder": "https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?w=400&h=300&fit=crop",
+  // Commercial & Industrial Crops
+  "Sugarcane": "https://images.unsplash.com/photo-1590779033100-9f60705a2f3b?w=400&h=300&fit=crop",
+  "Sugarbeet": "https://images.unsplash.com/photo-1593105544559-ecb03bf76f82?w=400&h=300&fit=crop",
+  "Stevia": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Palm Sugar": "https://images.unsplash.com/photo-1590779033100-9f60705a2f3b?w=400&h=300&fit=crop",
+  "Raw Cotton": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Cotton Bales": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Raw Jute": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Jute Bags": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Hemp": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Flax": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Coir": "https://images.unsplash.com/photo-1523672556977-3a0e3fad3044?w=400&h=300&fit=crop",
+  "Groundnut": "https://images.unsplash.com/photo-1474979266404-7eaacabc88c5?w=400&h=300&fit=crop",
+  "Mustard": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Soybean": "https://images.unsplash.com/photo-1599708193358-81a02ba36cc8?w=400&h=300&fit=crop",
+  "Sunflower": "https://images.unsplash.com/photo-1474979266404-7eaacabc88c5?w=400&h=300&fit=crop",
+  "Sesame": "https://images.unsplash.com/photo-1474979266404-7eaacabc88c5?w=400&h=300&fit=crop",
+  "Castor Seed": "https://images.unsplash.com/photo-1474979266404-7eaacabc88c5?w=400&h=300&fit=crop",
+  "Green Leaf Tea": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "CTC Tea": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Coffee Cherries": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Arabica Coffee": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Robusta": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Cocoa Beans": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Natural Rubber": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Rubber Sheets": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Latex Concentrate": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Crepe Rubber": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Flue-Cured Tobacco": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Bidi Tobacco": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Chewing Tobacco": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Industrial Tobacco": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
 
-  // Animal Feed
+  // Other Agricultural & Plantation
+  "Plantation Crops": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Tea": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Coffee": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
+  "Rubber": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Coconut": "https://images.unsplash.com/photo-1523672556977-3a0e3fad3044?w=400&h=300&fit=crop",
+  "Arecanut": "https://images.unsplash.com/photo-1523672556977-3a0e3fad3044?w=400&h=300&fit=crop",
+  "Oil Palm": "https://images.unsplash.com/photo-1474979266404-7eaacabc88c5?w=400&h=300&fit=crop",
+  "Cashew": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=400&h=300&fit=crop",
+  "Natural Fibres": "https://images.unsplash.com/photo-1523672556977-3a0e3fad3044?w=400&h=300&fit=crop",
+  "Fibre & Stalks": "https://images.unsplash.com/photo-1523672556977-3a0e3fad3044?w=400&h=300&fit=crop",
+  "Sisal": "https://images.unsplash.com/photo-1523672556977-3a0e3fad3044?w=400&h=300&fit=crop",
+  "Abaca": "https://images.unsplash.com/photo-1523672556977-3a0e3fad3044?w=400&h=300&fit=crop",
+  "Banana Fibre": "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=400&h=300&fit=crop",
+  "Timber & Bamboo": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Teak Wood": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Eucalyptus": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Mahogany": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Bamboo Poles": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Bamboo Shoots": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Wood Chips": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Animal Feed & Fodder": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
   "Cattle Feed": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
   "Poultry Feed (Starter)": "https://images.unsplash.com/photo-1587593810167-a84920ea084e?w=400&h=300&fit=crop",
+  "Poultry Feed": "https://images.unsplash.com/photo-1587593810167-a84920ea084e?w=400&h=300&fit=crop",
+  "Fish Feed": "https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=400&h=300&fit=crop",
   "Fish Feed Pellets": "https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=400&h=300&fit=crop",
   "Green Fodder (Napier)": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
-
-  // Plantation Crops
-  "Green Tea Leaves": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
-  "Coffee Beans (Arabica)": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop",
-  "Rubber Latex": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
-
-  // Fibre Crops
-  "Raw Cotton": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
-  "Jute Fibre": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
-  "Coir Fibre": "https://images.unsplash.com/photo-1523672556977-3a0e3fad3044?w=400&h=300&fit=crop",
-
-  // Timber & Bamboo
-  "Bamboo Poles": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
-  "Teak Wood Logs": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
-  "Eucalyptus Logs": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
-
-  // Bakery
-  "Sourdough Bread": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop",
-  "Whole Grain Bread": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
+  "Green Fodder": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Dry Fodder": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
+  "Silage": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+  "Agri-Waste & By-Products": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Rice Husk": "https://images.unsplash.com/photo-1586201358815-0dca50cd4f85?w=400&h=300&fit=crop",
+  "Wheat Straw": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
+  "Sugarcane Bagasse": "https://images.unsplash.com/photo-1590779033100-9f60705a2f3b?w=400&h=300&fit=crop",
+  "Corn Stover": "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400&h=300&fit=crop",
+  "Oil Cakes": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+  "Molasses": "https://images.unsplash.com/photo-1590779033100-9f60705a2f3b?w=400&h=300&fit=crop",
 
   // Default fallback
-  "default": "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=400&h=300&fit=crop"
+  "default": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop"
 };
 
 function getProductImage(productName: string): string {
@@ -1341,10 +1475,25 @@ export class MemStorage implements IStorage {
 
     if (filters) {
       if (filters.categoryId) {
-        products = products.filter((p) => p.categoryId === filters.categoryId);
+        if (filters.categoryId === "fresh-produce") {
+          products = products.filter(
+            (p) =>
+              p.categoryId === "fresh-produce" ||
+              p.categoryId === "processed" ||
+              p.categoryId === "specialty" ||
+              p.categoryId === "commercial-crops" ||
+              p.categoryId === "other-agri",
+          );
+        } else {
+          products = products.filter((p) => p.categoryId === filters.categoryId);
+        }
       }
       if (filters.subcategoryId) {
-        products = products.filter((p) => p.subcategoryId === filters.subcategoryId);
+        products = products.filter(
+          (p) =>
+            p.subcategoryId === filters.subcategoryId ||
+            p.categoryId === filters.subcategoryId,
+        );
       }
       if (filters.isOrganic) {
         products = products.filter((p) => p.isOrganic);
@@ -2352,8 +2501,27 @@ class PersistentCommerceStorage extends MemStorage {
       (product.publicationStatus ?? "published") === "published",
     );
     if (!filters) return products;
-    if (filters.categoryId) products = products.filter((p) => p.categoryId === filters.categoryId);
-    if (filters.subcategoryId) products = products.filter((p) => p.subcategoryId === filters.subcategoryId);
+    if (filters.categoryId) {
+      if (filters.categoryId === "fresh-produce") {
+        products = products.filter(
+          (p) =>
+            p.categoryId === "fresh-produce" ||
+            p.categoryId === "processed" ||
+            p.categoryId === "specialty" ||
+            p.categoryId === "commercial-crops" ||
+            p.categoryId === "other-agri",
+        );
+      } else {
+        products = products.filter((p) => p.categoryId === filters.categoryId);
+      }
+    }
+    if (filters.subcategoryId) {
+      products = products.filter(
+        (p) =>
+          p.subcategoryId === filters.subcategoryId ||
+          p.categoryId === filters.subcategoryId,
+      );
+    }
     if (filters.isOrganic) products = products.filter((p) => p.isOrganic);
     if (filters.inStock) products = products.filter((p) => p.stock > 0);
     if (filters.distance) products = products.filter((p) => (p.distance ?? 0) <= filters.distance!);

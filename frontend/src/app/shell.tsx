@@ -59,14 +59,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (isNoRail) return <><SkipLink /><div id="main-content" tabIndex={-1}>{children}</div></>;
 
   return (
-    <><SkipLink /><div className="flex h-screen overflow-hidden">
+    <><SkipLink /><div className="flex h-screen h-[100dvh] w-full overflow-hidden">
       <Suspense fallback={<ShellFallback />}>
         <AppNavRail />
         <GlobalSubcategoryPanel />
       </Suspense>
       {showMarketPanel ? (
         <div className="flex flex-1 min-w-0 h-full overflow-hidden">
-          <div id="main-content" tabIndex={-1} className={`flex-1 min-w-0 ${isFullScreen ? "overflow-hidden" : "overflow-y-auto"} ${showMobileNav ? "pb-16 md:pb-0" : ""}`}>
+          <div id="main-content" tabIndex={-1} className={`flex-1 min-w-0 ${isFullScreen ? "overflow-hidden" : "overflow-y-auto"} ${showMobileNav ? "pb-20 md:pb-0" : ""}`}>
             {children}
           </div>
           <div className="hidden h-full min-h-0 lg:block">
@@ -76,7 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       ) : (
-        <div id="main-content" tabIndex={-1} className={`flex-1 min-w-0 ${isFullScreen ? "overflow-hidden" : "overflow-y-auto"} ${showMobileNav ? "pb-16 md:pb-0" : ""}`}>
+        <div id="main-content" tabIndex={-1} className={`flex-1 min-w-0 ${isFullScreen ? "overflow-hidden" : "overflow-y-auto"} ${showMobileNav ? "pb-20 md:pb-0" : ""}`}>
           {children}
         </div>
       )}

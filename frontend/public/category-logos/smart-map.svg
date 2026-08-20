@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-smap" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="50%" stop-color="#0284C7" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="pin-red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F87171" />
+      <stop offset="100%" stop-color="#DC2626" />
+    </linearGradient>
+    <filter id="shadow-smap" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-smap)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-smap)">
+    <!-- 3D Folded Smart Map -->
+    <!-- Left panel -->
+    <polygon points="26,44 48,36 48,92 26,100" fill="#F1F5F9" stroke="#334155" stroke-width="1.5" />
+    <!-- Center panel -->
+    <polygon points="48,36 80,44 80,100 48,92" fill="#CBD5E1" stroke="#334155" stroke-width="1.5" />
+    <!-- Right panel -->
+    <polygon points="80,44 102,36 102,92 80,100" fill="#E2E8F0" stroke="#334155" stroke-width="1.5" />
+    <!-- Road / River Navigation lines -->
+    <path d="M32 68 Q48 54 64 68 T96 68" stroke="#38BDF8" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M40 86 Q64 74 76 86 T94 80" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <!-- Live GPS Location Marker Pin with Pulse -->
+    <circle cx="64" cy="46" r="16" fill="url(#pin-red)" opacity="0.25" />
+    <path d="M64 26 C54 26 46 34 46 44 C46 58 64 76 64 76 C64 76 82 58 82 44 C82 34 74 26 64 26 Z" fill="url(#pin-red)" stroke="#FFFFFF" stroke-width="2" />
+    <circle cx="64" cy="42" r="6" fill="#FFFFFF" />
+    <circle cx="64" cy="42" r="3" fill="#16A34A" />
+  </g>
+</svg>

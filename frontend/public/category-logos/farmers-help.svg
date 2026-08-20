@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-fhelp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22C55E" />
+      <stop offset="50%" stop-color="#16A34A" />
+      <stop offset="100%" stop-color="#14532D" />
+    </linearGradient>
+    <linearGradient id="glow-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="100%" stop-color="#FACC15" />
+    </linearGradient>
+    <filter id="shadow-fhelp" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-fhelp)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-fhelp)">
+    <!-- Shield Outline -->
+    <path d="M64 26 C78 26 94 30 94 46 C94 72 64 96 64 96 C64 96 34 72 34 46 C34 30 50 26 64 26 Z" fill="white" opacity="0.15" />
+    <!-- Farm Support / Growth Sprout Centerpiece -->
+    <path d="M64 88 V46 M64 46 C64 34 50 32 44 38 C44 52 56 50 64 46 Z" fill="url(#glow-gold)" stroke="#78350F" stroke-width="1.5" />
+    <path d="M64 54 C64 44 76 40 82 46 C84 58 72 58 64 54 Z" fill="url(#glow-gold)" stroke="#78350F" stroke-width="1.5" />
+    <!-- Stethoscope / Medical Crop Advisory Ring -->
+    <path d="M42 54 C42 72 54 82 64 82 C74 82 86 72 86 54" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <circle cx="42" cy="52" r="4" fill="#FFFFFF" />
+    <circle cx="86" cy="52" r="4" fill="#FFFFFF" />
+    <!-- Doctor / Expert Cross Badge -->
+    <circle cx="64" cy="90" r="11" fill="#EF4444" stroke="#FFFFFF" stroke-width="2" />
+    <path d="M64 84 V96 M58 90 H70" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" />
+  </g>
+</svg>

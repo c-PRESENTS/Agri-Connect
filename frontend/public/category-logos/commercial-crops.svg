@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-comm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#854D0E" />
+      <stop offset="50%" stop-color="#15803D" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+    <linearGradient id="coffee-beans" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#451A03" />
+    </linearGradient>
+    <linearGradient id="tea-leaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ADE80" />
+      <stop offset="100%" stop-color="#166534" />
+    </linearGradient>
+    <linearGradient id="cotton-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+    <filter id="shadow-comm" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-comm)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-comm)">
+    <!-- Global B2B Export / Trade Latitude Lines Behind -->
+    <circle cx="64" cy="62" r="32" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none" />
+    <ellipse cx="64" cy="62" rx="16" ry="32" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none" />
+    <line x1="32" y1="62" x2="96" y2="62" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
+    <!-- Tea / Plantation Leaf Stalk -->
+    <path d="M64 78 C64 56 46 44 40 46 C38 60 52 74 64 78 Z" fill="url(#tea-leaf)" stroke="#052E16" stroke-width="1.5" />
+    <path d="M48 58 Q56 62 62 70" stroke="#86EFAC" stroke-width="1.5" fill="none" />
+    <!-- Coffee Bean -->
+    <ellipse cx="80" cy="50" rx="12" ry="16" transform="rotate(25 80 50)" fill="url(#coffee-beans)" stroke="#FEF3C7" stroke-width="1.5" />
+    <path d="M74 38 Q84 50 78 62" stroke="#FEF3C7" stroke-width="2" fill="none" stroke-linecap="round" />
+    <!-- Cotton Boll / Sugarcane Industrial Commodity Base -->
+    <circle cx="54" cy="82" r="9" fill="url(#cotton-grad)" stroke="#94A3B8" stroke-width="1" />
+    <circle cx="66" cy="84" r="10" fill="url(#cotton-grad)" stroke="#94A3B8" stroke-width="1" />
+    <circle cx="78" cy="82" r="9" fill="url(#cotton-grad)" stroke="#94A3B8" stroke-width="1" />
+    <path d="M48 88 Q66 94 84 88 L66 96 Z" fill="#78350F" />
+    <!-- Industrial Freight Container / Cargo Symbol -->
+    <rect x="42" y="92" width="44" height="8" rx="2" fill="#EAB308" stroke="#78350F" stroke-width="1" />
+    <line x1="52" y1="92" x2="52" y2="100" stroke="#78350F" stroke-width="1" />
+    <line x1="64" y1="92" x2="64" y2="100" stroke="#78350F" stroke-width="1" />
+    <line x1="76" y1="92" x2="76" y2="100" stroke="#78350F" stroke-width="1" />
+  </g>
+</svg>

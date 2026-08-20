@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-dash" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="50%" stop-color="#6D28D9" />
+      <stop offset="100%" stop-color="#2E1065" />
+    </linearGradient>
+    <linearGradient id="bar-emerald" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="bar-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <linearGradient id="bar-cyan" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+    <filter id="shadow-dash" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-dash)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-dash)">
+    <!-- Dashboard Workspace Board -->
+    <rect x="26" y="28" width="76" height="72" rx="10" fill="#0F172A" stroke="#FFFFFF" stroke-width="2" />
+    <!-- Top Stats Row -->
+    <rect x="34" y="36" width="16" height="12" rx="3" fill="#334155" />
+    <rect x="56" y="36" width="16" height="12" rx="3" fill="#334155" />
+    <rect x="78" y="36" width="16" height="12" rx="3" fill="#334155" />
+    <!-- Analytics Growth Bars -->
+    <rect x="36" y="66" width="12" height="24" rx="3" fill="url(#bar-cyan)" />
+    <rect x="52" y="56" width="12" height="34" rx="3" fill="url(#bar-gold)" />
+    <rect x="68" y="48" width="12" height="42" rx="3" fill="url(#bar-emerald)" />
+    <rect x="84" y="60" width="12" height="30" rx="3" fill="#F43F5E" />
+    <!-- Trend Line with nodes -->
+    <path d="M42 64 L58 52 L74 44 L90 56" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <circle cx="42" cy="64" r="3" fill="#38BDF8" stroke="#FFFFFF" stroke-width="1.5" />
+    <circle cx="58" cy="52" r="3" fill="#FDE047" stroke="#FFFFFF" stroke-width="1.5" />
+    <circle cx="74" cy="44" r="3.5" fill="#34D399" stroke="#FFFFFF" stroke-width="1.5" />
+    <circle cx="90" cy="56" r="3" fill="#F43F5E" stroke="#FFFFFF" stroke-width="1.5" />
+  </g>
+</svg>

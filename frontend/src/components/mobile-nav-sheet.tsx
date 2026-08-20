@@ -25,30 +25,56 @@ type RailItem = {
 const ITEMS: RailItem[] = [
   { id: "home",          path: "/",                          icon: Home,            label: "Home",       public: true },
   { id: "cat-daily",     path: "/?category=daily-needs",     icon: ShoppingBasket,  label: "Daily",      public: true, category: "daily-needs"      },
-  { id: "cat-fresh",     path: "/?category=fresh-produce",   icon: Salad,           label: "Fresh",      public: true, category: "fresh-produce"    },
+  { id: "cat-fresh",     path: "/?category=fresh-produce",   icon: Salad,           label: "Bulk & Wholesale", public: true, category: "fresh-produce" },
   { id: "cat-livestock", path: "/?category=livestock",       icon: Beef,            label: "Livestock",  public: true, category: "livestock"        },
   { id: "cat-inputs",    path: "/?category=inputs-tools",    icon: Wrench,          label: "Inputs",     public: true, category: "inputs-tools"     },
-  { id: "cat-processed", path: "/?category=processed",       icon: Package,         label: "Process",    public: true, category: "processed"        },
-  { id: "cat-specialty", path: "/?category=specialty",       icon: Award,           label: "Special",    public: true, category: "specialty"        },
-  { id: "cat-other",     path: "/?category=other-agri",      icon: Wheat,           label: "Other",      public: true, category: "other-agri"       },
   { id: "cat-super",     path: "/?category=supermarket",     icon: Store,           label: "Market",     public: true, category: "supermarket"      },
   { id: "cat-dietary",   path: "/?category=dietary",         icon: Salad,           label: "Dietary",    public: true, category: "dietary"          },
   { id: "cat-modern",    path: "/?category=modern-farming",  icon: Sparkles,        label: "Modern",     public: true, category: "modern-farming"   },
   { id: "cat-services",  path: "/?category=services",        icon: Briefcase,       label: "Service",    public: true, category: "services"         },
-  { id: "cat-commerc",   path: "/?category=commercial-crops",icon: Factory,         label: "Commerc",    public: true, category: "commercial-crops" },
   { id: "cat-bio",       path: "/?category=bio-products",    icon: Leaf,            label: "Bio",        public: true, category: "bio-products"     },
   { id: "help",          path: "/farmers-help",         icon: Sprout,          label: "Learn",     public: true  },
   { id: "agritech",      path: "/agritech",             icon: Cpu,             label: "AgriTech",  public: true  },
   { id: "map",           path: "/map",                  icon: Map,             label: "Map",       public: true  },
   { id: "land",          path: "/land-leasing",         icon: Landmark,        label: "Land",      public: true  },
   { id: "share",         path: "/share-care",           icon: HeartHandshake,  label: "Share",     public: true  },
-  { id: "ship",          path: "/ship",                 icon: Truck,           label: "Ship",      public: true  },
+  { id: "logistics",     path: "/logistics",            icon: Truck,           label: "Logistics", public: true  },
   { id: "schemes",       path: "/government-schemes",   icon: FileText,        label: "Schemes",   public: true  },
   { id: "cart",          path: "/cart",                 icon: ShoppingCart,    label: "Cart",      public: true  },
   { id: "dash",          path: "/dashboard",            icon: LayoutDashboard, label: "Dash",      public: false },
   { id: "sell",          path: "/dashboard/photo-sell", icon: Camera,          label: "Sell",      public: false },
   { id: "settings",      path: "/settings",             icon: Settings,        label: "More",      public: false },
 ];
+
+const ITEM_LOGOS: Record<string, string> = {
+  home: "/category-logos/daily-needs.svg",
+  help: "/category-logos/farmers-help.svg",
+  "student-help": "/category-logos/student-help.svg",
+  agritech: "/category-logos/agritech.svg",
+  map: "/category-logos/smart-map.svg",
+  land: "/category-logos/land-leasing.svg",
+  share: "/category-logos/share-care.svg",
+  logistics: "/category-logos/logistics.svg",
+  "regional-marketplace": "/category-logos/smart-map.svg",
+  schemes: "/category-logos/government.svg",
+  sell: "/category-logos/photo-sell.svg",
+  cart: "/category-logos/cart.svg",
+  dash: "/category-logos/dashboard.svg",
+  settings: "/category-logos/settings.svg",
+  "cat-daily": "/category-logos/daily-needs.svg",
+  "cat-fresh": "/category-logos/fresh-produce.svg",
+  "cat-live": "/category-logos/livestock.svg",
+  "cat-livestock": "/category-logos/livestock.svg",
+  "cat-inputs": "/category-logos/inputs-tools.svg",
+  "cat-processed": "/category-logos/processed.svg",
+  "cat-specialty": "/category-logos/specialty.svg",
+  "cat-other": "/category-logos/other-agri.svg",
+  "cat-super": "/category-logos/supermarket.svg",
+  "cat-dietary": "/category-logos/dietary.svg",
+  "cat-commercial": "/category-logos/commercial-crops.svg",
+  "cat-bio": "/category-logos/bio-products.svg",
+  "cat-services": "/category-logos/services.svg",
+};
 
 function shortLabel(name: string) {
   return name
@@ -240,9 +266,10 @@ export function MobileNavSheet() {
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto overflow-x-hidden py-1.5 px-1 flex flex-col gap-0.5">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden py-1.5 px-1 flex flex-col gap-1">
             {visible.map((item) => {
               const Icon = item.icon;
+              const logo = ITEM_LOGOS[item.id];
               const isActive =
                 (item.category && activeCat === item.category) ||
                 (!item.category && (item.path === "/" ? location === "/" : location.startsWith(item.path.split("?")[0])));
@@ -252,12 +279,18 @@ export function MobileNavSheet() {
                   onClick={() => handleItemTap(item)}
                   data-testid={`mobile-nav-item-${item.id}`}
                   title={getItemLabel(item)}
-                  className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-lg transition-all active:scale-[0.94] ${
-                    isActive ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-xl transition-all active:scale-[0.94] border ${
+                    isActive 
+                      ? "bg-amber-400 text-amber-950 font-black border-amber-500 shadow-sm" 
+                      : "bg-emerald-50/90 text-emerald-900 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200"
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
-                  <span className="text-[8px] font-bold uppercase tracking-tight leading-[1.05] w-full text-center break-words line-clamp-2">
+                  {logo ? (
+                    <img src={logo} alt="" className="h-4.5 w-4.5 object-cover rounded-md" />
+                  ) : (
+                    <Icon className="h-4 w-4" />
+                  )}
+                  <span className="text-[8px] font-black uppercase tracking-tight leading-[1.05] w-full text-center break-words line-clamp-2">
                     {getItemLabel(item)}
                   </span>
                 </button>
@@ -270,8 +303,14 @@ export function MobileNavSheet() {
             inline 3rd-level expansion under any tapped sub. ── */}
         {activeCategory && (
           <div className="shrink-0 flex flex-col bg-background" style={{ width: col2Width }}>
-            <div className="flex items-center gap-1 px-1.5 py-1.5 border-b border-border/40 bg-primary/8">
-              <h3 className="flex-1 min-w-0 text-[10px] font-black uppercase tracking-widest text-primary truncate">
+            <div className="flex items-center gap-1.5 px-1.5 py-1.5 border-b border-emerald-300 bg-emerald-50/90 dark:bg-emerald-950/40">
+              <img
+                src={ITEM_LOGOS[`cat-${activeCategory.id}`] || `/category-logos/${activeCategory.id}.svg`}
+                alt=""
+                className="h-4 w-4 object-cover rounded shrink-0"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <h3 className="flex-1 min-w-0 text-[10px] font-black uppercase tracking-widest text-emerald-900 dark:text-emerald-200 truncate">
                 {activeCategory.name}
               </h3>
               <button
@@ -283,14 +322,14 @@ export function MobileNavSheet() {
                 <X className="h-3 w-3" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto overflow-x-hidden py-1 px-1 flex flex-col gap-0.5">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden py-1 px-1 flex flex-col gap-1">
               <button
                 onClick={handleSeeAll}
                 data-testid="mobile-nav-subcat-see-all"
-                className="flex items-center gap-1.5 py-1.5 px-1.5 rounded-lg bg-primary/15 text-primary active:scale-[0.98] transition-all"
+                className="flex items-center gap-1.5 py-1.5 px-1.5 rounded-lg bg-amber-400 text-amber-950 font-black border border-amber-500 shadow-xs active:scale-[0.98] transition-all"
               >
-                <Sparkles className="h-4 w-4 shrink-0" />
-                <span className="text-[10px] font-black uppercase tracking-wider truncate">{t("nav.see_all")}</span>
+                <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[9px] font-black uppercase tracking-wider truncate">{t("nav.see_all")}</span>
               </button>
               {activeCategory.subcategories.map((sub) => {
                 const deep = getSubSubcategories(sub.id);
@@ -302,8 +341,10 @@ export function MobileNavSheet() {
                       onClick={() => handleSubcategoryTap(sub.id)}
                       data-testid={`mobile-nav-subcat-${sub.id}`}
                       title={sub.name}
-                      className={`relative flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg transition-all active:scale-[0.98] ${
-                        isExpanded ? "bg-primary/15 text-primary" : "text-foreground hover:bg-muted/60"
+                      className={`relative flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg transition-all active:scale-[0.98] border ${
+                        isExpanded 
+                          ? "bg-amber-400 text-amber-950 font-black border-amber-500 shadow-xs" 
+                          : "bg-emerald-50/90 text-emerald-900 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-200"
                       }`}
                     >
                       <img
@@ -312,7 +353,7 @@ export function MobileNavSheet() {
                         loading="lazy"
                         className="h-7 w-7 rounded-md object-cover border border-border/40 shrink-0"
                       />
-                      <span className="text-[8px] font-bold uppercase tracking-tight leading-[1.05] w-full text-center break-words line-clamp-2">
+                      <span className="text-[8px] font-black uppercase tracking-tight leading-[1.05] w-full text-center break-words line-clamp-2">
                         {sub.name}
                       </span>
                       {hasDeep && (

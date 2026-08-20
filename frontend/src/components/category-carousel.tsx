@@ -48,7 +48,7 @@ export const CategoryCarousel = memo(function CategoryCarousel({
           className="flex items-center justify-between mb-3 sm:mb-6 md:mb-8"
         >
           <div className="min-w-0">
-            <span className="text-primary font-semibold text-[10px] sm:text-xs md:text-sm uppercase tracking-wider">
+            <span className="text-primary font-black text-sm sm:text-base md:text-lg lg:text-xl uppercase tracking-wider block mb-1">
               {t("category.browse_by_category")}
             </span>
             <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold mt-0.5 sm:mt-1 md:mt-2 leading-tight">
@@ -56,11 +56,11 @@ export const CategoryCarousel = memo(function CategoryCarousel({
             </h2>
             <Link
               href="/categories"
-              className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 bg-gradient-to-r from-primary to-green-600 bg-clip-text text-sm sm:text-base md:text-lg font-semibold text-transparent hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm"
+              className="mt-2 sm:mt-3 inline-flex items-center gap-2 bg-gradient-to-r from-primary to-green-600 bg-clip-text text-base sm:text-lg md:text-xl lg:text-2xl font-black text-transparent hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm"
               data-testid="link-view-all-categories"
             >
               {t("category.view_all_categories")}
-              <ArrowRight className="h-4 w-4 text-green-600" aria-hidden="true" />
+              <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 font-black stroke-[2.5]" aria-hidden="true" />
             </Link>
           </div>
             <div className="hidden sm:flex gap-2.5">
@@ -87,7 +87,7 @@ export const CategoryCarousel = memo(function CategoryCarousel({
           
           <div 
             ref={scrollContainerRef}
-            className="flex gap-4 sm:gap-6 md:gap-7 overflow-x-auto pb-4 sm:pb-6 scrollbar-hide snap-x snap-mandatory -mx-3 px-3 sm:mx-0 sm:px-0"
+            className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory -mx-3 px-3 sm:mx-0 sm:gap-4 sm:px-0 sm:pb-5 md:gap-5"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {carouselCategories.map((category) => {
@@ -97,10 +97,10 @@ export const CategoryCarousel = memo(function CategoryCarousel({
               return (
                 <div
                   key={category.id}
-                  className="flex-shrink-0 w-[220px] sm:w-[290px] md:w-[340px] snap-start"
+                  className="w-[180px] flex-shrink-0 snap-start sm:w-[220px] md:w-[250px] lg:w-[270px]"
                 >
                   <Card 
-                    className="h-[260px] sm:h-[330px] md:h-[380px] relative overflow-hidden group cursor-pointer border-2 border-transparent hover:border-primary/60 rounded-2xl sm:rounded-3xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+                    className="group relative h-[220px] cursor-pointer overflow-hidden rounded-2xl border-2 border-transparent shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-xl sm:h-[260px] md:h-[290px] lg:h-[310px]"
                     onClick={() => onCategorySelect(category.id)}
                     data-testid={`card-category-${category.id}`}
                   >
@@ -117,23 +117,27 @@ export const CategoryCarousel = memo(function CategoryCarousel({
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent transition-colors group-hover:from-black/95" />
                     
-                    <div className="relative z-10 h-full flex flex-col justify-end p-4 sm:p-6 md:p-7">
+                    <div className="relative z-10 flex h-full flex-col justify-end p-3 sm:p-4 md:p-5">
                       <div
-                        className="h-10 w-10 sm:h-13 sm:w-13 md:h-15 md:w-15 rounded-2xl bg-white/30 backdrop-blur-md flex items-center justify-center mb-3 sm:mb-4 border border-white/30 shadow-md transition-transform duration-300 group-hover:scale-110"
+                        className="mb-2.5 flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl border border-white/30 bg-white/30 p-1 shadow-md backdrop-blur-md transition-transform duration-300 group-hover:scale-110 sm:h-10 sm:w-10 md:h-11 md:w-11"
                       >
-                        <IconComponent className="h-5 w-5 sm:h-7 sm:w-7 md:h-8 md:w-8 text-white drop-shadow-sm" />
+                        {bgImage ? (
+                          <img src={bgImage} alt={category.name} className="h-full w-full rounded-lg object-cover" />
+                        ) : (
+                          <IconComponent className="h-4 w-4 text-white drop-shadow-sm sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                        )}
                       </div>
-                      <h3 className="text-lg sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wide mb-1 sm:mb-2 leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{category.name}</h3>
-                      <p className="text-white/95 text-xs sm:text-base font-extrabold mb-3 sm:mb-4 drop-shadow-sm">
+                      <h3 className="mb-1 text-base font-black uppercase leading-tight tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] sm:text-lg md:text-xl">{category.name}</h3>
+                      <p className="mb-2.5 text-[10px] font-extrabold text-white/95 drop-shadow-sm sm:mb-3 sm:text-xs">
                         {category.subcategories.length} subcategories
                       </p>
                       <Button 
                         variant="secondary" 
                         size="sm"
-                        className="w-fit h-9 sm:h-11 px-4 sm:px-5 text-xs sm:text-sm font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg border border-amber-500/50 rounded-xl"
+                        className="h-8 w-fit rounded-lg border border-amber-500/50 bg-amber-400 px-3 text-[10px] font-black uppercase tracking-wider text-black shadow-md hover:bg-amber-500 sm:h-9 sm:px-4 sm:text-xs"
                       >
                         {t("category.see_all")}
-                        <ArrowRight className="ml-1.5 sm:ml-2 h-4 w-4 text-black" />
+                        <ArrowRight className="ml-1 h-3.5 w-3.5 text-black sm:ml-1.5 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
                   </Card>

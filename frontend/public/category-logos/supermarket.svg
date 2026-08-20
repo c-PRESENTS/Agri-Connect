@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-super" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="50%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#312E81" />
+    </linearGradient>
+    <linearGradient id="cart-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#C7D2FE" />
+    </linearGradient>
+    <filter id="shadow-super" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-super)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-super)">
+    <!-- Storefront Awning / Canopy -->
+    <path d="M30 38 L98 38 L94 48 L34 48 Z" fill="#F43F5E" />
+    <path d="M30 38 L42 38 L40 48 L34 48 Z M54 38 L66 38 L64 48 L58 48 Z M78 38 L90 38 L88 48 L82 48 Z" fill="#FFFFFF" />
+    <path d="M34 48 Q37 53 40 48 Q43 53 46 48 Q49 53 52 48 Q55 53 58 48 Q61 53 64 48 Q67 53 70 48 Q73 53 76 48 Q79 53 82 48 Q85 53 88 48 Q91 53 94 48" fill="#F43F5E" />
+    <!-- Wholesale Supermarket Cart -->
+    <path d="M32 54 H40 L48 84 H88 L96 58 H44" fill="none" stroke="url(#cart-grad)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Cart Grid -->
+    <path d="M48 64 H92 M52 74 H86 M58 58 L55 82 M68 58 L67 82 M78 58 L79 82" stroke="url(#cart-grad)" stroke-width="2" stroke-linecap="round" />
+    <!-- Wheels -->
+    <circle cx="54" cy="94" r="5" fill="#FBBF24" stroke="#FFFFFF" stroke-width="1.5" />
+    <circle cx="82" cy="94" r="5" fill="#FBBF24" stroke="#FFFFFF" stroke-width="1.5" />
+    <!-- Packaged Goods inside -->
+    <rect x="52" y="46" width="10" height="12" rx="2" fill="#34D399" />
+    <rect x="65" y="42" width="12" height="16" rx="2" fill="#F59E0B" />
+    <rect x="80" y="48" width="9" height="10" rx="2" fill="#38BDF8" />
+  </g>
+</svg>

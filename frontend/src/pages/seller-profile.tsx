@@ -115,7 +115,7 @@ export default function SellerProfilePage() {
                 <MapPin className="w-3.5 h-3.5" />
                 {seller.farmerLocation || "United Kingdom"}
               </p>
-              <div className="flex items-center gap-4 mt-3 text-sm">
+              <div className="flex items-center gap-2 sm:gap-4 mt-3 text-xs sm:text-sm flex-wrap">
                 <span className="flex items-center gap-1" data-testid="text-seller-rating">
                   <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
                   <span className="font-semibold">{seller.farmerRating.toFixed(1)}</span>
@@ -167,11 +167,11 @@ export default function SellerProfilePage() {
       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
         <div>
           <Tabs defaultValue="all">
-            <TabsList>
-              <TabsTrigger value="all" data-testid="tab-all-listings">
-                {t("seller_profile.product_listings")} <Badge variant="secondary" className="ml-2">{totalListings}</Badge>
+            <TabsList className="h-auto flex-wrap gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm">
+              <TabsTrigger value="all" className="px-5 py-2.5 text-sm font-black rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 transition-all" data-testid="tab-all-listings">
+                {t("seller_profile.product_listings")} <Badge variant="secondary" className="ml-2 font-black">{totalListings}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="about" data-testid="tab-about">{t("seller_profile.description_title")}</TabsTrigger>
+              <TabsTrigger value="about" className="px-5 py-2.5 text-sm font-black rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 transition-all" data-testid="tab-about">{t("seller_profile.description_title")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="mt-4">

@@ -235,6 +235,44 @@ export const subSubcategoryData: Record<string, SubSubItem[]> = {
     { title: "Health Equipment", items: ["Veterinary Kit", "Weighing Scale", "Dehorners"] }
   ],
 
+  // PROCESSED & VALUE-ADDED PRODUCTS (Subcategory of Bulk & Wholesale Produce)
+  "processed": [
+    { title: "Spices & Powders", items: ["All Whole Varieties", "Ground Spices", "Spice Blends", "Specialty Spices", "Saffron", "Vanilla"] },
+    { title: "Pickles & Preserves", items: ["Fruit Pickles", "Vegetable Pickles", "Preserves & Jams", "Chutneys"] },
+    { title: "Health & Organic Foods", items: ["Organic Cereals", "Organic Pulses", "Millet Products", "Superfoods", "Supplements", "Chia Seeds"] },
+    { title: "Beverages", items: ["Green Tea", "Black Tea", "Herbal Tea", "Coffee Beans", "Ground Coffee", "Fresh Juices", "Health Drinks"] },
+    { title: "Snacks & Ready Foods", items: ["Traditional Snacks", "Healthy Snacks", "Roasted Nuts", "Sweets", "Instant Mixes"] }
+  ],
+
+  // SPECIALTY & PREMIUM PRODUCTS (Subcategory of Bulk & Wholesale Produce)
+  "specialty": [
+    { title: "Organic Products", items: ["Organic Fruits", "Organic Vegetables", "Organic Grains", "Organic Spices", "Certified Organic"] },
+    { title: "Medicinal Plants & Herbs", items: ["Fresh Herbs", "Dried Herbs", "Ashwagandha", "Brahmi", "Giloy", "Herbal Powders", "Raw Materials"] },
+    { title: "Aromatic Plants", items: ["Lemongrass", "Vetiver", "Jasmine", "Rose", "Lavender", "Aromatic Herbs"] },
+    { title: "Mushrooms", items: ["Button Mushroom", "Oyster Mushroom", "Shiitake", "Portobello", "Mushroom Spawn", "Dry Mushrooms"] },
+    { title: "Honey & Bee Products", items: ["Natural Honey", "Forest Honey", "Organic Honey", "Manuka Honey", "Beeswax", "Royal Jelly", "Bee Pollen"] },
+    { title: "Premium Crops", items: ["Kashmiri Saffron", "Vanilla Beans", "Green Cardamom", "True Cinnamon", "Clove", "Nutmeg"] }
+  ],
+
+  // COMMERCIAL & INDUSTRIAL CROPS (Subcategory of Bulk & Wholesale Produce)
+  "commercial-crops": [
+    { title: "Sugar & Sweeteners", items: ["Sugarcane", "Sugarbeet", "Stevia", "Palm Sugar", "Jaggery"] },
+    { title: "Fibre Crops", items: ["Raw Cotton", "Cotton Bales", "Raw Jute", "Jute Bags", "Hemp", "Flax", "Coir"] },
+    { title: "Oilseeds", items: ["Groundnut", "Mustard", "Soybean", "Sunflower", "Sesame", "Castor Seed"] },
+    { title: "Beverage Crops", items: ["Green Leaf Tea", "CTC Tea", "Coffee Cherries", "Arabica Coffee", "Robusta", "Cocoa Beans"] },
+    { title: "Rubber & Latex", items: ["Natural Rubber", "Rubber Sheets", "Latex Concentrate", "Crepe Rubber"] },
+    { title: "Tobacco & Narcotics", items: ["Flue-Cured Tobacco", "Bidi Tobacco", "Chewing Tobacco", "Industrial Tobacco"] }
+  ],
+
+  // OTHER AGRICULTURAL PRODUCTS (Subcategory of Bulk & Wholesale Produce)
+  "other-agri": [
+    { title: "Plantation Crops", items: ["Tea", "Coffee", "Rubber", "Coconut", "Arecanut", "Oil Palm", "Cashew"] },
+    { title: "Fibre & Stalks", items: ["Natural Fibres", "Flax", "Sisal", "Abaca", "Banana Fibre"] },
+    { title: "Timber & Bamboo", items: ["Teak Wood", "Eucalyptus", "Mahogany", "Bamboo Poles", "Bamboo Shoots", "Wood Chips"] },
+    { title: "Animal Feed & Fodder", items: ["Cattle Feed", "Poultry Feed", "Fish Feed", "Green Fodder", "Dry Fodder", "Silage"] },
+    { title: "Agri-Waste & By-Products", items: ["Rice Husk", "Wheat Straw", "Sugarcane Bagasse", "Corn Stover", "Oil Cakes", "Molasses"] }
+  ],
+
   // SPICE POWDERS (processed)
   "spice-powders": [
     { title: "Whole Spices", items: ["All Whole Varieties", "Premium Selection"] },

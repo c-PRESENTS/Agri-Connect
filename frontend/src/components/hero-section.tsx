@@ -25,7 +25,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLiveLocation } from "@/contexts/live-location-context";
 
 type ShareCareItem = { id: string; name: string; unit: string; qty: number; donor: string; location: string; emoji: string; postedAgo: string; category: string };
-type PlatformStatistics = { buyers: number };
+
+type PlatformStatistics = {
+  farmers: number;
+  products: number;
+  freeItems: number;
+  buyers: number;
+  students: number;
+  services: number;
+  updatedAt?: string;
+};
 
 interface HeroSectionProps {
   onBrowse: () => void;
@@ -230,14 +239,14 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <div className="inline-flex items-center gap-1 bg-green-500/15 border border-green-400/40 rounded-full px-1.5 py-0.5 shrink-0">
                 <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[9px] font-bold text-green-300">{farmerCount} {t("home.farmers")}</span>
+                <span className="text-[9px] font-bold text-green-300">{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
               </div>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{farmerCount}</span> {t("home.farmers")}</span>
+              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{platformStats?.farmers ?? farmerCount}</span> {t("home.farmers")}</span>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{products.length}</span> {t("home.products")}</span>
+              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{platformStats?.products ?? products.length}</span> {t("home.products")}</span>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{shareCareItems.length}</span> {t("home.free_items")}</span>
+              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{platformStats?.freeItems ?? shareCareItems.length}</span> {t("home.free_items")}</span>
               <span className="text-[9px] text-white/40 shrink-0">·</span>
               <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{platformStats?.buyers ?? "—"}</span> {t("platform_stats.buyers", "Buyers")}</span>
             </div>
@@ -281,7 +290,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
               </Badge>
               <div className="flex items-center gap-1.5 bg-white/15 border-2 border-white/25 rounded-full px-3 py-1 shadow-xs">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs font-black text-green-300">{farmerCount} {t("home.farmers")}</span>
+                <span className="text-xs font-black text-green-300">{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
               </div>
             </div>
 
@@ -294,19 +303,19 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
               {t("home.hero_description")}
             </p>
 
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-2.5 mb-5 max-w-lg">
               {[
-                { value: `${farmerCount}`, label: t("home.farmers"), icon: Users, color: "text-primary bg-primary/25" },
-                { value: `${products.length}`, label: t("home.products"), icon: Sprout, color: "text-emerald-400 bg-emerald-900/60" },
-                { value: `${shareCareItems.length}`, label: t("home.free_items"), icon: Activity, color: "text-amber-400 bg-amber-900/60" },
+                { value: `${platformStats?.farmers ?? farmerCount}`, label: t("home.farmers"), icon: Users, color: "text-primary bg-primary/25" },
+                { value: `${platformStats?.products ?? products.length}`, label: t("home.products"), icon: Sprout, color: "text-emerald-400 bg-emerald-900/60" },
+                { value: `${platformStats?.freeItems ?? shareCareItems.length}`, label: t("home.free_items"), icon: Activity, color: "text-amber-400 bg-amber-900/60" },
                 { value: platformStats?.buyers === undefined ? "—" : `${platformStats.buyers}`, label: t("platform_stats.buyers", "Buyers"), icon: ShoppingBag, color: "text-sky-300 bg-sky-900/60" },
               ].map(({ value, label, icon: Icon, color }) => (
-                <div key={label} className="bg-white/15 backdrop-blur-md border-2 border-white/25 rounded-2xl p-4 sm:p-5 flex flex-col items-center text-center shadow-lg hover:bg-white/20 transition-all">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 ${color}`}>
-                    <Icon className="h-5 w-5" />
+                <div key={label} className="bg-white/15 backdrop-blur-md border border-white/25 rounded-xl py-2.5 px-3 sm:py-3 sm:px-3.5 flex flex-col items-center text-center shadow-md hover:bg-white/20 transition-all">
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5 ${color}`}>
+                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
-                  <span className="text-2xl sm:text-3xl font-black text-white leading-none my-1">{value}</span>
-                  <span className="text-xs sm:text-sm font-black uppercase tracking-[0.14em] text-white/80">{label}</span>
+                  <span className="text-lg sm:text-xl font-black text-white leading-none my-0.5">{value}</span>
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.12em] text-white/80">{label}</span>
                 </div>
               ))}
             </div>

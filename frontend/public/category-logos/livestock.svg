@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-live" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EA580C" />
+      <stop offset="45%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+    <linearGradient id="cow-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </linearGradient>
+    <linearGradient id="fish-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+    <filter id="shadow-live" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg-live)" />
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+  <g filter="url(#shadow-live)">
+    <!-- Cattle Head Silhouette -->
+    <path d="M42 34 C36 30 30 32 28 36 C34 40 40 42 44 42 M86 34 C92 30 98 32 100 36 C94 40 88 42 84 42" stroke="#FEF08A" stroke-width="4" stroke-linecap="round" fill="none" />
+    <!-- Horns -->
+    <path d="M46 44 C42 40 32 44 32 50 C38 52 44 50 48 48 M82 44 C86 40 96 44 96 50 C90 52 84 50 80 48" fill="#F8FAFC" />
+    <!-- Face / Muzzle -->
+    <path d="M46 42 H82 L80 64 C80 72 74 78 64 78 C54 78 48 72 48 64 Z" fill="url(#cow-grad)" stroke="#0F172A" stroke-width="1.5" />
+    <!-- Snout -->
+    <ellipse cx="64" cy="68" rx="12" ry="7" fill="#FECDD3" stroke="#F43F5E" stroke-width="1" />
+    <circle cx="59" cy="68" r="2" fill="#881337" />
+    <circle cx="69" cy="68" r="2" fill="#881337" />
+    <!-- Eyes -->
+    <circle cx="54" cy="54" r="2.5" fill="#0F172A" />
+    <circle cx="74" cy="54" r="2.5" fill="#0F172A" />
+    <!-- Aquaculture Waves and Leaping Fish -->
+    <path d="M28 92 C36 88 44 96 52 92 C60 88 68 96 76 92 C84 88 92 96 100 92" stroke="#BAE6FD" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M24 100 C32 96 40 104 48 100 C56 96 64 104 72 100 C80 96 88 104 96 100" stroke="#7DD3FC" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7" />
+    <!-- Fish Leaping -->
+    <path d="M72 82 C82 76 94 80 98 86 C94 88 88 88 80 88 L88 94 L80 90 L76 94 Z" fill="url(#fish-grad)" stroke="#FFFFFF" stroke-width="1" />
+  </g>
+</svg>

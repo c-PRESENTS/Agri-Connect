@@ -1036,11 +1036,11 @@ export default function ProductDetailPage() {
         {/* BOTTOM: Tabs for Details / Nutrition / Reviews / More */}
         <div className="mt-8 lg:mt-12">
           <Tabs defaultValue="details" id="reviews">
-            <TabsList className="w-full justify-start h-auto flex-wrap gap-2 bg-muted/60 p-2 rounded-2xl border-2 border-border/80 shadow-md">
-              <TabsTrigger value="details" className="px-5 py-3 text-sm sm:text-base font-black rounded-xl data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md transition-all">{t("product_detail.specs_title")}</TabsTrigger>
-              <TabsTrigger value="reviews" className="px-5 py-3 text-sm sm:text-base font-black rounded-xl data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md transition-all">{t("product_detail.reviews_title")} ({product.reviewCount})</TabsTrigger>
-              <TabsTrigger value="nutrition" className="px-5 py-3 text-sm sm:text-base font-black rounded-xl data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md transition-all">{t("product_detail.nutrition_title")}</TabsTrigger>
-              <TabsTrigger value="more" className="px-5 py-3 text-sm sm:text-base font-black rounded-xl data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md transition-all">{t("seller_profile.recent_products")}</TabsTrigger>
+            <TabsList className="w-full justify-start h-auto flex-wrap gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm">
+              <TabsTrigger value="details" className="px-5 py-3 text-sm sm:text-base font-black rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 transition-all">{t("product_detail.specs_title")}</TabsTrigger>
+              <TabsTrigger value="reviews" className="px-5 py-3 text-sm sm:text-base font-black rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 transition-all">{t("product_detail.reviews_title")} ({product.reviewCount})</TabsTrigger>
+              <TabsTrigger value="nutrition" className="px-5 py-3 text-sm sm:text-base font-black rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 transition-all">{t("product_detail.nutrition_title")}</TabsTrigger>
+              <TabsTrigger value="more" className="px-5 py-3 text-sm sm:text-base font-black rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 transition-all">{t("seller_profile.recent_products")}</TabsTrigger>
             </TabsList>
 
             {/* Details tab */}
