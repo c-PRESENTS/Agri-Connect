@@ -391,6 +391,11 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
                       window.history.pushState({}, "", "/");
                     }
                     setLocation("/");
+                  } else if (item.id === "regional-marketplace") {
+                    window.dispatchEvent(new Event("agri-subcategory-close"));
+                    window.history.pushState({}, "", "/map?tab=marketplace");
+                    window.dispatchEvent(new Event("popstate"));
+                    setLocation("/map?tab=marketplace");
                   } else {
                     window.dispatchEvent(new Event("agri-subcategory-close"));
                     setLocation(item.path);
