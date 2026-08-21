@@ -17,6 +17,7 @@ import { TopNavigation } from "@/components/top-navigation";
 import { resolveProductImageForOrderItem } from "@/lib/product-images";
 import { BuyerTransactionHistory } from "@/components/payments/buyer-transaction-history";
 import { useCurrency } from "@/contexts/currency-context";
+import { OrderAgainButton } from "@/components/order-again-button";
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: typeof Package }> = {
   pending:            { label: "Pending",            color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",     icon: Clock },
@@ -213,6 +214,11 @@ export default function OrdersPage() {
                             {order.items.map((i) => i.productName).join(" · ")}
                           </p>
                         </div>
+                        <OrderAgainButton
+                          orderId={order.id}
+                          className="shrink-0"
+                          testId={`button-order-again-${order.id}`}
+                        />
                         <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       </div>
 

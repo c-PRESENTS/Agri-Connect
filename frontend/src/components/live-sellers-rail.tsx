@@ -13,7 +13,6 @@ import {
   Phone, MessageCircle, ShoppingBag, ChevronRight,
 } from "lucide-react";
 import { resolveProductImageForProduct } from "@/lib/product-images";
-import { isSellerOnline } from "@/lib/seller-presence";
 import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product } from "@shared/schema";
 import { useCurrency } from "@/contexts/currency-context";
@@ -51,8 +50,6 @@ function timeAgo(seconds: number): string {
 }
 
 export interface LiveSellersRailProps {
-  /** Optional pre-filtered products. Defaults to all. */
-  products?: Product[];
   /** Map height in pixels. */
   mapHeight?: number;
   /** Seller list height in pixels. */
@@ -72,20 +69,23 @@ export interface LiveSellersRailProps {
  *  3. Online sellers get a pulsing green dot.
  */
 export function LiveSellersRail({
-  products: providedProducts,
   mapHeight = 380,
   listHeight = 460,
   layout = "stacked",
 }: LiveSellersRailProps) {
   const { t } = useTranslation();
   const { format } = useCurrency();
-  const { data: fetched = [], dataUpdatedAt, isFetching } = useQuery<Product[]>({
-    queryKey: ["/api/products"],
-    enabled: !providedProducts,
+  const {
+    data: products = [],
+    dataUpdatedAt,
+    isFetching,
+    isError,
+    refetch,
+  } = useQuery<Product[]>({
+    queryKey: ["/api/sellers/verified-products"],
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,
   });
-  const products = providedProducts ?? fetched;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -108,7 +108,7 @@ export function LiveSellersRail({
           location: getPublicLocationLabel(p.farmerLocation),
           productCount: 1,
           topProducts: [p],
-          isOnline: isSellerOnline(p.farmerId),
+          isOnline: p.farmerIsOnline === true,
           latitude: p.farmerLatitude,
           longitude: p.farmerLongitude,
           totalStock: p.stock || 0,
@@ -195,10 +195,18 @@ export function LiveSellersRail({
 
         <ScrollArea style={{ height: listHeight }}>
           <div className="divide-y">
-            {sellers.length === 0 ? (
+            {isError ? (
+              <div className="p-8 text-center text-sm font-bold text-muted-foreground sm:p-12">
+                <RefreshCw className="mx-auto mb-3 h-8 w-8 opacity-40" />
+                <p>Verified sellers could not be loaded.</p>
+                <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>
+                  Try again
+                </Button>
+              </div>
+            ) : sellers.length === 0 ? (
               <div className="p-8 sm:p-12 text-center text-base font-bold text-muted-foreground space-y-2">
                 <MapPin className="w-8 h-8 mx-auto mb-3 opacity-40" />
-                <p>{t("product_grid.no_products_title")}</p>
+                <p>No verified sellers with published listings are available right now.</p>
               </div>
             ) : (
               sellers.map((s) => {

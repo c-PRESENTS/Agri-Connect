@@ -42,8 +42,8 @@ export const CategoryCarousel = memo(function CategoryCarousel({
   };
 
   return (
-    <section className="py-4 sm:py-10 md:py-14 px-3 sm:px-4" style={{ contentVisibility: "auto", containIntrinsicSize: "400px" }}>
-      <div className="container mx-auto">
+    <section className="py-4 sm:py-8 md:py-10 px-3 sm:px-6 lg:px-8" style={{ contentVisibility: "auto", containIntrinsicSize: "400px" }}>
+      <div className="w-full max-w-[1700px] mx-auto">
         <div
           className="flex items-center justify-between mb-3 sm:mb-6 md:mb-8"
         >

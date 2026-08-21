@@ -39,6 +39,28 @@ type Order = {
   deliveryFee: number;
   total: number;
 };
+type ReorderResult = {
+  orderId: string;
+  action: "validate" | "add_available";
+  requestedItemCount: number;
+  availableItemCount: number;
+  unavailableItemCount: number;
+  addedItemCount: number;
+  addedQuantity: number;
+  requiresConfirmation: boolean;
+  allAvailable: boolean;
+  items: Array<{
+    productId: string;
+    requestedQuantity: number;
+    quantityToAdd: number;
+    originalPrice: number;
+    currentPrice?: number;
+    status: string;
+    canAdd: boolean;
+    requiresConfirmation: boolean;
+    changes: string[];
+  }>;
+};
 
 test.describe("orders, cart, checkout, and role-safe dashboards", () => {
   test.describe.configure({ mode: "serial" });
@@ -112,6 +134,14 @@ test.describe("orders, cart, checkout, and role-safe dashboards", () => {
     await buyerApi?.dispose();
     await sellerApi?.dispose();
     await adminApi?.dispose();
+  });
+
+  test("uses verified database sellers for the live-seller rail", async () => {
+    const response = await buyerApi.get("/api/sellers/verified-products");
+    expect(response.ok()).toBeTruthy();
+    const products = (await response.json()) as Product[];
+    expect(products.some((candidate) => candidate.farmerId === seller.id)).toBeTruthy();
+    expect(products.every((candidate) => !/^farmer-\d+$/.test(candidate.farmerId))).toBeTruthy();
   });
 
   test("validates ownership, stock, and duplicate cart additions", async () => {
@@ -216,6 +246,91 @@ test.describe("orders, cart, checkout, and role-safe dashboards", () => {
     expect(unrelatedOrder.status()).toBe(403);
   });
 
+  test("reorders only live, buyer-owned products using current price and stock", async () => {
+    expect((await sellerApi.post(`/api/orders/${order.id}/reorder`, {
+      data: { action: "validate" },
+    })).status()).toBe(403);
+    expect((await adminApi.post(`/api/orders/${order.id}/reorder`, {
+      data: { action: "validate" },
+    })).status()).toBe(403);
+    expect((await buyerApi.post(`/api/orders/${order.id}/reorder`, {
+      data: { action: "validate", productIds: ["not-part-of-this-order"] },
+    })).status()).toBe(400);
+
+    const exactPreviewResponse = await buyerApi.post(`/api/orders/${order.id}/reorder`, {
+      data: { action: "validate" },
+    });
+    expect(exactPreviewResponse.ok()).toBeTruthy();
+    const exactPreview = (await exactPreviewResponse.json()) as ReorderResult;
+    expect(exactPreview).toMatchObject({
+      orderId: order.id,
+      action: "validate",
+      requestedItemCount: 1,
+      availableItemCount: 1,
+      unavailableItemCount: 0,
+      allAvailable: true,
+      requiresConfirmation: false,
+    });
+    expect(exactPreview.items[0]).toMatchObject({
+      productId: product.id,
+      requestedQuantity: 2,
+      quantityToAdd: 2,
+      originalPrice: product.price,
+      currentPrice: product.price,
+      status: "available",
+      canAdd: true,
+    });
+
+    const exactAddResponse = await buyerApi.post(`/api/orders/${order.id}/reorder`, {
+      data: { action: "add_available" },
+    });
+    expect(exactAddResponse.ok()).toBeTruthy();
+    const exactAdd = (await exactAddResponse.json()) as ReorderResult;
+    expect(exactAdd).toMatchObject({ addedItemCount: 1, addedQuantity: 2 });
+    let cart = (await (await buyerApi.get("/api/cart")).json()) as Cart;
+    expect(cart.items.find((item) => item.productId === product.id)?.quantity).toBe(2);
+
+    await buyerApi.delete("/api/cart");
+    const changedPrice = product.price + 3.25;
+    const changedProductResponse = await sellerApi.patch(`/api/products/${product.id}`, {
+      data: { price: changedPrice, stock: 1 },
+    });
+    expect(changedProductResponse.ok()).toBeTruthy();
+
+    const changedPreviewResponse = await buyerApi.post(`/api/orders/${order.id}/reorder`, {
+      data: { action: "validate", productIds: [product.id] },
+    });
+    expect(changedPreviewResponse.ok()).toBeTruthy();
+    const changedPreview = (await changedPreviewResponse.json()) as ReorderResult;
+    expect(changedPreview).toMatchObject({
+      availableItemCount: 1,
+      unavailableItemCount: 0,
+      allAvailable: false,
+      requiresConfirmation: true,
+    });
+    expect(changedPreview.items[0]).toMatchObject({
+      productId: product.id,
+      quantityToAdd: 1,
+      currentPrice: changedPrice,
+      status: "limited_stock",
+      canAdd: true,
+      requiresConfirmation: true,
+    });
+    expect(changedPreview.items[0].changes).toContain("price");
+
+    const partialAddResponse = await buyerApi.post(`/api/orders/${order.id}/reorder`, {
+      data: { action: "add_available", productIds: [product.id] },
+    });
+    expect(partialAddResponse.ok()).toBeTruthy();
+    const partialAdd = (await partialAddResponse.json()) as ReorderResult;
+    expect(partialAdd).toMatchObject({ addedItemCount: 1, addedQuantity: 1 });
+    cart = (await (await buyerApi.get("/api/cart")).json()) as Cart;
+    const reorderedItem = cart.items.find((item) => item.productId === product.id);
+    expect(reorderedItem).toMatchObject({ quantity: 1 });
+    expect(reorderedItem?.product.price).toBe(changedPrice);
+    await buyerApi.delete("/api/cart");
+  });
+
   test("enforces seller-only status transitions and keeps payment manual", async () => {
     expect((await buyerApi.patch(`/api/orders/${order.id}/status`, {
       data: { status: "confirmed" },
@@ -271,5 +386,23 @@ test.describe("orders, cart, checkout, and role-safe dashboards", () => {
       data: { productId: product.id, quantity: 1 },
     });
     expect(addUnavailable.status()).toBe(400);
+
+    const reorderPreviewResponse = await buyerApi.post(`/api/orders/${order.id}/reorder`, {
+      data: { action: "validate", productIds: [product.id] },
+    });
+    expect(reorderPreviewResponse.ok()).toBeTruthy();
+    const reorderPreview = (await reorderPreviewResponse.json()) as ReorderResult;
+    expect(reorderPreview).toMatchObject({
+      availableItemCount: 0,
+      unavailableItemCount: 1,
+      allAvailable: false,
+      requiresConfirmation: true,
+    });
+    expect(reorderPreview.items[0]).toMatchObject({
+      productId: product.id,
+      quantityToAdd: 0,
+      status: "out_of_stock",
+      canAdd: false,
+    });
   });
 });

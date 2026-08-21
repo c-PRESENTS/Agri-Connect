@@ -47,44 +47,42 @@ export const FeatureShowcase = memo(function FeatureShowcase() {
   ];
   return (
     <section
-      className="py-12 sm:py-20 px-4 bg-gradient-to-b from-background via-muted/20 to-background"
+      className="py-8 sm:py-14 px-3 sm:px-6 lg:px-8 bg-gradient-to-b from-background via-muted/20 to-background"
       style={{ contentVisibility: "auto", containIntrinsicSize: "850px" }}
     >
-      <div className="container mx-auto max-w-7xl">
+      <div className="w-full max-w-[1700px] mx-auto">
 
         {/* Heading */}
-        <div
-          className="text-center mb-10 sm:mb-14"
-        >
-          <span className="text-amber-700 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/70 px-4 py-1.5 rounded-full border-2 border-amber-300 dark:border-amber-700 font-black text-xs sm:text-sm uppercase tracking-widest inline-block shadow-xs">
+        <div className="text-center mb-8 sm:mb-10">
+          <span className="text-amber-700 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/70 px-3.5 py-1 rounded-full border-2 border-amber-300 dark:border-amber-700 font-black text-xs sm:text-sm uppercase tracking-widest inline-block shadow-2xs">
             {t("features.section_title")}
           </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mt-3 sm:mt-4 mb-3 tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mt-2.5 sm:mt-3 mb-2 tracking-tight leading-tight">
             {t("features.powerful_features")}{" "}
             <span className="bg-gradient-to-r from-primary via-green-500 to-emerald-500 bg-clip-text text-transparent">
               {t("features.modern_agriculture")}
             </span>
           </h2>
-          <p className="text-foreground/80 text-sm sm:text-base md:text-lg font-bold max-w-2xl mx-auto leading-relaxed">
+          <p className="text-foreground/80 text-xs sm:text-sm md:text-base font-bold max-w-2xl mx-auto leading-relaxed">
             {t("features.section_subtitle")}
           </p>
         </div>
 
-        {/* Feature grid — 4 cols desktop, 2 tablet, all visible */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10 sm:mb-14">
+        {/* Feature grid — 4 cols desktop, 2 tablet, compact & sleek */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-10">
           {features.map((f) => (
             <div
               key={f.title}
-              className="flex items-start gap-4 p-4.5 sm:p-5.5 rounded-2xl border-2 border-border/70 bg-card hover:border-primary/70 hover:bg-card/95 shadow-sm hover:shadow-xl transition-all duration-300 group"
+              className="flex items-start gap-3.5 p-3.5 sm:p-4 rounded-xl border-2 border-border/70 bg-card hover:border-primary/70 hover:bg-card/95 shadow-2xs hover:shadow-md transition-all duration-300 group"
             >
-              <div className={`flex-shrink-0 h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                <f.icon className="h-6 w-6 sm:h-7 sm:w-7 text-white drop-shadow-xs" />
+              <div className={`flex-shrink-0 h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-300`}>
+                <f.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white drop-shadow-xs" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm sm:text-base md:text-lg font-black leading-tight text-foreground group-hover:text-primary transition-colors uppercase tracking-wide mb-1">
+                <div className="text-xs sm:text-sm md:text-base font-black leading-tight text-foreground group-hover:text-primary transition-colors uppercase tracking-wide mb-1">
                   {t(f.title)}
                 </div>
-                <div className="text-xs sm:text-sm font-bold text-foreground/85 leading-snug">
+                <div className="text-[11px] sm:text-xs md:text-sm font-bold text-foreground/80 leading-snug">
                   {t(f.description)}
                 </div>
               </div>
@@ -93,7 +91,7 @@ export const FeatureShowcase = memo(function FeatureShowcase() {
         </div>
 
         <div
-          className="grid md:grid-cols-3 gap-5 mb-10 sm:mb-14"
+          className="grid md:grid-cols-3 gap-3.5 sm:gap-4 mb-8 sm:mb-10"
           data-testid="section-farmer-access-messaging"
         >
           {[
@@ -101,56 +99,56 @@ export const FeatureShowcase = memo(function FeatureShowcase() {
             { title: "features.zero_barrier_title", text: "features.zero_barrier_desc", icon: Zap },
             { title: "features.transparent_policy_title", text: "features.transparent_policy_desc", icon: Clock },
           ].map(({ title, text, icon: Icon }) => (
-            <div key={title} className="rounded-2xl border-2 border-amber-300/60 dark:border-amber-700/50 bg-amber-50/70 dark:bg-amber-950/20 p-5 sm:p-6 flex items-start gap-4 sm:gap-5 shadow-xs">
-              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-background border-2 border-amber-300 dark:border-amber-700 flex items-center justify-center shrink-0 shadow-md">
-                <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-amber-600 dark:text-amber-400" />
+            <div key={title} className="rounded-xl border-2 border-amber-300/60 dark:border-amber-700/50 bg-amber-50/70 dark:bg-amber-950/20 p-3.5 sm:p-4.5 flex items-start gap-3 sm:gap-3.5 shadow-2xs">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-background border-2 border-amber-300 dark:border-amber-700 flex items-center justify-center shrink-0 shadow-2xs">
+                <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600 dark:text-amber-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-base sm:text-lg md:text-xl font-black text-foreground leading-tight mb-1.5 uppercase tracking-wide">{t(title)}</h3>
-                <p className="text-xs sm:text-sm md:text-base text-foreground/85 leading-relaxed font-bold">{t(text)}</p>
+                <h3 className="text-xs sm:text-sm md:text-base font-black text-foreground leading-tight mb-1 uppercase tracking-wide">{t(title)}</h3>
+                <p className="text-[11px] sm:text-xs md:text-sm text-foreground/80 leading-relaxed font-bold">{t(text)}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Live platform statistics */}
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4 rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/15 via-emerald-500/10 to-background px-6 py-5 shadow-sm">
+        <div className="mb-4 sm:mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/15 via-emerald-500/10 to-background px-4 sm:px-5 py-3.5 shadow-2xs">
           <div>
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-foreground">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-foreground">
               {t("platform_stats.title", "Live platform statistics")}
             </h3>
-            <p className="mt-1 text-sm sm:text-base font-bold text-muted-foreground">
+            <p className="mt-0.5 text-xs sm:text-sm font-bold text-muted-foreground">
               {statsUnavailable
                 ? t("platform_stats.unavailable", "Statistics are temporarily unavailable")
                 : t("platform_stats.subtitle", "Marketplace totals refresh automatically")}
             </p>
           </div>
           {!statsUnavailable && (
-            <span className="inline-flex items-center gap-2 rounded-full border-2 border-emerald-400 bg-emerald-100/90 px-4 py-2 text-xs sm:text-sm font-black uppercase tracking-wider text-emerald-800 shadow-sm dark:border-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300">
-              <span className="h-3 w-3 animate-pulse rounded-full bg-emerald-500" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-emerald-400 bg-emerald-100/90 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-800 shadow-2xs dark:border-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
               {t("platform_stats.live", "Live")}
             </span>
           )}
         </div>
         <div
-          className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
+          className="grid grid-cols-2 gap-2.5 sm:gap-3.5 sm:grid-cols-3 lg:grid-cols-6"
           aria-live="polite"
           data-testid="platform-statistics"
         >
           {stats.map((s) => (
             <div
               key={s.id}
-              className="group flex min-h-40 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-primary/30 bg-card p-5 text-center shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-xl"
+              className="group flex min-h-28 sm:min-h-32 flex-col items-center justify-center gap-2 rounded-xl border-2 border-primary/30 bg-card p-3 sm:p-4 text-center shadow-2xs transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
               data-testid={`platform-stat-${s.id}`}
             >
-              <div className="flex h-13 w-13 sm:h-15 sm:w-15 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/25 to-emerald-500/20 ring-2 ring-primary/20 shadow-sm transition-transform group-hover:scale-110">
-                <s.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+              <div className="flex h-9 w-9 sm:h-11 sm:w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/25 to-emerald-500/20 ring-1 ring-primary/20 shadow-2xs transition-transform group-hover:scale-105">
+                <s.icon className="h-4.5 w-4.5 sm:h-5.5 sm:w-5.5 text-primary" />
               </div>
               <div className="min-w-0">
-                <div className="bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-3xl sm:text-4xl lg:text-5xl font-black leading-none tracking-tight text-transparent">
+                <div className="bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-2xl sm:text-3xl lg:text-4xl font-black leading-none tracking-tight text-transparent">
                   {s.value === undefined ? "—" : statisticNumber.format(s.value)}
                 </div>
-                <div className="mt-2 truncate text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-foreground">{s.label}</div>
+                <div className="mt-1.5 truncate text-[11px] sm:text-xs md:text-sm font-black uppercase tracking-wider text-foreground">{s.label}</div>
               </div>
             </div>
           ))}

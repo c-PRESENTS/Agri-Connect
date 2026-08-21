@@ -37,6 +37,7 @@ import { useFavorites } from "@/hooks/use-favorites";
 import { resolveProductImageForOrderItem, resolveProductImageForProduct } from "@/lib/product-images";
 import { useCurrency } from "@/contexts/currency-context";
 import { useToast } from "@/hooks/use-toast";
+import { OrderAgainButton } from "@/components/order-again-button";
 
 type SellerDashboardData = {
   products: Product[];
@@ -382,28 +383,35 @@ function BuyerProfile() {
                   const firstItem = order.items[0];
                   const image = firstItem ? resolveProductImageForOrderItem(firstItem).src : undefined;
                   return (
-                    <button
-                      key={order.id}
-                      type="button"
-                      onClick={() => navigate(`/orders/${order.id}`)}
-                      className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-left transition-colors hover:bg-emerald-50/50"
-                    >
-                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border bg-muted">
-                        {image ? <img src={image} alt="" className="h-full w-full object-cover" /> : <Package className="m-3 h-6 w-6 text-muted-foreground" />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="truncate text-sm font-extrabold">{order.orderNumber}</p>
-                          <Badge variant="secondary" className="text-[10px]">{ORDER_STATUS_LABELS[order.status] || order.status}</Badge>
+                    <div key={order.id} className="flex items-center rounded-lg transition-colors hover:bg-emerald-50/50">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/orders/${order.id}`)}
+                        className="flex min-w-0 flex-1 items-center gap-3 px-2 py-3 text-left"
+                      >
+                        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border bg-muted">
+                          {image ? <img src={image} alt="" className="h-full w-full object-cover" /> : <Package className="m-3 h-6 w-6 text-muted-foreground" />}
                         </div>
-                        <p className="mt-1 truncate text-xs text-muted-foreground">
-                          {order.items.map((item) => item.productName).join(", ")}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
-                      </div>
-                      <p className="hidden shrink-0 text-sm font-black sm:block">{format(order.total, { includeCode: true })}</p>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-emerald-700" />
-                    </button>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-extrabold">{order.orderNumber}</p>
+                            <Badge variant="secondary" className="text-[10px]">{ORDER_STATUS_LABELS[order.status] || order.status}</Badge>
+                          </div>
+                          <p className="mt-1 truncate text-xs text-muted-foreground">
+                            {order.items.map((item) => item.productName).join(", ")}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
+                        </div>
+                        <p className="hidden shrink-0 text-sm font-black sm:block">{format(order.total, { includeCode: true })}</p>
+                        <ChevronRight className="hidden h-4 w-4 shrink-0 text-emerald-700 sm:block" />
+                      </button>
+                      <OrderAgainButton
+                        orderId={order.id}
+                        label="Order again"
+                        className="mr-2 shrink-0 px-2 sm:px-3"
+                        testId={`button-profile-order-again-${order.id}`}
+                      />
+                    </div>
                   );
                 })}
               </CardContent>

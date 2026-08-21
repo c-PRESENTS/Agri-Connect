@@ -182,6 +182,7 @@ export interface Product {
   farmerName: string;
   farmerAvatar: string;
   farmerRating: number;
+  farmerIsOnline?: boolean;
   farmerLocation: string;
   farmerLatitude: number;
   farmerLongitude: number;
@@ -325,6 +326,56 @@ export interface OrderItem {
   price: number;
   farmerId: string;
   farmerName: string;
+}
+
+export const reorderOrderSchema = z.object({
+  productIds: z.array(z.string().min(1)).min(1).max(100).optional(),
+  action: z.enum(["validate", "add_available"]).default("validate"),
+});
+
+export type ReorderItemStatus =
+  | "available"
+  | "added"
+  | "limited_stock"
+  | "out_of_stock"
+  | "unavailable"
+  | "own_product"
+  | "unsupported_currency"
+  | "add_failed";
+
+export interface ReorderItemResult {
+  productId: string;
+  productName: string;
+  originalProductName: string;
+  productImage?: string;
+  requestedQuantity: number;
+  quantityToAdd: number;
+  availableStock?: number;
+  existingCartQuantity: number;
+  originalPrice: number;
+  currentPrice?: number;
+  originalSellerId: string;
+  originalSellerName: string;
+  currentSellerId?: string;
+  currentSellerName?: string;
+  status: ReorderItemStatus;
+  canAdd: boolean;
+  requiresConfirmation: boolean;
+  changes: string[];
+  message: string;
+}
+
+export interface ReorderOrderResult {
+  orderId: string;
+  action: "validate" | "add_available";
+  requestedItemCount: number;
+  availableItemCount: number;
+  unavailableItemCount: number;
+  addedItemCount: number;
+  addedQuantity: number;
+  requiresConfirmation: boolean;
+  allAvailable: boolean;
+  items: ReorderItemResult[];
 }
 
 // Reviews

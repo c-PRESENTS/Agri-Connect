@@ -39,6 +39,7 @@ import { useFavorites } from "@/hooks/use-favorites";
 import { resolveProductImageForOrderItem, resolveProductImageForProduct } from "@/lib/product-images";
 import { useCurrency } from "@/contexts/currency-context";
 import { SafeProductImage } from "@/components/safe-product-image";
+import { OrderAgainButton } from "@/components/order-again-button";
 
 type SellerDashboardData = {
   products: Product[];
@@ -317,37 +318,43 @@ function BuyerDashboard() {
                     const firstItem = order.items[0];
                     const image = firstItem ? resolveProductImageForOrderItem(firstItem).src : undefined;
                     return (
-                      <button
-                        key={order.id}
-                        type="button"
-                        onClick={() => navigate(`/orders/${order.id}`)}
-                        className="flex w-full items-center gap-4 rounded-xl px-3 py-4 text-left transition-colors hover:bg-muted/60"
-                      >
-                        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 border-border/60 bg-muted shadow-xs">
-                          {image ? (
-                            <img src={image} alt="" className="h-full w-full object-cover" />
-                          ) : (
-                            <Package className="m-5 h-6 w-6 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="truncate text-base font-black text-foreground">{order.orderNumber}</p>
-                            <Badge variant="outline" className={`font-black text-xs ${STATUS_META[order.status].className}`}>
-                              {STATUS_META[order.status].label}
-                            </Badge>
+                      <div key={order.id} className="flex items-center rounded-xl transition-colors hover:bg-muted/60">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/orders/${order.id}`)}
+                          className="flex min-w-0 flex-1 items-center gap-4 px-3 py-4 text-left"
+                        >
+                          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 border-border/60 bg-muted shadow-xs sm:h-16 sm:w-16">
+                            {image ? (
+                              <img src={image} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <Package className="m-4 h-6 w-6 text-muted-foreground sm:m-5" />
+                            )}
                           </div>
-                          <p className="mt-1 truncate text-xs sm:text-sm font-bold text-muted-foreground">
-                            {order.items.map((item) => item.productName).join(", ")}
-                          </p>
-                          <p className="mt-1 text-xs sm:text-sm font-extrabold text-muted-foreground">{formatDate(order.createdAt)}</p>
-                        </div>
-                        <div className="hidden shrink-0 text-right sm:block">
-                           <p className="text-base sm:text-lg font-black text-amber-600 dark:text-amber-400 font-mono">{format(order.total, { includeCode: true })}</p>
-                          <p className="mt-1 text-xs sm:text-sm font-black text-primary hover:underline">View details</p>
-                        </div>
-                        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-                      </button>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="truncate text-sm font-black text-foreground sm:text-base">{order.orderNumber}</p>
+                              <Badge variant="outline" className={`font-black text-xs ${STATUS_META[order.status].className}`}>
+                                {STATUS_META[order.status].label}
+                              </Badge>
+                            </div>
+                            <p className="mt-1 truncate text-xs font-bold text-muted-foreground sm:text-sm">
+                              {order.items.map((item) => item.productName).join(", ")}
+                            </p>
+                            <p className="mt-1 text-xs font-extrabold text-muted-foreground sm:text-sm">{formatDate(order.createdAt)}</p>
+                          </div>
+                          <div className="hidden shrink-0 text-right lg:block">
+                            <p className="text-base font-black text-amber-600 dark:text-amber-400 font-mono sm:text-lg">{format(order.total, { includeCode: true })}</p>
+                            <p className="mt-1 text-xs font-black text-primary hover:underline sm:text-sm">View details</p>
+                          </div>
+                          <ChevronRight className="hidden h-5 w-5 shrink-0 text-muted-foreground sm:block" />
+                        </button>
+                        <OrderAgainButton
+                          orderId={order.id}
+                          className="mr-3 shrink-0 px-2 sm:px-3"
+                          testId={`button-dashboard-order-again-${order.id}`}
+                        />
+                      </div>
                     );
                   })}
                 </div>

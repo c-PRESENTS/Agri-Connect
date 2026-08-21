@@ -25,6 +25,7 @@ function hydrateProduct(row: Record<string, any>): Product {
     farmerLongitude: row.seller_longitude == null ? 0 : Number(row.seller_longitude),
     farmerRating:
       row.seller_rating == null ? stored.farmerRating : Number(row.seller_rating),
+    farmerIsOnline: row.seller_is_online === true,
     regionId: row.region_id ?? stored.regionId,
   };
 }
@@ -35,7 +36,8 @@ const SELLER_LOCATION_SELECT = `
   u.location AS seller_location,
   u.latitude AS seller_latitude,
   u.longitude AS seller_longitude,
-  u.rating AS seller_rating`;
+  u.rating AS seller_rating,
+  u.is_online AS seller_is_online`;
 
 function hydrateOrder(row: Record<string, any>): Order {
   const order = row.order_data as Order;
@@ -170,6 +172,20 @@ export class CommerceRepository {
          FROM commerce_products p
          LEFT JOIN users u ON u.id=p.farmer_id
         ORDER BY p.created_at DESC, p.id`,
+    );
+    return result.rows.map(hydrateProduct);
+  }
+
+  async listVerifiedDatabaseSellerProducts(): Promise<Product[]> {
+    const result = await pool.query(
+      `SELECT p.*, ${SELLER_LOCATION_SELECT}
+         FROM commerce_products p
+         JOIN users u ON u.id=p.farmer_id
+        WHERE u.auth_method<>'catalog_seed'
+          AND (u.role='farmer' OR u.seller_enabled=true)
+          AND u.is_verified=true
+          AND COALESCE(p.product_data->>'publicationStatus','published')='published'
+        ORDER BY p.created_at DESC,p.id`,
     );
     return result.rows.map(hydrateProduct);
   }

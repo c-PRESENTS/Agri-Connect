@@ -9,6 +9,7 @@ export type AuditAction =
   | "cart.item_added"
   | "cart.item_updated"
   | "cart.item_removed"
+  | "cart.order_reordered"
   | "cart.checked_out"
   | "order.created"
   | "order.status_changed"

@@ -2,8 +2,8 @@ import type { Express, Request, Response } from "express";
 import type Stripe from "stripe";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import type { BasicOrderStatus, Order, OrderItem, OrderStatus, Shipment } from "@shared/schema";
-import { bookShipmentSchema, createOrderSchema, quoteShipmentSchema } from "@shared/schema";
+import type { BasicOrderStatus, Order, OrderItem, OrderStatus, ReorderItemResult, ReorderOrderResult, Shipment } from "@shared/schema";
+import { bookShipmentSchema, createOrderSchema, quoteShipmentSchema, reorderOrderSchema } from "@shared/schema";
 import { isAuthenticated } from "../../auth";
 import { authStorage } from "../../auth/storage";
 import { buildShipmentBookedEmail, notify, queueOrderConfirmation } from "../../notifications";
@@ -81,6 +81,141 @@ function handleZod(err: unknown, res: Response): boolean {
     return true;
   }
   return false;
+}
+
+async function evaluateReorder(
+  order: Order,
+  userId: string,
+  productIds?: string[],
+): Promise<ReorderItemResult[]> {
+  const selectedIds = productIds ? new Set(productIds) : undefined;
+  const selectedItems = selectedIds
+    ? order.items.filter((item) => selectedIds.has(item.productId))
+    : order.items;
+
+  if (selectedIds && Array.from(selectedIds).some((productId) =>
+    !order.items.some((item) => item.productId === productId)
+  )) {
+    throw new Error("One or more selected products do not belong to this order");
+  }
+
+  const currentCart = await storage.getCart(userId);
+  const cartQuantities = new Map(
+    currentCart.map((item) => [item.productId, item.quantity]),
+  );
+
+  return Promise.all(selectedItems.map(async (item): Promise<ReorderItemResult> => {
+    const product = await storage.getProduct(item.productId);
+    const existingCartQuantity = cartQuantities.get(item.productId) ?? 0;
+    const base = {
+      productId: item.productId,
+      productName: item.productName,
+      originalProductName: item.productName,
+      productImage: item.productImage,
+      requestedQuantity: item.quantity,
+      quantityToAdd: 0,
+      existingCartQuantity,
+      originalPrice: item.price,
+      originalSellerId: item.farmerId,
+      originalSellerName: item.farmerName,
+      canAdd: false,
+      requiresConfirmation: false,
+      changes: [] as string[],
+    };
+
+    if (!product || (product.publicationStatus ?? "published") !== "published") {
+      return {
+        ...base,
+        status: "unavailable",
+        message: "This product is no longer available for purchase.",
+      };
+    }
+
+    const current = {
+      currentPrice: product.price,
+      currentSellerId: product.farmerId,
+      currentSellerName: product.farmerName,
+      availableStock: product.stock,
+      productImage: product.images?.[0] ?? item.productImage,
+    };
+    const changes: string[] = [];
+    if (Math.abs(product.price - item.price) >= 0.005) changes.push("price");
+    if (product.farmerId !== item.farmerId) changes.push("seller");
+    if (product.name !== item.productName) changes.push("product details");
+
+    if (product.farmerId === userId) {
+      return {
+        ...base,
+        ...current,
+        changes,
+        status: "own_product",
+        message: "You cannot add your own product to the cart.",
+      };
+    }
+    if ((product.currency ?? "GBP") !== "GBP") {
+      return {
+        ...base,
+        ...current,
+        changes,
+        status: "unsupported_currency",
+        message: "This product's currency is not supported by the current cart.",
+      };
+    }
+
+    const remainingStock = Math.max(0, product.stock - existingCartQuantity);
+    if (remainingStock === 0) {
+      return {
+        ...base,
+        ...current,
+        changes,
+        status: "out_of_stock",
+        message: product.stock > 0
+          ? "All available stock is already in your cart."
+          : "This product is currently out of stock.",
+      };
+    }
+
+    const quantityToAdd = Math.min(item.quantity, remainingStock);
+    const limitedStock = quantityToAdd < item.quantity;
+    return {
+      ...base,
+      ...current,
+      productName: product.name,
+      quantityToAdd,
+      changes,
+      status: limitedStock ? "limited_stock" : "available",
+      canAdd: true,
+      requiresConfirmation: limitedStock || changes.length > 0,
+      message: limitedStock
+        ? `Only ${quantityToAdd} of ${item.quantity} can be added with the current stock.`
+        : changes.length > 0
+          ? `Available with changed ${changes.join(", ")}.`
+          : "Available at the same price, seller, and quantity.",
+    };
+  }));
+}
+
+function summarizeReorder(
+  orderId: string,
+  action: ReorderOrderResult["action"],
+  items: ReorderItemResult[],
+  addedItemCount = 0,
+  addedQuantity = 0,
+): ReorderOrderResult {
+  const availableItemCount = items.filter((item) => item.canAdd || item.status === "added").length;
+  const unavailableItemCount = items.filter((item) => !item.canAdd && item.status !== "added").length;
+  return {
+    orderId,
+    action,
+    requestedItemCount: items.length,
+    availableItemCount,
+    unavailableItemCount,
+    addedItemCount,
+    addedQuantity,
+    requiresConfirmation: items.some((item) => item.requiresConfirmation || !item.canAdd),
+    allAvailable: unavailableItemCount === 0 && items.every((item) => !item.requiresConfirmation),
+    items,
+  };
 }
 
 /**
@@ -325,6 +460,67 @@ export function registerCommerceRoutes(app: Express, deps: CommerceRouteDeps): v
       res.json(toSellerOrderView(order, userId));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch order" });
+    }
+  });
+
+  app.post("/api/orders/:id/reorder", isAuthenticated, async (req, res) => {
+    try {
+      const userId = getUserId(req)!;
+      const order = await storage.getOrder(req.params.id);
+      if (!order) return res.status(404).json({ error: "Order not found" });
+      if (order.buyerId !== userId) {
+        return res.status(403).json({ error: "Only the buyer can reorder this order" });
+      }
+
+      const { productIds, action } = reorderOrderSchema.parse(req.body ?? {});
+      let items = await evaluateReorder(order, userId, productIds);
+      if (action === "validate") {
+        return res.json(summarizeReorder(order.id, action, items));
+      }
+
+      let addedItemCount = 0;
+      let addedQuantity = 0;
+      const addResults: ReorderItemResult[] = [];
+      for (const item of items) {
+        if (!item.canAdd || item.quantityToAdd <= 0) {
+          addResults.push(item);
+          continue;
+        }
+        try {
+          await storage.addToCart(userId, item.productId, item.quantityToAdd);
+          addedItemCount += 1;
+          addedQuantity += item.quantityToAdd;
+          addResults.push({
+            ...item,
+            quantityToAdd: 0,
+            canAdd: false,
+            status: "added",
+            requiresConfirmation: false,
+            message: `${item.quantityToAdd} unit${item.quantityToAdd === 1 ? "" : "s"} added to the cart.`,
+          });
+        } catch (error) {
+          addResults.push({
+            ...item,
+            quantityToAdd: 0,
+            canAdd: false,
+            status: "add_failed",
+            requiresConfirmation: false,
+            message: error instanceof Error ? error.message : "This item could not be added to the cart.",
+          });
+        }
+      }
+      items = addResults;
+
+      if (addedItemCount > 0) {
+        audit({ action: "cart.order_reordered", actorId: userId, targetType: "order", targetId: order.id });
+      }
+      res.json(summarizeReorder(order.id, action, items, addedItemCount, addedQuantity));
+    } catch (error) {
+      if (handleZod(error, res)) return;
+      if (error instanceof Error && /selected products/.test(error.message)) {
+        return res.status(400).json({ error: error.message });
+      }
+      res.status(500).json({ error: "Failed to reorder items" });
     }
   });
 
