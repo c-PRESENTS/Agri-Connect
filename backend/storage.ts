@@ -1249,6 +1249,7 @@ function getProductImage(productName: string): string {
 export interface IStorage {
   // Products
   getProducts(filters?: ProductFilters): Promise<Product[]>;
+  getVerifiedDatabaseSellerProducts(): Promise<Product[]>;
   getProduct(id: string): Promise<Product | undefined>;
   createProduct(product: InsertProduct, farmerId: string): Promise<Product>;
   updateProduct(id: string, updates: Partial<Product>): Promise<Product | undefined>;
@@ -1539,6 +1540,10 @@ export class MemStorage implements IStorage {
     }
 
     return products;
+  }
+
+  async getVerifiedDatabaseSellerProducts(): Promise<Product[]> {
+    return [];
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
@@ -2541,6 +2546,11 @@ class PersistentCommerceStorage extends MemStorage {
       products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return products;
+  }
+
+  override async getVerifiedDatabaseSellerProducts(): Promise<Product[]> {
+    await this.ensureCatalog();
+    return commerceRepository.listVerifiedDatabaseSellerProducts();
   }
 
   override async getProduct(id: string): Promise<Product | undefined> {

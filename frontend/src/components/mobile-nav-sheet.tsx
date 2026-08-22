@@ -47,7 +47,7 @@ const ITEMS: RailItem[] = [
 ];
 
 const ITEM_LOGOS: Record<string, string> = {
-  home: "/category-logos/daily-needs.svg",
+  home: "/category-logos/home.svg",
   help: "/category-logos/farmers-help.svg",
   "student-help": "/category-logos/student-help.svg",
   agritech: "/category-logos/agritech.svg",
@@ -55,7 +55,6 @@ const ITEM_LOGOS: Record<string, string> = {
   land: "/category-logos/land-leasing.svg",
   share: "/category-logos/share-care.svg",
   logistics: "/category-logos/logistics.svg",
-  "regional-marketplace": "/category-logos/smart-map.svg",
   schemes: "/category-logos/government.svg",
   sell: "/category-logos/photo-sell.svg",
   cart: "/category-logos/cart.svg",

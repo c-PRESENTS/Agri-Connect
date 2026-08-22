@@ -1025,7 +1025,7 @@ export default function SmartMapPage() {
                   key={tab.id}
                   onClick={() => setRightPanel(tab.id)}
                   title={t(tab.labelKey)}
-                  className={`flex flex-col items-center justify-center gap-1 w-10 lg:w-14 py-2 lg:py-3.5 rounded-xl lg:rounded-2xl text-[9px] lg:text-xs font-black transition-all ${
+                  className={`flex flex-col items-center justify-center gap-1 w-11 lg:w-[68px] py-2 lg:py-3 rounded-xl lg:rounded-2xl text-[9px] font-black transition-all ${
                     active 
                       ? "bg-amber-400 text-amber-950 shadow-md scale-105 ring-2 ring-amber-500/80" 
                       : "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200"
@@ -1033,8 +1033,16 @@ export default function SmartMapPage() {
                   data-testid={`tab-${tab.id}`}
                 >
                   <Icon className={`h-4.5 w-4.5 lg:h-5 lg:w-5 stroke-[2.2] ${active ? "text-amber-950" : tab.color}`} />
-                  <span className="leading-tight text-center w-full lg:hidden font-black">{t(tab.shortLabelKey)}</span>
-                  <span className="leading-tight text-center hidden lg:block font-black" style={{ maxWidth: 50 }}>{t(tab.labelKey).split(" ").map((w, i) => <span key={i} className="block">{w}</span>)}</span>
+                  <span className="leading-tight text-center w-full lg:hidden font-black text-[9px] truncate px-0.5">
+                    {t(tab.shortLabelKey)}
+                  </span>
+                  <span className="leading-tight text-center hidden lg:block font-black text-[9.5px] tracking-tighter w-full px-0.5">
+                    {t(tab.labelKey).split(" ").map((w, i) => (
+                      <span key={i} className="block truncate">
+                        {w}
+                      </span>
+                    ))}
+                  </span>
                 </button>
               );
             })}
@@ -1250,34 +1258,51 @@ export default function SmartMapPage() {
                     </Select>
                   </div>
 
-                  {/* Subcategories if category selected */}
+                  {/* Subcategories Dropdown if category selected */}
                   {(() => {
                     const selectedCat = getShoppableCategories().find((c) => c.id === marketFilters.categoryId);
                     if (!selectedCat || !selectedCat.subcategories?.length) return null;
                     return (
-                      <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                      <div className="mt-2 flex items-center gap-2">
                         <Button
                           size="sm"
                           variant={!marketFilters.subcategoryId ? "default" : "outline"}
-                          className={`h-6.5 px-2 text-[10px] font-black uppercase rounded-lg border flex-shrink-0 ${!marketFilters.subcategoryId ? "bg-emerald-600 text-white" : ""}`}
+                          className={`h-9 px-3 text-xs font-black uppercase tracking-wider rounded-xl border-2 flex-shrink-0 transition-all ${
+                            !marketFilters.subcategoryId
+                              ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-xs"
+                              : "border-border/80 text-foreground hover:bg-muted"
+                          }`}
                           onClick={() => setMarketFilters((prev) => ({ ...prev, subcategoryId: "" }))}
+                          data-testid="subcategory-btn-all"
                         >
-                          All {selectedCat.name.split(" ")[0]}
+                          ALL {selectedCat.name.split(" ")[0]}
                         </Button>
-                        {selectedCat.subcategories.map((sub) => (
-                          <Button
-                            key={sub.id}
-                            size="sm"
-                            variant={marketFilters.subcategoryId === sub.id ? "default" : "outline"}
-                            className={`h-6.5 px-2 text-[10px] font-black uppercase rounded-lg border flex-shrink-0 ${marketFilters.subcategoryId === sub.id ? "bg-emerald-600 text-white" : ""}`}
-                            onClick={() => setMarketFilters((prev) => ({
+                        <Select
+                          value={marketFilters.subcategoryId || "all"}
+                          onValueChange={(val) =>
+                            setMarketFilters((prev) => ({
                               ...prev,
-                              subcategoryId: prev.subcategoryId === sub.id ? "" : sub.id,
-                            }))}
+                              subcategoryId: val === "all" ? "" : val,
+                            }))
+                          }
+                        >
+                          <SelectTrigger
+                            className="h-9 flex-1 text-xs font-bold rounded-xl border-2 bg-background shadow-2xs"
+                            data-testid="select-marketplace-subcategory"
                           >
-                            {sub.name}
-                          </Button>
-                        ))}
+                            <SelectValue placeholder={`Select Sub-category`} />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-72 rounded-xl border-2">
+                            <SelectItem value="all" className="font-bold">
+                              All {selectedCat.name} (All Sub-categories)
+                            </SelectItem>
+                            {selectedCat.subcategories.map((sub) => (
+                              <SelectItem key={sub.id} value={sub.id} className="font-bold">
+                                {sub.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     );
                   })()}

@@ -33,7 +33,7 @@ import { AppLauncher } from "./app-launcher";
 import { useTranslation } from "react-i18next";
 
 const SERVICE_LOGOS: Record<string, string> = {
-  home: "/category-logos/daily-needs.svg",
+  home: "/category-logos/home.svg",
   help: "/category-logos/farmers-help.svg",
   "student-help": "/category-logos/student-help.svg",
   agritech: "/category-logos/agritech.svg",
@@ -41,7 +41,6 @@ const SERVICE_LOGOS: Record<string, string> = {
   land: "/category-logos/land-leasing.svg",
   share: "/category-logos/share-care.svg",
   logistics: "/category-logos/logistics.svg",
-  "regional-marketplace": "/category-logos/smart-map.svg",
   schemes: "/category-logos/government.svg",
   sell: "/category-logos/photo-sell.svg",
   cart: "/category-logos/cart.svg",
@@ -76,7 +75,6 @@ const ALL_SERVICES = [
   { id: "cat-livestock",path: "/?category=livestock",        icon: Beef,           label: "Livestock",  public: true, category: "livestock"        },
   { id: "cat-inputs",   path: "/?category=inputs-tools",    icon: Wrench,         label: "Inputs",     public: true, category: "inputs-tools"    },
   { id: "cat-super",    path: "/?category=supermarket",     icon: Store,          label: "Complete Supermarket", public: true, category: "supermarket"     },
-  { id: "regional-marketplace", path: "/map?tab=marketplace", icon: MapPinned, label: "Regional Marketplace", public: true },
   { id: "cat-dietary",  path: "/?category=dietary",         icon: Salad,          label: "Dietary",    public: true, category: "dietary"         },
   { id: "cat-modern",   path: "/?category=modern-farming",  icon: Sparkles,       label: "Modern",     public: true, category: "modern-farming"  },
   { id: "cat-services", path: "/?category=services",        icon: Briefcase,      label: "Services",   public: true, category: "services"        },
@@ -124,7 +122,6 @@ const FULL_SERVICE_LABELS: Record<string, string> = {
   land: "Land Leasing Marketplace",
   share: "Share & Care Community",
   logistics: "Logistics & Delivery",
-  "regional-marketplace": "Regional Marketplace",
   schemes: "Government Schemes",
   cart: "Shopping Cart",
   dash: "Dashboard",

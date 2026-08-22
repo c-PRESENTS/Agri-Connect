@@ -1,7 +1,6 @@
 import { useState, useContext, useEffect } from "react";
 import { useLocation } from "wouter";
 import { 
-  ShoppingCart, 
   User, 
   Menu,
   Leaf,
@@ -43,6 +42,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLiveLocation } from "@/contexts/live-location-context";
+import addToCartImg from "@assets/AgriConnect Images/add to cart button.png";
 
 interface TopNavigationProps {
   cartItemCount?: number;
@@ -255,24 +255,28 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome, on
 
           <Button
             variant="ghost"
-            size="icon"
-            className="relative mx-1 h-9 w-9 overflow-visible rounded-xl transition-all hover:bg-primary/10 sm:h-10 sm:w-10"
+            className="relative mx-1 h-9 sm:h-10 px-2 sm:px-3 flex items-center gap-1.5 sm:gap-2 rounded-xl transition-all hover:bg-primary/10 border border-transparent hover:border-border/60"
             onClick={() => setLocation("/cart")}
             aria-label={`Shopping cart with ${cartCount} ${cartCount === 1 ? "item" : "items"}`}
             title={`Shopping cart (${cartCount})`}
             data-testid="button-cart-nav"
           >
-            <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
-            {cartCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-background bg-amber-400 px-1 text-[10px] font-black leading-none text-black shadow-md"
+            <div className="relative flex items-center justify-center w-[28px] h-[28px] sm:w-[32px] sm:h-[32px] shrink-0">
+              <img
+                src={addToCartImg}
+                alt="Cart"
+                className="w-[28px] h-[28px] sm:w-[32px] sm:h-[32px] object-contain dark:invert select-none pointer-events-none"
+              />
+              <span
+                className="absolute top-[32%] left-[58%] -translate-x-1/2 -translate-y-1/2 text-[10px] sm:text-[11px] font-black text-foreground select-none leading-none pointer-events-none"
                 data-testid="badge-cart-count"
               >
-                {cartCount > 9 ? "9+" : cartCount}
-              </motion.span>
-            )}
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            </div>
+            <span className="font-black text-sm sm:text-base md:text-lg tracking-tight text-foreground">
+              {t("nav.cart", "Cart")}
+            </span>
           </Button>
 
           {isAuthenticated && user ? (

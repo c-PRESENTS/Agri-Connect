@@ -13,7 +13,6 @@ import {
   Locate, AlertTriangle
 } from "lucide-react";
 import { resolveProductImageForProduct } from "@/lib/product-images";
-import { isSellerOnline } from "@/lib/seller-presence";
 import { getPublicLocationLabel, hasValidCoordinates, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product, LocalNeed } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -403,7 +402,7 @@ export function LeafletFarmerMap({
         avatar: product.farmerAvatar || "",
         latitude: product.farmerLatitude,
         longitude: product.farmerLongitude,
-        isOnline: isSellerOnline(product.farmerId),
+        isOnline: product.farmerIsOnline === true,
         productCount: 1,
         rating: Number.isFinite(product.farmerRating) ? product.farmerRating : 0,
         products: [product.name],

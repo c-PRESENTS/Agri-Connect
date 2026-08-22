@@ -21,6 +21,7 @@ import { TopNavigation } from "@/components/top-navigation";
 import { resolveProductImageForOrderItem } from "@/lib/product-images";
 import { OrderDisputes } from "@/components/payments/order-disputes";
 import { useCurrency } from "@/contexts/currency-context";
+import { OrderAgainButton } from "@/components/order-again-button";
 
 interface PaymentRefund {
   id: string;
@@ -226,7 +227,7 @@ export default function OrderDetailPage() {
       <TopNavigation />
 
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="mb-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate("/orders")} className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="h-5 w-5" />
@@ -238,7 +239,12 @@ export default function OrderDetailPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
+            <OrderAgainButton
+              orderId={order.id}
+              variant="default"
+              testId={`button-order-again-${order.id}`}
+            />
             <Badge variant="outline" className="h-8 gap-1.5 px-2.5" data-testid="text-payment-status">
               <span className="text-muted-foreground">{t("order_detail.payment_status")}:</span>
               <span>{displayedPaymentStatus}</span>
@@ -506,6 +512,14 @@ export default function OrderDetailPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="font-bold">{format(item.price * item.quantity, { includeCode: true })}</p>
+                      <OrderAgainButton
+                        orderId={order.id}
+                        productIds={[item.productId]}
+                        label="Order item again"
+                        variant="ghost"
+                        className="mt-1 ml-auto h-7 px-2 text-[11px] text-primary"
+                        testId={`button-order-item-again-${order.id}-${item.productId}`}
+                      />
                       {order.status === "delivered" && !submittedReviews.has(item.productId) && (
                         <button
                           onClick={() => {

@@ -104,6 +104,14 @@ export function registerCatalogRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/sellers/verified-products", async (_req, res) => {
+    try {
+      res.json(await storage.getVerifiedDatabaseSellerProducts());
+    } catch {
+      res.status(500).json({ error: "Failed to fetch verified sellers" });
+    }
+  });
+
   app.get("/api/products/:id", async (req, res) => {
     try {
       const product = await storage.getProduct(req.params.id);
