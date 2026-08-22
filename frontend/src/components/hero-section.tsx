@@ -236,19 +236,19 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
           {/* ──────── MOBILE HERO (compact — Amazon-app style) ──────── */}
           <div className="flex lg:hidden flex-col px-3 pt-2.5 pb-2 w-full min-w-0 gap-2">
             {/* Live status pill + compact stat strip — all in one row */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-              <div className="inline-flex items-center gap-1 bg-green-500/15 border border-green-400/40 rounded-full px-1.5 py-0.5 shrink-0">
-                <div className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[9px] font-bold text-green-300">{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+              <div className="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/60 rounded-full px-2.5 py-0.5 shrink-0">
+                <Leaf className="w-3 h-3 text-amber-400" />
+                <span className="text-[11px] font-black text-amber-300 uppercase tracking-wider">{t("home.farm_to_table")}</span>
               </div>
-              <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{platformStats?.farmers ?? farmerCount}</span> {t("home.farmers")}</span>
-              <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{platformStats?.products ?? products.length}</span> {t("home.products")}</span>
-              <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{platformStats?.freeItems ?? shareCareItems.length}</span> {t("home.free_items")}</span>
-              <span className="text-[9px] text-white/40 shrink-0">·</span>
-              <span className="text-[9px] font-semibold text-white/60 shrink-0"><span className="text-white/90 font-black">{platformStats?.buyers ?? "—"}</span> {t("platform_stats.buyers", "Buyers")}</span>
+              <div className="inline-flex items-center gap-1.5 bg-green-500/20 border border-green-400/50 rounded-full px-2.5 py-0.5 shrink-0">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-[11px] font-black text-green-300">{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
+              </div>
+              <span className="text-[11px] text-white/40 shrink-0">·</span>
+              <span className="text-[11px] font-bold text-white/70 shrink-0"><span className="text-white font-black">{platformStats?.products ?? products.length}</span> {t("home.products")}</span>
+              <span className="text-[11px] text-white/40 shrink-0">·</span>
+              <span className="text-[11px] font-bold text-white/70 shrink-0"><span className="text-white font-black">{platformStats?.freeItems ?? shareCareItems.length}</span> {t("home.free_items")}</span>
             </div>
 
             {/* Compact headline — one tight block */}
@@ -284,13 +284,16 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
           {/* ──────── DESKTOP HERO — Text & CTAs (≥lg only) ──────── */}
           <div ref={heroLeftRef} className="hidden lg:flex flex-col justify-center px-10 lg:px-12 py-8 w-full overflow-hidden min-w-0">
 
-            <div className="flex items-center gap-2 flex-wrap mb-4">
-              <Badge className="bg-primary/25 text-primary border-2 border-primary/40 px-3 py-1 text-xs font-black tracking-[0.12em] uppercase rounded-full shadow-xs">
-                <Leaf className="h-3.5 w-3.5 mr-1" />{t("home.farm_to_table")}
+            <div className="flex items-center gap-3 flex-wrap mb-4">
+              <Badge className="bg-amber-500/20 text-amber-300 border-2 border-amber-400/80 px-4 py-1.5 text-sm sm:text-base font-black tracking-wider uppercase rounded-full shadow-md backdrop-blur-xs flex items-center gap-1.5">
+                <Leaf className="h-4.5 w-4.5 text-amber-400" />
+                {t("home.farm_to_table")}
               </Badge>
-              <div className="flex items-center gap-1.5 bg-white/15 border-2 border-white/25 rounded-full px-3 py-1 shadow-xs">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs font-black text-green-300">{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
+              <div className="flex items-center gap-2 bg-black/40 border-2 border-white/30 rounded-full px-4 py-1.5 shadow-md backdrop-blur-xs">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+                <span className="text-sm sm:text-base font-black text-emerald-300">
+                  {platformStats?.farmers ?? farmerCount} {t("home.farmers")}
+                </span>
               </div>
             </div>
 
