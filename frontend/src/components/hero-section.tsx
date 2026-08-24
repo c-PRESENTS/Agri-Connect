@@ -16,7 +16,8 @@ import { HeroServiceGrid } from "./hero-service-grid";
 import { UserBookmarks } from "./user-bookmarks";
 import type { HomeProductRecommendations, Product } from "@shared/schema";
 import { resolveProductImageForProduct } from "@/lib/product-images";
-import { categoryImages, getShoppableCategories } from "@/lib/categories";
+import { handleCategoryImageError, resolveCategoryImage } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { MAIN_MARKETPLACE_CATEGORIES } from "@/lib/main-marketplace-categories";
 import { FavoriteProductButton } from "./favorite-product-button";
 import { buildCategoryBrowseUrl } from "@/lib/product-navigation";
@@ -56,35 +57,9 @@ type HomeCategoryTile = {
   categoryId: string;
   subcategoryId?: string;
   imageId: string;
+  imageUrl?: string;
   isSubcategory: boolean;
 };
-
-const shoppableCategoriesById = new Map(
-  getShoppableCategories().map((category) => [category.id, category]),
-);
-
-const HOME_CATEGORY_TILES: HomeCategoryTile[] = MAIN_MARKETPLACE_CATEGORIES.flatMap(({ id, label }) => {
-  const category = shoppableCategoriesById.get(id);
-  if (!category) return [];
-
-  return [
-    {
-      id: category.id,
-      label,
-      categoryId: category.id,
-      imageId: category.id,
-      isSubcategory: false,
-    },
-    ...category.subcategories.map((subcategory) => ({
-      id: `${category.id}-${subcategory.id}`,
-      label: subcategory.name,
-      categoryId: category.id,
-      subcategoryId: subcategory.id,
-      imageId: subcategory.id,
-      isSubcategory: true,
-    })),
-  ];
-});
 
 type HeroMapMode = "products" | "live-needs" | "farms-nearby" | "land-lots";
 
@@ -97,6 +72,11 @@ const HERO_MAP_MODES: { id: HeroMapMode; label: string; emoji: string; overlays:
 
 export const HeroSection = memo(function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: HeroSectionProps) {
   const { format } = useCurrency();
+  const { data: publishedCategories = [] } = useCatalogCategories("buyer");
+  const homeCategoryTiles: HomeCategoryTile[] = publishedCategories.flatMap((category) => {
+    const label = MAIN_MARKETPLACE_CATEGORIES.find((item) => item.id === category.id)?.label ?? category.name;
+    return [{ id: category.id, label, categoryId: category.id, imageId: category.id, imageUrl: category.imageUrl, isSubcategory: false }, ...category.subcategories.map((subcategory) => ({ id: `${category.id}-${subcategory.id}`, label: subcategory.name, categoryId: category.id, subcategoryId: subcategory.id, imageId: subcategory.id, imageUrl: subcategory.imageUrl, isSubcategory: true }))];
+  });
   const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const { location: liveLocation } = useLiveLocation();
@@ -134,6 +114,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
     window.addEventListener("touchend", handleEnd);
     document.body.style.userSelect = "none";
   };
+
   // Share & Care live items (live query)
   const { data: shareCareItems = [] } = useQuery<ShareCareItem[]>({
     queryKey: ["/api/share-care"],
@@ -194,6 +175,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
   const freshPickProducts = homeRecommendations?.freshPicks ?? [];
   const featuredProducts = homeRecommendations?.featuredProducts ?? [];
   const farmerCount = new Set(products.map(p => p.farmerId)).size;
+
   const openProductCategory = (product: Product) => {
     navigate(
       buildCategoryBrowseUrl({
@@ -207,6 +189,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
       }),
     );
   };
+
   const openHomeCategoryTile = (tile: HomeCategoryTile) => {
     const params = new URLSearchParams({ category: tile.categoryId });
     if (tile.subcategoryId) params.set("subcategory", tile.subcategoryId);
@@ -218,6 +201,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
       }),
     );
   };
+
   return (
     <section className="relative overflow-hidden">
 
@@ -231,7 +215,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
 
       {/* ─── HERO SPLIT: Text + Map ─── */}
       <div className="relative z-10 w-full overflow-hidden">
-        <div ref={heroGridRef} className="flex flex-col lg:flex-row lg:min-h-[420px] w-full">
+        <div ref={heroGridRef} className="flex flex-col lg:flex-row lg:min-h-[380px] w-full">
 
           {/* ──────── MOBILE HERO (compact — Amazon-app style) ──────── */}
           <div className="flex lg:hidden flex-col px-3 pt-2.5 pb-2 w-full min-w-0 gap-2">
@@ -262,80 +246,80 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             </div>
 
             {/* CTAs — side by side */}
-            <div className="flex gap-3 mt-1">
+            <div className="flex gap-2.5 mt-1">
               <Button
                 onClick={onBrowse}
                 data-testid="button-mobile-shop-now"
-                className="flex-1 h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base font-black uppercase tracking-wider rounded-xl shadow-md gap-2 px-4"
+                className="flex-1 h-11 bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl shadow-md gap-2 px-3"
               >
-                {t("home.shop_now")}<ArrowRight className="h-4.5 w-4.5" />
+                {t("home.shop_now")}<ArrowRight className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/map")}
                 data-testid="button-mobile-live-map"
-                className="flex-1 h-12 border-2 border-white/30 text-white hover:bg-white/15 bg-white/10 text-sm sm:text-base font-black uppercase tracking-wider rounded-xl gap-2 px-4"
+                className="flex-1 h-11 border border-white/30 text-white hover:bg-white/15 bg-white/10 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl gap-2 px-3"
               >
-                <Satellite className="h-4.5 w-4.5 text-green-400" />{t("home.live_map")}
+                <Satellite className="h-4 w-4 text-green-400" />{t("home.live_map")}
               </Button>
             </div>
           </div>
 
           {/* ──────── DESKTOP HERO — Text & CTAs (≥lg only) ──────── */}
-          <div ref={heroLeftRef} className="hidden lg:flex flex-col justify-center px-10 lg:px-12 py-8 w-full overflow-hidden min-w-0">
+          <div ref={heroLeftRef} className="hidden lg:flex flex-col justify-center px-6 lg:px-8 py-5 lg:py-6 w-full overflow-hidden min-w-0">
 
-            <div className="flex items-center gap-3 flex-wrap mb-4">
-              <Badge className="bg-amber-500/20 text-amber-300 border-2 border-amber-400/80 px-4 py-1.5 text-sm sm:text-base font-black tracking-wider uppercase rounded-full shadow-md backdrop-blur-xs flex items-center gap-1.5">
-                <Leaf className="h-4.5 w-4.5 text-amber-400" />
+            <div className="flex items-center gap-2.5 flex-wrap mb-2.5">
+              <Badge className="bg-amber-500/20 text-amber-300 border border-amber-400/80 px-3 py-1 text-xs font-black tracking-wider uppercase rounded-full shadow-xs backdrop-blur-xs flex items-center gap-1.5">
+                <Leaf className="h-3.5 w-3.5 text-amber-400" />
                 {t("home.farm_to_table")}
               </Badge>
-              <div className="flex items-center gap-2 bg-black/40 border-2 border-white/30 rounded-full px-4 py-1.5 shadow-md backdrop-blur-xs">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
-                <span className="text-sm sm:text-base font-black text-emerald-300">
+              <div className="flex items-center gap-2 bg-black/40 border border-white/30 rounded-full px-3 py-1 shadow-xs backdrop-blur-xs">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+                <span className="text-xs font-black text-emerald-300">
                   {platformStats?.farmers ?? farmerCount} {t("home.farmers")}
                 </span>
               </div>
             </div>
 
-            <h1 className="text-4xl xl:text-5xl font-black text-white mb-3 leading-[1] tracking-tighter">
+            <h1 className="text-3xl xl:text-4xl font-black text-white mb-2 leading-[1.05] tracking-tight">
               <span className="block">{t("home.fresh_produce")}</span>
               <span className="gradient-text block whitespace-nowrap">{t("home.direct_to_you")}</span>
             </h1>
 
-            <p className="text-base sm:text-lg font-bold text-white/90 mb-6 leading-relaxed max-w-lg">
+            <p className="text-xs sm:text-sm font-semibold text-white/90 mb-3.5 leading-normal max-w-lg">
               {t("home.hero_description")}
             </p>
 
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-2.5 mb-5 max-w-lg">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 mb-3.5 max-w-lg">
               {[
                 { value: `${platformStats?.farmers ?? farmerCount}`, label: t("home.farmers"), icon: Users, color: "text-primary bg-primary/25" },
                 { value: `${platformStats?.products ?? products.length}`, label: t("home.products"), icon: Sprout, color: "text-emerald-400 bg-emerald-900/60" },
                 { value: `${platformStats?.freeItems ?? shareCareItems.length}`, label: t("home.free_items"), icon: Activity, color: "text-amber-400 bg-amber-900/60" },
                 { value: platformStats?.buyers === undefined ? "—" : `${platformStats.buyers}`, label: t("platform_stats.buyers", "Buyers"), icon: ShoppingBag, color: "text-sky-300 bg-sky-900/60" },
               ].map(({ value, label, icon: Icon, color }) => (
-                <div key={label} className="bg-white/15 backdrop-blur-md border border-white/25 rounded-xl py-2.5 px-3 sm:py-3 sm:px-3.5 flex flex-col items-center text-center shadow-md hover:bg-white/20 transition-all">
-                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5 ${color}`}>
-                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <div key={label} className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl py-1.5 px-2 flex flex-col items-center text-center shadow-xs hover:bg-white/20 transition-all">
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center mx-auto mb-1 ${color}`}>
+                    <Icon className="h-3 w-3" />
                   </div>
-                  <span className="text-lg sm:text-xl font-black text-white leading-none my-0.5">{value}</span>
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.12em] text-white/80">{label}</span>
+                  <span className="text-base sm:text-lg font-black text-white leading-none my-0.5">{value}</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.08em] text-white/80">{label}</span>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center gap-4 mb-6 flex-wrap">
-              <Button onClick={onBrowse} className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 h-14 text-base sm:text-lg font-black uppercase tracking-wider rounded-2xl shadow-xl shadow-primary/30 gap-2.5">
-                {t("home.shop_now")}<ArrowRight className="h-5.5 w-5.5" />
+            <div className="flex items-center gap-3 mb-3.5 flex-wrap">
+              <Button onClick={onBrowse} className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 h-11 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl shadow-md shadow-primary/30 gap-2">
+                {t("home.shop_now")}<ArrowRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" className="border-2 border-green-400/80 text-white hover:bg-green-500/30 px-8 h-14 text-base sm:text-lg font-black uppercase tracking-wider rounded-2xl gap-2.5 bg-green-500/25 shadow-lg" onClick={() => navigate("/map")}>
-                <Satellite className="h-5.5 w-5.5 text-green-300" />{t("home.live_map")}
+              <Button variant="outline" className="border border-green-400/80 text-white hover:bg-green-500/30 px-6 h-11 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl gap-2 bg-green-500/25 shadow-md" onClick={() => navigate("/map")}>
+                <Satellite className="h-4 w-4 text-green-300" />{t("home.live_map")}
               </Button>
             </div>
 
-            <div className="flex gap-5 sm:gap-6 flex-wrap items-center">
+            <div className="flex gap-4 sm:gap-5 flex-wrap items-center">
               {TRUST_BADGES.map(({ icon: Icon, label, color }) => (
-                <div key={label} className="flex items-center gap-2 text-sm sm:text-base text-white font-black drop-shadow-md">
-                  <Icon className={`h-5 w-5 shrink-0 ${color}`} />
+                <div key={label} className="flex items-center gap-1.5 text-xs text-white font-bold drop-shadow-md">
+                  <Icon className={`h-3.5 w-3.5 shrink-0 ${color}`} />
                   <span>{t(label)}</span>
                 </div>
               ))}
@@ -343,9 +327,8 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
 
           </div>
 
-          {/* MOBILE-ONLY compact map — shown on mobile, hidden on lg+ where the full right-panel map shows */}
+          {/* MOBILE-ONLY compact map */}
           <div className="block lg:hidden relative w-full px-3" style={{ height: mobileMapHeight }}>
-            {/* Map tile — overflow-hidden only on the map itself */}
             <div className="w-full h-full rounded-2xl overflow-hidden border border-white/20 shadow-xl shadow-black/30">
               <LeafletFarmerMap
                 products={products}
@@ -359,7 +342,6 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                 mapOverlays={HERO_MAP_MODES.find(m => m.id === heroMapMode)?.overlays}
               />
             </div>
-            {/* Mode buttons — OUTSIDE overflow-hidden so they sit above Leaflet layers */}
             <div className="absolute bottom-2 left-2 right-2 z-[500] flex gap-1 flex-nowrap justify-between pointer-events-auto">
               {HERO_MAP_MODES.map(mode => (
                 <button
@@ -375,33 +357,20 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             </div>
           </div>
 
-          {/* MOBILE-ONLY map resize handle — glowing, animated, obvious tap target */}
+          {/* MOBILE-ONLY map resize handle */}
           <div
             onMouseDown={(e) => { e.preventDefault(); startMobileMapDrag(e.clientY); }}
             onTouchStart={(e) => { startMobileMapDrag(e.touches[0].clientY); }}
             data-testid="mobile-map-resize-handle"
             title={t("map.drag_to_resize")}
-            className="block lg:hidden mx-3 mt-1.5 mb-2 h-7 rounded-full cursor-row-resize touch-none select-none relative overflow-hidden bg-gradient-to-r from-green-500/20 via-green-400/40 to-green-500/20 border border-green-400/50 shadow-[0_0_18px_rgba(34,197,94,0.5)] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            className="block lg:hidden mx-3 mt-1.5 mb-2 h-6 rounded-full cursor-row-resize touch-none select-none relative overflow-hidden bg-gradient-to-r from-green-500/20 via-green-400/40 to-green-500/20 border border-green-400/50 shadow-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
-            {/* Shining sweep animation */}
-            <div className="absolute inset-0 -translate-x-full animate-[shimmer_2.4s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
-            {/* Grip dots */}
-            <div className="flex items-center gap-1 relative z-10">
-              <span className="w-1 h-1 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.9)]" />
-              <span className="w-1 h-1 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.9)]" />
-              <span className="w-1 h-1 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.9)]" />
-            </div>
-            <span className="relative z-10 text-[10px] font-black uppercase tracking-wider text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
+            <span className="relative z-10 text-[9px] font-black uppercase tracking-wider text-white drop-shadow-xs">
               {t("map.drag_to_resize")}
             </span>
-            <div className="flex items-center gap-1 relative z-10">
-              <span className="w-1 h-1 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.9)]" />
-              <span className="w-1 h-1 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.9)]" />
-              <span className="w-1 h-1 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.9)]" />
-            </div>
           </div>
 
-          {/* DRAG HANDLE — horizontal resize between text and map */}
+          {/* DRAG HANDLE */}
           <div
             onMouseDown={startHeroDrag}
             title={t("map.drag_to_resize")}
@@ -419,11 +388,11 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             className="relative hidden lg:flex flex-1"
           >
-            <div className="absolute inset-0 p-4 pl-0">
-              <div className="w-full h-full rounded-[1.75rem] overflow-hidden border border-white/20 shadow-2xl shadow-black/30">
+            <div className="absolute inset-0 p-3 pl-0">
+              <div className="w-full h-full rounded-2xl overflow-hidden border border-white/20 shadow-xl shadow-black/30">
                 <LeafletFarmerMap
                   products={products}
                   onFarmerClick={onFarmerClick}
@@ -437,7 +406,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                 />
               </div>
               {/* Map mode toggle strip */}
-              <div className="absolute bottom-8 left-4 right-8 z-30 flex items-end justify-between gap-2">
+              <div className="absolute bottom-6 left-3 right-6 z-30 flex items-end justify-between gap-2">
                 <div className="flex flex-wrap gap-1 pointer-events-auto">
                   {HERO_MAP_MODES.map(mode => (
                     <button
@@ -456,25 +425,18 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
           </motion.div>
         </div>
 
-        {/* ─── QUICK ACCESS — full-width, still on dark hero bg ─── */}
-        <div className="px-3 sm:px-10 lg:px-12 pb-2 sm:pb-3 pt-1 w-full overflow-hidden">
+        {/* ─── QUICK ACCESS — full-width, snug and compact ─── */}
+        <div className="px-3 sm:px-6 lg:px-8 pb-1.5 pt-0.5 w-full overflow-hidden">
           <HeroServiceGrid />
         </div>
-
-        {/* ─── MY SITES / BOOKMARKS ─── */}
-        {!isEmbeddedView && (
-          <div className="px-3 sm:px-10 lg:px-12 pb-3 sm:pb-5 w-full overflow-hidden">
-            <UserBookmarks />
-          </div>
-        )}
       </div>
 
       {/* ─── BOTTOM CONTENT STRIP ─── */}
       <div className="relative z-10 bg-background border-t border-border/50">
 
         {/* ─── FRESH PICKS CAROUSEL ─── */}
-        <div className="px-3 sm:container sm:mx-auto sm:px-4 py-2 sm:py-4">
-          <div className="flex items-center justify-between mb-1.5 sm:mb-2.5">
+        <div className="px-3 sm:container sm:mx-auto sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-foreground/60">{t("home.fresh_picks")}</span>
@@ -511,7 +473,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                       openProductCategory(product);
                     }
                   }}
-                  className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border border-border/50 bg-muted mb-1 sm:mb-1.5 shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/30 group-hover:scale-[1.02]"
+                  className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border border-border/50 bg-muted mb-1 sm:mb-1.5 shadow-xs transition-all group-hover:shadow-md group-hover:border-primary/30 group-hover:scale-[1.02]"
                 >
                   <img
                     src={resolveProductImageForProduct(product).src}
@@ -521,7 +483,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                     onError={(e) => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1540420828642-fca2c5c18abe?w=300&h=300&fit=crop`; }}
                   />
                   <div className="absolute top-1 right-1">
-                    <Badge className="bg-primary/95 border-none h-4 sm:h-5 px-1 sm:px-1.5 text-[8px] sm:text-[10px] font-bold shadow-sm">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</Badge>
+                    <Badge className="bg-primary/95 border-none h-4 sm:h-5 px-1 sm:px-1.5 text-[8px] sm:text-[10px] font-bold shadow-xs">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</Badge>
                   </div>
                   <FavoriteProductButton
                     productId={product.id}
@@ -557,10 +519,10 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
           </div>
         </div>
 
-        {/* ─── FEATURED PRODUCTS — slightly bigger cards, right under Fresh Picks ─── */}
+        {/* ─── FEATURED PRODUCTS ─── */}
         {featuredProducts.length > 0 && (
-          <div className="px-3 sm:container sm:mx-auto sm:px-4 pb-2 sm:pb-4">
-            <div className="flex items-center justify-between mb-1.5 sm:mb-2.5">
+          <div className="px-3 sm:container sm:mx-auto sm:px-4 pb-2 sm:pb-3">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-amber-500 animate-pulse" />
                 <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">{t("home.featured")}</span>
@@ -575,7 +537,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                 In-stock featured listings available within {homeRecommendations.nearbyRadiusKm} km of {homeRecommendations.location.label}, ordered by distance, stock, rating, and recency.
               </p>
             )}
-            <div className="flex gap-1.5 sm:gap-3 overflow-x-auto pb-1 sm:pb-1.5 no-scrollbar">
+            <div className="flex gap-1.5 sm:gap-2.5 overflow-x-auto pb-1 sm:pb-1.5 no-scrollbar">
               {featuredProducts.slice(0, 16).map((product, idx) => (
                 <motion.div
                   key={product.id}
@@ -597,7 +559,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                         openProductCategory(product);
                       }
                     }}
-                    className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 border-amber-200/60 dark:border-amber-700/40 bg-muted mb-1 sm:mb-1.5 shadow-md transition-all group-hover:shadow-lg group-hover:border-amber-400 group-hover:scale-[1.02]"
+                    className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 border-amber-200/60 dark:border-amber-700/40 bg-muted mb-1 sm:mb-1.5 shadow-xs transition-all group-hover:shadow-md group-hover:border-amber-400 group-hover:scale-[1.02]"
                   >
                     <img
                       src={resolveProductImageForProduct(product).src}
@@ -606,7 +568,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                       loading="lazy"
                       onError={(e) => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1540420828642-fca2c5c18abe?w=300&h=300&fit=crop`; }}
                     />
-                    <div className="absolute top-1 left-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-400 flex items-center justify-center shadow-sm">
+                    <div className="absolute top-1 left-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-400 flex items-center justify-center shadow-xs">
                       <Star className="h-2 w-2 sm:h-3 sm:w-3 text-white fill-white" />
                     </div>
                     <div className="absolute top-1 right-1">
@@ -633,18 +595,18 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                     onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
                     data-testid={`button-hero-featured-add-${product.id}`}
                   >
-                  <ShoppingCart className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                  {t("product.add_short")}
-                </Button>
-              </motion.div>
-            ))}
+                    <ShoppingCart className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                    {t("product.add_short")}
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
         )}
 
-        {/* ─── COMMUNITY FREE ITEMS — 2 rows, live Share & Care data ─── */}
+        {/* ─── COMMUNITY FREE ITEMS ─── */}
         {shareCareItems.length > 0 && (
-          <div className="px-3 sm:container sm:mx-auto sm:px-4 pb-2 sm:pb-4">
+          <div className="px-3 sm:container sm:mx-auto sm:px-4 pb-2 sm:pb-3">
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-orange-500 animate-pulse" />
@@ -686,19 +648,19 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
 
         {/* ─── ALL CATEGORIES ─── */}
         <div className="border-t border-border/30 bg-background">
-          <div className="px-3 sm:container sm:mx-auto sm:px-4 pt-2 sm:pt-5 pb-3 sm:pb-6">
+          <div className="px-3 sm:container sm:mx-auto sm:px-4 pt-2 sm:pt-4 pb-3 sm:pb-5">
 
-            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-5 flex-wrap">
-              <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-primary flex-shrink-0" />
-              <h2 className="text-sm sm:text-base md:text-lg font-black uppercase tracking-[0.12em] text-foreground">{t("home.all_categories")}</h2>
-              <span className="text-xs sm:text-sm text-muted-foreground font-black">
-                ({HOME_CATEGORY_TILES.length})
+            <div className="flex items-center gap-2 sm:gap-2.5 mb-2.5 sm:mb-3 flex-wrap">
+              <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-primary flex-shrink-0" />
+              <h2 className="text-xs sm:text-sm md:text-base font-black uppercase tracking-[0.12em] text-foreground">{t("home.all_categories")}</h2>
+              <span className="text-xs text-muted-foreground font-black">
+                ({homeCategoryTiles.length})
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11">
-              {HOME_CATEGORY_TILES.map((tile) => {
-                const image = categoryImages[tile.imageId] || categoryImages[tile.categoryId];
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11">
+              {homeCategoryTiles.map((tile) => {
+                const image = resolveCategoryImage(tile.imageId, tile.imageUrl, tile.categoryId);
                 return (
                   <button
                     key={tile.id}
@@ -706,7 +668,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                     onClick={() => openHomeCategoryTile(tile)}
                     data-testid={`${tile.isSubcategory ? "subcategory" : "main-category"}-${tile.id}`}
                     aria-label={`Open ${tile.label} ${tile.isSubcategory ? "subcategory" : "category"}`}
-                    className={`group relative aspect-[4/3] min-w-0 overflow-hidden rounded-2xl border-2 bg-muted text-left shadow-md transition-all duration-200 hover:-translate-y-1 hover:border-primary/80 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0 ${
+                    className={`group relative aspect-[4/3] min-w-0 overflow-hidden rounded-xl border bg-muted text-left shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/80 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0 ${
                       tile.isSubcategory ? "border-border/80" : "border-primary"
                     }`}
                   >
@@ -715,6 +677,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                         src={image}
                         alt=""
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(event) => handleCategoryImageError(event.currentTarget, tile.imageId, tile.categoryId)}
                       />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/50 to-primary/15" />
@@ -723,11 +686,11 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                       tile.isSubcategory ? "from-black/85" : "from-black/95"
                     }`} />
                     {tile.isSubcategory && (
-                      <span className="absolute left-2 top-2 rounded-lg bg-amber-400 text-black px-2 py-0.5 text-[9px] sm:text-xs font-black uppercase tracking-wider shadow-sm">
+                      <span className="absolute left-1.5 top-1.5 rounded bg-amber-400 text-black px-1.5 py-0.2 text-[8px] sm:text-[10px] font-black uppercase tracking-wider shadow-xs">
                         Sub
                       </span>
                     )}
-                    <span className="absolute inset-x-2 bottom-2 line-clamp-2 text-center text-xs sm:text-sm font-black leading-tight text-white drop-shadow-md uppercase tracking-tight">
+                    <span className="absolute inset-x-1.5 bottom-1.5 line-clamp-2 text-center text-[11px] sm:text-xs font-black leading-tight text-white drop-shadow-md uppercase tracking-tight">
                       {tile.label}
                     </span>
                   </button>

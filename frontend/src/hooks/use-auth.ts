@@ -42,7 +42,7 @@ export function useAuth() {
       return res.json();
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["/api/auth/user"], data);
+      if (!data.requiresMfa) queryClient.setQueryData(["/api/auth/user"], data);
     },
   });
 
@@ -101,7 +101,7 @@ export function useAuth() {
       return res.json();
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["/api/auth/user"], data.user);
+      if (data.user) queryClient.setQueryData(["/api/auth/user"], data.user);
     },
   });
 
@@ -111,8 +111,16 @@ export function useAuth() {
       return res.json();
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["/api/auth/user"], data.user);
+      if (data.user) queryClient.setQueryData(["/api/auth/user"], data.user);
     },
+  });
+
+  const verifyMfa = useMutation({
+    mutationFn: async (code: string) => {
+      const res = await apiRequest("POST", "/api/auth/mfa/verify", { code });
+      return res.json();
+    },
+    onSuccess: (data) => queryClient.setQueryData(["/api/auth/user"], data.user),
   });
 
   const logout = async () => {
@@ -131,6 +139,7 @@ export function useAuth() {
     sendOtp,
     verifyOtp,
     googleLogin,
+    verifyMfa,
     logout,
     updateProfile,
     completeProfile,

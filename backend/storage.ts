@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { authStorage } from "./auth/storage";
 import { commerceRepository } from "./repositories/commerce-repository";
+import { ensureCanonicalTaxonomyImported, listPublishedTaxonomy } from "./organisations/admin-category-repository";
 import { subSubcategoryData } from "@shared/sub-subcategories";
 import type {
   Product, 
@@ -40,7 +41,7 @@ function getEstimatedDelivery(method: string): string {
 }
 
 // Categories data
-const categoriesData: Category[] = [
+export const categoriesData: Category[] = [
   {
     id: "daily-needs",
     name: "Daily Needs Market",
@@ -1251,6 +1252,7 @@ export interface IStorage {
   getProducts(filters?: ProductFilters): Promise<Product[]>;
   getVerifiedDatabaseSellerProducts(): Promise<Product[]>;
   getProduct(id: string): Promise<Product | undefined>;
+  getProductForOwner(id: string): Promise<Product | undefined>;
   createProduct(product: InsertProduct, farmerId: string): Promise<Product>;
   updateProduct(id: string, updates: Partial<Product>): Promise<Product | undefined>;
   deleteProduct(id: string): Promise<boolean>;
@@ -1472,7 +1474,9 @@ export class MemStorage implements IStorage {
 
   // Products
   async getProducts(filters?: ProductFilters): Promise<Product[]> {
-    let products = Array.from(this.products.values());
+    let products = Array.from(this.products.values()).filter((product) =>
+      (product.moderationStatus ?? (product.publicationStatus === "draft" ? "draft" : "approved")) === "approved",
+    );
 
     if (filters) {
       if (filters.categoryId) {
@@ -1547,6 +1551,12 @@ export class MemStorage implements IStorage {
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
+    const product = this.products.get(id);
+    const status = product?.moderationStatus ?? (product?.publicationStatus === "draft" ? "draft" : "approved");
+    return status === "approved" ? product : undefined;
+  }
+
+  async getProductForOwner(id: string): Promise<Product | undefined> {
     return this.products.get(id);
   }
 
@@ -1575,6 +1585,11 @@ export class MemStorage implements IStorage {
       rating: 0,
       reviewCount: 0,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      moderationStatus: "draft",
+      moderationVersion: 1,
+      publicationStatus: "draft",
+      publicationReason: "Submit this listing for marketplace review when it is ready.",
     };
     
     this.products.set(id, product);
@@ -2492,6 +2507,7 @@ export class MemStorage implements IStorage {
 
 class PersistentCommerceStorage extends MemStorage {
   private seedPromise?: Promise<void>;
+  private taxonomyPromise?: Promise<void>;
 
   private async ensureCatalog(): Promise<void> {
     if (!this.seedPromise) {
@@ -2500,11 +2516,23 @@ class PersistentCommerceStorage extends MemStorage {
     await this.seedPromise;
   }
 
+  private async ensureTaxonomy(): Promise<void> {
+    if (!this.taxonomyPromise) this.taxonomyPromise = ensureCanonicalTaxonomyImported(categoriesData);
+    await this.taxonomyPromise;
+  }
+
+  override async getCategories(): Promise<Category[]> {
+    await this.ensureTaxonomy();
+    return listPublishedTaxonomy("seller");
+  }
+
+  override async getCategory(id: string): Promise<Category | undefined> {
+    return (await this.getCategories()).find((category) => category.id === id);
+  }
+
   override async getProducts(filters?: ProductFilters): Promise<Product[]> {
     await this.ensureCatalog();
-    let products = (await commerceRepository.listProducts()).filter((product) =>
-      (product.publicationStatus ?? "published") === "published",
-    );
+    let products = await commerceRepository.listPublicProducts();
     if (!filters) return products;
     if (filters.categoryId) {
       if (filters.categoryId === "fresh-produce") {
@@ -2535,7 +2563,7 @@ class PersistentCommerceStorage extends MemStorage {
     if (filters.maxPrice !== undefined) products = products.filter((p) => p.price <= filters.maxPrice!);
     if (filters.qualityGrade) products = products.filter((p) => p.qualityGrade === filters.qualityGrade);
     if (filters.search) {
-      const categories = await super.getCategories();
+      const categories = await this.getCategories();
       products = filterAndRankProducts(products, filters.search, categories);
     }
     if (filters.sortBy === "price_asc") products.sort((a, b) => a.price - b.price);
@@ -2558,14 +2586,17 @@ class PersistentCommerceStorage extends MemStorage {
     return commerceRepository.getProduct(id);
   }
 
+  override async getProductForOwner(id: string): Promise<Product | undefined> {
+    await this.ensureCatalog();
+    return commerceRepository.getProductForManagement(id);
+  }
+
   override async createProduct(insertProduct: InsertProduct, farmerId: string): Promise<Product> {
     await this.ensureCatalog();
     const farmer = await authStorage.getUser(farmerId);
-    const { sellerCapabilities } = await import("./seller-verification/capabilities");
     const { regionalMarketplaceRepository } = await import("./repositories/regional-marketplace-repository");
-    const capabilities = await sellerCapabilities(farmerId);
     const regionalAssignment = await regionalMarketplaceRepository.getActiveSellerAssignment(farmerId, insertProduct.regionId);
-    const canPublish = capabilities.canPublishListings && Boolean(regionalAssignment?.canPublish);
+    const now = new Date().toISOString();
     const product: Product = {
       id: randomUUID(),
       ...insertProduct,
@@ -2588,13 +2619,12 @@ class PersistentCommerceStorage extends MemStorage {
       isFeatured: false,
       rating: 0,
       reviewCount: 0,
-      createdAt: new Date().toISOString(),
-      publicationStatus: canPublish ? "published" : "draft",
-      publicationReason: canPublish
-        ? undefined
-        : !capabilities.canPublishListings
-          ? "Complete seller verification before publishing this listing."
-          : "Obtain approval for a selling region before publishing this listing.",
+      createdAt: now,
+      updatedAt: now,
+      moderationStatus: "draft",
+      moderationVersion: 1,
+      publicationStatus: "draft",
+      publicationReason: "Submit this listing for marketplace review when it is ready.",
       regionId: regionalAssignment?.regionId,
       regionName: regionalAssignment?.regionName,
     };
@@ -2602,7 +2632,7 @@ class PersistentCommerceStorage extends MemStorage {
   }
 
   override async updateProduct(id: string, updates: Partial<Product>): Promise<Product | undefined> {
-    const existing = await this.getProduct(id);
+    const existing = await this.getProductForOwner(id);
     if (!existing) return undefined;
     return commerceRepository.saveProduct({ ...existing, ...updates, id });
   }
@@ -2649,11 +2679,13 @@ class PersistentCommerceStorage extends MemStorage {
       await this.removeFromCart(userId, itemId);
       return undefined;
     }
-    if (quantity > existing.product.stock) {
-      throw new Error(`Only ${existing.product.stock} ${existing.product.unit} available for ${existing.product.name}`);
+    const currentProduct = await this.getProduct(existing.productId);
+    if (!currentProduct) throw new Error("Product is no longer available");
+    if (quantity > currentProduct.stock) {
+      throw new Error(`Only ${currentProduct.stock} ${currentProduct.unit} available for ${currentProduct.name}`);
     }
     await commerceRepository.updateCartItem(userId, itemId, quantity);
-    return { ...existing, quantity };
+    return { ...existing, product: currentProduct, quantity };
   }
 
   override async removeFromCart(userId: string, itemId: string): Promise<boolean> {

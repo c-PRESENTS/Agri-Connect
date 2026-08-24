@@ -5,6 +5,8 @@ import { checkSendRateLimit, generateOtp, verifyOtp } from "./service";
 import { isSmsConfigured, sendSms } from "./sms";
 import { authStorage } from "../auth/storage";
 import { regenerateSessionPreservingGuestCart } from "../auth";
+import { recordAccountLoginEvent } from "../auth/login-events";
+import { establishSessionOrMfaChallenge } from "../auth/session-security";
 
 const sendOtpSchema = z.object({
   phone: z.string().min(8).max(20).regex(/^\+?[\d\s\-()]+$/, "Invalid phone number"),
@@ -123,6 +125,8 @@ export function registerOtpRoutes(app: Express): void {
       const result = await verifyOtp(phone, code);
 
       if (!result.valid) {
+        const existingUser = await authStorage.getUserByPhone(phone);
+        await recordAccountLoginEvent({ req, userId: existingUser?.id, email: existingUser?.email, outcome: "failed", method: "otp", failureCode: result.reason?.toUpperCase() || "INVALID_OTP" });
         if (result.reason === "max_attempts") {
           return res.status(429).json({
             message: "Too many incorrect attempts. Please request a new OTP.",
@@ -143,9 +147,17 @@ export function registerOtpRoutes(app: Express): void {
         });
       }
 
+      if (user.accountStatus !== "active") {
+        await recordAccountLoginEvent({ req, userId: user.id, email: user.email, outcome: "denied", method: "otp", failureCode: "ACCOUNT_NOT_ACTIVE" });
+        return res.status(403).json({ message: "This account is not active", code: "ACCOUNT_NOT_ACTIVE" });
+      }
+
       // Regenerate session to prevent session fixation.
       await regenerateSessionPreservingGuestCart(req);
-      req.session.userId = user.id;
+      if (await establishSessionOrMfaChallenge(req, user.id)) {
+        return res.json({ requiresMfa: true, challengeExpiresInSeconds: 300, isNewUser: false });
+      }
+      await recordAccountLoginEvent({ req, userId: user.id, email: user.email, outcome: "success", method: "otp" });
 
       const { passwordHash: _, ...safeUser } = user;
       res.json({ user: safeUser, isNewUser: !user.profileComplete });

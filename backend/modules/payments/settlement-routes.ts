@@ -5,6 +5,7 @@ import { storage } from "../../storage";
 import { protectedFundsService } from "../../payments/protected-funds-service";
 import { settlementRepository } from "../../repositories/settlement-repository";
 import { audit } from "../../audit";
+import { requireAdminPermission } from "../../organisations/access";
 
 interface SettlementRouteDeps {
   getUserId(req: Request): string | undefined;
@@ -48,20 +49,16 @@ export function registerSettlementRoutes(app: Express, deps: SettlementRouteDeps
     return res.json({ payouts: await settlementRepository.listSellerPayouts(userId) });
   });
 
-  app.get("/api/payments/operator/payout-failures", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    const user = await authStorage.getUser(userId);
-    if (!user || user.role !== "admin") return res.status(403).json({ error: "Access denied" });
+  app.get("/api/payments/operator/payout-failures", isAuthenticated, requireAdminPermission("revenue.view"), async (_req, res) => {
     return res.json({ failures: await settlementRepository.listPayoutFailures() });
   });
 
   app.post(
     "/api/payments/operator/payouts/:allocationId/retry",
     isAuthenticated,
+    requireAdminPermission("revenue.manage_payouts"),
     async (req, res) => {
       const userId = deps.getUserId(req)!;
-      const user = await authStorage.getUser(userId);
-      if (!user || user.role !== "admin") return res.status(403).json({ error: "Access denied" });
       const reset = await protectedFundsService.retry(req.params.allocationId);
       if (!reset) return res.status(409).json({ error: "Payout is not recoverable in its current state" });
       audit({

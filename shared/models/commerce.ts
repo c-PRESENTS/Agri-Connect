@@ -30,12 +30,23 @@ export const commerceProducts = pgTable(
     farmerId: varchar("farmer_id").notNull(),
     regionId: varchar("region_id"),
     productData: jsonb("product_data").notNull(),
+    moderationStatus: varchar("moderation_status", { length: 30 }).notNull().default("draft"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewedBy: varchar("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+    moderationReason: text("moderation_reason"),
+    moderationVersion: integer("moderation_version").notNull().default(1),
+    isFeatured: boolean("is_featured").notNull().default(false),
+    isFreshPick: boolean("is_fresh_pick").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     index("commerce_products_category_idx").on(table.categoryId, table.subcategoryId),
     index("commerce_products_farmer_idx").on(table.farmerId),
+    index("commerce_products_moderation_queue_idx").on(table.moderationStatus, table.updatedAt),
+    index("commerce_products_moderation_region_idx").on(table.moderationStatus, table.regionId, table.updatedAt),
+    index("commerce_products_featured_idx").on(table.moderationStatus, table.isFeatured, table.isFreshPick, table.updatedAt),
   ],
 );
 

@@ -6,6 +6,7 @@ import { storage } from "../../storage";
 import { disputeService } from "../../payments/dispute-service";
 import { disputeRepository } from "../../repositories/dispute-repository";
 import { audit } from "../../audit";
+import { requireAdminPermission } from "../../organisations/access";
 
 interface DisputeRouteDeps {
   getUserId(req: Request): string | undefined;
@@ -131,10 +132,7 @@ export function registerDisputeRoutes(app: Express, deps: DisputeRouteDeps): voi
     }
   });
 
-  app.get("/api/payments/operator/disputes", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    const user = await authStorage.getUser(userId);
-    if (!user || user.role !== "admin") return res.status(403).json({ error: "Access denied" });
+  app.get("/api/payments/operator/disputes", isAuthenticated, requireAdminPermission("revenue.view"), async (req, res) => {
     const page = z.coerce.number().int().min(1).default(1).parse(req.query.page);
     const pageSize = z.coerce.number().int().min(1).max(100).default(25).parse(req.query.pageSize);
     const status = z.string().max(40).optional().parse(req.query.status);
@@ -159,11 +157,10 @@ export function registerDisputeRoutes(app: Express, deps: DisputeRouteDeps): voi
   app.post(
     "/api/payments/operator/disputes/:disputeId/review",
     isAuthenticated,
+    requireAdminPermission("revenue.manage_payouts"),
     async (req, res) => {
       try {
         const userId = deps.getUserId(req)!;
-        const user = await authStorage.getUser(userId);
-        if (!user || user.role !== "admin") return res.status(403).json({ error: "Access denied" });
         return res.json(await disputeService.startReview(req.params.disputeId, userId));
       } catch (error) {
         return res.status(409).json({
@@ -176,11 +173,10 @@ export function registerDisputeRoutes(app: Express, deps: DisputeRouteDeps): voi
   app.post(
     "/api/payments/operator/disputes/:disputeId/resolve",
     isAuthenticated,
+    requireAdminPermission("revenue.manage_payouts"),
     async (req, res) => {
       try {
         const userId = deps.getUserId(req)!;
-        const user = await authStorage.getUser(userId);
-        if (!user || user.role !== "admin") return res.status(403).json({ error: "Access denied" });
         const input = resolutionSchema.parse(req.body);
         const result = await disputeService.resolve(req.params.disputeId, userId, input);
         audit({

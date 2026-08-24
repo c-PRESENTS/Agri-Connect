@@ -5,6 +5,7 @@ import { authStorage } from "../../auth/storage";
 import { paymentDashboardRepository } from "../../repositories/payment-dashboard-repository";
 import { reconciliationService } from "../../payments/reconciliation-service";
 import { audit } from "../../audit";
+import { requireAdminPermission } from "../../organisations/access";
 
 interface PaymentDashboardRouteDeps {
   getUserId(req: Request): string | undefined;
@@ -14,11 +15,6 @@ function pagination(query: Request["query"]) {
   const page = z.coerce.number().int().min(1).default(1).parse(query.page);
   const pageSize = z.coerce.number().int().min(1).max(100).default(25).parse(query.pageSize);
   return { page, pageSize, offset: (page - 1) * pageSize };
-}
-
-async function requireAdmin(userId: string) {
-  const user = await authStorage.getUser(userId);
-  return user?.role === "admin";
 }
 
 export function registerPaymentDashboardRoutes(
@@ -62,15 +58,11 @@ export function registerPaymentDashboardRoutes(
     );
   });
 
-  app.get("/api/payments/operator/overview", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    if (!(await requireAdmin(userId))) return res.status(403).json({ error: "Access denied" });
+  app.get("/api/payments/operator/overview", isAuthenticated, requireAdminPermission("revenue.view"), async (_req, res) => {
     return res.json(await paymentDashboardRepository.getOperatorOverview());
   });
 
-  app.get("/api/payments/operator/reconciliation", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    if (!(await requireAdmin(userId))) return res.status(403).json({ error: "Access denied" });
+  app.get("/api/payments/operator/reconciliation", isAuthenticated, requireAdminPermission("revenue.view"), async (req, res) => {
     const { pageSize, offset } = pagination(req.query);
     return res.json(
       await paymentDashboardRepository.listReconciliationAttention(pageSize, offset),
@@ -80,9 +72,9 @@ export function registerPaymentDashboardRoutes(
   app.post(
     "/api/payments/operator/reconciliation/:attemptId/run",
     isAuthenticated,
+    requireAdminPermission("revenue.manage_payouts"),
     async (req, res) => {
       const userId = deps.getUserId(req)!;
-      if (!(await requireAdmin(userId))) return res.status(403).json({ error: "Access denied" });
       const reconciled = await reconciliationService.reconcileAttempt(req.params.attemptId);
       audit({
         action: "payment.reconciliation_requested",
@@ -95,9 +87,7 @@ export function registerPaymentDashboardRoutes(
     },
   );
 
-  app.get("/api/payments/operator/recovery-cases", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    if (!(await requireAdmin(userId))) return res.status(403).json({ error: "Access denied" });
+  app.get("/api/payments/operator/recovery-cases", isAuthenticated, requireAdminPermission("revenue.view"), async (req, res) => {
     const { pageSize, offset } = pagination(req.query);
     const status = z.enum(["open", "acknowledged", "resolved"]).default("open").parse(req.query.status);
     return res.json(
@@ -108,9 +98,9 @@ export function registerPaymentDashboardRoutes(
   app.patch(
     "/api/payments/operator/recovery-cases/:caseId",
     isAuthenticated,
+    requireAdminPermission("revenue.manage_payouts"),
     async (req, res) => {
       const userId = deps.getUserId(req)!;
-      if (!(await requireAdmin(userId))) return res.status(403).json({ error: "Access denied" });
       const input = z.object({
         status: z.enum(["acknowledged", "resolved"]),
       }).parse(req.body);

@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useState, useRef, memo } from "react";
 import { Link } from "wouter";
-import { categoryImages, getShoppableCategories } from "@/lib/categories";
+import { handleCategoryImageError, resolveCategoryImage } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { getCategoryIconComponent } from "@/lib/category-icons";
-import { MAIN_MARKETPLACE_CATEGORIES } from "@/lib/main-marketplace-categories";
 import type { Product } from "@shared/schema";
 
 interface CategoryCarouselProps {
@@ -15,18 +15,14 @@ interface CategoryCarouselProps {
   onAddToCart: (product: Product) => void;
 }
 
-const categoriesById = new Map(getShoppableCategories().map((category) => [category.id, category]));
-const carouselCategories = MAIN_MARKETPLACE_CATEGORIES.flatMap(({ id }) => {
-  const category = categoriesById.get(id);
-  return category ? [category] : [];
-});
-
 export const CategoryCarousel = memo(function CategoryCarousel({ 
   onCategorySelect, 
   products,
   onAddToCart
 }: CategoryCarouselProps) {
   const { t } = useTranslation();
+  const { data: publishedCategories = [] } = useCatalogCategories("buyer");
+  const carouselCategories = publishedCategories;
   const [scrollPosition, setScrollPosition] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -92,7 +88,7 @@ export const CategoryCarousel = memo(function CategoryCarousel({
           >
             {carouselCategories.map((category) => {
               const IconComponent = getCategoryIconComponent(category.icon);
-              const bgImage = categoryImages[category.id];
+              const bgImage = resolveCategoryImage(category.id, category.imageUrl);
               
               return (
                 <div
@@ -111,6 +107,7 @@ export const CategoryCarousel = memo(function CategoryCarousel({
                         loading="lazy"
                         decoding="async"
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        onError={(event) => handleCategoryImageError(event.currentTarget, category.id)}
                       />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/15 to-muted" />
@@ -122,7 +119,7 @@ export const CategoryCarousel = memo(function CategoryCarousel({
                         className="mb-2.5 flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl border border-white/30 bg-white/30 p-1 shadow-md backdrop-blur-md transition-transform duration-300 group-hover:scale-110 sm:h-10 sm:w-10 md:h-11 md:w-11"
                       >
                         {bgImage ? (
-                          <img src={bgImage} alt={category.name} className="h-full w-full rounded-lg object-cover" />
+                          <img src={bgImage} alt={category.name} className="h-full w-full rounded-lg object-cover" onError={(event) => handleCategoryImageError(event.currentTarget, category.id)} />
                         ) : (
                           <IconComponent className="h-4 w-4 text-white drop-shadow-sm sm:h-5 sm:w-5 md:h-6 md:w-6" />
                         )}

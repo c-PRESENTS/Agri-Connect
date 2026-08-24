@@ -6,6 +6,7 @@ import { storage } from "../../storage";
 import { refundService } from "../../payments/refund-service";
 import { refundRepository } from "../../repositories/refund-repository";
 import { audit } from "../../audit";
+import { requireAdminPermission } from "../../organisations/access";
 
 interface RefundRouteDeps {
   getUserId(req: Request): string | undefined;
@@ -62,21 +63,16 @@ export function registerRefundRoutes(app: Express, deps: RefundRouteDeps): void 
     return res.json({ refunds: await refundRepository.listOrderRefunds(order.id) });
   });
 
-  app.get("/api/payments/operator/refund-failures", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    const user = await authStorage.getUser(userId);
-    if (!user || user.role !== "admin") return res.status(403).json({ error: "Access denied" });
+  app.get("/api/payments/operator/refund-failures", isAuthenticated, requireAdminPermission("revenue.view"), async (_req, res) => {
     return res.json({ failures: await refundRepository.listFailedRefunds() });
   });
 
   app.post(
     "/api/payments/operator/refunds/:refundId/retry",
     isAuthenticated,
+    requireAdminPermission("revenue.manage_payouts"),
     async (req, res) => {
       try {
-        const userId = deps.getUserId(req)!;
-        const user = await authStorage.getUser(userId);
-        if (!user || user.role !== "admin") return res.status(403).json({ error: "Access denied" });
         const result = await refundService.retry(req.params.refundId);
         return res.json(result);
       } catch (error) {

@@ -31,11 +31,12 @@ export function getVerificationTiers(profile: VerificationProfile | null | undef
   ];
 }
 
-export function PublicSellerBadges({ rating, reviewCount }: { rating?: number | null; reviewCount?: number | null }) {
+export function PublicSellerBadges({ isVerified, rating, reviewCount }: { isVerified?: boolean | null; rating?: number | null; reviewCount?: number | null }) {
   const isTrusted = Number(rating ?? 0) >= 4.5 && Number(reviewCount ?? 0) >= 20;
   return <>
     <Badge variant="outline" className="gap-1 text-[10px]" data-testid="badge-seller"><Store className="h-3 w-3" /> Seller</Badge>
-    {isTrusted && <Badge variant="secondary" className="gap-1 text-[10px] text-amber-700 dark:text-amber-300" data-testid="badge-trusted-seller"><Star className="h-3 w-3 fill-current" /> Trusted seller</Badge>}
+    {isVerified && <Badge variant="secondary" className="gap-1 text-[10px] text-emerald-700 dark:text-emerald-300" data-testid="badge-verified-seller"><ShieldCheck className="h-3 w-3" /> Verified seller</Badge>}
+    {isVerified && isTrusted && <Badge variant="secondary" className="gap-1 text-[10px] text-amber-700 dark:text-amber-300" data-testid="badge-trusted-seller"><Star className="h-3 w-3 fill-current" /> Trusted seller</Badge>}
   </>;
 }
 

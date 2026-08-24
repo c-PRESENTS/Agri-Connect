@@ -237,12 +237,12 @@ export const UserBookmarks = memo(function UserBookmarks() {
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="space-y-2">
         <div className="flex items-center px-0.5">
-          <span className="text-base sm:text-lg md:text-xl font-black uppercase tracking-[0.18em] text-white drop-shadow-md">{t("home.my_sites")}</span>
+          <span className="text-sm sm:text-base md:text-lg font-black uppercase tracking-[0.14em] text-white drop-shadow-md">{t("home.my_sites")}</span>
         </div>
 
-        <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar sm:flex-wrap">
+        <div className="flex gap-2 sm:gap-2.5 overflow-x-auto no-scrollbar sm:flex-wrap items-center">
           {bookmarks.map(b => {
             const favicon = getFavicon(b.url);
             const isActive = panel.open && panel.url === normalizeUrl(b.url);
@@ -251,20 +251,20 @@ export const UserBookmarks = memo(function UserBookmarks() {
                 <button
                   onClick={() => openPanel(b)}
                   data-testid={`bookmark-${b.id}`}
-                  className={`flex flex-col items-center gap-1.5 p-1.5 sm:p-2 rounded-xl transition-all duration-150 w-16 sm:w-20 ${
+                  className={`flex flex-col items-center gap-1 p-1 sm:p-1.5 rounded-xl transition-all duration-150 w-14 sm:w-16 ${
                     isActive
-                      ? "bg-white/15 scale-[1.05]"
+                      ? "bg-white/15 scale-[1.03]"
                       : "hover:bg-white/10 active:scale-95"
                   }`}
                 >
-                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center overflow-hidden ${b.color} shadow-md`}>
+                  <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center overflow-hidden ${b.color} shadow-xs`}>
                     {favicon
-                      ? <img src={favicon} alt="" className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                      ? <img src={favicon} alt="" className="w-5.5 h-5.5 sm:w-6 sm:h-6 object-contain"
                           loading="lazy" onError={handleFaviconError} />
-                      : <span className="text-base sm:text-lg font-black text-white">{getInitial(b.name)}</span>
+                      : <span className="text-sm sm:text-base font-black text-white">{getInitial(b.name)}</span>
                     }
                   </div>
-                  <span className="text-xs sm:text-xs font-bold text-white/90 text-center leading-none w-full truncate">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-white/90 text-center leading-none w-full truncate">
                     {b.name}
                   </span>
                 </button>
@@ -272,10 +272,10 @@ export const UserBookmarks = memo(function UserBookmarks() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black/75 border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-black/75 border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
                       data-testid={`bookmark-opts-${b.id}`}
                     >
-                      <MoreVertical className="h-3 w-3 text-white" />
+                      <MoreVertical className="h-2.5 w-2.5 text-white" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-40">
@@ -297,12 +297,12 @@ export const UserBookmarks = memo(function UserBookmarks() {
           <button
             onClick={openAdd}
             data-testid="bookmark-add-new"
-            className="flex flex-col items-center gap-1.5 p-2 sm:p-2.5 rounded-xl border-2 border-dashed border-white/30 bg-white/5 hover:border-white/50 hover:bg-white/10 transition-all min-w-[64px] sm:min-w-[76px] shrink-0"
+            className="flex flex-col items-center gap-1 p-1 sm:p-1.5 rounded-xl border border-dashed border-white/30 bg-white/5 hover:border-white/50 hover:bg-white/10 transition-all w-14 sm:w-16 shrink-0"
           >
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 border-dashed border-white/40 flex items-center justify-center">
-              <Plus className="h-6 w-6 text-white/70" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl border border-dashed border-white/40 flex items-center justify-center">
+              <Plus className="h-5 w-5 text-white/70" />
             </div>
-            <span className="text-xs sm:text-xs font-bold text-white/80">{t("home.add_site")}</span>
+            <span className="text-[10px] sm:text-[11px] font-bold text-white/80 leading-none">{t("home.add_site")}</span>
           </button>
         </div>
 

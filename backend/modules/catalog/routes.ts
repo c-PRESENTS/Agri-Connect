@@ -1,15 +1,16 @@
 import type { Express, Request, Response } from "express";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { insertProductSchema, type ProductFilters } from "@shared/schema";
+import { insertProductSchema, sellerProductSubmitSchema, type ProductFilters } from "@shared/schema";
 import { isAuthenticated } from "../../auth";
 import { authStorage } from "../../auth/storage";
-import { storage } from "../../storage";
+import { categoriesData, storage } from "../../storage";
+import { ensureCanonicalTaxonomyImported, listPublishedTaxonomy } from "../../organisations/admin-category-repository";
 import { audit } from "../../audit";
 import { buildHomeProductRecommendations } from "../../catalog/home-recommendations";
-import { sellerCapabilities } from "../../seller-verification/capabilities";
 import { regionalMarketplaceRepository } from "../../repositories/regional-marketplace-repository";
 import { haversineKm } from "../../shipping/quote-engine";
+import { ProductModerationError, submitSellerProduct } from "../../organisations/admin-product-service";
 
 function getUserId(req: Request): string | undefined {
   return req.session?.userId;
@@ -33,6 +34,20 @@ function getBuyerCategories(categories: Awaited<ReturnType<typeof storage.getCat
 }
 
 export function registerCatalogRoutes(app: Express): void {
+  app.get("/api/catalog/categories", async (req, res) => {
+    const audience = req.query.audience === "seller" ? "seller" : "buyer";
+    try {
+      await ensureCanonicalTaxonomyImported(categoriesData);
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+      return res.json(await listPublishedTaxonomy(audience));
+    } catch (error) {
+      console.error("Published catalogue taxonomy failed", error);
+      res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
+      res.setHeader("X-AgriConnect-Catalog-Source", "canonical-fallback");
+      return res.json(audience === "seller" ? categoriesData : getBuyerCategories(categoriesData));
+    }
+  });
+
   app.get("/api/products", async (req, res) => {
     try {
       const filters: ProductFilters = {};
@@ -114,11 +129,10 @@ export function registerCatalogRoutes(app: Express): void {
 
   app.get("/api/products/:id", async (req, res) => {
     try {
-      const product = await storage.getProduct(req.params.id);
+      const publicProduct = await storage.getProduct(req.params.id);
+      const ownedProduct = publicProduct ? undefined : await storage.getProductForOwner(req.params.id);
+      const product = publicProduct ?? (ownedProduct?.farmerId === getUserId(req) ? ownedProduct : undefined);
       if (!product) {
-        return res.status(404).json({ error: "Product not found" });
-      }
-      if ((product.publicationStatus ?? "published") !== "published" && product.farmerId !== getUserId(req)) {
         return res.status(404).json({ error: "Product not found" });
       }
       res.json(product);
@@ -153,48 +167,45 @@ export function registerCatalogRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/products/:id/publish", isAuthenticated, async (req, res) => {
+  const submitProductForReview = async (req: Request, res: Response) => {
     try {
       const userId = getUserId(req)!;
-      const existing = await storage.getProduct(req.params.id);
+      const existing = await storage.getProductForOwner(req.params.id);
       if (!existing) return res.status(404).json({ error: "Product not found" });
       if (existing.farmerId !== userId) return res.status(403).json({ error: "Access denied" });
-      const capabilities = await sellerCapabilities(userId);
-      if (!capabilities.canPublishListings) {
-        return res.status(403).json({
-          error: "Complete seller verification before publishing listings.",
-          code: "SELLER_VERIFICATION_REQUIRED",
-        });
-      }
-      const assignment = await regionalMarketplaceRepository.getActiveSellerAssignment(userId, existing.regionId);
-      if (!assignment?.canPublish) {
-        return res.status(403).json({
-          error: "An approved selling region is required before publishing listings.",
-          code: "SELLER_REGION_APPROVAL_REQUIRED",
-        });
-      }
-      const product = await storage.updateProduct(existing.id, {
-        publicationStatus: "published",
-        publicationReason: undefined,
-        regionId: assignment.regionId,
-        regionName: assignment.regionName,
-      });
-      await regionalMarketplaceRepository.attachProductRegion(existing.id, assignment);
-      audit({ action: "seller.product_published", actorId: userId, targetType: "product", targetId: existing.id });
-      return res.json(product);
-    } catch {
-      return res.status(500).json({ error: "Failed to publish product" });
+      const input = sellerProductSubmitSchema.parse(req.body);
+      await submitSellerProduct(existing.id, userId, input.expectedUpdatedAt);
+      return res.json(await storage.getProductForOwner(existing.id));
+    } catch (error) {
+      if (handleZod(error, res)) return;
+      if (error instanceof ProductModerationError) return res.status(error.status).json({ error: error.message, code: error.code });
+      return res.status(500).json({ error: "Failed to submit product for review" });
     }
-  });
+  };
+
+  app.post("/api/products/:id/submit", isAuthenticated, submitProductForReview);
+  app.post("/api/products/:id/publish", isAuthenticated, submitProductForReview);
 
   app.patch("/api/products/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = getUserId(req)!;
-      const existing = await storage.getProduct(req.params.id);
+      const existing = await storage.getProductForOwner(req.params.id);
       if (!existing) return res.status(404).json({ error: "Product not found" });
       if (existing.farmerId !== userId) return res.status(403).json({ error: "Access denied" });
+      if (!["draft", "changes_requested"].includes(existing.moderationStatus ?? "draft")) {
+        return res.status(409).json({ error: "Only draft or changes-requested listings can be edited.", code: "PRODUCT_EDIT_STATE_INVALID" });
+      }
       const parsedUpdates = insertProductSchema.partial().parse(req.body);
       const { opportunityId: _ignoredOpportunityId, ...updates } = parsedUpdates;
+      if (updates.categoryId !== undefined || updates.subcategoryId !== undefined) {
+        const categoryId = updates.categoryId ?? existing.categoryId;
+        const subcategoryId = updates.subcategoryId ?? existing.subcategoryId;
+        const category = await storage.getCategory(categoryId);
+        if (!category) return res.status(400).json({ error: "Please select a published category.", code: "CATEGORY_NOT_PUBLISHED" });
+        if (!category.subcategories.some((subcategory) => subcategory.id === subcategoryId)) {
+          return res.status(400).json({ error: "Please select a published subcategory.", code: "SUBCATEGORY_NOT_PUBLISHED" });
+        }
+      }
       if (updates.regionId) {
         const assignment = await regionalMarketplaceRepository.getActiveSellerAssignment(userId, updates.regionId);
         if (!assignment) return res.status(403).json({ error: "You are not approved to sell in that region", code: "SELLER_REGION_APPROVAL_REQUIRED" });
@@ -212,9 +223,12 @@ export function registerCatalogRoutes(app: Express): void {
   app.delete("/api/products/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = getUserId(req)!;
-      const existing = await storage.getProduct(req.params.id);
+      const existing = await storage.getProductForOwner(req.params.id);
       if (!existing) return res.status(404).json({ error: "Product not found" });
       if (existing.farmerId !== userId) return res.status(403).json({ error: "Access denied" });
+      if (!["draft", "changes_requested", "rejected"].includes(existing.moderationStatus ?? "draft")) {
+        return res.status(409).json({ error: "A listing under review or publicly approved cannot be deleted.", code: "PRODUCT_DELETE_STATE_INVALID" });
+      }
       await storage.deleteProduct(req.params.id);
       audit({ action: "seller.product_deleted", actorId: userId, targetType: "product", targetId: req.params.id });
       res.status(204).send();

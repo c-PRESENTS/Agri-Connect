@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import type { Product } from "@shared/schema";
 import { useTranslation } from "react-i18next";
-import { categories, getShoppableCategories } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { apiRequest } from "@/lib/queryClient";
 import { SafeProductImage } from "@/components/safe-product-image";
 import { resolveProductImageForProduct } from "@/lib/product-images";
@@ -52,6 +52,7 @@ function clearRecentSearches() {
 
 export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocompleteProps) {
   const { format } = useCurrency();
+  const { data: categories = [] } = useCatalogCategories("buyer");
   const [open, setOpen] = useState(false);
   const [inputVal, setInputVal] = useState(value);
   const [recentSearches, setRecentSearches] = useState<string[]>(getRecentSearches);
@@ -147,7 +148,6 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
     onChange(val);
     setOpen(true);
     if (aiDebounceRef.current) window.clearTimeout(aiDebounceRef.current);
-    // Trigger AI search with debounce
     if (aiSearchEnabled && val.length >= 2) {
       aiDebounceRef.current = window.setTimeout(() => performAiSearch(val), 300);
     } else {
@@ -163,7 +163,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
   };
 
   const navigateToProductCategory = (product: Product) => {
-    const shoppableCategories = getShoppableCategories();
+    const shoppableCategories = categories;
     const category =
       shoppableCategories.find((item) => item.id === product.categoryId) ??
       shoppableCategories.find((item) =>
@@ -250,28 +250,35 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <form onSubmit={handleSubmit} className="relative group w-full">
-        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+      <form onSubmit={handleSubmit} className="relative flex items-center w-full">
         <Input
           ref={inputRef}
           type="search"
-          placeholder={t("search.placeholder", "Search produce, farmers...")}
+          placeholder={t("search.placeholder", "Search for products, farmers, categories...")}
           value={inputVal}
           onChange={handleChange}
           onFocus={() => setOpen(true)}
-          className="pl-10 pr-10 h-11 text-base font-bold bg-muted/40 border-2 border-border/50 focus:bg-background focus:border-primary/30 focus:ring-2 focus:ring-primary/20 transition-all rounded-xl w-full"
+          className="pl-4 pr-24 h-10 text-xs sm:text-sm font-medium bg-white dark:bg-card border border-slate-200 dark:border-border/80 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 transition-all rounded-xl w-full placeholder:text-slate-400"
           data-testid="input-search"
         />
         {inputVal && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-22 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
             data-testid="button-search-clear"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         )}
+        <button
+          type="submit"
+          className="absolute right-1 top-1/2 -translate-y-1/2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors"
+          data-testid="button-search-submit"
+        >
+          <Search className="h-3.5 w-3.5" />
+          <span>Search</span>
+        </button>
       </form>
 
       <AnimatePresence>
@@ -361,7 +368,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 px-2">
-                  {getShoppableCategories().slice(0, 12).map((cat) => (
+                  {categories.slice(0, 12).map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => void handleSelect(`?category=${cat.id}`)}

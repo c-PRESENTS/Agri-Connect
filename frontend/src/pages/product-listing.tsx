@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
-import { hasSellerTaxonomyAccess, getSellerTaxonomy } from "@/lib/categories";
+import { hasSellerTaxonomyAccess } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { LISTING_POLICY } from "@/lib/listing-policy";
 import { prepareListingImage } from "@/lib/listing-image-upload";
@@ -30,7 +31,7 @@ function listingErrorMessage(reason: unknown): string {
 export default function ProductListingPage() {
   const [, navigate] = useLocation();
   const { user, isLoading } = useAuth();
-  const taxonomy = getSellerTaxonomy();
+  const { data: taxonomy = [], isLoading: isTaxonomyLoading, isError: isTaxonomyError, refetch: refetchTaxonomy } = useCatalogCategories("seller");
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const galleryRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
@@ -90,10 +91,12 @@ export default function ProductListingPage() {
   });
 
   if (!isLoading && !hasSellerTaxonomyAccess(user?.role)) return <div className="min-h-screen bg-background"><TopNavigation /><main className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center px-6 text-center"><h1 className="text-xl font-bold">Seller access required</h1><p className="mt-2 text-sm text-muted-foreground">Complete your seller profile before creating listings.</p><Button className="mt-5" onClick={() => navigate("/settings")}>Complete seller profile</Button></main></div>;
+  if (isTaxonomyLoading) return <div className="min-h-screen bg-background"><TopNavigation /><main className="grid min-h-[60vh] place-items-center"><Loader2 className="h-7 w-7 animate-spin" /></main></div>;
+  if (isTaxonomyError) return <div className="min-h-screen bg-background"><TopNavigation /><main className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center text-center"><p className="font-bold">Published categories could not be loaded.</p><Button className="mt-4" onClick={() => refetchTaxonomy()}>Retry</Button></main></div>;
 
   return <div className="min-h-screen bg-background"><TopNavigation /><main className="mx-auto max-w-2xl px-4 py-8">
     <Button variant="ghost" className="mb-4 gap-2" onClick={() => navigate("/dashboard")}><ArrowLeft className="h-4 w-4" />Back to dashboard</Button>
-    <Card><CardHeader><CardTitle>Create product listing</CardTitle><p className="text-sm text-muted-foreground">Seller location: {user?.location || "Location not specified"}</p>{activeRegions.length ? <p className="text-xs font-semibold text-emerald-700">Approved marketplace: {activeRegions.map((item) => `${item.regionName}, ${item.countryCode}`).join(" · ")}</p> : <p className="text-xs font-semibold text-amber-700">This listing will remain a draft until a selling region is approved in Seller Hub.</p>}</CardHeader>
+    <Card><CardHeader><CardTitle>Create product listing</CardTitle><p className="text-sm text-muted-foreground">Seller location: {user?.location || "Location not specified"}</p>{activeRegions.length ? <p className="text-xs font-semibold text-emerald-700">Approved marketplace: {activeRegions.map((item) => `${item.regionName}, ${item.countryCode}`).join(" · ")}. New listings remain private until submitted and approved.</p> : <p className="text-xs font-semibold text-amber-700">This listing will remain a draft until a selling region is approved in Seller Hub and the listing passes review.</p>}</CardHeader>
     <CardContent><div className="mb-5 rounded-md border bg-muted/40 p-3 text-sm" data-testid="listing-policy"><div className="flex flex-wrap items-center gap-2 font-medium"><span>{LISTING_POLICY.title}</span><Badge variant="secondary">${LISTING_POLICY.feeUsd} policy</Badge></div><p className="mt-1 text-muted-foreground">{LISTING_POLICY.zeroEntryMessage}</p><p className="mt-1 text-xs text-muted-foreground">{LISTING_POLICY.enforcementMessage}</p></div>
     <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); setError(null); createListing.mutate(); }}>
       <div><Label htmlFor="listing-name">Product name</Label><Input id="listing-name" data-testid="input-listing-name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div>
@@ -106,7 +109,7 @@ export default function ProductListingPage() {
         {!uploadedImage && <><div className="flex items-center gap-3 py-1 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">or use an image URL</div><Input id="listing-image" type="url" value={form.imageUrl} onChange={(event) => setForm({ ...form, imageUrl: event.target.value })} placeholder="https://example.com/your-product-image.jpg" /></>}
         <p className="text-xs text-muted-foreground">JPEG, PNG, or WebP up to 10 MB. Add a clear image of the actual product.</p></div>
       {error && <p className="text-sm text-destructive" data-testid="listing-error">{error}</p>}
-      <Button className="w-full" type="submit" disabled={createListing.isPending || isPreparingImage || (activeRegions.length > 1 && !form.regionId)} data-testid="button-create-listing">{createListing.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Create listing</Button>
+      <Button className="w-full" type="submit" disabled={createListing.isPending || isPreparingImage || (activeRegions.length > 1 && !form.regionId)} data-testid="button-create-listing">{createListing.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save draft</Button>
     </form></CardContent></Card>
   </main></div>;
 }

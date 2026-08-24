@@ -47,6 +47,7 @@ export function buildHomeProductRecommendations(input: {
     .filter((product) => product.distance <= HOME_NEARBY_RADIUS_KM);
 
   const freshPicks = nearbyProducts
+    .filter((product) => product.isFreshPick === true)
     .filter(isFreshFoodProduct)
     .filter((product) => new Date(product.createdAt).getTime() >= freshCutoff)
     .sort(compareAvailabilityAndDistance);

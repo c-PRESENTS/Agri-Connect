@@ -109,7 +109,7 @@ export default function SellerProfilePage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold" data-testid="text-seller-name">{seller.farmerName}</h1>
-                <PublicSellerBadges rating={seller.farmerRating} reviewCount={seller.reviewCount} />
+                <PublicSellerBadges isVerified={seller.farmerIsVerified} rating={seller.farmerRating} reviewCount={seller.reviewCount} />
               </div>
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1" data-testid="text-seller-location">
                 <MapPin className="w-3.5 h-3.5" />
@@ -191,7 +191,8 @@ export default function SellerProfilePage() {
               <Card>
                 <CardContent className="p-6 space-y-3 text-sm">
                   <p>
-                    <span className="font-semibold">{seller.farmerName}</span> {t("seller_profile.verified_badge")}
+                    <span className="font-semibold">{seller.farmerName}</span>{" "}
+                    {seller.farmerIsVerified ? t("seller_profile.verified_badge") : "has not completed seller verification."}
                   </p>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Package className="w-4 h-4" />

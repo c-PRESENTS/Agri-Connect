@@ -28,7 +28,7 @@ import { TopNavigation } from "@/components/top-navigation";
 import { SafeProductImage } from "@/components/safe-product-image";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { FavoriteProductButton } from "@/components/favorite-product-button";
-import { getShoppableCategories } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import {
   buildCategoryBrowseUrl,
   buildProductDetailUrl,
@@ -124,6 +124,7 @@ export default function ProductDetailPage() {
   const search = useSearch();
   const { toast } = useToast();
   const { format } = useCurrency();
+  const { data: publishedCategories = [] } = useCatalogCategories("buyer");
   const { user, isAuthenticated } = useAuth();
 
   const [selectedImage, setSelectedImage] = useState(0);
@@ -308,7 +309,7 @@ export default function ProductDetailPage() {
   const browseContext = getProductBrowseContext(search, product);
   const categoryReturnUrl = buildCategoryBrowseUrl(browseContext);
   const categoryLabel =
-    getShoppableCategories().find((category) => category.id === browseContext.categoryId)?.name ||
+    publishedCategories.find((category) => category.id === browseContext.categoryId)?.name ||
     browseContext.categoryId.replace(/-/g, " ");
   const relatedProductUrl = (relatedProduct: Product) =>
     buildProductDetailUrl(relatedProduct, browseContext);
@@ -416,9 +417,9 @@ export default function ProductDetailPage() {
             )}
 
             {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-2 mt-2">
+            <div className={`grid gap-2 mt-2 ${product.farmerIsVerified ? "grid-cols-3" : "grid-cols-2"}`}>
               {[
-                { icon: Shield, label: t("product_detail.verified_seller"), color: "text-blue-500" },
+                ...(product.farmerIsVerified ? [{ icon: Shield, label: t("product_detail.verified_seller"), color: "text-blue-500" }] : []),
                 { icon: Truck, label: t("product_detail.standard_delivery"), color: "text-green-500" },
                 { icon: Package, label: t("product_detail.freshness_guarantee"), color: "text-amber-500" },
               ].map(({ icon: Icon, label, color }) => (
@@ -568,10 +569,7 @@ export default function ProductDetailPage() {
                   <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
                     <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                     <span className="font-medium">{product.farmerRating.toFixed(1)}</span>
-                    <span>{t("product_detail.verified_seller")}</span>
-                    <span>·</span>
-                    <BadgeCheck className="h-3 w-3 text-blue-500" />
-                    <span>{t("product_detail.verified_seller")}</span>
+                    {product.farmerIsVerified && <><span>·</span><BadgeCheck className="h-3 w-3 text-blue-500" /><span>{t("product_detail.verified_seller")}</span></>}
                   </div>
                   <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                     <MapPin className="h-3 w-3" />
@@ -583,9 +581,7 @@ export default function ProductDetailPage() {
                   <div className="sm:hidden flex items-center gap-1 text-[11px] text-muted-foreground leading-tight">
                     <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />
                     <span className="font-medium">{product.farmerRating.toFixed(1)}</span>
-                    <span>·</span>
-                    <BadgeCheck className="h-3 w-3 text-blue-500 shrink-0" />
-                    <span className="truncate">Verified</span>
+                    {product.farmerIsVerified && <><span>·</span><BadgeCheck className="h-3 w-3 text-blue-500 shrink-0" /><span className="truncate">Verified</span></>}
                   </div>
                 </div>
                 <Button

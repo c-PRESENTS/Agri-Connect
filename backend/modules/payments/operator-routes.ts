@@ -1,8 +1,8 @@
 import type { Express, Request } from "express";
 import { z } from "zod";
 import { isAuthenticated } from "../../auth";
-import { authStorage } from "../../auth/storage";
 import { audit } from "../../audit";
+import { requireAdminPermission } from "../../organisations/access";
 import { paymentRuntimeConfig, paymentProviderSchema } from "../../payments/config";
 import { paymentMaintenanceService } from "../../payments/maintenance-service";
 import { paymentMetrics } from "../../payments/observability";
@@ -83,17 +83,11 @@ const providerConfigurationSchema = z.object({
   }
 });
 
-async function isAdmin(userId: string): Promise<boolean> {
-  return (await authStorage.getUser(userId))?.role === "admin";
-}
-
 export function registerPaymentOperatorRoutes(
   app: Express,
   deps: OperatorPaymentRouteDeps,
 ): void {
-  app.get("/api/payments/operator/providers/readiness", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    if (!(await isAdmin(userId))) return res.status(403).json({ error: "Access denied" });
+  app.get("/api/payments/operator/providers/readiness", isAuthenticated, requireAdminPermission("revenue.view"), async (_req, res) => {
     const providers = paymentProviderSchema.options;
     return res.json({
       mode: paymentRuntimeConfig.mode,
@@ -103,9 +97,8 @@ export function registerPaymentOperatorRoutes(
     });
   });
 
-  app.put("/api/payments/operator/providers/:provider/configuration", isAuthenticated, async (req, res) => {
+  app.put("/api/payments/operator/providers/:provider/configuration", isAuthenticated, requireAdminPermission("security.manage"), async (req, res) => {
     const userId = deps.getUserId(req)!;
-    if (!(await isAdmin(userId))) return res.status(403).json({ error: "Access denied" });
     const provider = paymentProviderSchema.parse(req.params.provider);
     const input = providerConfigurationSchema.parse(req.body);
     const unknownKeys = Object.keys(input.configuration).filter(
@@ -142,16 +135,13 @@ export function registerPaymentOperatorRoutes(
     });
   });
 
-  app.post("/api/payments/operator/providers/:provider/validate", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    if (!(await isAdmin(userId))) return res.status(403).json({ error: "Access denied" });
+  app.post("/api/payments/operator/providers/:provider/validate", isAuthenticated, requireAdminPermission("security.manage"), async (req, res) => {
     const provider = paymentProviderSchema.parse(req.params.provider);
     return res.json(await providerActivationService.validate(provider, true));
   });
 
-  app.post("/api/payments/operator/providers/:provider/activate", isAuthenticated, async (req, res) => {
+  app.post("/api/payments/operator/providers/:provider/activate", isAuthenticated, requireAdminPermission("security.manage"), async (req, res) => {
     const userId = deps.getUserId(req)!;
-    if (!(await isAdmin(userId))) return res.status(403).json({ error: "Access denied" });
     const provider = paymentProviderSchema.parse(req.params.provider);
     const readiness = await providerActivationService.activate(provider);
     audit({
@@ -164,9 +154,8 @@ export function registerPaymentOperatorRoutes(
     return res.status(readiness.ready ? 200 : 409).json(readiness);
   });
 
-  app.post("/api/payments/operator/providers/:provider/suspend", isAuthenticated, async (req, res) => {
+  app.post("/api/payments/operator/providers/:provider/suspend", isAuthenticated, requireAdminPermission("security.manage"), async (req, res) => {
     const userId = deps.getUserId(req)!;
-    if (!(await isAdmin(userId))) return res.status(403).json({ error: "Access denied" });
     const provider = paymentProviderSchema.parse(req.params.provider);
     const input = z.object({ reason: z.string().trim().min(10).max(500) }).parse(req.body);
     await paymentOperationsRepository.suspendProvider(provider, "operator_suspended");
@@ -186,15 +175,12 @@ export function registerPaymentOperatorRoutes(
     return res.json({ provider, status: "suspended" });
   });
 
-  app.get("/api/payments/operator/metrics", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    if (!(await isAdmin(userId))) return res.status(403).json({ error: "Access denied" });
+  app.get("/api/payments/operator/metrics", isAuthenticated, requireAdminPermission("revenue.view"), async (_req, res) => {
     return res.json({ metrics: paymentMetrics.snapshot() });
   });
 
-  app.post("/api/payments/operator/recovery-drill", isAuthenticated, async (req, res) => {
+  app.post("/api/payments/operator/recovery-drill", isAuthenticated, requireAdminPermission("security.manage"), async (req, res) => {
     const userId = deps.getUserId(req)!;
-    if (!(await isAdmin(userId))) return res.status(403).json({ error: "Access denied" });
     const result = await paymentMaintenanceService.runRecoveryDrill(true);
     audit({
       action: "payment.recovery_drill_run",
@@ -206,9 +192,7 @@ export function registerPaymentOperatorRoutes(
     return res.status(result.healthy ? 200 : 409).json(result);
   });
 
-  app.post("/api/payments/operator/retention/run", isAuthenticated, async (req, res) => {
-    const userId = deps.getUserId(req)!;
-    if (!(await isAdmin(userId))) return res.status(403).json({ error: "Access denied" });
+  app.post("/api/payments/operator/retention/run", isAuthenticated, requireAdminPermission("security.manage"), async (_req, res) => {
     return res.json({ deleted: await paymentMaintenanceService.runRetention() });
   });
 }

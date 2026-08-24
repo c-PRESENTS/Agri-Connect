@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import { Route, Switch } from "wouter";
+import { Redirect, Route, Switch } from "wouter";
 import { ProtectedRoute } from "@/components/protected-route";
 import { StudentAccessRoute } from "@/components/student-access-route";
 import { AdminAccessRoute } from "@/components/admin-access-route";
@@ -42,15 +42,32 @@ const TermsOfServicePage = lazy(() => import("@/pages/terms-of-service"));
 const RefundPolicyPage = lazy(() => import("@/pages/refund-policy"));
 const FavoritesPage = lazy(() => import("@/pages/favorites"));
 const MyProfilePage = lazy(() => import("@/pages/my-profile"));
+const MySitesPage = lazy(() => import("@/pages/my-sites"));
 const ProfileCompletionPage = lazy(() => import("@/pages/profile-completion"));
 const StudentHelpPointPage = lazy(() => import("@/pages/student-help-point"));
 const StudentLoginPage = lazy(() => import("@/pages/student-login"));
 const StudentVerifyEmailPage = lazy(() => import("@/pages/student-verify-email"));
 const StudentConfirmLoginPage = lazy(() => import("@/pages/student-confirm-login"));
 const FulfillmentPage = lazy(() => import("@/pages/fulfillment"));
-const OperatorDashboardPage = lazy(() => import("@/pages/operator-dashboard"));
 const MarketplacePage = lazy(() => import("@/pages/marketplace"));
 const RegionalOrganisationPage = lazy(() => import("@/pages/regional-organisation"));
+const AdminOverviewPage = lazy(() => import("@/pages/admin-overview"));
+const AdminAuditPage = lazy(() => import("@/pages/admin-audit"));
+const AdminUsersPage = lazy(() => import("@/pages/admin-users"));
+const AdminUserDetailPage = lazy(() => import("@/pages/admin-user-detail"));
+const AdminVerificationsPage = lazy(() => import("@/pages/admin-verifications"));
+const AdminVerificationDetailPage = lazy(() => import("@/pages/admin-verification-detail"));
+const AdminProductsPage = lazy(() => import("@/pages/admin-products"));
+const AdminProductDetailPage = lazy(() => import("@/pages/admin-product-detail"));
+const AdminCategoriesPage = lazy(() => import("@/pages/admin-categories"));
+const AdminEmployeesPage = lazy(() => import("@/pages/admin-employees"));
+const AdminEmployeeDetailPage = lazy(() => import("@/pages/admin-employee-detail"));
+const AdminRolesPage = lazy(() => import("@/pages/admin-roles"));
+const AdminSecurityPage = lazy(() => import("@/pages/admin-security"));
+const AcceptInvitationPage = lazy(() => import("@/pages/accept-invitation"));
+const ResetPasswordPage = lazy(() => import("@/pages/reset-password"));
+const VerifyEmailPage = lazy(() => import("@/pages/verify-email"));
+const AdminSignInPage = lazy(() => import("@/pages/admin-sign-in"));
 
 export function AppRoutes() {
   return (
@@ -59,6 +76,10 @@ export function AppRoutes() {
       <Route path="/categories" component={CategoriesPage} />
       <Route path="/marketplace" component={SmartMapPage} />
       <Route path="/login" component={LoginPage} />
+      <Route path="/accept-invitation" component={AcceptInvitationPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
+      <Route path="/verify-email" component={VerifyEmailPage} />
+      <Route path="/admin/sign-in" component={AdminSignInPage} />
       <Route path="/dashboard">
         <ProtectedRoute><Dashboard /></ProtectedRoute>
       </Route>
@@ -80,6 +101,9 @@ export function AppRoutes() {
       <Route path="/my-profile">
         <ProtectedRoute><MyProfilePage /></ProtectedRoute>
       </Route>
+      <Route path="/my-sites" component={MySitesPage} />
+      <Route path="/sites"><Redirect to="/my-sites" /></Route>
+      <Route path="/dietary"><Redirect to="/?category=dietary" /></Route>
       <Route path="/profile-completion">
         <ProtectedRoute><ProfileCompletionPage /></ProtectedRoute>
       </Route>
@@ -116,12 +140,55 @@ export function AppRoutes() {
         <ProtectedRoute><FulfillmentPage /></ProtectedRoute>
       </Route>
       <Route path="/operator">
-        <AdminAccessRoute permission="dashboard.view"><OperatorDashboardPage /></AdminAccessRoute>
+        <AdminAccessRoute permission="dashboard.view"><Redirect to="/admin/overview" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin">
+        <AdminAccessRoute permission="dashboard.view"><Redirect to="/admin/overview" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/overview">
+        <AdminAccessRoute permission="dashboard.view"><AdminOverviewPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/audit">
+        <AdminAccessRoute permission="audit.view"><AdminAuditPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/users/:userId">
+        <AdminAccessRoute permission="users.view"><AdminUserDetailPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/users">
+        <AdminAccessRoute permission="users.view"><AdminUsersPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/verifications/:caseId">
+        <AdminAccessRoute permission="verification.view"><AdminVerificationDetailPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/verifications">
+        <AdminAccessRoute permission="verification.view"><AdminVerificationsPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/products/:productId">
+        <AdminAccessRoute permission="products.view"><AdminProductDetailPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/products">
+        <AdminAccessRoute permission="products.view"><AdminProductsPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/categories">
+        <AdminAccessRoute permission="categories.view"><AdminCategoriesPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/employees/:membershipId">
+        <AdminAccessRoute permission="employees.view"><AdminEmployeeDetailPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/employees">
+        <AdminAccessRoute permission="employees.view"><AdminEmployeesPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/roles">
+        <AdminAccessRoute permission="employees.view"><AdminRolesPage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/security">
+        <AdminAccessRoute permission="security.manage"><AdminSecurityPage /></AdminAccessRoute>
       </Route>
       <Route path="/regional-organisation">
         <ProtectedRoute><RegionalOrganisationPage /></ProtectedRoute>
       </Route>
       <Route path="/sellers/:id" component={SellerProfilePage} />
+      <Route path="/sellers" component={SellerPage} />
       <Route path="/map" component={SmartMapPage} />
       <Route path="/checkout">
         <ProtectedRoute><CheckoutPage /></ProtectedRoute>

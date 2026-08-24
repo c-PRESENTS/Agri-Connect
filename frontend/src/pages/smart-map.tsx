@@ -29,7 +29,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TopNavigation } from "@/components/top-navigation";
 import { SafeProductImage } from "@/components/safe-product-image";
 import { ProductCard } from "@/components/product-card";
-import { getShoppableCategories } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { useTranslation } from "react-i18next";
 import { useLocation, useSearch } from "wouter";
 
@@ -196,6 +196,7 @@ const RIGHT_PANEL_TABS: { id: RightPanelType; icon: any; labelKey: string; short
 ];
 
 export default function SmartMapPage() {
+  const { data: publishedCategories = [] } = useCatalogCategories("buyer");
   const { format } = useCurrency();
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -1249,7 +1250,7 @@ export default function SmartMapPage() {
                         <SelectItem value="all" className="font-bold">
                           All Categories (Complete Catalogue)
                         </SelectItem>
-                        {getShoppableCategories().map((cat) => (
+                        {publishedCategories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id} className="font-bold">
                             {cat.name}
                           </SelectItem>
@@ -1260,7 +1261,7 @@ export default function SmartMapPage() {
 
                   {/* Subcategories Dropdown if category selected */}
                   {(() => {
-                    const selectedCat = getShoppableCategories().find((c) => c.id === marketFilters.categoryId);
+                    const selectedCat = publishedCategories.find((c) => c.id === marketFilters.categoryId);
                     if (!selectedCat || !selectedCat.subcategories?.length) return null;
                     return (
                       <div className="mt-2 flex items-center gap-2">

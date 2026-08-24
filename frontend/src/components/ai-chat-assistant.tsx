@@ -34,6 +34,17 @@ export function AIChatAssistant() {
     }
   }, [messages]);
 
+  useEffect(() => {
+    const toggleHandler = () => setIsOpen((prev) => !prev);
+    const openHandler = () => setIsOpen(true);
+    window.addEventListener("toggle-ai-chat", toggleHandler);
+    window.addEventListener("open-ai-chat", openHandler);
+    return () => {
+      window.removeEventListener("toggle-ai-chat", toggleHandler);
+      window.removeEventListener("open-ai-chat", openHandler);
+    };
+  }, []);
+
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
