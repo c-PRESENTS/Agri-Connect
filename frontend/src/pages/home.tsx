@@ -311,7 +311,7 @@ export default function Home() {
                   className="h-full flex flex-col"
                 >
                   {selectedCategory === "dietary" ? (
-                    <DietaryComingSoon products={products} />
+                    <DietaryComingSoon products={products} subcategoryId={effectiveSubcategory} />
                   ) : (
                     <ResizableSplit
                       left={

@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Star,
@@ -17,6 +18,7 @@ import {
   Leaf,
   Droplets,
   ShieldCheck,
+  ShieldAlert,
   ShoppingCart,
   Sprout,
   Sparkles,
@@ -28,7 +30,18 @@ import { useCurrency } from "@/contexts/currency-context";
 import { apiRequest } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 
-interface DietaryMealItem {
+export interface DietaryProductItem {
+  id: string;
+  name: string;
+  qty: number | string;
+  unit: string;
+  price: number;
+  formattedPrice: string;
+  isOrganic?: boolean;
+  availableForCart?: boolean;
+}
+
+export interface DietaryMealItem {
   id: string;
   time: string;
   mealType: string;
@@ -43,30 +56,77 @@ interface DietaryMealItem {
     fibre: number;
     netCarbs: number;
   };
-  products: {
-    id: string;
-    name: string;
-    qty: number;
-    unit: string;
-    price: number;
-    formattedPrice: string;
-  }[];
+  products: DietaryProductItem[];
   bundlePrice: number;
   bundlePriceFormatted: string;
 }
 
-const STATIC_PLAN = {
+export interface DietaryPlanData {
+  id: string;
+  subcategory: string;
+  title: string;
+  totalCalories: number;
+  seller: {
+    id: string;
+    name: string;
+    logo: string;
+    verified: boolean;
+    verificationStatus: "verified" | "unverified" | "pending";
+    verificationLabel: string;
+    rating: number;
+    reviewCount: number;
+    activeDietPlans: number;
+    ordersDelivered: number;
+    tags: string[];
+    bio: string;
+    farmerPhoto: string;
+    storeUrl: string;
+  };
+  meals: DietaryMealItem[];
+  nutritionDashboard: {
+    calories: { current: number; target: number; percentage: number };
+    protein: { current: number; target: number; percentage: number };
+    totalCarbs: { current: number; target: number; percentage: number };
+    netCarbs: { current: number; target: number; percentage: number };
+    totalFat: { current: number; target: number; percentage: number };
+    fibre: { current: number; target: number; percentage: number };
+    waterIntake: { current: number; target: number; percentage: number; unit: string };
+  };
+  macronutrientBreakdown: {
+    protein: { grams: number; percentage: number };
+    fat: { grams: number; percentage: number };
+    carbs: { grams: number; percentage: number };
+  };
+  additionalNutrients: {
+    fibre: string;
+    sugar: string;
+    sodium: string;
+    cholesterol: string;
+  };
+  pricing: {
+    totalProductsCost: number;
+    dietPlanServiceFee: number;
+    deliveryCharges: number;
+    totalAmount: number;
+  };
+}
+
+const STATIC_PLAN: DietaryPlanData = {
   id: "rorz-keto-day-plan",
+  subcategory: "keto",
   title: "Rorz's Keto Day Plan",
   totalCalories: 2394,
   seller: {
+    id: "seller-aura-organic-1",
     name: "Aura Organic Foods",
     logo: "/category-logos/daily-needs.svg",
-    verified: true,
-    rating: 4.9,
-    reviewCount: 1245,
+    verified: false,
+    verificationStatus: "unverified",
+    verificationLabel: "Unverified Seller",
+    rating: 4.8,
+    reviewCount: 38,
     activeDietPlans: 12,
-    ordersDelivered: 1245,
+    ordersDelivered: 142,
     tags: ["Keto Expert", "📍 Essex, UK", "🛍 Farm Fresh Ingredients"],
     bio: "Aura Organic Foods provides customised keto meal plans with 100% organic, farm-fresh ingredients sourced directly from trusted local farmers.",
     farmerPhoto: "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=500&auto=format&fit=crop&q=80",
@@ -159,7 +219,7 @@ const STATIC_PLAN = {
       bundlePrice: 7.80,
       bundlePriceFormatted: "£7.80",
     },
-  ] as DietaryMealItem[],
+  ],
   nutritionDashboard: {
     calories: { current: 2394, target: 2500, percentage: 96 },
     protein: { current: 186, target: 180, percentage: 103 },
@@ -188,60 +248,95 @@ const STATIC_PLAN = {
   },
 };
 
-export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
+export function DietaryComingSoon({
+  products = [],
+  subcategoryId,
+}: {
+  products?: Product[];
+  subcategoryId?: string;
+}) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { format } = useCurrency();
+  const [location, setLocation] = useLocation();
 
   const [addedBundles, setAddedBundles] = useState<Set<string>>(new Set());
   const [isFollowing, setIsFollowing] = useState(false);
 
-  // Fetch dynamic plan from backend or fallback to STATIC_PLAN
-  const { data: plan = STATIC_PLAN } = useQuery<typeof STATIC_PLAN>({
-    queryKey: ["/api/dietary/plans/keto-day"],
-    staleTime: 60_000,
+  // Extract active subcategory from prop or URL
+  const effectiveSubcategory = useMemo(() => {
+    if (subcategoryId) return subcategoryId;
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get("subcategory") || urlParams.get("subcategoryId") || "keto";
+  }, [subcategoryId, location]);
+
+  // Fetch real database-backed plan from backend API
+  const { data: plan = STATIC_PLAN, isLoading } = useQuery<DietaryPlanData>({
+    queryKey: [`/api/dietary/plans?subcategory=${effectiveSubcategory}`],
+    staleTime: 30_000,
   });
 
-  // Mutation to add individual meal bundle
+  // Mutation to add individual meal bundle into real user cart
   const addBundleMutation = useMutation({
     mutationFn: async (meal: DietaryMealItem) => {
+      const availableProducts = meal.products.filter((product) => product.availableForCart === true);
+      if (availableProducts.length === 0) {
+        throw new Error("No products in this bundle are currently available");
+      }
       const res = await apiRequest("POST", "/api/dietary/add-bundle", {
         mealId: meal.id,
         bundleTitle: `${meal.title} Bundle`,
-        price: meal.bundlePrice,
-        products: meal.products,
+        products: availableProducts.map((product) => ({ id: product.id })),
       });
-      return res.json();
+      return res.json() as Promise<{ addedCount: number; unavailableItems?: unknown[] }>;
     },
     onSuccess: (_data, meal) => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       setAddedBundles((prev) => new Set(prev).add(meal.id));
       toast({
         title: `Added ${meal.title} Bundle to Cart!`,
-        description: `${meal.products.length} fresh ingredients included (${meal.bundlePriceFormatted})`,
+        description: `${meal.products.length} fresh ingredients included (${format(meal.bundlePrice, { sourceCurrency: "GBP" })})`,
       });
     },
-    onError: () => {
-      toast({ title: "Failed to add bundle to cart", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add bundle to cart",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
-  // Mutation to buy complete day plan
+  // Mutation to buy complete day plan from database
   const buyCompletePlanMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/dietary/buy-complete-plan", {});
-      return res.json();
+      const res = await apiRequest("POST", "/api/dietary/buy-complete-plan", {
+        subcategory: effectiveSubcategory,
+        productIds: Array.from(new Set(
+          plan.meals.flatMap((meal) =>
+            meal.products
+              .filter((product) => product.availableForCart === true)
+              .map((product) => product.id),
+          ),
+        )),
+      });
+      return res.json() as Promise<{ addedCount: number; unavailableItems?: unknown[] }>;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       toast({
-        title: "Complete Day Keto Plan Added!",
-        description: "12 farm-fresh products & custom meal guide (£42.50) added to your cart.",
+        title: "Complete Day Plan Added to Cart!",
+        description: `${result.addedCount} available product${result.addedCount === 1 ? "" : "s"} from ${plan.title} added. Opening your cart…`,
       });
+      setLocation("/cart");
     },
-    onError: () => {
-      toast({ title: "Failed to order complete plan", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to order complete plan",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -249,8 +344,8 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
     if (navigator.share) {
       navigator
         .share({
-          title: "Rorz's Keto Day Plan - Aura Organic Foods",
-          text: "Check out this customized keto day meal plan with 100% organic farm fresh ingredients on AgriConnect!",
+          title: `${plan.title} - ${plan.seller.name}`,
+          text: `Check out ${plan.title} with 100% organic farm fresh ingredients on AgriConnect!`,
           url: window.location.href,
         })
         .catch(() => {});
@@ -263,7 +358,7 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
   const handleDownload = () => {
     toast({
       title: "Downloading Diet Plan PDF...",
-      description: "Rorz's Keto Day Plan with full nutritional guide & recipe instructions.",
+      description: `${plan.title} with full nutritional guide & recipe instructions.`,
     });
   };
 
@@ -302,14 +397,14 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
 
       {/* ─── MAIN CONTAINER ─── */}
       <div className="max-w-[1550px] mx-auto p-4 sm:p-6 space-y-6">
-        {/* ─── 1. SELLER / CREATOR PROFILE CARD ─── */}
+        {/* ─── 1. REAL SELLER / CREATOR PROFILE CARD FROM DATABASE ─── */}
         <div className="bg-white dark:bg-card rounded-2xl border border-slate-200/80 dark:border-border/80 p-5 shadow-2xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="flex items-start gap-4 flex-1">
             {/* Logo */}
             <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full border border-slate-200 dark:border-border/80 bg-white dark:bg-muted flex flex-col items-center justify-center p-2 text-center shrink-0 shadow-xs">
               <Sprout className="h-6 w-6 text-emerald-600 mb-0.5" />
               <span className="text-[8px] font-black text-emerald-950 dark:text-emerald-300 leading-tight uppercase">
-                Aura Organic
+                {plan.seller.name.slice(0, 12)}
               </span>
             </div>
 
@@ -319,9 +414,17 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                   {plan.seller.name}
                 </h1>
-                <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <Check className="h-3 w-3" /> Verified Seller
-                </span>
+                {/* Real database verification badge */}
+                {plan.seller.verified ? (
+                  <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Verified Seller
+                  </span>
+                ) : (
+                  <span className="bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-amber-300/70 dark:border-amber-800">
+                    <ShieldAlert className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                    {plan.seller.verificationLabel || "Unverified Seller"}
+                  </span>
+                )}
               </div>
 
               {/* Rating & Stats */}
@@ -422,10 +525,11 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
               </div>
             </div>
 
-            {/* ─── 5 MEAL CARDS EXACT FORMATTING & SPACING ─── */}
+            {/* ─── 5 MEAL CARDS (REAL DATABASE DATA & CURRENCY) ─── */}
             <div className="space-y-3.5">
-              {plan.meals.map((meal: DietaryMealItem) => {
-                const isAdded = addedBundles.has(meal.id);
+                {plan.meals.map((meal: DietaryMealItem) => {
+                  const isAdded = addedBundles.has(meal.id);
+                  const hasAvailableProducts = meal.products.some((product) => product.availableForCart === true);
 
                 return (
                   <div
@@ -492,7 +596,7 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                         </div>
                       </div>
 
-                      {/* Column 4: Products Included List */}
+                      {/* Column 4: Products Included List (Real DB Products) */}
                       <div className="flex-1 min-w-[200px]">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
                           PRODUCTS INCLUDED
@@ -500,10 +604,14 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                         <div className="space-y-0.5 text-xs">
                           {meal.products.map((prod) => (
                             <div key={prod.id} className="flex items-center justify-between gap-2">
-                              <span className="font-semibold text-slate-700 dark:text-slate-300 truncate">{prod.name}</span>
+                              <span className="font-semibold text-slate-700 dark:text-slate-300 truncate" title={prod.name}>
+                                {prod.name}
+                              </span>
                               <div className="flex items-center gap-2 text-slate-400 font-medium shrink-0">
                                 <span>{prod.qty} {prod.unit}</span>
-                                <span className="font-bold text-slate-900 dark:text-slate-100">{prod.formattedPrice}</span>
+                                <span className="font-bold text-slate-900 dark:text-slate-100">
+                                  {format(prod.price, { sourceCurrency: "GBP" })}
+                                </span>
                               </div>
                             </div>
                           ))}
@@ -515,15 +623,20 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                         <button
                           type="button"
                           onClick={() => addBundleMutation.mutate(meal)}
-                          disabled={addBundleMutation.isPending}
-                          className="w-full h-24 rounded-2xl border-2 border-emerald-500/70 bg-emerald-50/40 hover:bg-emerald-100/70 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/60 p-2 flex flex-col items-center justify-center text-center transition-all group shadow-2xs"
+                          disabled={addBundleMutation.isPending || isAdded || !hasAvailableProducts}
+                          title={hasAvailableProducts ? undefined : "This bundle is currently unavailable"}
+                          className="w-full h-24 rounded-2xl border-2 border-emerald-500/70 bg-emerald-50/40 hover:bg-emerald-100/70 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/60 p-2 flex flex-col items-center justify-center text-center transition-all group shadow-2xs cursor-pointer"
                         >
                           <ShoppingCart className="h-4 w-4 text-emerald-800 dark:text-emerald-400 mb-1 group-hover:scale-105 transition-transform" />
                           <span className="text-[11px] font-black text-emerald-900 dark:text-emerald-200 leading-tight">
-                            {isAdded ? "Added to Cart" : `Add ${meal.mealType === "BREAKFAST" ? "Breakfast" : meal.mealType === "LUNCH" ? "Lunch" : meal.mealType === "DINNER" ? "Dinner" : "Snack"} Bundle`}
+                            {isAdded
+                              ? "Added to Cart"
+                              : !hasAvailableProducts
+                                ? "Currently Unavailable"
+                                : `Add ${meal.mealType === "BREAKFAST" ? "Breakfast" : meal.mealType === "LUNCH" ? "Lunch" : meal.mealType === "DINNER" ? "Dinner" : "Snack"} Bundle`}
                           </span>
                           <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 mt-1">
-                            {meal.bundlePriceFormatted}
+                            {format(meal.bundlePrice, { sourceCurrency: "GBP" })}
                           </span>
                         </button>
                       </div>
@@ -545,7 +658,7 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                   <div className="relative h-20 w-20 rounded-full border-4 border-emerald-600 flex items-center justify-center shrink-0">
                     <div className="text-center">
                       <span className="text-sm font-black text-slate-900 dark:text-slate-100 block leading-tight">
-                        2,394
+                        {plan.totalCalories.toLocaleString()}
                       </span>
                       <span className="text-[10px] font-bold text-slate-400">kcal</span>
                     </div>
@@ -555,18 +668,24 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                   <div className="space-y-1 text-xs">
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-emerald-600" />
-                      <span className="font-bold text-slate-700 dark:text-slate-200">Protein 186g</span>
-                      <span className="text-slate-400 font-semibold">(31%)</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-200">
+                        Protein {plan.macronutrientBreakdown.protein.grams}g
+                      </span>
+                      <span className="text-slate-400 font-semibold">({plan.macronutrientBreakdown.protein.percentage}%)</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-purple-600" />
-                      <span className="font-bold text-slate-700 dark:text-slate-200">Fat 172g</span>
-                      <span className="text-slate-400 font-semibold">(65%)</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-200">
+                        Fat {plan.macronutrientBreakdown.fat.grams}g
+                      </span>
+                      <span className="text-slate-400 font-semibold">({plan.macronutrientBreakdown.fat.percentage}%)</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-amber-500" />
-                      <span className="font-bold text-slate-700 dark:text-slate-200">Carbs 34g</span>
-                      <span className="text-slate-400 font-semibold">(6%)</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-200">
+                        Carbs {plan.macronutrientBreakdown.carbs.grams}g
+                      </span>
+                      <span className="text-slate-400 font-semibold">({plan.macronutrientBreakdown.carbs.percentage}%)</span>
                     </div>
                   </div>
                 </div>
@@ -580,31 +699,40 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                 <div className="space-y-2.5">
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-slate-600">Protein 186g</span>
-                      <span className="text-emerald-700 font-black">31%</span>
+                      <span className="text-slate-600">Protein {plan.macronutrientBreakdown.protein.grams}g</span>
+                      <span className="text-emerald-700 font-black">{plan.macronutrientBreakdown.protein.percentage}%</span>
                     </div>
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-600 rounded-full" style={{ width: "31%" }} />
+                      <div
+                        className="h-full bg-emerald-600 rounded-full"
+                        style={{ width: `${plan.macronutrientBreakdown.protein.percentage}%` }}
+                      />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-slate-600">Fat 172g</span>
-                      <span className="text-purple-700 font-black">65%</span>
+                      <span className="text-slate-600">Fat {plan.macronutrientBreakdown.fat.grams}g</span>
+                      <span className="text-purple-700 font-black">{plan.macronutrientBreakdown.fat.percentage}%</span>
                     </div>
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-purple-600 rounded-full" style={{ width: "65%" }} />
+                      <div
+                        className="h-full bg-purple-600 rounded-full"
+                        style={{ width: `${plan.macronutrientBreakdown.fat.percentage}%` }}
+                      />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-slate-600">Carbs 34g</span>
-                      <span className="text-amber-700 font-black">6%</span>
+                      <span className="text-slate-600">Carbs {plan.macronutrientBreakdown.carbs.grams}g</span>
+                      <span className="text-amber-700 font-black">{plan.macronutrientBreakdown.carbs.percentage}%</span>
                     </div>
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-amber-500 rounded-full" style={{ width: "6%" }} />
+                      <div
+                        className="h-full bg-amber-500 rounded-full"
+                        style={{ width: `${plan.macronutrientBreakdown.carbs.percentage}%` }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -658,13 +786,19 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                       <span>Calories</span>
                     </span>
                     <span className="font-black text-slate-900 dark:text-slate-100">
-                      2,394 <span className="text-slate-400 font-normal">/ 2,500 kcal</span>
+                      {plan.nutritionDashboard.calories.current.toLocaleString()}{" "}
+                      <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.calories.target.toLocaleString()} kcal</span>
                     </span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full" style={{ width: "96%" }} />
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full"
+                      style={{ width: `${Math.min(100, plan.nutritionDashboard.calories.percentage)}%` }}
+                    />
                   </div>
-                  <span className="text-[10px] text-slate-400 font-bold float-right mt-0.5">96%</span>
+                  <span className="text-[10px] text-slate-400 font-bold float-right mt-0.5">
+                    {plan.nutritionDashboard.calories.percentage}%
+                  </span>
                 </div>
 
                 {/* Protein */}
@@ -675,13 +809,19 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                       <span>Protein</span>
                     </span>
                     <span className="font-black text-slate-900 dark:text-slate-100">
-                      186 <span className="text-slate-400 font-normal">/ 180 g</span>
+                      {plan.nutritionDashboard.protein.current}{" "}
+                      <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.protein.target} g</span>
                     </span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-600 rounded-full" style={{ width: "100%" }} />
+                    <div
+                      className="h-full bg-emerald-600 rounded-full"
+                      style={{ width: `${Math.min(100, plan.nutritionDashboard.protein.percentage)}%` }}
+                    />
                   </div>
-                  <span className="text-[10px] text-emerald-600 font-black float-right mt-0.5">103%</span>
+                  <span className="text-[10px] text-emerald-600 font-black float-right mt-0.5">
+                    {plan.nutritionDashboard.protein.percentage}%
+                  </span>
                 </div>
 
                 {/* Total Carbs */}
@@ -692,13 +832,19 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                       <span>Total Carbs</span>
                     </span>
                     <span className="font-black text-slate-900 dark:text-slate-100">
-                      34 <span className="text-slate-400 font-normal">/ 50 g</span>
+                      {plan.nutritionDashboard.totalCarbs.current}{" "}
+                      <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.totalCarbs.target} g</span>
                     </span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full" style={{ width: "68%" }} />
+                    <div
+                      className="h-full bg-amber-500 rounded-full"
+                      style={{ width: `${Math.min(100, plan.nutritionDashboard.totalCarbs.percentage)}%` }}
+                    />
                   </div>
-                  <span className="text-[10px] text-slate-400 font-bold float-right mt-0.5">68%</span>
+                  <span className="text-[10px] text-slate-400 font-bold float-right mt-0.5">
+                    {plan.nutritionDashboard.totalCarbs.percentage}%
+                  </span>
                 </div>
 
                 {/* Net Carbs */}
@@ -709,13 +855,19 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                       <span>Net Carbs</span>
                     </span>
                     <span className="font-black text-slate-900 dark:text-slate-100">
-                      17 <span className="text-slate-400 font-normal">/ 30 g</span>
+                      {plan.nutritionDashboard.netCarbs.current}{" "}
+                      <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.netCarbs.target} g</span>
                     </span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-600 rounded-full" style={{ width: "57%" }} />
+                    <div
+                      className="h-full bg-emerald-600 rounded-full"
+                      style={{ width: `${Math.min(100, plan.nutritionDashboard.netCarbs.percentage)}%` }}
+                    />
                   </div>
-                  <span className="text-[10px] text-slate-400 font-bold float-right mt-0.5">57%</span>
+                  <span className="text-[10px] text-slate-400 font-bold float-right mt-0.5">
+                    {plan.nutritionDashboard.netCarbs.percentage}%
+                  </span>
                 </div>
 
                 {/* Total Fat */}
@@ -726,13 +878,19 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                       <span>Total Fat</span>
                     </span>
                     <span className="font-black text-slate-900 dark:text-slate-100">
-                      172 <span className="text-slate-400 font-normal">/ 170 g</span>
+                      {plan.nutritionDashboard.totalFat.current}{" "}
+                      <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.totalFat.target} g</span>
                     </span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-purple-600 rounded-full" style={{ width: "100%" }} />
+                    <div
+                      className="h-full bg-purple-600 rounded-full"
+                      style={{ width: `${Math.min(100, plan.nutritionDashboard.totalFat.percentage)}%` }}
+                    />
                   </div>
-                  <span className="text-[10px] text-purple-600 font-black float-right mt-0.5">101%</span>
+                  <span className="text-[10px] text-purple-600 font-black float-right mt-0.5">
+                    {plan.nutritionDashboard.totalFat.percentage}%
+                  </span>
                 </div>
 
                 {/* Fibre */}
@@ -743,13 +901,19 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                       <span>Fibre</span>
                     </span>
                     <span className="font-black text-slate-900 dark:text-slate-100">
-                      26 <span className="text-slate-400 font-normal">/ 25 g</span>
+                      {plan.nutritionDashboard.fibre.current}{" "}
+                      <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.fibre.target} g</span>
                     </span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-600 rounded-full" style={{ width: "100%" }} />
+                    <div
+                      className="h-full bg-emerald-600 rounded-full"
+                      style={{ width: `${Math.min(100, plan.nutritionDashboard.fibre.percentage)}%` }}
+                    />
                   </div>
-                  <span className="text-[10px] text-emerald-600 font-black float-right mt-0.5">104%</span>
+                  <span className="text-[10px] text-emerald-600 font-black float-right mt-0.5">
+                    {plan.nutritionDashboard.fibre.percentage}%
+                  </span>
                 </div>
 
                 {/* Water Intake */}
@@ -760,22 +924,28 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
                       <span>Water Intake</span>
                     </span>
                     <span className="font-black text-slate-900 dark:text-slate-100">
-                      3.0 <span className="text-slate-400 font-normal">/ 3.0 L</span>
+                      {plan.nutritionDashboard.waterIntake.current}{" "}
+                      <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.waterIntake.target} L</span>
                     </span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-500 rounded-full" style={{ width: "100%" }} />
+                    <div
+                      className="h-full bg-cyan-500 rounded-full"
+                      style={{ width: `${Math.min(100, plan.nutritionDashboard.waterIntake.percentage)}%` }}
+                    />
                   </div>
-                  <span className="text-[10px] text-cyan-600 font-black float-right mt-0.5">100%</span>
+                  <span className="text-[10px] text-cyan-600 font-black float-right mt-0.5">
+                    {plan.nutritionDashboard.waterIntake.percentage}%
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* 2. COMPLETE DAY KETO PLAN CHECKOUT CARD */}
+            {/* 2. COMPLETE DAY PLAN CHECKOUT CARD (REAL DB PRICING) */}
             <div className="bg-white dark:bg-card p-5 rounded-2xl border-2 border-emerald-500/60 shadow-md space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-black text-sm text-slate-900 dark:text-slate-100 uppercase tracking-tight">
-                  COMPLETE DAY KETO PLAN
+                  COMPLETE {plan.subcategory.toUpperCase()} PLAN
                 </h3>
                 <span className="bg-emerald-800 text-white text-[10px] font-black px-2 py-0.5 rounded-md">
                   Best Value
@@ -784,20 +954,26 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
 
               {/* Tag Strip */}
               <div className="flex items-center justify-between text-xs font-bold text-slate-500 bg-slate-50 dark:bg-muted/40 p-2.5 rounded-xl border border-slate-100">
-                <span className="flex items-center gap-1">🍽 5 Meals</span>
-                <span className="flex items-center gap-1">📦 12 Products</span>
-                <span className="flex items-center gap-1">🛡 100% Keto</span>
+                <span className="flex items-center gap-1">🍽 {plan.meals.length} Meals</span>
+                <span className="flex items-center gap-1">
+                  📦 {plan.meals.reduce((acc, m) => acc + m.products.length, 0)} Products
+                </span>
+                <span className="flex items-center gap-1">🛡 100% Farm Fresh</span>
               </div>
 
-              {/* Price Calculation */}
+              {/* Price Calculation with Global Currency Context */}
               <div className="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
                 <div className="flex justify-between">
                   <span>Total Products Cost</span>
-                  <span className="font-black text-slate-900 dark:text-slate-100">£37.50</span>
+                  <span className="font-black text-slate-900 dark:text-slate-100">
+                    {format(plan.pricing.totalProductsCost, { sourceCurrency: "GBP" })}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Diet Plan Service Fee</span>
-                  <span className="font-black text-slate-900 dark:text-slate-100">£5.00</span>
+                  <span className="font-black text-slate-900 dark:text-slate-100">
+                    {format(plan.pricing.dietPlanServiceFee, { sourceCurrency: "GBP" })}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery Charges</span>
@@ -806,7 +982,9 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
 
                 <div className="border-t border-slate-200 dark:border-border/60 pt-2.5 flex items-baseline justify-between">
                   <span className="font-black text-sm text-slate-900 dark:text-slate-100">TOTAL AMOUNT</span>
-                  <span className="font-black text-2xl text-slate-900 dark:text-slate-100">£42.50</span>
+                  <span className="font-black text-2xl text-slate-900 dark:text-slate-100">
+                    {format(plan.pricing.totalAmount, { sourceCurrency: "GBP" })}
+                  </span>
                 </div>
               </div>
 
@@ -814,10 +992,10 @@ export function DietaryComingSoon({ products = [] }: { products?: Product[] }) {
               <Button
                 onClick={() => buyCompletePlanMutation.mutate()}
                 disabled={buyCompletePlanMutation.isPending}
-                className="w-full h-11 bg-emerald-800 hover:bg-emerald-900 text-white font-black text-xs sm:text-sm rounded-xl shadow-md gap-2 transition-all uppercase tracking-wide"
+                className="w-full h-11 bg-emerald-800 hover:bg-emerald-900 text-white font-black text-xs sm:text-sm rounded-xl shadow-md gap-2 transition-all uppercase tracking-wide cursor-pointer"
               >
                 <ShoppingCart className="h-4 w-4" />
-                <span>BUY COMPLETE DAY PLAN</span>
+                <span>{buyCompletePlanMutation.isPending ? "ADDING PLAN…" : "BUY COMPLETE DAY PLAN"}</span>
               </Button>
 
               {/* Trust badges */}

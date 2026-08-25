@@ -49,7 +49,11 @@ export function registerBackendModules(app: Express, deps: BackendModuleDeps): v
   });
   registerRegionalMarketplaceRoutes(app);
   registerCatalogRoutes(app);
-  registerDietaryRoutes(app, { getUserIdOrSession: deps.getUserIdOrSession });
+  registerDietaryRoutes(app, {
+    getUserIdOrSession: deps.getUserIdOrSession,
+    touchGuestSession: deps.touchGuestSession,
+    mergeGuestCartIfNeeded: deps.mergeGuestCartIfNeeded,
+  });
   registerCartRoutes(app, {
     getUserId: deps.getUserId,
     getUserIdOrSession: deps.getUserIdOrSession,
