@@ -7,15 +7,8 @@ const workspaceRoot = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   server: {
-    // The Express development server owns port 5000 and serves Vite in
-    // middleware mode. Tell the browser to use that same WebSocket endpoint
-    // instead of falling back to a separate (non-existent) port 5173 server.
-    hmr:{
-      protocol: "ws",
-      host: "localhost",
-      clientPort: 5000,
-      path: "vite-hmr",
-    },
+    host: "0.0.0.0",
+    allowedHosts: true,
     fs:{
       strict: true,
       deny: ["**/.*"],
