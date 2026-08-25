@@ -1,0 +1,1 @@
+- [Schema setup](schema-setup.md) — A fresh development database needs both current Drizzle tables and selected legacy core migrations; avoid blindly replaying overlapping SQL.
