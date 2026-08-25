@@ -30,7 +30,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { getShoppableCategories, categoryImages } from "@/lib/categories";
+import { handleCategoryImageError, resolveCategoryImage } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { getCategoryIconComponent } from "@/lib/category-icons";
 import type { Category } from "@shared/schema";
 import { motion } from "framer-motion";
@@ -46,23 +47,12 @@ interface CategorySidebarProps {
 
 const STORAGE_KEY = "agriconnect-category-order";
 
-function getCategoryImage(categoryId: string): string | undefined {
-  if (categoryImages[categoryId]) return categoryImages[categoryId];
-  const category = getShoppableCategories().find(cat => cat.id === categoryId);
-  if (category) {
-    for (const sub of category.subcategories) {
-      if (categoryImages[sub.id]) return categoryImages[sub.id];
-    }
-  }
-  return undefined;
-}
-
 function loadOrder(): string[] {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
   } catch {}
-  return getShoppableCategories().map(c => c.id);
+  return [];
 }
 
 function saveOrder(ids: string[]) {
@@ -81,49 +71,54 @@ function SortableCategory({ category, isSelected, isExpanded, isCollapsed, onTap
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
-  const image = getCategoryImage(category.id) || `/category-logos/${category.id}.svg`;
+  const image = resolveCategoryImage(category.id, category.imageUrl) || `/category-logos/${category.id}.svg`;
   const IconComponent = getCategoryIconComponent(category.icon);
 
   if (isCollapsed) {
     return (
       <div ref={setNodeRef} style={style}>
-        <motion.button
-          onClick={() => onTap(category)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.92 }}
-          className={`w-full flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl transition-all duration-150 group border-2 ${
-            isExpanded || isSelected
-              ? "bg-amber-400 text-amber-950 shadow-md ring-2 ring-amber-500 border-amber-500 font-black dark:bg-amber-400 dark:text-amber-950"
-              : "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300/80 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
-          }`}
-          style={{ touchAction: "manipulation" }}
-          data-testid={`button-category-collapsed-${category.id}`}
-        >
-          {image ? (
-            <img
-              src={image}
-              alt={category.name}
-              className={`w-[52px] h-[52px] rounded-xl object-cover transition-transform group-hover:scale-110 shadow-xs ${
-                isExpanded || isSelected ? "ring-2 ring-amber-600/60" : ""
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <motion.button
+              onClick={() => onTap(category)}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.94 }}
+              className={`w-full flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded-xl transition-all duration-150 group border ${
+                isExpanded || isSelected
+                  ? "bg-amber-400 text-amber-950 shadow-sm ring-1 ring-amber-500 border-amber-500 font-black dark:bg-amber-400 dark:text-amber-950"
+                  : "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300/60 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
               }`}
-              loading="lazy"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          ) : (
-            <div className={`w-[52px] h-[52px] flex items-center justify-center rounded-xl ${
-              isExpanded || isSelected ? "bg-amber-500/20 text-amber-950" : "bg-emerald-100 text-emerald-800"
-            }`}>
-              <IconComponent className="h-7 w-7" />
-            </div>
-          )}
-          <span className={`text-[10px] font-black leading-tight text-center uppercase tracking-tight w-full px-1 truncate ${
-            isExpanded || isSelected ? "text-amber-950" : "text-emerald-900 dark:text-emerald-200 group-hover:text-emerald-950"
-          }`}>
-            {category.name.split(" ")[0]}
-          </span>
-        </motion.button>
+              style={{ touchAction: "manipulation" }}
+              data-testid={`button-category-collapsed-${category.id}`}
+            >
+              {image ? (
+                <img
+                  src={image}
+                  alt={category.name}
+                  className={`w-8 h-8 rounded-lg object-cover transition-transform group-hover:scale-105 shadow-2xs ${
+                    isExpanded || isSelected ? "ring-1.5 ring-amber-600/60" : ""
+                  }`}
+                  loading="lazy"
+                  onError={(event) => handleCategoryImageError(event.currentTarget, category.id)}
+                />
+              ) : (
+                <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${
+                  isExpanded || isSelected ? "bg-amber-500/20 text-amber-950" : "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300"
+                }`}>
+                  <IconComponent className="h-5 w-5" />
+                </div>
+              )}
+              <span className={`text-[9.5px] font-black leading-tight text-center uppercase tracking-tight w-full px-0.5 truncate ${
+                isExpanded || isSelected ? "text-amber-950" : "text-emerald-900 dark:text-emerald-200 group-hover:text-emerald-950"
+              }`}>
+                {category.name.split(" ")[0]}
+              </span>
+            </motion.button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="text-xs font-bold uppercase tracking-wider">
+            {category.name}
+          </TooltipContent>
+        </Tooltip>
       </div>
     );
   }
@@ -132,34 +127,32 @@ function SortableCategory({ category, isSelected, isExpanded, isCollapsed, onTap
     <div ref={setNodeRef} style={style} className="relative group/drag">
       <button
         onClick={() => onTap(category)}
-        className={`w-full flex flex-col items-center justify-center p-2 rounded-xl cursor-pointer min-h-[68px] transition-all duration-200 group border-2 ${
+        className={`w-full flex flex-col items-center justify-center p-1.5 rounded-xl cursor-pointer min-h-[58px] transition-all duration-150 group border ${
           isExpanded || isSelected
-            ? "bg-amber-400 text-amber-950 ring-2 ring-amber-500 border-amber-500 shadow-md font-black dark:bg-amber-400 dark:text-amber-950"
-            : "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300/80 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
+            ? "bg-amber-400 text-amber-950 ring-1 ring-amber-500 border-amber-500 shadow-sm font-black dark:bg-amber-400 dark:text-amber-950"
+            : "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300/60 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
         }`}
         style={{ touchAction: "manipulation" }}
         data-testid={`button-category-${category.id}`}
       >
-        <div className="relative overflow-hidden rounded-lg mb-1 shadow-xs">
+        <div className="relative overflow-hidden rounded-lg mb-0.5 shadow-2xs">
           {image ? (
             <img 
               src={image} 
               alt={category.name} 
-              className="w-[52px] h-[52px] object-cover transition-transform duration-300 group-hover:scale-110 rounded-lg" 
+              className="w-8 h-8 object-cover transition-transform duration-200 group-hover:scale-105 rounded-lg" 
               loading="lazy" 
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
+              onError={(event) => handleCategoryImageError(event.currentTarget, category.id)}
             />
           ) : (
-            <div className={`w-[52px] h-[52px] flex items-center justify-center transition-colors rounded-lg ${
-              isExpanded || isSelected ? "bg-amber-500/20 text-amber-950" : "bg-emerald-100 text-emerald-800"
+            <div className={`w-8 h-8 flex items-center justify-center transition-colors rounded-lg ${
+              isExpanded || isSelected ? "bg-amber-500/20 text-amber-950" : "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300"
             }`}>
-              <IconComponent className="h-7 w-7" />
+              <IconComponent className="h-5 w-5" />
             </div>
           )}
         </div>
-        <span className={`text-[10px] font-black text-center leading-tight line-clamp-2 uppercase tracking-tight transition-colors ${
+        <span className={`text-[9.5px] font-black text-center leading-tight truncate w-full uppercase tracking-tight transition-colors px-0.5 ${
           isExpanded || isSelected ? "text-amber-950" : "text-emerald-900 dark:text-emerald-200"
         }`}>
           {category.name.split(" ").slice(0, 2).join(" ")}
@@ -186,6 +179,7 @@ export function CategorySidebar({
   isPanelOpen,
 }: CategorySidebarProps) {
   const { t } = useTranslation();
+  const { data: publishedCategories = [] } = useCatalogCategories("buyer");
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const { setOpen, open, state, toggleSidebar } = useSidebar();
@@ -195,15 +189,22 @@ export function CategorySidebar({
   const [scrollPosition, setScrollPosition] = useState<"top" | "middle" | "bottom">("top");
   const [categoryOrder, setCategoryOrder] = useState<string[]>(loadOrder);
 
+  useEffect(() => {
+    setCategoryOrder((current) => [
+      ...current.filter((id) => publishedCategories.some((category) => category.id === id)),
+      ...publishedCategories.map((category) => category.id).filter((id) => !current.includes(id)),
+    ]);
+  }, [publishedCategories]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const orderedCategories = useMemo(() => {
-    const map = new Map(getShoppableCategories().map(c => [c.id, c]));
+    const map = new Map(publishedCategories.map(c => [c.id, c]));
     return categoryOrder.map(id => map.get(id)).filter(Boolean) as Category[];
-  }, [categoryOrder]);
+  }, [categoryOrder, publishedCategories]);
 
   const filteredCategories = useMemo(() =>
     orderedCategories.filter(cat =>
@@ -274,9 +275,9 @@ export function CategorySidebar({
   };
 
   const totalSubcategories = useMemo(() =>
-    getShoppableCategories().reduce((acc, cat) => acc + cat.subcategories.length, 0), []
+    publishedCategories.reduce((acc, cat) => acc + cat.subcategories.length, 0), [publishedCategories]
   );
-  const totalCategories = useMemo(() => getShoppableCategories().length, []);
+  const totalCategories = useMemo(() => publishedCategories.length, [publishedCategories]);
 
   return (
     <Sidebar
@@ -328,7 +329,7 @@ export function CategorySidebar({
           className="h-[calc(100vh-7rem)]"
           onScrollCapture={handleScroll}
         >
-          <div className="p-1.5 gap-1.5 flex flex-col">
+          <div className="p-1.5 gap-1 flex flex-col">
             {!isCollapsed && (
               <Link href="/farmers-help" data-testid="link-farmers-help">
                 <div className="mb-1 p-1.5 bg-gradient-to-r from-primary/10 to-transparent rounded-lg border border-primary/20 hover:border-primary/40 transition-all group overflow-hidden relative">
@@ -364,7 +365,7 @@ export function CategorySidebar({
                 )}
 
                 {isCollapsed && (
-                  <div className="flex flex-col gap-1.5 px-1">
+                  <div className="flex flex-col gap-1 px-0.5">
                     {filteredCategories.map((category) => (
                       <SortableCategory
                         key={category.id}
@@ -398,9 +399,9 @@ export function CategorySidebar({
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border/40 p-1.5 bg-muted/10 space-y-1">
+      <SidebarFooter className="border-t border-border/40 p-1 bg-muted/10 space-y-1">
         {/* A.6 Quick-Launch Panels */}
-        <div className={`grid ${isCollapsed ? "grid-cols-1 gap-1" : "grid-cols-3 gap-1"}`}>
+        <div className={`grid ${isCollapsed ? "grid-cols-1 gap-0.5" : "grid-cols-3 gap-1"}`}>
           {[
             { icon: ShoppingCart, label: "nav.cart", href: "/cart", color: "text-orange-500" },
             { icon: TrendingUp, label: "nav.browse", href: "/land-leasing", color: "text-blue-500" },
@@ -409,8 +410,8 @@ export function CategorySidebar({
             <Tooltip key={label} delayDuration={0}>
               <TooltipTrigger asChild>
                 <Link href={href} data-testid={`link-quick-${label.toLowerCase()}`}>
-                  <button className={`w-full flex flex-col items-center justify-center gap-0.5 py-1 rounded-lg hover:bg-muted/60 transition-all group ${isCollapsed ? "py-1.5" : ""}`}>
-                    <Icon className={`${isCollapsed ? "h-4 w-4" : "h-3.5 w-3.5"} ${color} transition-transform group-hover:scale-110`} />
+                  <button className={`w-full flex flex-col items-center justify-center gap-0.5 py-1 rounded-lg hover:bg-muted/60 transition-all group ${isCollapsed ? "py-1" : ""}`}>
+                    <Icon className={`${isCollapsed ? "h-3.5 w-3.5" : "h-3.5 w-3.5"} ${color} transition-transform group-hover:scale-110`} />
                     {!isCollapsed && <span className="text-[7px] uppercase font-bold tracking-wide text-muted-foreground">{t(label)}</span>}
                   </button>
                 </Link>

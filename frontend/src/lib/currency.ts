@@ -1,12 +1,22 @@
 export const BASE_CURRENCY = "GBP";
 
+const digitsCache = new Map<string, number>();
+const formatterCache = new Map<string, Intl.NumberFormat>();
+
 export function currencyFractionDigits(currency: string, locale = "en-GB"): number {
+  const key = `${currency}_${locale}`;
+  const cached = digitsCache.get(key);
+  if (cached !== undefined) return cached;
+
   try {
-    return new Intl.NumberFormat(locale, {
+    const digits = new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
     }).resolvedOptions().maximumFractionDigits ?? 2;
+    digitsCache.set(key, digits);
+    return digits;
   } catch {
+    digitsCache.set(key, 2);
     return 2;
   }
 }
@@ -35,6 +45,28 @@ export function convertCurrencyAmount(
   return baseMajor * targetRate;
 }
 
+function getFormatter(currency: string, locale: string): Intl.NumberFormat {
+  const key = `${currency}_${locale || "en-GB"}`;
+  let formatter = formatterCache.get(key);
+  if (!formatter) {
+    try {
+      formatter = new Intl.NumberFormat(locale || "en-GB", {
+        style: "currency",
+        currency,
+        currencyDisplay: "narrowSymbol",
+      });
+    } catch {
+      formatter = new Intl.NumberFormat("en-GB", {
+        style: "currency",
+        currency: "GBP",
+        currencyDisplay: "narrowSymbol",
+      });
+    }
+    formatterCache.set(key, formatter);
+  }
+  return formatter;
+}
+
 export function formatCurrencyAmount(
   amount: number,
   currency: string,
@@ -42,10 +74,7 @@ export function formatCurrencyAmount(
   includeCode = false,
 ): string {
   if (!Number.isFinite(amount)) return "Price on request";
-  const formatted = new Intl.NumberFormat(locale || "en-GB", {
-    style: "currency",
-    currency,
-    currencyDisplay: "narrowSymbol",
-  }).format(amount);
+  const formatter = getFormatter(currency, locale);
+  const formatted = formatter.format(amount);
   return includeCode ? `${formatted}\u00A0·\u00A0${currency}` : formatted;
 }

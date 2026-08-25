@@ -16,13 +16,13 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useCart } from "@/hooks/use-cart";
 import { useTranslation } from "react-i18next";
 import type { Product, ProductFilters as Filters } from "@shared/schema";
-import { getShoppableCategories } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { buildProductDetailUrl } from "@/lib/product-navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-function findCategoryForSubcategory(subcategoryId: string | null) {
+function findCategoryForSubcategory(categories: readonly import("@shared/schema").Category[], subcategoryId: string | null) {
   if (!subcategoryId) return null;
-  return getShoppableCategories().find((category) =>
+  return categories.find((category) =>
     category.subcategories.some((subcategory) => subcategory.id === subcategoryId)
   )?.id ?? null;
 }
@@ -75,6 +75,7 @@ function DietaryFilterStrip({ active, onChange }: { active: string | null; onCha
 export default function Home() {
   const [, setLocation] = useLocation();
   const { t } = useTranslation();
+  const { data: publishedCategories = [] } = useCatalogCategories("buyer");
   const [filters, setFilters] = useState<Filters>({});
   const { items: cartItems, itemCount: cartCount, addItem, updateItem, removeItem } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -87,7 +88,7 @@ export default function Home() {
   const urlCategory =
     urlParams.get("category") ||
     urlParams.get("categoryId") ||
-    findCategoryForSubcategory(urlSubcategory);
+    findCategoryForSubcategory(publishedCategories, urlSubcategory);
   const urlSection = urlParams.get("section");
 
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(urlCategory || undefined);
@@ -100,7 +101,7 @@ export default function Home() {
   const requestedSubcategory = urlSubcategory || activeSubcategory || selectedSubcategory;
   const effectiveSubcategory = useMemo(() => {
     if (!selectedCategory || !requestedSubcategory) return undefined;
-    const category = getShoppableCategories().find(
+    const category = publishedCategories.find(
       (item) => item.id === selectedCategory,
     );
     return category?.subcategories.some(
@@ -108,7 +109,7 @@ export default function Home() {
     )
       ? requestedSubcategory
       : undefined;
-  }, [requestedSubcategory, selectedCategory]);
+  }, [requestedSubcategory, selectedCategory, publishedCategories]);
 
   useEffect(() => {
     const subcat = urlParams.get("subcategory") || urlParams.get("subcategoryId");
@@ -116,7 +117,7 @@ export default function Home() {
     const cat =
       urlParams.get("category") ||
       urlParams.get("categoryId") ||
-      findCategoryForSubcategory(subcat);
+      findCategoryForSubcategory(publishedCategories, subcat);
     const section = urlParams.get("section");
     setSearchQuery(searchFromUrl);
     if (cat) {
@@ -131,7 +132,7 @@ export default function Home() {
       setFilters({});
     }
     setActiveSection(section);
-  }, [urlParams]);
+  }, [urlParams, publishedCategories]);
 
   useEffect(() => {
     const onClose = () => {
@@ -310,7 +311,7 @@ export default function Home() {
                   className="h-full flex flex-col"
                 >
                   {selectedCategory === "dietary" ? (
-                    <DietaryComingSoon products={products} />
+                    <DietaryComingSoon products={products} subcategoryId={effectiveSubcategory} />
                   ) : (
                     <ResizableSplit
                       left={

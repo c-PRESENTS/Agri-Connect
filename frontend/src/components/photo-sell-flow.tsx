@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { AIDetectionResult } from "@shared/schema";
-import { getSellerTaxonomy } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface PhotoSellFlowProps {
@@ -65,7 +65,7 @@ export function PhotoSellFlow({ onComplete, onCancel, onManualListing, onViewLis
   const [listingError, setListingError] = useState<string | null>(null);
   const [isCreatingListing, setIsCreatingListing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const sellerTaxonomy = getSellerTaxonomy();
+  const { data: sellerTaxonomy = [] } = useCatalogCategories("seller");
   const selectedCategory = sellerTaxonomy.find((category) => category.id === editedDetection?.suggestedCategory);
 
   const handleCapture = () => {

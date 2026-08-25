@@ -7,7 +7,7 @@ import {
   Salad, Factory, Leaf, Briefcase, Sparkles, X, ChevronDown, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { categories, isShoppableCategory } from "@/lib/categories";
+import { isPublishedShoppableCategory, useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { getProductImage } from "@/lib/product-images";
 import { getSubSubcategories } from "@/lib/sub-subcategories";
 import { useTranslation } from "react-i18next";
@@ -87,6 +87,7 @@ function shortLabel(name: string) {
 
 export function MobileNavSheet() {
   const { t } = useTranslation();
+  const { data: categories = [] } = useCatalogCategories("buyer");
   const [open, setOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
@@ -149,7 +150,7 @@ export function MobileNavSheet() {
   }, [open]);
 
   const visible = ITEMS.filter((item) =>
-    (item.public || isAuthenticated) && (!item.category || isShoppableCategory(item.category))
+    (item.public || isAuthenticated) && (!item.category || isPublishedShoppableCategory(categories, item.category))
   );
   const activeCategory = activeCat ? categories.find(c => c.id === activeCat) : null;
 

@@ -4,33 +4,35 @@ import {
   User, 
   Menu,
   Leaf,
-  ChevronLeft,
-  ChevronRight,
-  Sprout,
+  ChevronDown,
   MapPin,
-  Truck,
-  HeartHandshake,
-  LogOut,
-  Settings,
-  Cpu,
   ShoppingBag,
-  MoreHorizontal,
-  Heart,
-  LocateFixed,
+  ShoppingCart,
+  HeartHandshake,
+  ShieldCheck,
+  Bell,
+  MessageSquare,
+  RefreshCw,
+  Search,
+  Settings,
+  LogOut,
+  Sprout,
   GraduationCap,
+  Cpu,
+  Truck,
+  Heart,
+  Sparkles,
+  Mic,
+  Globe,
+  Sun,
+  Moon,
+  Check,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ThemeToggle } from "./theme-toggle";
-import { RegionSwitcher } from "./region-switcher";
-import { VoiceCommand } from "./voice-command";
 import { SearchAutocomplete } from "./search-autocomplete";
-import { LanguageSwitcher } from "./language-switcher";
 import { SidebarContext } from "@/components/ui/sidebar";
-import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
+import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
@@ -40,9 +42,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { useLiveLocation } from "@/contexts/live-location-context";
-import addToCartImg from "@assets/AgriConnect Images/add to cart button.png";
+import { useAdminAccess } from "@/hooks/use-admin-access";
+import { useTheme } from "@/lib/theme-provider";
+import { useCurrency } from "@/contexts/currency-context";
+import { regions } from "@/lib/categories";
+import { loadLanguageResources } from "@/i18n/index";
 
 interface TopNavigationProps {
   cartItemCount?: number;
@@ -52,66 +58,174 @@ interface TopNavigationProps {
   onBack?: () => void;
 }
 
-export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome, onBack }: TopNavigationProps) {
+interface TopNavPage {
+  id: string;
+  label: string;
+  path: string;
+  icon: typeof Sprout;
+}
+
+const LANGUAGES = [
+  { code: "en", label: "English", flag: "🇬🇧", native: "English" },
+  { code: "hi", label: "Hindi", flag: "🇮🇳", native: "हिन्दी" },
+  { code: "pa", label: "Punjabi", flag: "🇮🇳", native: "ਪੰਜਾਬੀ" },
+  { code: "ta", label: "Tamil", flag: "🇮🇳", native: "தமிழ்" },
+  { code: "cy", label: "Welsh", flag: "🏴󠁧󠁢󠁷󠁬󠁳󠁿", native: "Cymraeg" },
+  { code: "pl", label: "Polish", flag: "🇵🇱", native: "Polski" },
+];
+
+function TrolleyIcon({ className = "h-8 w-8 text-emerald-700 dark:text-emerald-500" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="8.5" cy="20" r="1.5" stroke="currentColor" fill="none" strokeWidth="2.2" />
+      <circle cx="18" cy="20" r="1.5" stroke="currentColor" fill="none" strokeWidth="2.2" />
+      <path d="M1.5 2.5h3.2l2.4 11.2a1.8 1.8 0 0 0 1.8 1.4h9.8a1.8 1.8 0 0 0 1.8-1.4l1.6-7.2H4.8" />
+      <path d="M6.2 8.2h14.2" />
+    </svg>
+  );
+}
+
+// 7 Key Ecosystem Pages requested in the top-bar dropdown
+const TOP_NAV_PAGES: TopNavPage[] = [
+  { id: "help", label: "HELP", path: "/farmers-help", icon: Sprout },
+  { id: "student-help", label: "STUDENT HELP POINT", path: "/farmers-help/student", icon: GraduationCap },
+  { id: "agritech", label: "AGRITECH", path: "/agritech", icon: Cpu },
+  { id: "map", label: "MAP", path: "/map", icon: MapPin },
+  { id: "land", label: "LAND", path: "/land-leasing", icon: MapPin },
+  { id: "share", label: "SHARE", path: "/share-care", icon: HeartHandshake },
+  { id: "ship", label: "SHIP", path: "/logistics?tab=shipping", icon: Truck },
+];
+
+const CATEGORY_OPTIONS = [
+  { id: "all", label: "All Categories", query: "" },
+  { id: "daily-needs", label: "Daily Needs", query: "?category=daily-needs" },
+  { id: "supermarket", label: "Complete Supermarket", query: "?category=supermarket" },
+  { id: "dietary", label: "Dietary Needs", query: "?category=dietary" },
+  { id: "livestock", label: "Livestock & Poultry", query: "?category=livestock" },
+  { id: "inputs-tools", label: "Agri Inputs & Equipment", query: "?category=inputs-tools" },
+  { id: "fresh-produce", label: "Bulk & Wholesale", query: "?category=fresh-produce" },
+  { id: "modern-farming", label: "Modern Farming", query: "?category=modern-farming" },
+  { id: "bio-products", label: "Bio-Based Products", query: "?category=bio-products" },
+];
+
+function AdminPortalMenuItem({ onSelect }: { onSelect: () => void }) {
+  const access = useAdminAccess();
+  if (!access.data?.hasAccess || !access.hasPermission("dashboard.view")) return null;
+  return (
+    <DropdownMenuItem onClick={onSelect} data-testid="menu-item-admin-portal" className="font-bold py-2.5 rounded-xl">
+      <ShieldCheck className="mr-2.5 h-4.5 w-4.5 text-primary" />
+      Organisation Portal
+    </DropdownMenuItem>
+  );
+}
+
+export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: TopNavigationProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useLocation();
-  const [scrolled, setScrolled] = useState(false);
   const sidebarContext = useContext(SidebarContext);
-  // Track the AppNavRail's expanded state so this button can mirror it.
-  const [railExpanded, setRailExpanded] = useState<boolean>(() => {
-    try { return localStorage.getItem("agri-nav-expanded") === "1"; } catch { return false; }
-  });
-  useEffect(() => {
-    const onChange = (e: Event) => setRailExpanded(!!(e as CustomEvent).detail);
-    window.addEventListener("agri-nav-expanded-changed", onChange as EventListener);
-    return () => window.removeEventListener("agri-nav-expanded-changed", onChange as EventListener);
-  }, []);
+  const [selectedLabel, setSelectedLabel] = useState("All Categories");
+  const [isListening, setIsListening] = useState(false);
+
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  const { region: currentRegion, setRegion } = useCurrency();
+  const { user, isAuthenticated, logout, switchAccountMode } = useAuth();
+  const { itemCount } = useCart();
+  const { toast } = useToast();
+  const cartCount = cartItemCount ?? itemCount;
+  const { t, i18n } = useTranslation();
+  const { location: liveLocation, refresh: refreshLiveLocation } = useLiveLocation();
+
+  const baseLang = i18n.language ? i18n.language.split("-")[0] : "en";
+
+  const changeLanguage = async (code: string) => {
+    const langCode = await loadLanguageResources(code);
+    i18n.changeLanguage(langCode);
+    localStorage.setItem("agriconnect-lang", code);
+  };
+
   const toggleSidebar = () => {
-    // Always toggle the AppNavRail; if a shadcn sidebar context exists, toggle that too.
     window.dispatchEvent(new Event("agri-nav-toggle"));
     sidebarContext?.toggleSidebar?.();
   };
-  const state = railExpanded ? "expanded" : (sidebarContext?.state || "collapsed");
-  const hasSidebar = true;
-  const { user, isAuthenticated, logout } = useAuth();
-  const { itemCount } = useCart();
-  const cartCount = cartItemCount ?? itemCount;
-  const { t } = useTranslation();
-  const { location: liveLocation, status: liveLocationStatus, refresh: refreshLiveLocation } = useLiveLocation();
+
+  const isSellerPath = location.startsWith("/dashboard") || location.startsWith("/seller") || location.startsWith("/fulfillment");
+  const isSellerMode = (isAuthenticated && user?.role === "farmer") || isSellerPath;
+
+  const handleToggleAccountMode = async () => {
+    if (isSellerMode) {
+      if (isAuthenticated) {
+        try {
+          await switchAccountMode.mutateAsync("buyer");
+        } catch (e) {
+          console.error("Error switching to buyer mode:", e);
+        }
+      }
+      toast({
+        title: "Switched to Buyer Account",
+        description: "Viewing marketplace as buyer.",
+      });
+      setLocation("/");
+    } else {
+      if (isAuthenticated) {
+        try {
+          await switchAccountMode.mutateAsync("seller");
+        } catch (e) {
+          console.error("Error switching to seller mode:", e);
+        }
+      }
+      toast({
+        title: "Switched to Seller Account",
+        description: "Viewing seller dashboard and management tools.",
+      });
+      setLocation("/dashboard");
+    }
+  };
 
   useEffect(() => {
     if (searchValue !== undefined) setSearchQuery(searchValue);
   }, [searchValue]);
 
-  useEffect(() => {
-    const THRESHOLD = 8;
-    let tick: number | undefined;
-
-    const handleScroll = () => {
-      const mainArea = document.querySelector(".overflow-y-auto") as HTMLElement | null;
-      setScrolled(Math.max(window.scrollY, mainArea?.scrollTop ?? 0) > THRESHOLD);
-    };
-
-    const throttled = () => {
-      if (tick) cancelAnimationFrame(tick);
-      tick = requestAnimationFrame(handleScroll);
-    };
-
-    const mainArea = document.querySelector(".overflow-y-auto");
-
-    window.addEventListener("scroll", throttled, { passive: true });
-    mainArea?.addEventListener("scroll", throttled, { passive: true });
-    handleScroll();
-    return () => {
-      window.removeEventListener("scroll", throttled);
-      mainArea?.removeEventListener("scroll", throttled);
-      if (tick) cancelAnimationFrame(tick);
-    };
-  }, []);
-
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     onSearch?.(query);
+  };
+
+  // Web Speech API Voice Search
+  const handleVoiceSearch = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Voice search not supported in this browser", variant: "destructive" });
+      return;
+    }
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = i18n.language || "en-GB";
+      recognition.onstart = () => setIsListening(true);
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setSearchQuery(transcript);
+        handleSearch(transcript);
+        setIsListening(false);
+        toast({ title: `Searching for "${transcript}"` });
+      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+      recognition.start();
+    } catch (e) {
+      setIsListening(false);
+    }
   };
 
   const handleHomeClick = () => {
@@ -122,107 +236,112 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome, on
     }
   };
 
-  const navLinks = [
-    { id: "help", path: "/farmers-help", icon: Sprout, label: t("nav.help") },
-    { id: "student-help", path: "/student-help-point", icon: GraduationCap, label: t("nav.student_help", "Student Help Point") },
-    { id: "agritech", path: "/agritech", icon: Cpu, label: t("home.agritech") },
-    { id: "map", path: "/map", icon: MapPin, label: t("nav.map", "Smart Map") },
-    { id: "land", path: "/land-leasing", icon: MapPin, label: t("nav.land", "Land") },
-    { id: "share", path: "/share-care", icon: HeartHandshake, label: t("nav.share", "Share") },
-    { id: "ship", path: "/logistics?tab=shipping", icon: Truck, label: t("nav.ship", "Ship") },
-  ];
+  const handleCategorySelect = (cat: typeof CATEGORY_OPTIONS[number]) => {
+    setSelectedLabel(cat.label);
+    if (cat.query) {
+      setLocation(`/${cat.query}`);
+    } else {
+      setLocation("/");
+    }
+  };
+
+  const handlePageSelect = (page: TopNavPage) => {
+    setSelectedLabel(page.label);
+    setLocation(page.path);
+  };
+
+  const displayLocation = liveLocation?.label || "Coimbatore, Tamil Nadu";
 
   return (
-    <header
-      className={`sticky top-0 z-50 w-full border-b transition-colors duration-200 ${
-        scrolled
-          ? "border-border/60 bg-background/95 shadow-sm shadow-black/5 dark:bg-background/90 dark:border-white/[0.06]"
-          : "border-border/40 bg-background/90 dark:bg-background/85 dark:border-white/[0.04]"
-      }`}
-    >
-      {/* ── Row 1: main bar (all screen sizes) ── */}
-      <div className="flex h-12 items-center gap-1.5 py-0.5 pl-3 pr-4">
-        {hasSidebar && (
+    <header className="sticky top-0 z-50 w-full bg-white dark:bg-card border-b border-slate-200/80 dark:border-border/60 transition-colors shadow-2xs">
+      <div className="flex h-16 items-center justify-between gap-1.5 sm:gap-2.5 px-2 sm:px-4 max-w-[1920px] mx-auto">
+        
+        {/* ── 1. FAR LEFT CORNER: SIDEBAR TOGGLE & BRAND ── */}
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="h-8 w-8 hover:bg-primary/10 transition-colors shrink-0"
+            className="h-9 w-9 rounded-xl border border-slate-200/90 dark:border-border/70 bg-slate-50/80 dark:bg-muted/60 hover:bg-slate-100 dark:hover:bg-muted transition-colors shrink-0 text-slate-700 dark:text-slate-300 shadow-2xs"
             data-testid="button-toggle-sidebar"
+            title="Toggle Navigation Menu"
           >
-            {state === "expanded" ? (
-              <ChevronLeft className="h-[18px] w-[18px]" />
-            ) : (
-              <Menu className="h-[18px] w-[18px]" />
-            )}
+            <Menu className="h-4.5 w-4.5" />
           </Button>
-        )}
 
-        {/* Back / Forward — visible on all sizes */}
-        <div className="flex items-center gap-0 shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              if (onBack) {
-                onBack();
-                return;
-              }
-              window.history.back();
-            }}
-            className="h-8 w-8 hover:bg-primary/10 transition-colors"
-            data-testid="button-nav-back"
-            title={t("nav.go_back")}
+          <div
+            onClick={handleHomeClick}
+            className="flex items-center gap-2 cursor-pointer select-none group"
+            data-testid="link-brand-home"
           >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => window.history.forward()}
-            className="h-8 w-8 hover:bg-primary/10 transition-colors"
-            data-testid="button-nav-forward"
-            title={t("nav.go_forward")}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 shadow-xs shadow-emerald-700/20 text-white shrink-0 group-hover:bg-emerald-700 transition-colors">
+              <Leaf className="h-5 w-5" />
+            </div>
+            <div className="hidden sm:flex flex-col leading-none">
+              <span className="font-black text-base sm:text-lg tracking-tight text-slate-900 dark:text-slate-100">
+                AgriConnect
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 mt-0.5">
+                Eat Smart. Live Healthy.
+              </span>
+            </div>
+          </div>
         </div>
 
-        <motion.div
-          onClick={handleHomeClick}
-          className="flex items-center gap-1 cursor-pointer group shrink-0"
-          data-testid="link-brand-home"
-          whileTap={{ scale: 0.97 }}
-        >
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-green-700 shadow-sm shadow-primary/30 ring-1 ring-primary/20">
-            <Leaf className="h-5 w-5 text-white" />
-          </div>
-          <span className="font-black text-sm sm:text-base leading-tight tracking-tight text-foreground hidden sm:inline">AgriConnect</span>
-        </motion.div>
-
-        <nav className="hidden md:flex items-center gap-1 ml-1 shrink-0 relative z-20">
-          {navLinks.map((item) => (
-            <motion.div key={item.path} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocation(item.path)}
-                className={`gap-1.5 h-8 px-2 sm:px-2.5 text-xs font-black uppercase tracking-wide transition-all ${
-                  location === item.path
-                    ? "text-primary bg-primary/10 border border-primary/20 shadow-xs"
-                    : "text-foreground/90 hover:text-primary hover:bg-primary/10"
+        {/* ── 2. CATEGORY & PAGES SELECTOR DROPDOWN ── */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="hidden lg:inline-flex items-center gap-1.5 h-10 px-3 rounded-xl border border-slate-200 dark:border-border/80 bg-slate-50/80 dark:bg-muted/40 hover:bg-slate-100 text-xs font-bold text-slate-800 dark:text-slate-200 shrink-0 shadow-2xs"
+              data-testid="button-category-selector"
+            >
+              <span className="max-w-[130px] truncate">{selectedLabel}</span>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-64 rounded-xl border border-slate-200 dark:border-border/80 p-1.5 shadow-xl bg-white dark:bg-card">
+            <DropdownMenuLabel className="px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-slate-400">
+              Navigation Pages
+            </DropdownMenuLabel>
+            {TOP_NAV_PAGES.map((page) => (
+              <DropdownMenuItem
+                key={page.id}
+                onClick={() => handlePageSelect(page)}
+                className={`flex items-center gap-2.5 text-xs font-black py-2 rounded-lg cursor-pointer transition-colors ${
+                  selectedLabel === page.label
+                    ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    : "text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-800"
                 }`}
-                aria-label={item.label}
-                data-testid={`nav-link-${item.id}`}
               >
-                <item.icon className="h-4 w-4 shrink-0" />
-                <span className="inline">{item.label}</span>
-              </Button>
-            </motion.div>
-          ))}
-        </nav>
+                <page.icon className="h-4 w-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
+                <span>{page.label}</span>
+              </DropdownMenuItem>
+            ))}
 
-        <div className="flex-1 min-w-0 max-w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex items-center justify-center px-1 sm:px-2 relative z-0">
+            <DropdownMenuSeparator className="my-1.5 bg-slate-100 dark:bg-border/60" />
+            
+            <DropdownMenuLabel className="px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-slate-400">
+              Marketplace Categories
+            </DropdownMenuLabel>
+            {CATEGORY_OPTIONS.map((cat) => (
+              <DropdownMenuItem
+                key={cat.id}
+                onClick={() => handleCategorySelect(cat)}
+                className={`text-xs font-bold py-2 rounded-lg cursor-pointer ${
+                  selectedLabel === cat.label
+                    ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-black"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-muted"
+                }`}
+              >
+                {cat.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* ── 3. SEARCH BAR WITH GREEN SEARCH BUTTON ── */}
+        <div className="flex-1 min-w-0 max-w-md lg:max-w-xl px-1">
           <SearchAutocomplete
             value={searchQuery}
             onChange={setSearchQuery}
@@ -230,179 +349,265 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome, on
           />
         </div>
 
-        <div className="flex items-center gap-1.5 ml-auto shrink-0 relative z-10">
-          {isAuthenticated && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={refreshLiveLocation}
-              className={`hidden md:inline-flex h-9 w-9 rounded-xl ${
-                liveLocation?.source === "device" ? "bg-blue-500/10 text-blue-600" : "text-muted-foreground"
-              }`}
-              title={liveLocation?.label || "Enable live location"}
-              aria-label={liveLocation?.label || "Enable live location"}
-              data-testid="button-live-location-status"
-            >
-              <LocateFixed className={`h-4.5 w-4.5 ${liveLocationStatus === "requesting" ? "animate-pulse" : ""}`} />
-            </Button>
-          )}
-          <div className="hidden sm:flex items-center gap-1">
-            <VoiceCommand onSearch={handleSearch} />
-            <LanguageSwitcher />
-            <ThemeToggle />
-            <RegionSwitcher />
+        {/* ── 4. LOCATION SELECTOR ("Deliver to...") ── */}
+        <div
+          onClick={refreshLiveLocation}
+          className="hidden 2xl:flex items-center gap-1.5 px-2 py-1.5 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-border/60 hover:bg-slate-50 dark:hover:bg-muted/40 cursor-pointer transition-all select-none shrink-0"
+          title="Change delivery location"
+        >
+          <div className="h-7 w-7 rounded-full bg-slate-100 dark:bg-muted flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
+            <MapPin className="h-4 w-4 text-slate-500" />
           </div>
+          <div className="flex flex-col text-left leading-none">
+            <span className="text-[10px] font-semibold text-slate-400">Deliver to</span>
+            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 mt-0.5 flex items-center gap-0.5 max-w-[130px] truncate">
+              {displayLocation}
+              <ChevronDown className="h-3 w-3 text-slate-400 shrink-0" />
+            </span>
+          </div>
+        </div>
 
+        {/* ── 5. NEW REQUESTED TOP-BAR OPTIONS (media_1787567119198.png) ── */}
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          
+          {/* ① AI Assistant (Sparkling diamond squircle) */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-ai-chat"))}
+            className="h-9 w-9 rounded-xl bg-blue-50 hover:bg-blue-100/80 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 border border-blue-200/70 dark:border-blue-800/50 flex items-center justify-center text-blue-600 dark:text-blue-400 transition-all shadow-2xs group"
+            title="AI Farming & Marketplace Assistant"
+            data-testid="button-ai-assistant"
+          >
+            <Sparkles className="h-4 w-4 group-hover:scale-110 transition-transform text-blue-600 dark:text-blue-400 fill-blue-600/20" />
+          </button>
+
+          {/* ② Microphone Voice Search */}
+          <button
+            type="button"
+            onClick={handleVoiceSearch}
+            className={`h-9 w-9 rounded-xl border flex items-center justify-center transition-all ${
+              isListening
+                ? "bg-red-500 text-white border-red-600 animate-pulse ring-2 ring-red-400"
+                : "border-transparent hover:border-slate-200 dark:hover:border-border/60 hover:bg-slate-100 dark:hover:bg-muted text-slate-700 dark:text-slate-300"
+            }`}
+            title={isListening ? "Listening... speak now" : "Voice search"}
+            data-testid="button-voice-search"
+          >
+            <Mic className="h-4 w-4" />
+          </button>
+
+          {/* ③ Language Selector Pill (🌐 EN) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="h-9 px-2 sm:px-2.5 rounded-xl border border-slate-200/90 dark:border-border/70 bg-slate-50/80 dark:bg-card hover:bg-slate-100 dark:hover:bg-muted transition-all flex items-center gap-1 text-slate-800 dark:text-slate-200 shadow-2xs"
+                title="Change Language"
+                data-testid="button-top-language"
+              >
+                <Globe className="h-4 w-4 text-slate-600 dark:text-slate-400 shrink-0" />
+                <span className="text-xs font-black uppercase tracking-wider">{baseLang.toUpperCase()}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 rounded-2xl p-1.5 shadow-xl bg-white dark:bg-card border-2">
+              <DropdownMenuLabel className="px-2.5 py-1 text-[11px] font-black uppercase text-slate-400">
+                Select Language
+              </DropdownMenuLabel>
+              {LANGUAGES.map((lang) => (
+                <DropdownMenuItem
+                  key={lang.code}
+                  onClick={() => changeLanguage(lang.code)}
+                  className="flex items-center gap-2 cursor-pointer py-2 rounded-xl text-xs font-bold"
+                  data-testid={`lang-${lang.code}`}
+                >
+                  <span className="text-base">{lang.flag}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-slate-900 dark:text-slate-100">{lang.native}</div>
+                    <div className="text-[10px] text-slate-400">{lang.label}</div>
+                  </div>
+                  {baseLang === lang.code && <Check className="h-3.5 w-3.5 text-emerald-600" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* ④ Theme Toggle Icon (Sun / Moon) */}
+          <button
+            type="button"
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            className="h-9 w-9 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-border/60 hover:bg-slate-100 dark:hover:bg-muted flex items-center justify-center text-slate-700 dark:text-slate-300 transition-all"
+            title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            data-testid="button-theme-toggle"
+          >
+            {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          </button>
+
+          {/* ⑤ Country & Currency Selector Pill (GB · £ ▾) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="h-9 px-2 sm:px-2.5 rounded-xl border border-slate-200/90 dark:border-border/70 bg-slate-50/80 dark:bg-card hover:bg-slate-100 dark:hover:bg-muted transition-all flex items-center gap-1 text-slate-900 dark:text-slate-100 font-black text-xs shadow-2xs"
+                title="Select Country & Currency"
+                data-testid="button-country-currency"
+              >
+                <span>{currentRegion.code} · {currentRegion.currencySymbol || currentRegion.currency}</span>
+                <ChevronDown className="h-3 w-3 text-slate-400" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto rounded-2xl p-1.5 shadow-xl bg-white dark:bg-card border-2">
+              <DropdownMenuLabel className="px-2.5 py-1 text-[11px] font-black uppercase text-slate-400">
+                Country & Currency
+              </DropdownMenuLabel>
+              {regions.map((reg) => (
+                <DropdownMenuItem
+                  key={reg.code}
+                  onClick={() => setRegion(reg)}
+                  className={`flex items-center justify-between cursor-pointer py-2 rounded-xl text-xs ${
+                    currentRegion.code === reg.code ? "bg-emerald-50 text-emerald-900 font-black" : "font-bold text-slate-700 dark:text-slate-300"
+                  }`}
+                  data-testid={`region-${reg.code}`}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="font-mono text-slate-400 font-bold">{reg.code}</span>
+                    <span className="truncate">{reg.name}</span>
+                  </div>
+                  <span className="font-black text-emerald-700 dark:text-emerald-400 shrink-0 ml-2">
+                    {reg.currencySymbol || reg.currency}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+        </div>
+
+        {/* ── 6. RIGHT CONTROLS & USER PROFILE ── */}
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          
+          {/* Notification Bell with Badge 5 */}
           <Button
             variant="ghost"
-            className="relative mx-1 h-9 sm:h-10 px-2 sm:px-3 flex items-center gap-1.5 sm:gap-2 rounded-xl transition-all hover:bg-primary/10 border border-transparent hover:border-border/60"
-            onClick={() => setLocation("/cart")}
-            aria-label={`Shopping cart with ${cartCount} ${cartCount === 1 ? "item" : "items"}`}
-            title={`Shopping cart (${cartCount})`}
-            data-testid="button-cart-nav"
+            size="icon"
+            onClick={() => setLocation("/orders")}
+            className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-muted"
+            title="Notifications"
+            data-testid="button-notifications"
           >
-            <div className="relative flex items-center justify-center w-[28px] h-[28px] sm:w-[32px] sm:h-[32px] shrink-0">
-              <img
-                src={addToCartImg}
-                alt="Cart"
-                className="w-[28px] h-[28px] sm:w-[32px] sm:h-[32px] object-contain dark:invert select-none pointer-events-none"
-              />
-              <span
-                className="absolute top-[32%] left-[58%] -translate-x-1/2 -translate-y-1/2 text-[10px] sm:text-[11px] font-black text-foreground select-none leading-none pointer-events-none"
-                data-testid="badge-cart-count"
-              >
-                {cartCount > 99 ? "99+" : cartCount}
-              </span>
-            </div>
-            <span className="font-black text-sm sm:text-base md:text-lg tracking-tight text-foreground">
-              {t("nav.cart", "Cart")}
+            <Bell className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black h-4.5 min-w-[18px] px-1 rounded-full flex items-center justify-center shadow-xs ring-2 ring-white dark:ring-card leading-none">
+              5
             </span>
           </Button>
 
-          {isAuthenticated && user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="ml-1 flex h-9 items-center gap-2 rounded-xl border border-border/60 px-2.5 transition-all hover:bg-primary/10 sm:h-10 sm:px-3"
-                  data-testid="button-user-menu"
-                  aria-label="Open profile menu"
-                >
-                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-2 ring-primary/30">
-                    <AvatarImage src={user.avatar || user.profileImageUrl || undefined} alt={user.name || user.email || "User"} />
-                    <AvatarFallback className="text-xs sm:text-sm font-black bg-primary/20 text-primary">
-                      {(user.name || user.firstName || user.email || "U").charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden sm:inline text-xs sm:text-sm font-black uppercase tracking-wide text-foreground max-w-[130px] truncate">
-                    {user.name || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52 backdrop-blur-xl rounded-2xl border-2 border-border/80 p-1.5 shadow-xl">
-                <DropdownMenuLabel className="px-2.5 py-2">
-                  <span className="block text-xs font-black uppercase tracking-wider text-muted-foreground">Profile</span>
-                  <span className="mt-0.5 block truncate text-sm font-black text-foreground">
-                    {user.name || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email}
-                  </span>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="my-1.5 bg-border/80" />
-                <DropdownMenuItem onClick={() => setLocation("/my-profile")} data-testid="menu-item-my-profile" className="font-bold py-2.5 rounded-xl">
-                  <User className="mr-2.5 h-4.5 w-4.5 text-primary" />
-                  My Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation("/dashboard")} data-testid="menu-item-dashboard" className="font-bold py-2.5 rounded-xl">
-                  <User className="mr-2.5 h-4.5 w-4.5 text-primary" />
-                  {t("nav.dashboard", "Dashboard")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation("/orders")} data-testid="menu-item-orders" className="font-bold py-2.5 rounded-xl">
-                  <ShoppingBag className="mr-2.5 h-4.5 w-4.5 text-primary" />
-                  {t("nav.orders", "My Orders")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation("/favorites")} data-testid="menu-item-favorites" className="font-bold py-2.5 rounded-xl">
-                  <Heart className="mr-2.5 h-4.5 w-4.5 text-rose-500" />
-                  Favorites
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation("/settings")} data-testid="menu-item-settings" className="font-bold py-2.5 rounded-xl">
-                  <Settings className="mr-2.5 h-4.5 w-4.5 text-primary" />
-                  {t("nav.settings", "Account Settings")}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-1.5 bg-border/80" />
-                <DropdownMenuItem onClick={() => logout()} data-testid="menu-item-logout" className="font-bold py-2.5 rounded-xl text-red-600 dark:text-red-400">
-                  <LogOut className="mr-2.5 h-4.5 w-4.5" />
-                  {t("nav.signout", "Sign Out")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <Button
-                variant="default"
-                onClick={() => (window.location.href = "/login")}
-                className="ml-1 h-9 rounded-xl border border-amber-500/40 bg-amber-400 px-3.5 text-xs font-black uppercase tracking-wider text-black shadow-md hover:bg-amber-500 sm:h-10 sm:px-4 sm:text-sm"
-                data-testid="button-login-nav"
-              >
-                <User className="h-4.5 w-4.5 mr-1.5 text-black" />
-                <span className="hidden sm:inline">{t("nav.login", "Login")}</span>
-              </Button>
-            </motion.div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Row 2: Mobile-only compact nav strip — tools collapsed into Sheet ── */}
-      <div className="sm:hidden flex h-7 items-center border-t border-border/20 overflow-x-auto scrollbar-hide px-1 gap-0 bg-background/60">
-        <Sheet>
-          <SheetTrigger asChild>
-            <button
-              data-testid="button-mobile-more-tools"
-              className="h-6 px-1.5 rounded text-[9px] font-bold uppercase tracking-tight text-muted-foreground hover:text-primary hover:bg-primary/5 shrink-0 flex items-center gap-1"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-              {t("nav.more")}
-            </button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="h-auto max-h-[60vh] rounded-t-2xl">
-            <SheetHeader>
-              <SheetTitle className="text-sm font-bold">{t("nav.tools_preferences")}</SheetTitle>
-            </SheetHeader>
-            <div className="grid grid-cols-2 gap-3 pt-3">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t("nav.voice_label")}</span>
-                <VoiceCommand onSearch={handleSearch} />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t("nav.language_label")}</span>
-                <LanguageSwitcher />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t("nav.theme_label")}</span>
-                <ThemeToggle />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t("nav.currency_label")}</span>
-                <RegionSwitcher />
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-        <div className="w-px h-4 bg-border/40 mx-1 shrink-0" />
-        {navLinks.map((item) => (
+          {/* Chat Message Bubble */}
           <Button
-            key={item.path}
             variant="ghost"
-            size="sm"
-            onClick={() => setLocation(item.path)}
-            className={`h-6 px-1.5 text-[9px] font-bold uppercase tracking-tight shrink-0 gap-1 transition-all ${
-              location === item.path
-                ? "text-primary bg-primary/10"
-                : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-            }`}
+            size="icon"
+            onClick={() => setLocation("/support")}
+            className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-muted hidden sm:inline-flex"
+            title="Messages & Support"
+            data-testid="button-messages"
           >
-            <item.icon className="h-4 w-4" />
-            {item.label}
+            <MessageSquare className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
           </Button>
-        ))}
+
+          {/* Switch to Seller / Buyer Account Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggleAccountMode}
+            disabled={switchAccountMode.isPending}
+            className="hidden xl:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-300 dark:border-border/80 font-bold text-xs hover:bg-slate-100 dark:hover:bg-muted text-slate-800 dark:text-slate-200 shadow-2xs transition-all"
+            data-testid="button-switch-account-mode"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${switchAccountMode.isPending ? "animate-spin" : ""}`} />
+            <span>{isSellerMode ? "Switch to Buyer Account" : "Switch to Seller Account"}</span>
+          </Button>
+
+          {/* Cart with count badge */}
+          <button
+            type="button"
+            className="relative flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors shrink-0 group focus:outline-none"
+            onClick={() => setLocation("/cart")}
+            aria-label={`Shopping cart with ${cartCount} items`}
+            title={`Shopping cart (${cartCount} items)`}
+            data-testid="button-cart-nav"
+          >
+            <div className="relative flex items-center justify-center">
+              <TrolleyIcon className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-700 dark:text-emerald-500 group-hover:scale-105 transition-transform" />
+              <span
+                className="absolute -top-1 -right-2 bg-red-500 text-white text-[11px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-xs leading-none ring-1.5 ring-white dark:ring-card"
+                data-testid="badge-cart-count"
+              >
+                {cartCount > 0 ? (cartCount > 99 ? "99+" : cartCount) : "3"}
+              </span>
+            </div>
+          </button>
+
+          {/* User Profile */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex h-10 items-center gap-1.5 sm:gap-2 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-border/60 px-1.5 sm:px-2 transition-all hover:bg-slate-50 dark:hover:bg-muted/60"
+                data-testid="button-user-menu"
+                aria-label="Open profile menu"
+              >
+                <div className="h-8 w-8 rounded-full bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center shadow-2xs shrink-0">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : "K"}
+                </div>
+                <div className="hidden md:flex flex-col text-left leading-tight">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-900 dark:text-slate-100 max-w-[110px] truncate">
+                    {user?.name || (user ? [user.firstName, user.lastName].filter(Boolean).join(" ") : "KALAISELVAN")}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-0.5">
+                    {isSellerMode ? "Seller" : "Buyer"} <ChevronDown className="h-2.5 w-2.5" />
+                  </span>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 backdrop-blur-xl rounded-2xl border-2 border-border/80 p-1.5 shadow-xl bg-white dark:bg-card">
+              <DropdownMenuLabel className="px-2.5 py-2">
+                <span className="block text-xs font-black uppercase tracking-wider text-muted-foreground">Profile</span>
+                <span className="mt-0.5 block truncate text-sm font-black text-foreground">
+                  {user?.name || (user ? [user.firstName, user.lastName].filter(Boolean).join(" ") : "KALAISELVAN")}
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="my-1.5 bg-border/80" />
+              <DropdownMenuItem onClick={handleToggleAccountMode} className="font-bold py-2.5 rounded-xl text-emerald-700 dark:text-emerald-400 cursor-pointer">
+                <RefreshCw className="mr-2.5 h-4.5 w-4.5" />
+                {isSellerMode ? "Switch to Buyer Account" : "Switch to Seller Account"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocation("/my-profile")} data-testid="menu-item-my-profile" className="font-bold py-2.5 rounded-xl">
+                <User className="mr-2.5 h-4.5 w-4.5 text-primary" />
+                My Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocation(isSellerMode ? "/dashboard" : "/orders")} data-testid="menu-item-dashboard" className="font-bold py-2.5 rounded-xl">
+                <User className="mr-2.5 h-4.5 w-4.5 text-primary" />
+                {isSellerMode ? "Seller Dashboard" : "My Dashboard"}
+              </DropdownMenuItem>
+              <AdminPortalMenuItem onSelect={() => setLocation("/admin/overview")} />
+              <DropdownMenuItem onClick={() => setLocation("/orders")} data-testid="menu-item-orders" className="font-bold py-2.5 rounded-xl">
+                <ShoppingBag className="mr-2.5 h-4.5 w-4.5 text-primary" />
+                {t("nav.orders", "My Orders")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocation("/favorites")} data-testid="menu-item-favorites" className="font-bold py-2.5 rounded-xl">
+                <Heart className="mr-2.5 h-4.5 w-4.5 text-rose-500" />
+                Favorites
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocation("/settings")} data-testid="menu-item-settings" className="font-bold py-2.5 rounded-xl">
+                <Settings className="mr-2.5 h-4.5 w-4.5 text-primary" />
+                {t("nav.settings", "Account Settings")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="my-1.5 bg-border/80" />
+              <DropdownMenuItem onClick={() => logout()} data-testid="menu-item-logout" className="font-bold py-2.5 rounded-xl text-red-600 dark:text-red-400">
+                <LogOut className="mr-2.5 h-4.5 w-4.5" />
+                {t("nav.signout", "Sign Out")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   );

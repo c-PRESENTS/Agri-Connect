@@ -1,4 +1,5 @@
 import { pool } from "../config/db";
+import { productPublicVisibilitySql } from "../catalog/product-visibility";
 
 export function normalizeProductKey(value: string): string {
   return value.trim().toLocaleLowerCase("en").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -46,10 +47,7 @@ export class RegionalMarketplaceRepository {
        WHERE p.id=$1 AND r.active=true AND sra.status='active' AND sra.can_publish=true
          AND (sra.effective_at IS NULL OR sra.effective_at<=now())
          AND (sra.expires_at IS NULL OR sra.expires_at>now())
-         AND ((u.auth_method='catalog_seed' AND u.is_verified=true) OR EXISTS (
-           SELECT 1 FROM seller_verification_cases svc WHERE svc.seller_id=p.farmer_id
-             AND svc.status='verified' AND (svc.expires_at IS NULL OR svc.expires_at>now())
-         ))`,
+         AND ${productPublicVisibilitySql("p", "u")}`,
       [productId],
     );
     return Boolean(result.rows[0]);
@@ -84,10 +82,7 @@ export class RegionalMarketplaceRepository {
         WHERE p.id=ANY($1::varchar[]) AND sra.status='active' AND sra.can_publish=true
           AND (sra.effective_at IS NULL OR sra.effective_at<=now())
           AND (sra.expires_at IS NULL OR sra.expires_at>now())
-          AND ((u.auth_method='catalog_seed' AND u.is_verified=true) OR EXISTS (
-            SELECT 1 FROM seller_verification_cases svc WHERE svc.seller_id=p.farmer_id
-              AND svc.status='verified' AND (svc.expires_at IS NULL OR svc.expires_at>now())
-          ))`,
+          AND ${productPublicVisibilitySql("p", "u")}`,
       [productIds],
     );
     return new Map(
@@ -381,8 +376,9 @@ export class RegionalMarketplaceRepository {
         WHERE o.status IN ('open','claimed','listing_submitted')
           AND (SELECT count(*) FROM commerce_products p
                JOIN seller_region_assignments sra ON sra.seller_id=p.farmer_id AND sra.region_id=o.region_id
+               JOIN users u ON u.id=p.farmer_id
                WHERE p.region_id=o.region_id AND sra.status='active' AND sra.can_publish=true
-                 AND COALESCE(p.product_data->>'publicationStatus','published')='published'
+                 AND ${productPublicVisibilitySql("p", "u")}
                  AND p.stock>0 AND ${productKeySql("p.name")}=o.product_key
                  AND (o.claimed_by IS NULL OR p.farmer_id=o.claimed_by)) >=
               (SELECT minimum_active_listings FROM regional_catalog_targets WHERE id=o.target_id)
@@ -396,8 +392,9 @@ export class RegionalMarketplaceRepository {
         WHERE t.active=true
           AND (SELECT count(*) FROM commerce_products p
                JOIN seller_region_assignments sra ON sra.seller_id=p.farmer_id AND sra.region_id=t.region_id
+               JOIN users u ON u.id=p.farmer_id
                WHERE p.region_id=t.region_id AND sra.status='active' AND sra.can_publish=true
-                 AND COALESCE(p.product_data->>'publicationStatus','published')='published'
+                 AND ${productPublicVisibilitySql("p", "u")}
                  AND p.stock>0 AND ${productKeySql("p.name")}=t.product_key) < t.minimum_active_listings
           AND NOT EXISTS (SELECT 1 FROM regional_product_opportunities o WHERE o.target_id=t.id AND o.status IN ('open','claimed','listing_submitted'))
        ON CONFLICT DO NOTHING

@@ -17,6 +17,7 @@ import {
 } from "@shared/schema";
 import { readStudentTestConfirmation, sendStudentLoginConfirmation } from "./email";
 import { audit } from "../../audit";
+import { recordAccountLoginEvent } from "../../auth/login-events";
 
 declare module "express-session" {
   interface SessionData {
@@ -240,6 +241,10 @@ export function registerStudentRoutes(app: Express, deps: StudentRouteDeps): voi
         });
       }
       if (!user) return res.status(500).json({ error: "Unable to prepare student account" });
+      if (user.accountStatus !== "active") {
+        await recordAccountLoginEvent({ req, userId: user.id, email, outcome: "denied", method: "student_email", failureCode: "ACCOUNT_NOT_ACTIVE" });
+        return res.status(403).json({ error: "This account is not active", code: "ACCOUNT_NOT_ACTIVE" });
+      }
 
       const rawToken = randomBytes(32).toString("base64url");
       const ttlMinutes = Math.min(30, Math.max(5, Number(process.env.STUDENT_LOGIN_CONFIRMATION_TTL_MINUTES) || 15));
@@ -263,6 +268,7 @@ export function registerStudentRoutes(app: Express, deps: StudentRouteDeps): voi
       await new Promise<void>((resolve, reject) => req.session.regenerate((error) => error ? reject(error) : resolve()));
       req.session.userId = user.id;
       req.session.guestCartKey = guestCartKey;
+      await recordAccountLoginEvent({ req, userId: user.id, email, outcome: "success", method: "student_email" });
       audit({ action: "student.login_requested", actorId: user.id, targetType: "student_access", targetId: registry.id });
       res.status(202).json({ requiresConfirmation: true, email: maskEmail(email), expiresInMinutes: ttlMinutes });
     } catch (error) {

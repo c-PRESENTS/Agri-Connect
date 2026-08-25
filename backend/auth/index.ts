@@ -9,6 +9,9 @@ import { updateProfileSchema, type User } from "@shared/models/auth";
 import { authStorage } from "./storage";
 import { audit } from "../audit";
 import { verifyGoogleToken } from "./google";
+import { recordAccountLoginEvent } from "./login-events";
+import { establishSessionOrMfaChallenge, stampAuthenticatedSession } from "./session-security";
+import { registerAccountSecurityRoutes } from "./security-routes";
 import {
   geocodeLocation,
   GeocodingUnavailableError,
@@ -110,9 +113,12 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   }
 
   const user = await authStorage.getUser(req.session.userId);
-  if (!user) {
+  if (!user || user.accountStatus !== "active") {
     req.session.destroy(() => undefined);
-    return res.status(401).json({ message: "Unauthorized" });
+    return res.status(user ? 403 : 401).json({
+      message: user ? "This account is not active" : "Unauthorized",
+      ...(user ? { code: "ACCOUNT_NOT_ACTIVE" } : {}),
+    });
   }
 
   (req as any).user = serializeUser(user);
@@ -140,6 +146,7 @@ function handleAuthError(error: unknown, res: Response): boolean {
 }
 
 export function registerAuthRoutes(app: Express): void {
+  registerAccountSecurityRoutes(app, isAuthenticated);
   app.post("/api/auth/register", registerLimiter, async (req, res) => {
     try {
       const credentials = credentialsSchema.parse(req.body);
@@ -157,7 +164,7 @@ export function registerAuthRoutes(app: Express): void {
         lastName: credentials.name?.split(" ").slice(1).join(" ") || null,
       });
       await regenerateSessionPreservingGuestCart(req);
-      req.session.userId = user.id;
+      stampAuthenticatedSession(req, user.id);
       res.status(201).json(serializeUser(user));
     } catch (error) {
       if (handleAuthError(error, res)) return;
@@ -171,16 +178,26 @@ export function registerAuthRoutes(app: Express): void {
       const credentials = loginSchema.parse(req.body);
       const user = await authStorage.getUserByEmail(credentials.email);
       if (!user?.passwordHash) {
+        await recordAccountLoginEvent({ req, email: credentials.email, outcome: "failed", method: "password", failureCode: "INVALID_CREDENTIALS" });
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
       const valid = await bcrypt.compare(credentials.password, user.passwordHash);
       if (!valid) {
+        await recordAccountLoginEvent({ req, userId: user.id, email: credentials.email, outcome: "failed", method: "password", failureCode: "INVALID_CREDENTIALS" });
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
+      if (user.accountStatus !== "active") {
+        await recordAccountLoginEvent({ req, userId: user.id, email: credentials.email, outcome: "denied", method: "password", failureCode: "ACCOUNT_NOT_ACTIVE" });
+        return res.status(403).json({ message: "This account is not active", code: "ACCOUNT_NOT_ACTIVE" });
+      }
+
       await regenerateSessionPreservingGuestCart(req);
-      req.session.userId = user.id;
+      if (await establishSessionOrMfaChallenge(req, user.id)) {
+        return res.json({ requiresMfa: true, challengeExpiresInSeconds: 300 });
+      }
+      await recordAccountLoginEvent({ req, userId: user.id, email: credentials.email, outcome: "success", method: "password" });
       res.json(serializeUser(user));
     } catch (error) {
       if (handleAuthError(error, res)) return;
@@ -224,9 +241,17 @@ export function registerAuthRoutes(app: Express): void {
         });
       }
 
+      if (user.accountStatus !== "active") {
+        await recordAccountLoginEvent({ req, userId: user.id, email: user.email, outcome: "denied", method: "google", failureCode: "ACCOUNT_NOT_ACTIVE" });
+        return res.status(403).json({ message: "This account is not active", code: "ACCOUNT_NOT_ACTIVE" });
+      }
+
       // Regenerate session to prevent session fixation.
       await regenerateSessionPreservingGuestCart(req);
-      req.session.userId = user.id;
+      if (await establishSessionOrMfaChallenge(req, user.id)) {
+        return res.json({ requiresMfa: true, challengeExpiresInSeconds: 300, isNewUser: false });
+      }
+      await recordAccountLoginEvent({ req, userId: user.id, email: user.email, outcome: "success", method: "google" });
       res.json({ user: serializeUser(user), isNewUser: !user.profileComplete });
     } catch (error) {
       console.error("Error with Google auth:", error);
@@ -252,7 +277,7 @@ export function registerAuthRoutes(app: Express): void {
       const userId = getSessionUserId(req);
       if (!userId) return res.json(null);
       const user = await authStorage.getUser(userId);
-      if (!user) {
+      if (!user || user.accountStatus !== "active") {
         req.session.destroy(() => undefined);
         return res.json(null);
       }
@@ -308,6 +333,12 @@ export function registerAuthRoutes(app: Express): void {
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
       const updates = updateProfileSchema.parse(req.body);
       const current = await authStorage.getUser(userId);
+      if (updates.role === "admin") {
+        return res.status(403).json({
+          message: "Administrator access cannot be self-assigned",
+          code: "ADMIN_SELF_ASSIGNMENT_FORBIDDEN",
+        });
+      }
       if (updates.role) {
         // Only lock role once the profile has been completed — new users must
         // be free to choose farmer / buyer during onboarding.

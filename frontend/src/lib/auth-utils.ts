@@ -8,7 +8,8 @@ export function getSafeReturnPath(value: string | null, fallback = "/"): string 
 }
 
 export function getLoginPath(returnPath: string): string {
-  return `/login?returnTo=${encodeURIComponent(getSafeReturnPath(returnPath, "/"))}`;
+  const safe = getSafeReturnPath(returnPath, "/");
+  return `${safe.startsWith("/admin") ? "/admin/sign-in" : "/login"}?returnTo=${encodeURIComponent(safe)}`;
 }
 
 // Redirect to login with a toast notification

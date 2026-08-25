@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { X, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { categories } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { getSubSubcategories, SubSubItem } from "@/lib/sub-subcategories";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -15,10 +15,11 @@ interface DeepSubPanelProps {
 
 export function DeepSubPanel({ subId, onClose, onItemSelect }: DeepSubPanelProps) {
   const { t } = useTranslation();
+  const { data: categories = [] } = useCatalogCategories("buyer");
   const content = useMemo(() => {
     if (!subId) return [];
     return getSubSubcategories(subId);
-  }, [subId]);
+  }, [subId, categories, t]);
 
   const subName = useMemo(() => {
     for (const cat of categories) {

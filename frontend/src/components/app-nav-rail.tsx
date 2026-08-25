@@ -1,283 +1,124 @@
 import { useState, useEffect } from "react";
-import type { ReactNode } from "react";
-import { useLocation, useSearch } from "wouter";
-import { motion } from "framer-motion";
+import { Link, useLocation, useSearch } from "wouter";
 import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  type DragEndEvent,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import {
-  Home, Map, Sprout, Cpu, Landmark, Truck, HeartHandshake,
-  FileText, ShoppingCart, LayoutDashboard, Camera, Settings,
-  Pencil, X, Check, RotateCcw, ChevronsRight, ChevronsLeft, GripVertical,
-  ShoppingBasket, Wrench, Package, Award, Wheat, Store, Beef,
-  Salad, Factory, Leaf, Briefcase, Sparkles, Grid3X3, GraduationCap,
-  Handshake, MapPinned,
+  Home,
+  Store,
+  ShoppingCart,
+  Beef,
+  Package,
+  Boxes,
+  Warehouse,
+  FlaskConical,
+  ShieldCheck,
+  Heart,
+  MapPin,
+  MapPinned,
+  Cpu,
+  Truck,
+  Building2,
+  GraduationCap,
+  UserCheck,
+  LayoutDashboard,
+  Network,
+  Settings,
+  Menu,
+  ChevronLeft,
+  Leaf,
+  Salad,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { categories as defaultCategories, categoryImages, isShoppableCategory } from "@/lib/categories";
-import { AppLauncher } from "./app-launcher";
-import { useTranslation } from "react-i18next";
 
-const SERVICE_LOGOS: Record<string, string> = {
-  home: "/category-logos/home.svg",
-  help: "/category-logos/farmers-help.svg",
-  "student-help": "/category-logos/student-help.svg",
-  agritech: "/category-logos/agritech.svg",
-  map: "/category-logos/smart-map.svg",
-  land: "/category-logos/land-leasing.svg",
-  share: "/category-logos/share-care.svg",
-  logistics: "/category-logos/logistics.svg",
-  schemes: "/category-logos/government.svg",
-  sell: "/category-logos/photo-sell.svg",
-  cart: "/category-logos/cart.svg",
-  dash: "/category-logos/dashboard.svg",
-  settings: "/category-logos/settings.svg",
-};
-
-function getCategoryImage(categoryId: string): string | undefined {
-  if (categoryImages[categoryId]) return categoryImages[categoryId];
-  const cat = defaultCategories.find(c => c.id === categoryId);
-  if (cat) {
-    for (const sub of cat.subcategories) {
-      if (categoryImages[sub.id]) return categoryImages[sub.id];
-    }
-  }
-  return undefined;
+interface NavItem {
+  id: string;
+  label: string;
+  path: string;
+  category?: string;
+  icon: typeof Home;
+  badge?: "NEW" | "SOON";
+  public?: boolean;
 }
 
-function getItemLogo(item: ServiceItem): string | undefined {
-  if (SERVICE_LOGOS[item.id]) return SERVICE_LOGOS[item.id];
-  if ("category" in item && item.category) {
-    return getCategoryImage(item.category);
-  }
-  return undefined;
+interface NavSection {
+  title: string;
+  items: NavItem[];
 }
 
-const ALL_SERVICES = [
-  { id: "home",         path: "/",                     icon: Home,            label: "Home",         public: true  },
-  // Shopping categories (merged from the old front sidebar) — link to home with ?category=
-  { id: "cat-daily",    path: "/?category=daily-needs",     icon: ShoppingBasket, label: "Daily",      public: true, category: "daily-needs"     },
-  { id: "cat-fresh",    path: "/?category=fresh-produce",    icon: Salad,          label: "Bulk & Wholesale", public: true, category: "fresh-produce" },
-  { id: "cat-livestock",path: "/?category=livestock",        icon: Beef,           label: "Livestock",  public: true, category: "livestock"        },
-  { id: "cat-inputs",   path: "/?category=inputs-tools",    icon: Wrench,         label: "Inputs",     public: true, category: "inputs-tools"    },
-  { id: "cat-super",    path: "/?category=supermarket",     icon: Store,          label: "Complete Supermarket", public: true, category: "supermarket"     },
-  { id: "cat-dietary",  path: "/?category=dietary",         icon: Salad,          label: "Dietary",    public: true, category: "dietary"         },
-  { id: "cat-modern",   path: "/?category=modern-farming",  icon: Sparkles,       label: "Modern",     public: true, category: "modern-farming"  },
-  { id: "cat-services", path: "/?category=services",        icon: Briefcase,      label: "Services",   public: true, category: "services"        },
-  { id: "cat-bio",      path: "/?category=bio-products",    icon: Leaf,           label: "Bio",        public: true, category: "bio-products"    },
-  // App services (existing)
-  { id: "help",     path: "/farmers-help",         icon: Sprout,          label: "Learn",     public: true  },
-  { id: "student-help", path: "/farmers-help/student", icon: GraduationCap, label: "Student Help Point", public: true },
-  { id: "agritech", path: "/agritech",             icon: Cpu,             label: "AgriTech",  public: true  },
-  { id: "map",      path: "/map",                  icon: Map,             label: "Smart Map", public: true  },
-  { id: "land",     path: "/land-leasing",         icon: Landmark,        label: "Land",      public: true  },
-  { id: "share",    path: "/share-care",           icon: HeartHandshake,  label: "Share",     public: true  },
-  { id: "logistics",path: "/logistics",                   icon: Truck,           label: "Delivery",  public: true  },
-  { id: "schemes",  path: "/government-schemes",   icon: FileText,        label: "Schemes",   public: true  },
-  { id: "cart",     path: "/cart",                 icon: ShoppingCart,    label: "Cart",      public: true  },
-  { id: "dash",     path: "/dashboard",            icon: LayoutDashboard, label: "Dashboard", public: false },
-  { id: "sell",     path: "/dashboard/photo-sell", icon: Camera,          label: "Sell",      public: false },
-  { id: "settings", path: "/settings",             icon: Settings,        label: "Settings",  public: false },
-] as const;
+const NAV_SECTIONS: NavSection[] = [
+  {
+    title: "MAIN MARKETPLACE",
+    items: [
+      { id: "home", label: "Home", path: "/", icon: Home, public: true },
+      { id: "cat-daily", label: "Daily Needs", path: "/?category=daily-needs", category: "daily-needs", icon: Store, public: true },
+      { id: "cat-super", label: "Complete Supermarket", path: "/?category=supermarket", category: "supermarket", icon: ShoppingCart, badge: "NEW", public: true },
+      { id: "cat-dietary", label: "Dietary Needs", path: "/?category=dietary", category: "dietary", icon: Salad, public: true },
+      { id: "cat-livestock", label: "Livestock & Poultry", path: "/?category=livestock", category: "livestock", icon: Beef, public: true },
+      { id: "cat-inputs", label: "Agri Inputs & Equipment", path: "/?category=inputs-tools", category: "inputs-tools", icon: Package, public: true },
+      { id: "cat-fresh", label: "Bulk & Wholesale", path: "/?category=fresh-produce", category: "fresh-produce", icon: Boxes, public: true },
+    ],
+  },
+  {
+    title: "FARMER ECOSYSTEM",
+    items: [
+      { id: "cat-modern", label: "Modern Farming", path: "/?category=modern-farming", category: "modern-farming", icon: Warehouse, badge: "SOON", public: true },
+      { id: "cat-bio", label: "Bio-Based Products", path: "/?category=bio-products", category: "bio-products", icon: FlaskConical, badge: "SOON", public: true },
+      { id: "help", label: "Farmer Help Point", path: "/farmers-help", icon: ShieldCheck, public: true },
+      { id: "share", label: "Share & Care Community", path: "/share-care", icon: Heart, badge: "SOON", public: true },
+    ],
+  },
+  {
+    title: "TECHNOLOGY & TOOLS",
+    items: [
+      { id: "map", label: "Smart Map", path: "/map", icon: MapPin, public: true },
+      { id: "land", label: "Land Leasing", path: "/land-leasing", icon: MapPinned, public: true },
+      { id: "agritech", label: "AgriTech & Innovations", path: "/agritech", icon: Cpu, badge: "SOON", public: true },
+    ],
+  },
+  {
+    title: "SERVICES & SUPPORT",
+    items: [
+      { id: "logistics", label: "Logistics & Delivery", path: "/logistics", icon: Truck, public: true },
+      { id: "schemes", label: "Government Schemes", path: "/government-schemes", icon: Building2, public: true },
+      { id: "student-help", label: "Student Help Point", path: "/farmers-help/student", icon: GraduationCap, badge: "SOON", public: true },
+    ],
+  },
+  {
+    title: "ACCOUNT & MANAGEMENT",
+    items: [
+      { id: "sell", label: "Seller Hub", path: "/dashboard/photo-sell", icon: UserCheck, public: true },
+      { id: "dash", label: "Dashboard", path: "/dashboard", icon: LayoutDashboard, public: true },
+      { id: "sites", label: "My Sites", path: "/my-sites", icon: Network, public: true },
+      { id: "settings", label: "Account Settings", path: "/settings", icon: Settings, public: true },
+    ],
+  },
+];
 
-type ServiceItem = typeof ALL_SERVICES[number];
-
-const SHOPPING_CATEGORY_IDS = new Set<string>(
-  ALL_SERVICES.filter((item) => "category" in item).map((item) => item.id),
-);
-
-const COMING_SOON_SERVICE_IDS = new Set([
-  "student-help",
-  "agritech",
-  "land",
-  "share",
-  "logistics",
-  "schemes",
-  "cat-dietary",
-]);
-
-const LS_ORDER    = "agri-nav-order";
-const LS_HIDDEN   = "agri-nav-hidden";
 const LS_EXPANDED = "agri-nav-expanded";
 
-const FULL_SERVICE_LABELS: Record<string, string> = {
-  help: "Farmers Help Point",
-  "student-help": "Student Help Point",
-  agritech: "Agricultural Technology",
-  map: "Smart Map",
-  land: "Land Leasing Marketplace",
-  share: "Share & Care Community",
-  logistics: "Logistics & Delivery",
-  schemes: "Government Schemes",
-  cart: "Shopping Cart",
-  dash: "Dashboard",
-  sell: "Sell or List a Product",
-  settings: "Account Settings",
-};
-
-function readOrder(): string[] | null {
-  try { return JSON.parse(localStorage.getItem(LS_ORDER) || "null"); } catch { return null; }
-}
-function readHidden(): string[] {
+function readExpanded(): boolean {
   try {
-    const saved = JSON.parse(localStorage.getItem(LS_HIDDEN) || "[]");
-    return Array.isArray(saved)
-      ? saved.filter((id): id is string => typeof id === "string" && !SHOPPING_CATEGORY_IDS.has(id))
-      : [];
+    const saved = localStorage.getItem(LS_EXPANDED);
+    return saved === null ? true : saved === "1";
   } catch {
-    return [];
+    return true;
   }
 }
-function readExpanded(): boolean {
-  try { return localStorage.getItem(LS_EXPANDED) === "1"; } catch { return false; }
-}
-function persist(order: string[], hidden: Set<string>) {
-  localStorage.setItem(LS_ORDER, JSON.stringify(order));
-  localStorage.setItem(
-    LS_HIDDEN,
-    JSON.stringify(Array.from(hidden).filter((id) => !SHOPPING_CATEGORY_IDS.has(id))),
-  );
-  window.dispatchEvent(new Event("agri-nav-changed"));
-}
 
-function mergeAvailableOrder(saved: string[] | null, availableIds: string[]): string[] {
-  const available = new Set(availableIds);
-  const merged = (saved ?? []).filter((id) => available.has(id));
-  availableIds.forEach((id, defaultIndex) => {
-    if (merged.includes(id)) return;
-    const nextExistingId = availableIds
-      .slice(defaultIndex + 1)
-      .find((candidate) => merged.includes(candidate));
-    if (nextExistingId) {
-      merged.splice(merged.indexOf(nextExistingId), 0, id);
-    } else {
-      merged.push(id);
-    }
-  });
-  return merged;
-}
-function readEmojis(): Record<string, string> {
-  try { return JSON.parse(localStorage.getItem("agri-nav-emojis") || "{}"); } catch { return {}; }
-}
-
-interface AppNavRailProps { cartCount?: number; }
-
-function SortableNavSlot({
-  id,
-  editMode,
-  children,
-}: {
-  id: string;
-  editMode: boolean;
-  children: ReactNode;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id,
-    disabled: !editMode,
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.55 : 1,
-      }}
-      {...(editMode ? attributes : {})}
-      {...(editMode ? listeners : {})}
-      className={`relative ${isDragging ? "ring-2 ring-primary/60 rounded-xl z-10" : ""}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
-  const { t } = useTranslation();
+export function AppNavRail() {
   const [location, setLocation] = useLocation();
   const search = useSearch();
   const currentCategory = new URLSearchParams(search || "").get("category");
   const { isAuthenticated } = useAuth();
-  const [editMode, setEditMode] = useState(false);
   const [expanded, setExpanded] = useState<boolean>(() => readExpanded());
-  const [appLauncherOpen, setAppLauncherOpen] = useState(false);
 
-  const LABEL_KEYS: Record<string, string> = {
-    "home": "nav.home",
-    "cat-daily": "category.daily",
-    "cat-inputs": "category.inputs",
-    "cat-processed": "category.processed",
-    "cat-specialty": "category.specialty",
-    "cat-other": "category.other_agri",
-    "cat-super": "category.market",
-    "cat-dietary": "category.dietary",
-    "cat-modern": "category.modern",
-    "cat-services": "category.services",
-    "cat-commerc": "category.commercial",
-    "cat-bio": "category.bio",
-    "help": "nav.help",
-    "agritech": "home.agritech",
-    "map": "nav.map",
-    "land": "nav.land",
-    "share": "nav.share",
-    "ship": "nav.ship",
-    "logistics": "home.logistics",
-    "schemes": "home.govt_schemes",
-    "cart": "nav.cart",
-    "dash": "nav.dashboard",
-    "sell": "home.sell_list",
-    "settings": "nav.settings",
-  };
-  const getItemLabel = (item: ServiceItem) => {
-    const key = LABEL_KEYS[item.id];
-    return key ? t(key, { defaultValue: item.label }) : item.label;
-  };
-  const getExpandedItemLabel = (item: ServiceItem) => {
-    if ("category" in item) {
-      return defaultCategories.find((category) => category.id === item.category)?.name
-        ?? getItemLabel(item);
-    }
-    return FULL_SERVICE_LABELS[item.id] ?? getItemLabel(item);
-  };
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-
-  const isBuyerVisibleItem = (item: ServiceItem) => !("category" in item) || isShoppableCategory(item.category);
-  const defaultIds = ALL_SERVICES.filter(s => (s.public || isAuthenticated) && isBuyerVisibleItem(s)).map(s => s.id);
-
-  const [order, setOrder] = useState<string[]>(() => {
-    const saved = readOrder();
-    return mergeAvailableOrder(saved, defaultIds);
-  });
-  const [hidden, setHidden] = useState<Set<string>>(() => new Set(readHidden()));
-  const [emojis, setEmojis] = useState<Record<string, string>>(() => readEmojis());
-
-  // Persist expansion state and broadcast so the top nav can stay in sync.
   useEffect(() => {
-    try { localStorage.setItem(LS_EXPANDED, expanded ? "1" : "0"); } catch {}
+    try {
+      localStorage.setItem(LS_EXPANDED, expanded ? "1" : "0");
+    } catch {}
     window.dispatchEvent(new CustomEvent("agri-nav-expanded-changed", { detail: expanded }));
   }, [expanded]);
 
-  // Listen for an external toggle (e.g. menu button in the top nav).
   useEffect(() => {
-    const onToggle = () => setExpanded(v => !v);
+    const onToggle = () => setExpanded((v) => !v);
     const onSet = (e: Event) => setExpanded(!!(e as CustomEvent).detail);
     window.addEventListener("agri-nav-toggle", onToggle);
     window.addEventListener("agri-nav-set", onSet as EventListener);
@@ -287,292 +128,152 @@ export function AppNavRail({ cartCount = 0 }: AppNavRailProps) {
     };
   }, []);
 
-  useEffect(() => {
-    const sync = () => {
-      const saved = readOrder();
-      setOrder(mergeAvailableOrder(saved, defaultIds));
-      setHidden(new Set(readHidden()));
-      setEmojis(readEmojis());
-    };
-    window.addEventListener("agri-nav-changed", sync);
-    return () => window.removeEventListener("agri-nav-changed", sync);
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    setOrder((previous) => mergeAvailableOrder(previous, defaultIds));
-  }, [isAuthenticated]);
-
-  const visibleItems = order
-    .map(id => ALL_SERVICES.find(s => s.id === id))
-    .filter((s): s is typeof ALL_SERVICES[0] => !!s && (s.public || isAuthenticated) && isBuyerVisibleItem(s) && !hidden.has(s.id));
-
-  const hiddenItems = ALL_SERVICES.filter(s => (s.public || isAuthenticated) && isBuyerVisibleItem(s) && hidden.has(s.id));
-
-  const remove = (id: string) => setHidden(prev => {
-    if (SHOPPING_CATEGORY_IDS.has(id)) return prev;
-    const next = new Set(Array.from(prev)); next.add(id); persist(order, next); return next;
-  });
-  const restore = (id: string) => setHidden(prev => {
-    const next = new Set(prev); next.delete(id); persist(order, next); return next;
-  });
-  const reset = () => {
-    const def = ALL_SERVICES.filter(s => (s.public || isAuthenticated) && isBuyerVisibleItem(s)).map(s => s.id);
-    const h = new Set<string>();
-    setOrder(def); setHidden(h); persist(def, h);
+  const handleItemClick = (item: NavItem) => {
+    if (item.category) {
+      setLocation(item.path);
+      window.dispatchEvent(new CustomEvent("agri-subcategory-open", { detail: item.category }));
+    } else if (item.id === "home") {
+      window.dispatchEvent(new Event("agri-subcategory-close"));
+      if (window.location.pathname !== "/" || window.location.search) {
+        window.history.pushState({}, "", "/");
+      }
+      setLocation("/");
+    } else {
+      window.dispatchEvent(new Event("agri-subcategory-close"));
+      setLocation(item.path);
+    }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    setOrder(prev => {
-      const next = [...prev];
-      const fi = next.indexOf(String(active.id));
-      const ti = next.indexOf(String(over.id));
-      if (fi < 0 || ti < 0) return prev;
-      const reordered = arrayMove(next, fi, ti);
-      persist(reordered, hidden);
-      return reordered;
-    });
-  };
-
-  // Keep the compact rail small while giving full expanded labels room to wrap naturally.
-  const W_COLLAPSED = 108;
-  const W_EXPANDED  = editMode ? 350 : 330;
+  const W_EXPANDED = 270;
+  const W_COLLAPSED = 68;
 
   return (
     <aside
-      className="hidden lg:flex flex-col bg-sidebar border-r border-border/40 shrink-0 overflow-hidden z-50"
-      style={{
-        width: expanded ? W_EXPANDED : W_COLLAPSED,
-        transition: "width 160ms cubic-bezier(0.23,1,0.32,1)",
-      }}
+      className="hidden lg:flex flex-col bg-white dark:bg-sidebar border-r border-slate-200 dark:border-border/40 shrink-0 select-none z-50 h-screen transition-[width] duration-200 ease-in-out overflow-hidden"
+      style={{ width: expanded ? W_EXPANDED : W_COLLAPSED }}
       data-testid="app-nav-rail"
     >
-      {/* Header: manual expand/collapse toggle */}
-      <div className="flex items-center justify-between px-3 pt-2.5 pb-1">
-        {expanded && (
-          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Menu</span>
-        )}
-        <button
-          onClick={() => setExpanded(v => !v)}
-          className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors ml-auto border border-border/40"
-          title={expanded ? t("nav.collapse_menu") : t("nav.expand_menu")}
-          data-testid="nav-rail-toggle"
-        >
-          {expanded ? <ChevronsLeft className="h-5 w-5" /> : <ChevronsRight className="h-5 w-5" />}
-        </button>
-      </div>
-
-      {/* Scrollable nav items */}
-      <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden py-2 gap-1.5 px-2.5">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={visibleItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
-            {visibleItems.map((item) => {
-              const itemCat = (item as ServiceItem & { category?: string }).category;
-              const isComingSoon = COMING_SOON_SERVICE_IDS.has(item.id);
-              const isActive = itemCat
-                ? location === "/" && currentCategory === itemCat
-                : item.id === "home"
-                  ? location === "/" && !currentCategory
-                  : location === item.path || location.startsWith(item.path + "/");
-              const Icon = item.icon;
-              return (
-                <SortableNavSlot key={item.id} id={item.id} editMode={editMode}>
-              <motion.button
-                onClick={() => {
-                  if (editMode) return;
-                  if (itemCat) {
-                    setLocation(item.path);
-                    window.dispatchEvent(new CustomEvent("agri-subcategory-open", { detail: itemCat }));
-                  } else if (item.id === "home") {
-                    // Hard-clear any category query so Home truly goes home.
-                    window.dispatchEvent(new Event("agri-subcategory-close"));
-                    if (window.location.pathname !== "/" || window.location.search) {
-                      window.history.pushState({}, "", "/");
-                    }
-                    setLocation("/");
-                  } else if (item.id === "regional-marketplace") {
-                    window.dispatchEvent(new Event("agri-subcategory-close"));
-                    window.history.pushState({}, "", "/map?tab=marketplace");
-                    window.dispatchEvent(new Event("popstate"));
-                    setLocation("/map?tab=marketplace");
-                  } else {
-                    window.dispatchEvent(new Event("agri-subcategory-close"));
-                    setLocation(item.path);
-                  }
-                }}
-                whileHover={!editMode ? { scale: 1.03 } : {}}
-                whileTap={!editMode ? { scale: 0.96 } : {}}
-                title={isComingSoon ? `${getExpandedItemLabel(item)} — Coming soon` : getExpandedItemLabel(item)}
-                className={`w-full relative flex rounded-xl transition-all duration-150 overflow-hidden ${
-                  expanded
-                    ? "items-center gap-3 py-2.5 px-3"
-                    : "flex-col items-center justify-center gap-1.5 py-2.5 px-1.5"
-                } ${
-                  isActive && !editMode
-                    ? "bg-amber-400 text-amber-950 font-black shadow-md ring-2 ring-amber-500 hover:bg-amber-300 dark:bg-amber-400 dark:text-amber-950"
-                    : editMode
-                    ? "bg-muted/40 text-muted-foreground cursor-grab active:cursor-grabbing"
-                    : "bg-emerald-50/90 text-emerald-900 ring-1 ring-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-700 dark:hover:bg-emerald-950/60 shadow-2xs font-extrabold"
-                }`}
-                data-testid={`nav-rail-${item.id}`}
-              >
-                {isActive && !editMode && (
-                  <>
-                    {/* Big visible left bar that extends well past the rail edge */}
-                    <span className="absolute -left-1 top-1 bottom-1 w-2 rounded-r-full bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.9)]" />
-                    {/* Soft glow extending leftward for stronger visual cue */}
-                    <span className="absolute -left-2 top-1/2 -translate-y-1/2 h-9 w-2.5 rounded-full bg-amber-500/50 blur-[6px]" />
-                  </>
-                )}
-                {/* Drag handle visible on left when editing + expanded */}
-                {editMode && expanded && (
-                  <GripVertical className="h-4 w-4 flex-shrink-0 opacity-60" />
-                )}
-
-                {/* Icon — use category image for shopping categories, Lucide for app routes */}
-                <span className="flex-shrink-0 flex items-center justify-center relative">
-                  {emojis[item.id] ? (
-                    <span className={expanded ? "text-[28px] leading-none" : "text-[34px] leading-none"}>
-                      {emojis[item.id]}
-                    </span>
-                  ) : getItemLogo(item) ? (
-                    <img
-                      src={getItemLogo(item)}
-                      alt={getExpandedItemLabel(item)}
-                      loading="lazy"
-                      className={`object-cover rounded-xl shadow-sm ring-1 ring-black/10 dark:ring-white/15 ${
-                        expanded ? "h-10 w-10" : "h-13 w-13"
-                      } ${isActive && !editMode ? "ring-2 ring-amber-500" : ""}`}
-                    />
-                  ) : (
-                    <Icon className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={2.2} />
-                  )}
-                  {(item.id as string) === "cart" && cartCount > 0 && !editMode && (
-                    <span className="absolute -top-1.5 -right-1.5 h-5 min-w-5 px-1 rounded-full bg-primary text-xs font-black text-primary-foreground flex items-center justify-center leading-none shadow-sm">
-                      {cartCount > 9 ? "9+" : cartCount}
-                    </span>
-                  )}
-                </span>
-
-                {/* Label — under icon when collapsed, inline when expanded */}
-                {expanded ? (
-                  <span className="min-w-0 flex-1 whitespace-normal break-words text-left text-base font-black leading-tight text-foreground sm:text-lg">
-                    {getExpandedItemLabel(item)}
-                  </span>
-                ) : (
-                  <span className="text-xs sm:text-sm font-black leading-tight text-center w-full whitespace-nowrap overflow-hidden text-ellipsis text-foreground">
-                    {getItemLabel(item)}
-                  </span>
-                )}
-                {isComingSoon && !editMode && (
-                  <span className={expanded
-                    ? "shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-black uppercase tracking-wide text-white shadow-xs"
-                    : "absolute right-1 top-1 rounded-full bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none text-white shadow-xs"
-                  }>
-                    Soon
-                  </span>
-                )}
-
-                {/* Remove (X) when editing */}
-                {editMode && !SHOPPING_CATEGORY_IDS.has(item.id) && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); remove(item.id); }}
-                    className={`ml-auto h-5 w-5 rounded flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950 ${
-                      expanded ? "" : "absolute top-0.5 right-0.5"
-                    }`}
-                    title={`${t("home.hide")} ${getExpandedItemLabel(item)}`}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </motion.button>
-                </SortableNavSlot>
-              );
-            })}
-          </SortableContext>
-        </DndContext>
-
-        {/* Restore hidden items */}
-        {editMode && hiddenItems.length > 0 && (
-          <div className="mt-1 pt-1 border-t border-dashed border-border/50 space-y-px">
-            {expanded && (
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground text-center font-semibold px-1 py-0.5">{t("nav.hidden")}</p>
-            )}
-            {hiddenItems.map(item => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => restore(item.id)}
-                  className={`w-full rounded-xl text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 transition-all flex ${
-                    expanded ? "items-center gap-2.5 px-2.5 py-2" : "flex-col items-center gap-0.5 px-1 py-2"
-                  }`}
-                  title={`${t("home.restore_all")} ${getExpandedItemLabel(item)}`}
-                >
-                  <Icon className="h-5 w-5 flex-shrink-0" />
-                  <span className={expanded ? "min-w-0 text-left text-[12px] font-medium leading-tight" : "w-full truncate text-center text-[9px] font-medium"}>
-                    {expanded ? `${t("home.restore_all")} ${getExpandedItemLabel(item)}` : getItemLabel(item)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Bottom controls */}
-      <div className="flex flex-col gap-1 px-2 pb-2 pt-1.5 border-t border-border/40 flex-shrink-0">
-        <button
-          onClick={() => setAppLauncherOpen(true)}
-          className={`w-full rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all flex ${
-            expanded ? "items-center gap-3 px-3 py-2.5" : "flex-col items-center gap-1 py-2"
-          }`}
-          title={t("nav.all_apps")}
-          data-testid="nav-rail-apps"
-        >
-          <Grid3X3 className="h-5 w-5 flex-shrink-0" />
-          <span className={expanded ? "text-left text-[13px] font-semibold" : "text-[10px] font-semibold"}>
-            {expanded ? t("nav.all_apps", { defaultValue: "All Apps & Features" }) : t("nav.apps")}
-          </span>
-        </button>
-        {editMode && (
-          <button
-            onClick={reset}
-            className={`w-full rounded-xl text-muted-foreground hover:bg-muted transition-all flex ${
-              expanded ? "items-center gap-3 px-3 py-2.5" : "flex-col items-center gap-1 py-2"
-            }`}
-            title={t("nav.reset_menu")}
+      {/* ─── BRANDING HEADER CARD ─── */}
+      <div className="p-3.5 border-b border-slate-100 dark:border-border/40 bg-white/80 dark:bg-card/40 backdrop-blur-xs">
+        <div className="flex items-center justify-between gap-2.5">
+          <Link
+            href="/"
+            onClick={() => {
+              window.dispatchEvent(new Event("agri-subcategory-close"));
+              if (window.location.pathname !== "/" || window.location.search) {
+                window.history.pushState({}, "", "/");
+              }
+              setLocation("/");
+            }}
+            className="flex items-center gap-2.5 min-w-0 flex-1 hover:opacity-90 transition-opacity"
           >
-            <RotateCcw className="h-5 w-5 flex-shrink-0" />
-            <span className={expanded ? "text-left text-[13px] font-semibold" : "text-[10px] font-semibold"}>
-              {expanded ? t("nav.reset_menu", { defaultValue: "Reset Sidebar" }) : t("nav.reset")}
-            </span>
-          </button>
-        )}
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white shrink-0 shadow-sm">
+              <Leaf className="h-5 w-5 text-white stroke-[2.4]" />
+            </div>
+            {expanded && (
+              <div className="min-w-0 flex-1">
+                <h1 className="font-black text-[17px] leading-tight tracking-tight text-slate-900 dark:text-slate-100">
+                  AgriConnect
+                </h1>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                  Eat Smart. Live Healthy.
+                </p>
+              </div>
+            )}
+          </Link>
+        </div>
+      </div>
+
+      {/* ─── SCROLLABLE NAV SECTIONS ─── */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-2.5 space-y-3.5 scrollbar-thin">
+        {NAV_SECTIONS.map((section, sIdx) => {
+          const sectionItems = section.items;
+          if (sectionItems.length === 0) return null;
+
+          return (
+            <div
+              key={section.title}
+              className={sIdx > 0 ? "pt-2 border-t border-slate-100 dark:border-border/40" : ""}
+            >
+              {expanded ? (
+                <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2.5 pb-1.5">
+                  {section.title}
+                </div>
+              ) : (
+                <div className="w-5 h-0.5 bg-slate-200 dark:bg-border/60 mx-auto my-1.5 rounded-full" />
+              )}
+              <div className="space-y-0.5">
+                {sectionItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = item.category
+                    ? currentCategory === item.category
+                    : item.id === "home"
+                      ? location === "/" && !currentCategory
+                      : location === item.path || location.startsWith(item.path + "/");
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleItemClick(item)}
+                      title={item.label}
+                      className={`w-full flex items-center rounded-xl transition-all duration-150 ${
+                        expanded ? "px-3 py-2 gap-3" : "justify-center p-2.5"
+                      } ${
+                        isActive
+                          ? "bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-700 text-white font-black shadow-xs"
+                          : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 font-semibold hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                      data-testid={`nav-item-${item.id}`}
+                    >
+                      <Icon
+                        className={`h-5 w-5 shrink-0 stroke-[1.8] ${
+                          isActive ? "text-white" : "text-slate-700 dark:text-slate-300"
+                        }`}
+                      />
+                      {expanded && (
+                        <>
+                          <span className="text-[13.5px] leading-tight truncate text-left flex-1 font-bold">
+                            {item.label}
+                          </span>
+                          {item.badge === "NEW" && (
+                            <span className="ml-auto shrink-0 bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-2xs uppercase tracking-wide">
+                              NEW
+                            </span>
+                          )}
+                          {item.badge === "SOON" && (
+                            <span className="ml-auto shrink-0 bg-emerald-800 text-emerald-100 text-[10px] font-bold px-1.5 py-0.5 rounded shadow-2xs uppercase tracking-wide">
+                              SOON
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ─── BOTTOM COLLAPSE MENU ─── */}
+      <div className="p-2.5 border-t border-slate-100 dark:border-border/40 mt-auto bg-white/60 dark:bg-card/40">
         <button
-          onClick={() => setEditMode(v => !v)}
-          className={`w-full rounded-xl transition-all duration-100 overflow-hidden flex ${
-            expanded ? "items-center gap-3 px-3 py-2.5" : "flex-col items-center gap-1 py-2"
-          } ${editMode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-          data-testid="nav-rail-edit"
-          title={editMode ? t("nav.done") : t("nav.edit_menu_hint")}
+          onClick={() => setExpanded((v) => !v)}
+          className={`w-full rounded-xl border border-slate-200 dark:border-border/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all flex items-center ${
+            expanded
+              ? "justify-center gap-2 px-3 py-2 text-slate-700 dark:text-slate-200 font-bold text-xs"
+              : "justify-center py-2 text-slate-600 dark:text-slate-300"
+          }`}
+          data-testid="nav-collapse-btn"
+          title={expanded ? "Collapse Menu" : "Expand Menu"}
         >
-          {editMode ? <Check className="h-5 w-5 flex-shrink-0" /> : <Pencil className="h-5 w-5 flex-shrink-0" />}
-          <span className={expanded ? "text-[13px] font-semibold whitespace-nowrap" : "text-[10px] font-semibold"}>
-            {editMode
-              ? t("nav.done")
-              : expanded
-                ? t("nav.edit_menu_hint", { defaultValue: "Customize Sidebar" })
-                : t("nav.edit")}
-          </span>
+          <ChevronLeft
+            className={`h-4 w-4 transition-transform duration-200 ${!expanded ? "rotate-180" : ""}`}
+          />
+          {expanded && <span>Collapse Menu</span>}
         </button>
       </div>
-      <AppLauncher
-        open={appLauncherOpen}
-        onClose={() => setAppLauncherOpen(false)}
-        railWidth={expanded ? W_EXPANDED : W_COLLAPSED}
-      />
     </aside>
   );
 }

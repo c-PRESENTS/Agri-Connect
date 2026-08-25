@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { users } from "./auth";
+import { adminVerificationReviewInputSchema } from "./admin-user-management";
 
 export const sellerEntityTypeSchema = z.enum([
   "individual",
@@ -215,15 +216,7 @@ export const sellerDocumentInputSchema = z.object({
   expiresAt: z.string().datetime().optional(),
 });
 
-export const sellerVerificationReviewSchema = z.object({
-  decision: z.enum(["verified", "needs_information", "rejected", "suspended"]),
-  reason: z.string().trim().min(3).max(2000),
-  documentDecisions: z.array(z.object({
-    documentId: z.string().min(1),
-    status: z.enum(["verified", "rejected"]),
-    reason: z.string().trim().max(1000).optional(),
-  })).max(100).default([]),
-});
+export const sellerVerificationReviewSchema = adminVerificationReviewInputSchema;
 
 export type SellerBusinessProfileInput = z.infer<typeof sellerBusinessProfileInputSchema>;
 export type SellerVerificationStatus = z.infer<typeof sellerVerificationStatusSchema>;

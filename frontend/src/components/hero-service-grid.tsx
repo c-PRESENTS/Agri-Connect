@@ -142,35 +142,35 @@ export const HeroServiceGrid = memo(function HeroServiceGrid() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-2.5 sm:mb-3 px-0.5">
-        <span className="text-base sm:text-lg md:text-xl font-black uppercase tracking-[0.18em] text-white drop-shadow-md">{t("home.quick_access")}</span>
+      <div className="flex items-center justify-between mb-2 sm:mb-2.5 px-0.5">
+        <span className="text-sm sm:text-base md:text-lg font-black uppercase tracking-[0.14em] text-white drop-shadow-md">{t("home.quick_access")}</span>
         <div className="flex items-center gap-2">
           {editMode && (
             <button
               onClick={reset}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white/70 hover:text-white hover:bg-white/10 border border-white/20 transition-all"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-white/70 hover:text-white hover:bg-white/10 border border-white/20 transition-all"
             >
-              <RotateCcw className="h-3.5 w-3.5" /> {t("nav.reset")}
+              <RotateCcw className="h-3 w-3" /> {t("nav.reset")}
             </button>
           )}
           <button
             onClick={() => { setEditMode(v => !v); setEditingEmoji(null); }}
             data-testid="hero-services-edit"
-            className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-xs font-black border transition-all shadow-sm ${
+            className={`flex items-center gap-1.5 px-3 py-1 sm:py-1.5 rounded-xl text-xs font-black border transition-all shadow-xs ${
               editMode
                 ? "bg-primary text-primary-foreground border-primary shadow-primary/30"
                 : "bg-white/10 text-white/90 border-white/20 hover:bg-white/18 hover:border-white/35 hover:text-white"
             }`}
           >
             {editMode
-              ? <><Check className="h-4 w-4" /> {t("nav.done")}</>
-              : <><Pencil className="h-4 w-4" /> {t("nav.edit")}</>
+              ? <><Check className="h-3.5 w-3.5" /> {t("nav.done")}</>
+              : <><Pencil className="h-3.5 w-3.5" /> {t("nav.edit")}</>
             }
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 min-[420px]:grid-cols-3 sm:grid-cols-5 sm:gap-2.5 lg:grid-cols-10">
+      <div className="grid grid-cols-3 min-[480px]:grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-11 gap-1.5 sm:gap-2">
         {visibleItems.map((item, idx) => {
           const Icon = item.icon;
           const customEmoji = emojis[item.id];
@@ -189,25 +189,25 @@ export const HeroServiceGrid = memo(function HeroServiceGrid() {
                   }
                 }}
                 data-testid={`nav-${item.id}`}
-                className={`w-full h-[74px] sm:h-[84px] flex flex-col items-center justify-center gap-1.5 rounded-xl sm:rounded-2xl border transition-all duration-150 py-2 px-1 bg-white/[0.09] ${
+                className={`w-full h-[52px] sm:h-[58px] flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-150 py-1.5 px-1 bg-white/[0.08] ${
                   editMode
                     ? "border-white/10 cursor-default"
-                    : "border-white/15 hover:border-white/40 hover:bg-white/[0.16] hover:scale-[1.05] active:scale-95 cursor-pointer shadow-md"
+                    : "border-white/15 hover:border-white/40 hover:bg-white/[0.16] hover:scale-[1.03] active:scale-95 cursor-pointer shadow-xs"
                 }`}
               >
                 {customEmoji ? (
-                  <span className="text-xl sm:text-2xl leading-none drop-shadow flex-shrink-0">{customEmoji}</span>
+                  <span className="text-lg sm:text-xl leading-none drop-shadow flex-shrink-0">{customEmoji}</span>
                 ) : logoSrc ? (
                   <img
                     src={logoSrc}
                     alt=""
-                    className="h-7 w-7 sm:h-8 sm:w-8 object-contain drop-shadow flex-shrink-0"
+                    className="h-5.5 w-5.5 sm:h-6 sm:w-6 object-contain drop-shadow flex-shrink-0"
                     loading="lazy"
                   />
                 ) : (
-                  <Icon className={`h-6 w-6 sm:h-7 sm:w-7 drop-shadow flex-shrink-0 ${item.color}`} />
+                  <Icon className={`h-5 w-5 sm:h-5.5 sm:w-5.5 drop-shadow flex-shrink-0 ${item.color}`} />
                 )}
-                <span className="text-xs sm:text-xs font-black text-white text-center leading-tight w-full truncate drop-shadow px-0.5">
+                <span className="text-[10px] sm:text-[11px] font-bold text-white text-center leading-none w-full truncate drop-shadow px-0.5">
                   {t(item.label, { defaultValue: item.fallbackLabel })}
                 </span>
               </button>

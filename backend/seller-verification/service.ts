@@ -1,8 +1,4 @@
-import { db } from "../config/db";
-import { eq } from "drizzle-orm";
 import {
-  sellerVerificationReviewSchema,
-  users,
   type SellerBusinessProfileInput,
   type SellerVerificationRequirement,
 } from "@shared/schema";
@@ -10,6 +6,8 @@ import { protectSensitiveValue } from "../security/sensitive-fields";
 import { sellerVerificationRepository } from "../repositories/seller-verification-repository";
 import { sellerRequirements, SELLER_REQUIREMENTS_VERSION } from "./requirements";
 import { sellerCapabilities } from "./capabilities";
+
+export class SellerVerificationRuleError extends Error {}
 
 function requirementCompletion(
   requirement: SellerVerificationRequirement,
@@ -110,6 +108,9 @@ export class SellerVerificationService {
   async submit(sellerId: string) {
     const state = await this.status(sellerId);
     if (!state.profile || !state.case || !state.supported) throw new Error("Complete a supported business profile before submission");
+    if (!["in_progress", "needs_information", "rejected", "expired"].includes(state.case.status)) {
+      throw new SellerVerificationRuleError(`A ${state.case.status} verification case cannot be submitted.`);
+    }
     const missing = state.requirements.filter((requirement) => requirement.required && !requirement.complete);
     const gstinProvided = state.identifiers.some((identifier) => identifier.type === "gstin");
     if (gstinProvided && !state.requirements.find((requirement) => requirement.code === "gst_registration")?.complete) {
@@ -124,27 +125,6 @@ export class SellerVerificationService {
     return this.status(sellerId);
   }
 
-  async review(caseId: string, reviewerId: string, input: unknown) {
-    const review = sellerVerificationReviewSchema.parse(input);
-    const queue = await sellerVerificationRepository.listQueue(["pending_review", "needs_information", "verified", "suspended"]);
-    const summary = queue.find((item) => item.id === caseId);
-    if (!summary) throw new Error("Seller verification case was not found");
-    for (const decision of review.documentDecisions) {
-      const document = await sellerVerificationRepository.getDocumentById(decision.documentId);
-      if (!document || document.caseId !== caseId) throw new Error("Document does not belong to this verification case");
-      await sellerVerificationRepository.updateDocument(document.id, { status: decision.status, rejectionReason: decision.status === "rejected" ? (decision.reason || review.reason) : null, reviewedAt: new Date(), reviewedBy: reviewerId });
-    }
-    const verificationCase = await sellerVerificationRepository.getCase(summary.sellerId);
-    if (!verificationCase) throw new Error("Seller verification case was not found");
-    const expiresAt = review.decision === "verified" ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) : null;
-    await sellerVerificationRepository.upsertCase({ ...verificationCase, status: review.decision, reviewedBy: reviewerId, reviewedAt: new Date(), reviewReason: review.reason, expiresAt });
-    if (review.decision === "verified" || review.decision === "rejected") {
-      await sellerVerificationRepository.setTaxIdentifierReview(summary.sellerId, review.decision, "operator_manual_review");
-    }
-    await db.update(users).set({ isVerified: review.decision === "verified", updatedAt: new Date() }).where(eq(users.id, summary.sellerId));
-    await sellerVerificationRepository.recordEvent(caseId, reviewerId, `verification_${review.decision}`, { reason: review.reason });
-    return this.status(summary.sellerId);
-  }
 }
 
 export const sellerVerificationService = new SellerVerificationService();

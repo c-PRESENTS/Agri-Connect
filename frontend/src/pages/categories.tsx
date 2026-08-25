@@ -2,21 +2,14 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { TopNavigation } from "@/components/top-navigation";
 import { Card } from "@/components/ui/card";
-import { categoryImages, getShoppableCategories } from "@/lib/categories";
+import { handleCategoryImageError, resolveCategoryImage } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { getCategoryIconComponent } from "@/lib/category-icons";
-import { MAIN_MARKETPLACE_CATEGORIES } from "@/lib/main-marketplace-categories";
-
-const categoriesById = new Map(
-  getShoppableCategories().map((category) => [category.id, category]),
-);
-
-const marketplaceCategories = MAIN_MARKETPLACE_CATEGORIES.flatMap(({ id }) => {
-  const category = categoriesById.get(id);
-  return category ? [category] : [];
-});
 
 export default function CategoriesPage() {
   const [, setLocation] = useLocation();
+  const { data: publishedCategories = [], isLoading, isError, refetch } = useCatalogCategories("buyer");
+  const marketplaceCategories = publishedCategories;
 
   const openCategory = (categoryId: string) => {
     setLocation(`/?category=${encodeURIComponent(categoryId)}`);
@@ -53,9 +46,11 @@ export default function CategoriesPage() {
           className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           aria-label="Marketplace categories"
         >
+          {isLoading && <p className="col-span-full py-12 text-center text-muted-foreground">Loading published categories…</p>}
+          {isError && <div className="col-span-full py-12 text-center"><p className="font-bold">Categories could not be loaded.</p><button className="mt-3 text-primary underline" onClick={() => refetch()}>Retry</button></div>}
           {marketplaceCategories.map((category) => {
             const Icon = getCategoryIconComponent(category.icon);
-            const image = categoryImages[category.id];
+            const image = resolveCategoryImage(category.id, category.imageUrl);
 
             return (
               <Card
@@ -78,11 +73,12 @@ export default function CategoriesPage() {
                       src={image}
                       alt=""
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(event) => handleCategoryImageError(event.currentTarget, category.id)}
                     />
                   )}
                   <div className="absolute bottom-3 left-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400/40 text-white backdrop-blur-md border border-amber-300/60 shadow-md overflow-hidden p-1">
                     {image ? (
-                      <img src={image} alt={category.name} className="h-full w-full object-cover rounded-xl" />
+                      <img src={image} alt={category.name} className="h-full w-full object-cover rounded-xl" onError={(event) => handleCategoryImageError(event.currentTarget, category.id)} />
                     ) : (
                       <Icon className="h-6 w-6 text-white drop-shadow-xs" aria-hidden="true" />
                     )}

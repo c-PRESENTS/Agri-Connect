@@ -28,6 +28,8 @@ import { registerSellerVerificationRoutes } from "./seller-verification/routes";
 import { registerLogisticsCollaborationRoutes } from "./logistics-collaboration/routes";
 import { registerRegionalMarketplaceRoutes } from "./regional-marketplace/routes";
 
+import { registerDietaryRoutes } from "./dietary/routes";
+
 export interface BackendModuleDeps {
   getUserId(req: Request): string | undefined;
   getUserIdOrSession(req: Request): string;
@@ -47,6 +49,11 @@ export function registerBackendModules(app: Express, deps: BackendModuleDeps): v
   });
   registerRegionalMarketplaceRoutes(app);
   registerCatalogRoutes(app);
+  registerDietaryRoutes(app, {
+    getUserIdOrSession: deps.getUserIdOrSession,
+    touchGuestSession: deps.touchGuestSession,
+    mergeGuestCartIfNeeded: deps.mergeGuestCartIfNeeded,
+  });
   registerCartRoutes(app, {
     getUserId: deps.getUserId,
     getUserIdOrSession: deps.getUserIdOrSession,

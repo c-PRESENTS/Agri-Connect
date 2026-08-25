@@ -28,7 +28,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { SiApple } from "react-icons/si";
 
-type AuthStep = "phone" | "otp" | "profile";
+type AuthStep = "phone" | "otp" | "mfa" | "profile";
 
 const trustSignals = [
   { icon: Sprout, labelKey: "login.feature_marketplace", fallback: "Live Marketplace" },
@@ -50,12 +50,13 @@ export default function LoginPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const {
-    isAuthenticated, isLoading, sendOtp, verifyOtp, googleLogin, updateProfile, completeProfile,
+    isAuthenticated, isLoading, sendOtp, verifyOtp, verifyMfa, googleLogin, updateProfile, completeProfile,
   } = useAuth();
 
   const [step, setStep] = useState<AuthStep>("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<"farmer" | "buyer">("farmer");
   const [phoneError, setPhoneError] = useState("");
@@ -90,7 +91,9 @@ export default function LoginPage() {
 
     try {
       const data = await googleLogin.mutateAsync({ credential: response.credential });
-      if (data.isNewUser) {
+      if (data.requiresMfa) {
+        setStep("mfa");
+      } else if (data.isNewUser) {
         setStep("profile");
       }
     } catch {
@@ -196,7 +199,9 @@ export default function LoginPage() {
     setOtpError("");
     try {
       const data = await verifyOtp.mutateAsync({ phone: phone.trim(), code: otp });
-      if (data.isNewUser) {
+      if (data.requiresMfa) {
+        setStep("mfa");
+      } else if (data.isNewUser) {
         setStep("profile");
       }
     } catch {
@@ -214,7 +219,17 @@ export default function LoginPage() {
     }
   };
 
-  const isSubmitting = sendOtp.isPending || verifyOtp.isPending || googleLogin.isPending || updateProfile.isPending;
+  const handleVerifyMfa = async () => {
+    setOtpError("");
+    try {
+      await verifyMfa.mutateAsync(mfaCode);
+      setLocation(returnPath);
+    } catch {
+      setOtpError("Invalid or expired authenticator/recovery code.");
+    }
+  };
+
+  const isSubmitting = sendOtp.isPending || verifyOtp.isPending || verifyMfa.isPending || googleLogin.isPending || updateProfile.isPending;
 
   return (
     <main
@@ -257,7 +272,7 @@ export default function LoginPage() {
                   onPhoneChange={(value) => { setPhone(value); setPhoneError(""); }}
                   onSendOtp={handleSendOtp}
                 />
-              ) : (
+              ) : step === "otp" ? (
                 <OtpStep
                   t={t}
                   phone={phone}
@@ -271,6 +286,8 @@ export default function LoginPage() {
                   onResendOtp={handleSendOtp}
                   onBack={() => { setStep("phone"); setOtp(""); setOtpError(""); }}
                 />
+              ) : (
+                <MfaStep code={mfaCode} error={otpError} pending={verifyMfa.isPending} onCodeChange={(value) => { setMfaCode(value); setOtpError(""); }} onVerify={handleVerifyMfa} />
               )}
             </Card>
           </section>
@@ -278,6 +295,10 @@ export default function LoginPage() {
       </div>
     </main>
   );
+}
+
+function MfaStep({ code, error, pending, onCodeChange, onVerify }: { code: string; error: string; pending: boolean; onCodeChange: (value: string) => void; onVerify: () => void }) {
+  return <><CardHeader className="relative z-10 space-y-5 px-6 pt-9 sm:px-10"><StepBadge icon={ShieldCheck} label="Administrator protection" /><div><CardTitle className="text-3xl font-black text-emerald-950">Two-factor authentication</CardTitle><CardDescription className="mt-3">Enter the six-digit code from your authenticator, or one unused recovery code.</CardDescription></div></CardHeader><CardContent className="relative z-10 space-y-4 px-6 pb-10 sm:px-10"><div><Label htmlFor="mfa-code">Authenticator or recovery code</Label><Input id="mfa-code" autoComplete="one-time-code" value={code} onChange={(event) => onCodeChange(event.target.value)} onKeyDown={(event) => event.key === "Enter" && onVerify()} />{error && <p className="mt-2 text-sm text-destructive">{error}</p>}</div><Button className="h-14 w-full" disabled={code.trim().length < 6 || pending} onClick={onVerify}>{pending ? "Verifying…" : "Verify and sign in"}</Button></CardContent></>;
 }
 
 function BrandPanel({ t }: { t: TFunction }) {

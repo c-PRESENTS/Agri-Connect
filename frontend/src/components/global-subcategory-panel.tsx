@@ -1,11 +1,11 @@
 import { useLocation, useSearch } from "wouter";
 import { useCallback, useEffect, useState } from "react";
 import { SubcategoryPanel } from "@/components/subcategory-panel";
-import { getShoppableCategories } from "@/lib/categories";
-
-const PAGE_CATEGORIES = new Set(getShoppableCategories().map(c => c.id));
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 
 export function GlobalSubcategoryPanel() {
+  const { data: publishedCategories = [] } = useCatalogCategories("buyer");
+  const pageCategories = new Set(publishedCategories.map((category) => category.id));
   const [location, setLocation] = useLocation();
   const search = useSearch();
   const params = new URLSearchParams(search || "");
@@ -15,7 +15,7 @@ export function GlobalSubcategoryPanel() {
 
   // Which top-level category panel is open
   const [activeCategory, setActiveCategory] = useState<string | null>(
-    urlCategory && PAGE_CATEGORIES.has(urlCategory) ? urlCategory : null
+    urlCategory && pageCategories.has(urlCategory) ? urlCategory : null
   );
   // Which subcategory inside the open panel is expanded inline (3rd level)
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(
@@ -28,10 +28,10 @@ export function GlobalSubcategoryPanel() {
 
   // Keep state in sync with URL changes (e.g. nav from links elsewhere)
   useEffect(() => {
-    if (urlCategory && PAGE_CATEGORIES.has(urlCategory)) {
+    if (urlCategory && pageCategories.has(urlCategory)) {
       setActiveCategory(urlCategory);
     }
-  }, [urlCategory]);
+  }, [urlCategory, publishedCategories]);
 
   useEffect(() => {
     setActiveSubcategory(urlSubcategory ?? null);
@@ -45,7 +45,7 @@ export function GlobalSubcategoryPanel() {
   useEffect(() => {
     const onOpen = (e: Event) => {
       const id = (e as CustomEvent).detail as string;
-      if (id && PAGE_CATEGORIES.has(id)) setActiveCategory(id);
+      if (id && pageCategories.has(id)) setActiveCategory(id);
     };
     const onClose = () => {
       setActiveCategory(null);
@@ -58,7 +58,7 @@ export function GlobalSubcategoryPanel() {
       window.removeEventListener("agri-subcategory-open", onOpen as EventListener);
       window.removeEventListener("agri-subcategory-close", onClose);
     };
-  }, []);
+  }, [publishedCategories]);
 
   const handleClose = useCallback(() => {
     setActiveCategory(null);

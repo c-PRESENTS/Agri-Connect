@@ -12,19 +12,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { getShoppableCategories } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLiveLocation } from "@/contexts/live-location-context";
 import { useToast } from "@/hooks/use-toast";
-import type { Product } from "@shared/schema";
+import type { Category, Product } from "@shared/schema";
 
 type Region = { id: string; parentId: string | null; code: string; name: string; countryCode: string; type: string; latitude: number | null; longitude: number | null; activeSellerCount: number };
 type Organisation = { id: string; name: string; slug: string; regionId: string; regionName: string };
 type MarketplaceResponse = { products: Product[]; markers: MarketplaceMarker[]; pagination: { page: number; pageSize: number; total: number; pageCount: number }; summary: { localCount: number; globalCount: number } };
 type MapConfig = { mapProvider: string; tileUrl: string; tileAttribution: string; geocodingProvider: string; googleMapsApiKey?: string };
 
-function MarketplaceFilters({ categoryId, subcategoryId, regionId, quantity, qualityGrade, minPrice, maxPrice, minRating, scope, regions, onChange }: any) {
-  const categories = getShoppableCategories();
+function MarketplaceFilters(props: any) {
+  const { categoryId, subcategoryId, regionId, quantity, qualityGrade, minPrice, maxPrice, minRating, scope, regions, onChange } = props;
+  const categories = props.categories as Category[];
   const selected = categories.find((category) => category.id === categoryId);
   return <div className="space-y-5">
     <div><h2 className="font-black">Product categories</h2><p className="text-xs text-muted-foreground">Browse the complete AgriConnect catalogue.</p></div>
@@ -48,6 +49,7 @@ export default function MarketplacePage() {
   const [, navigate] = useLocation();
   const { location } = useLiveLocation();
   const { toast } = useToast();
+  const { data: categories = [] } = useCatalogCategories("buyer");
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const [filters, setFilters] = useState({ search: params.get("search") || "", categoryId: params.get("category") || "", subcategoryId: params.get("subcategory") || "", regionId: params.get("regionId") || "", quantity: "", qualityGrade: "", minPrice: "", maxPrice: "", minRating: "", scope: "global", sortBy: "distance" });
   const productRefs = useRef(new Map<string, HTMLDivElement>());
@@ -72,7 +74,7 @@ export default function MarketplacePage() {
   const selectedRegion = regions.find((region) => region.id === filters.regionId);
   const center: [number, number] = [selectedRegion?.latitude ?? location?.latitude ?? 52.3555, selectedRegion?.longitude ?? location?.longitude ?? -1.1743];
   const focusSeller = (sellerId: string) => productRefs.current.get(sellerId)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  const filterProps = { ...filters, regions, onChange: update };
+  const filterProps = { ...filters, regions, categories, onChange: update };
   return <div className="min-h-screen bg-background"><TopNavigation /><main className="mx-auto max-w-[1600px] px-3 py-5 sm:px-5">
     <header className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between"><div><div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-emerald-700"><Store className="h-4 w-4" />Regional marketplace</div><h1 className="mt-1 text-3xl font-black">Find approved sellers near you</h1><p className="text-sm text-muted-foreground">Local fulfilment is prioritised while approved products remain globally discoverable.</p></div><div className="flex gap-2"><div className="relative flex-1 lg:w-96"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" value={filters.search} onChange={(event) => update({ search: event.target.value })} placeholder="Search Rice, Tomato, seeds..." /></div><Sheet><SheetTrigger asChild><Button variant="outline" className="lg:hidden"><Filter className="h-4 w-4" /></Button></SheetTrigger><SheetContent side="left" className="overflow-y-auto"><SheetHeader><SheetTitle>Marketplace filters</SheetTitle></SheetHeader><div className="mt-5"><MarketplaceFilters {...filterProps} /></div></SheetContent></Sheet></div></header>
     <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">

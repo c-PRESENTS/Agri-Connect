@@ -384,6 +384,37 @@ for (const [categoryId, folder] of Object.entries(thumbnailFolderByCategoryId)) 
   if (fallback) categoryImages[categoryId] = thumbnailFromFolder(folder, fallback);
 }
 
+/**
+ * Prefer administrator-managed images, except for the legacy import's
+ * generated per-category SVG path when a real bundled image is available.
+ * The import used that path for every subcategory even though only top-level
+ * category logo files exist.
+ */
+export function resolveCategoryImage(
+  categoryId: string,
+  imageUrl?: string | null,
+  parentCategoryId?: string,
+): string | undefined {
+  const bundledImage = categoryImages[categoryId] ?? (parentCategoryId ? categoryImages[parentCategoryId] : undefined);
+  const generatedLogoPath = `/category-logos/${categoryId}.svg`;
+  if (!imageUrl || imageUrl === generatedLogoPath) return bundledImage ?? imageUrl ?? undefined;
+  return imageUrl;
+}
+
+/** Switch a failed managed image to the bundled category image without looping. */
+export function handleCategoryImageError(
+  image: HTMLImageElement,
+  categoryId: string,
+  parentCategoryId?: string,
+): void {
+  const fallback = categoryImages[categoryId] ?? (parentCategoryId ? categoryImages[parentCategoryId] : undefined);
+  if (fallback && image.getAttribute("src") !== fallback) {
+    image.src = fallback;
+    return;
+  }
+  image.style.display = "none";
+}
+
 export const categories: Category[] = [
   {
     id: "daily-needs",

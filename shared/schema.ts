@@ -10,6 +10,11 @@ export * from "./models/payments";
 export * from "./models/payment-operations";
 export * from "./models/community";
 export * from "./models/organisations";
+export * from "./models/admin-portal";
+export * from "./models/admin-user-management";
+export * from "./models/product-moderation";
+export * from "./models/catalog-categories";
+export * from "./models/admin-employees";
 export * from "./models/messaging";
 export * from "./models/user-addresses";
 export * from "./models/seller-verification";
@@ -21,6 +26,7 @@ export interface Category {
   id: string;
   name: string;
   icon: string;
+  imageUrl?: string;
   subcategories: Subcategory[];
   buyerVisible?: boolean;
   sellerOnly?: boolean;
@@ -31,6 +37,7 @@ export interface Subcategory {
   name: string;
   parentId: string;
   buyerVisible?: boolean;
+  imageUrl?: string;
 }
 
 // Government Scheme Application
@@ -183,6 +190,7 @@ export interface Product {
   farmerAvatar: string;
   farmerRating: number;
   farmerIsOnline?: boolean;
+  farmerIsVerified?: boolean;
   farmerLocation: string;
   farmerLatitude: number;
   farmerLongitude: number;
@@ -190,12 +198,21 @@ export interface Product {
   images: string[];
   isOrganic: boolean;
   isFeatured: boolean;
+  isFreshPick?: boolean;
   rating: number;
   reviewCount: number;
   createdAt: string;
   dietaryTags?: string[];
   publicationStatus?: "draft" | "published" | "suspended";
   publicationReason?: string;
+  moderationStatus?: import("./models/product-moderation").ProductModerationStatus;
+  moderationReason?: string;
+  moderationVersion?: number;
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  updatedAt?: string;
+  isPubliclyVisible?: boolean;
   regionId?: string;
   regionName?: string;
   localFulfilmentEligible?: boolean;

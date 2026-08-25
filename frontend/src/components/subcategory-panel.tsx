@@ -4,7 +4,8 @@ import { useLocation } from "wouter";
 import { X, ChevronDown, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getShoppableCategories, categoryImages } from "@/lib/categories";
+import { handleCategoryImageError, resolveCategoryImage } from "@/lib/categories";
+import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import { getCategoryIconComponent } from "@/lib/category-icons";
 import { getSubSubcategories } from "@/lib/sub-subcategories";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,13 +22,6 @@ interface SubcategoryPanelProps {
   onSectionClick?: (sectionTitle: string, subcategoryId?: string) => void;
 }
 
-function getCategoryImage(categoryId: string, subcategoryId?: string): string | undefined {
-  if (subcategoryId && categoryImages[subcategoryId]) {
-    return categoryImages[subcategoryId];
-  }
-  return categoryImages[categoryId];
-}
-
 export function SubcategoryPanel({ 
   categoryId, 
   selectedSubcategory,
@@ -39,12 +33,13 @@ export function SubcategoryPanel({
   onSectionClick
 }: SubcategoryPanelProps) {
   const { t } = useTranslation();
+  const { data: publishedCategories = [] } = useCatalogCategories("buyer");
   const [, setLocation] = useLocation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollPosition, setScrollPosition] = useState<'top' | 'middle' | 'bottom'>('top');
 
   const category = useMemo(() => 
-    getShoppableCategories().find(c => c.id === categoryId), [categoryId]
+    publishedCategories.find(c => c.id === categoryId), [categoryId, publishedCategories]
   );
 
   const handleScroll = (e?: React.UIEvent) => {
@@ -102,7 +97,7 @@ export function SubcategoryPanel({
   if (!category) return null;
 
   const IconComponent = getCategoryIconComponent(category.icon);
-  const categoryLogo = getCategoryImage(category.id) || `/category-logos/${category.id}.svg`;
+  const categoryLogo = resolveCategoryImage(category.id, category.imageUrl) || `/category-logos/${category.id}.svg`;
 
   return (
     <AnimatePresence mode="wait">
@@ -136,10 +131,7 @@ export function SubcategoryPanel({
                     src={categoryLogo}
                     alt={category.name}
                     className="h-11 w-11 object-cover rounded-xl"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement?.classList.add('flex', 'items-center', 'justify-center');
-                    }}
+                    onError={(event) => handleCategoryImageError(event.currentTarget, category.id)}
                   />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -165,7 +157,7 @@ export function SubcategoryPanel({
                 <div className="p-2.5">
                   <div className="flex flex-col gap-2">
                     {category.subcategories.map((subcategory) => {
-                      const subImage = getCategoryImage(category.id, subcategory.id) || categoryLogo;
+                      const subImage = resolveCategoryImage(subcategory.id, subcategory.imageUrl, category.id) || categoryLogo;
                       const isSelected = selectedSubcategory === subcategory.id;
                       const isActive = activeSubcategory === subcategory.id;
                       const deepContent = getSubSubcategories(subcategory.id);
@@ -192,6 +184,7 @@ export function SubcategoryPanel({
                                   alt={subcategory.name}
                                   className="w-9 h-9 object-cover rounded-lg border border-border/40"
                                   loading="lazy"
+                                  onError={(event) => handleCategoryImageError(event.currentTarget, subcategory.id, category.id)}
                                 />
                               ) : (
                                 <div className={`w-9 h-9 flex items-center justify-center rounded-lg ${

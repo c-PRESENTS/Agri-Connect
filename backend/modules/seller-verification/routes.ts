@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { ZodError, z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import {
+  adminVerificationReviewInputSchema,
   sellerAssociatedPersonInputSchema,
   sellerBusinessProfileInputSchema,
   sellerDocumentInputSchema,
@@ -10,9 +11,10 @@ import {
 import { isAuthenticated } from "../../auth";
 import { authStorage } from "../../auth/storage";
 import { requireAdminPermission } from "../../organisations/access";
+import { AdminUserOperationError, reviewAdminVerification } from "../../organisations/admin-user-service";
 import { sellerVerificationRepository } from "../../repositories/seller-verification-repository";
 import { sellerDocumentStorage, MAX_DOCUMENT_BYTES } from "../../seller-verification/document-storage";
-import { sellerVerificationService } from "../../seller-verification/service";
+import { SellerVerificationRuleError, sellerVerificationService } from "../../seller-verification/service";
 import { sellerRequirements } from "../../seller-verification/requirements";
 
 type Deps = { getUserId(req: Request): string | undefined };
@@ -22,8 +24,24 @@ const uploadSchema = sellerDocumentInputSchema.extend({
 
 function handleError(error: unknown, res: Response) {
   if (error instanceof ZodError) return res.status(400).json({ error: fromZodError(error).message });
+  if (error instanceof SellerVerificationRuleError) return res.status(422).json({ error: error.message, code: "SELLER_VERIFICATION_INVALID_TRANSITION" });
+  if (error instanceof AdminUserOperationError) return res.status(error.status).json({ error: error.message, code: error.code });
   const message = error instanceof Error ? error.message : "Seller verification request failed";
   return res.status(400).json({ error: message });
+}
+
+function maskRegistrationNumber(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const compact = value.replace(/\s+/g, "");
+  return compact.length <= 4 ? "•".repeat(compact.length) : `${"•".repeat(Math.min(8, compact.length - 4))}${compact.slice(-4)}`;
+}
+
+async function safeOperatorStatus(sellerId: string) {
+  const state = await sellerVerificationService.status(sellerId);
+  return {
+    ...state,
+    profile: state.profile ? { ...state.profile, registrationNumber: maskRegistrationNumber(state.profile.registrationNumber) } : state.profile,
+  };
 }
 
 async function requireSeller(req: Request, res: Response, deps: Deps) {
@@ -143,7 +161,7 @@ export function registerSellerVerificationRoutes(app: Express, deps: Deps): void
   });
 
   app.get("/api/operator/seller-verifications/:sellerId", isAuthenticated, requireAdminPermission("verification.view"), async (req, res) => {
-    return res.json(await sellerVerificationService.status(req.params.sellerId));
+    return res.json(await safeOperatorStatus(req.params.sellerId));
   });
 
   app.get("/api/operator/seller-verification-documents/:documentId", isAuthenticated, requireAdminPermission("verification.view"), async (req, res) => {
@@ -158,12 +176,17 @@ export function registerSellerVerificationRoutes(app: Express, deps: Deps): void
 
   app.post("/api/operator/seller-verifications/:caseId/review", isAuthenticated, requireAdminPermission("verification.review"), async (req, res) => {
     try {
-      const decision = typeof req.body?.decision === "string" ? req.body.decision : "";
-      const requiredPermission = decision === "verified" ? "verification.approve" : decision === "rejected" ? "verification.reject" : "verification.review";
+      const input = adminVerificationReviewInputSchema.parse(req.body);
+      const requiredPermission = input.decision === "verified" ? "verification.approve" : input.decision === "rejected" ? "verification.reject" : "verification.review";
       if (!req.adminAccess?.permissions.includes(requiredPermission)) {
         return res.status(403).json({ error: "Access denied", code: "ADMIN_PERMISSION_REQUIRED", permission: requiredPermission });
       }
-      return res.json(await sellerVerificationService.review(req.params.caseId, deps.getUserId(req)!, req.body));
+      const result = await reviewAdminVerification(req.params.caseId, {
+        userId: deps.getUserId(req)!,
+        access: req.adminAccess!,
+        requestId: req.get("x-request-id") ?? null,
+      }, input);
+      return res.json(await safeOperatorStatus(result.sellerId));
     } catch (error) { return handleError(error, res); }
   });
 }

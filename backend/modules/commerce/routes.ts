@@ -267,7 +267,7 @@ async function ensureShipmentsForOrderInner(order: Order, origin: string): Promi
     // Resolve every item's product so traits (cold-chain, fragile, weight) come
     // from the actual product, not just the first item — needed for parity with
     // the cart-quote endpoint when one farmer ships mixed categories.
-    const resolved = await Promise.all(items.map(async (it: OrderItem) => ({ it, product: await storage.getProduct(it.productId) })));
+    const resolved = await Promise.all(items.map(async (it: OrderItem) => ({ it, product: await storage.getProductForOwner(it.productId) })));
     const firstProduct = resolved.find((r) => r.product)?.product;
     if (!firstProduct) continue;
     const shipItems = resolved
