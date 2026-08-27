@@ -70,6 +70,7 @@ import {
   updateCategory,
 } from "../../organisations/admin-category-service";
 import { registerEmployeeSecurityRoutes } from "./employee-security-routes";
+import { registerOrganisationControlCentreRoutes } from "./control-centre-routes";
 
 const adminPortalService = createAdminPortalService(adminPortalDataSource);
 const userIdSchema = z.string().trim().min(1).max(160).regex(/^[A-Za-z0-9._:-]+$/);
@@ -186,6 +187,7 @@ async function sendCategoryOperationError(error: unknown, req: Request, res: Res
 
 export function registerAdminFoundationRoutes(app: Express): void {
   registerEmployeeSecurityRoutes(app);
+  registerOrganisationControlCentreRoutes(app);
   app.get(
     "/api/admin/categories",
     isAuthenticated,

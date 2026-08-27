@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowRight, Star, Users, Leaf,
   ShieldCheck, Truck, Sprout, Globe, Activity, Satellite,
-  ShoppingBag, ShoppingCart,
+  ShoppingBag, ShoppingCart, Zap, Sun, Droplets,
+  BarChart3, Wifi, Compass, Mountain, Map, Plus, MapPin,
+  ChevronRight, Check,
 } from "lucide-react";
 import { LeafletFarmerMap } from "./leaflet-farmer-map";
 import { HeroServiceGrid } from "./hero-service-grid";
@@ -63,11 +65,11 @@ type HomeCategoryTile = {
 
 type HeroMapMode = "products" | "live-needs" | "farms-nearby" | "land-lots";
 
-const HERO_MAP_MODES: { id: HeroMapMode; label: string; emoji: string; overlays: { farmers?: boolean; needs?: boolean; heatmap?: boolean } }[] = [
-  { id: "products", label: "Products & Farmers", emoji: "🌱", overlays: { farmers: true, needs: false, heatmap: false } },
-  { id: "live-needs", label: "Live Needs", emoji: "📍", overlays: { farmers: false, needs: true, heatmap: false } },
-  { id: "farms-nearby", label: "Farms Nearby", emoji: "🏡", overlays: { farmers: true, needs: false, heatmap: true } },
-  { id: "land-lots", label: "Land & Lots", emoji: "🗺️", overlays: { farmers: false, needs: false, heatmap: false } },
+const HERO_MAP_MODES: { id: HeroMapMode; label: string; emoji: string; overlays: { farmers?: boolean; needs?: boolean; heatmap?: boolean; land?: boolean } }[] = [
+  { id: "products", label: "Products & Farmers", emoji: "🌱", overlays: { farmers: true, needs: false, heatmap: false, land: false } },
+  { id: "live-needs", label: "Live Needs", emoji: "📍", overlays: { farmers: false, needs: true, heatmap: false, land: false } },
+  { id: "farms-nearby", label: "Farms Nearby", emoji: "🏡", overlays: { farmers: true, needs: false, heatmap: true, land: false } },
+  { id: "land-lots", label: "Land & Lots", emoji: "🗺️", overlays: { farmers: false, needs: false, heatmap: false, land: true } },
 ];
 
 export const HeroSection = memo(function HeroSection({ onBrowse, products, onFarmerClick, onAddToCart }: HeroSectionProps) {
@@ -83,6 +85,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
   const [, navigate] = useLocation();
   const isEmbeddedView = new URLSearchParams(window.location.search).get("embedded") === "1";
   const [heroMapMode, setHeroMapMode] = useState<HeroMapMode>("products");
+  const [heroTileStyle, setHeroTileStyle] = useState<"standard" | "satellite" | "terrain" | "hybrid">("standard");
   const [heroLeftPct, setHeroLeftPct] = useState(42);
   const heroGridRef = useRef<HTMLDivElement | null>(null);
   const heroLeftRef = useRef<HTMLDivElement | null>(null);
@@ -203,31 +206,33 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
   };
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative isolate overflow-hidden bg-[#050d0d] text-white">
 
-      {/* ─── DARK NATURE BACKGROUND ─── */}
+      {/* Atmospheric command-centre backdrop — kept separate from the live UI. */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 -z-10 pointer-events-none bg-cover bg-[35%_center] lg:bg-center"
         style={{
-          background: `linear-gradient(rgba(0,0,0,0.72) 0%, rgba(10,20,10,0.80) 100%), url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1920&h=700&fit=crop&q=80') center/cover no-repeat`,
+          backgroundImage:
+            "linear-gradient(90deg, rgba(3,13,12,0.2) 0%, rgba(3,13,12,0.34) 43%, rgba(3,13,12,0.72) 100%), url('/images/agriconnect-command-center-bg.png')",
         }}
       />
+      <div className="absolute inset-0 -z-10 pointer-events-none bg-[linear-gradient(180deg,rgba(3,12,11,0.02),rgba(3,12,11,0.28))]" />
 
-      {/* ─── HERO SPLIT: Text + Map ─── */}
+      {/* ─── HERO SPLIT: Text + Map HUD Console ─── */}
       <div className="relative z-10 w-full overflow-hidden">
-        <div ref={heroGridRef} className="flex flex-col lg:flex-row lg:min-h-[380px] w-full">
+        <div ref={heroGridRef} className="flex flex-col lg:flex-row lg:min-h-[370px] w-full items-stretch">
 
-          {/* ──────── MOBILE HERO (compact — Amazon-app style) ──────── */}
-          <div className="flex lg:hidden flex-col px-3 pt-2.5 pb-2 w-full min-w-0 gap-2">
-            {/* Live status pill + compact stat strip — all in one row */}
+          {/* ──────── MOBILE HERO (compact — Cyber HUD style) ──────── */}
+          <div className="flex lg:hidden flex-col px-3 pt-3 pb-2 w-full min-w-0 gap-2.5 bg-[#061413]">
+            {/* Live status pills */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-              <div className="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/60 rounded-full px-2.5 py-0.5 shrink-0">
-                <Leaf className="w-3 h-3 text-amber-400" />
-                <span className="text-[11px] font-black text-amber-300 uppercase tracking-wider">{t("home.farm_to_table")}</span>
+              <div className="inline-flex items-center gap-1.5 bg-[#0a2723] border border-emerald-500/80 rounded-full px-2.5 py-0.5 shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                <Leaf className="w-3 h-3 text-emerald-400" />
+                <span className="text-[10.5px] font-black text-emerald-300 uppercase tracking-wider">{t("home.farm_to_table")}</span>
               </div>
-              <div className="inline-flex items-center gap-1.5 bg-green-500/20 border border-green-400/50 rounded-full px-2.5 py-0.5 shrink-0">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[11px] font-black text-green-300">{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
+              <div className="inline-flex items-center gap-1.5 bg-[#0a2723] border border-emerald-500/70 rounded-full px-2.5 py-0.5 shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10.5px] font-black text-emerald-300">{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
               </div>
               <span className="text-[11px] text-white/40 shrink-0">·</span>
               <span className="text-[11px] font-bold text-white/70 shrink-0"><span className="text-white font-black">{platformStats?.products ?? products.length}</span> {t("home.products")}</span>
@@ -235,101 +240,243 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
               <span className="text-[11px] font-bold text-white/70 shrink-0"><span className="text-white font-black">{platformStats?.freeItems ?? shareCareItems.length}</span> {t("home.free_items")}</span>
             </div>
 
-            {/* Compact headline — one tight block */}
+            {/* Headline */}
             <div>
-              <h1 className="text-[20px] font-black text-white leading-[1.1] tracking-tight">
-                {t("home.hero_title")}, <span className="gradient-text">{t("home.hero_subtitle")}</span>
+              <h1 className="text-[22px] font-black text-white leading-[1.1] tracking-tight uppercase">
+                FRESH PRODUCE, <span className="text-amber-400 drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]">DIRECT TO YOU</span>
               </h1>
-              <p className="text-[11px] text-white/60 leading-snug mt-0.5">
-                {t("home.hero_description")}
+              <p className="text-[11px] text-white/70 leading-snug mt-0.5 font-medium">
+                Connecting you directly with local growers, Fair prices, verified quality, and sustainable impact.
               </p>
             </div>
 
-            {/* CTAs — side by side */}
-            <div className="flex gap-2.5 mt-1">
+            {/* Metric Strip */}
+            <div className="grid grid-cols-4 gap-1.5">
+              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-amber-400 rounded-xl p-1.5 text-center shadow-xs">
+                <span className="text-xs font-black text-white block">{platformStats?.farmers ?? farmerCount}</span>
+                <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-400">Farmers</span>
+              </div>
+              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-cyan-400 rounded-xl p-1.5 text-center shadow-xs">
+                <span className="text-xs font-black text-white block">{platformStats?.products ?? products.length}</span>
+                <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-400">Products</span>
+              </div>
+              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-orange-400 rounded-xl p-1.5 text-center shadow-xs">
+                <span className="text-xs font-black text-white block">{platformStats?.freeItems ?? shareCareItems.length}</span>
+                <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-400">Free Items</span>
+              </div>
+              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-blue-400 rounded-xl p-1.5 text-center shadow-xs">
+                <span className="text-xs font-black text-white block">{platformStats?.buyers ?? 1}</span>
+                <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-400">Buyers</span>
+              </div>
+            </div>
+
+            {/* AI Crop Intelligence & 2027 Field Network */}
+            <div className="flex items-center justify-between gap-2 py-0.5">
+              <div className="inline-flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/60 rounded-md px-2 py-1 shadow-xs">
+                <Activity className="h-3 w-3 text-emerald-400 shrink-0" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-white">
+                  AI CROP INTELLIGENCE
+                </span>
+                <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 text-[8px] font-black px-1.5 py-0.2 rounded uppercase">
+                  OPTIMAL
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-black text-white tracking-wider drop-shadow-sm">
+                <Zap className="h-3.5 w-3.5 text-cyan-400 fill-cyan-400 shrink-0" />
+                <span>2027 FIELD NETWORK</span>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex gap-2 mt-0.5">
               <Button
                 onClick={onBrowse}
                 data-testid="button-mobile-shop-now"
-                className="flex-1 h-11 bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl shadow-md gap-2 px-3"
+                className="flex-1 h-10 bg-[#0e2a28] hover:bg-[#143d3a] border border-emerald-600/50 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md gap-1.5 px-2"
               >
-                {t("home.shop_now")}<ArrowRight className="h-4 w-4" />
+                {t("home.shop_now")}<ArrowRight className="h-3.5 w-3.5 text-amber-400" />
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/map")}
                 data-testid="button-mobile-live-map"
-                className="flex-1 h-11 border border-white/30 text-white hover:bg-white/15 bg-white/10 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl gap-2 px-3"
+                className="flex-1 h-10 border-2 border-emerald-400 bg-emerald-500/20 text-emerald-300 text-xs font-black uppercase tracking-wider rounded-xl gap-1.5 px-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
               >
-                <Satellite className="h-4 w-4 text-green-400" />{t("home.live_map")}
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                {t("home.live_map")}
               </Button>
             </div>
           </div>
 
-          {/* ──────── DESKTOP HERO — Text & CTAs (≥lg only) ──────── */}
-          <div ref={heroLeftRef} className="hidden lg:flex flex-col justify-center px-6 lg:px-8 py-5 lg:py-6 w-full overflow-hidden min-w-0">
+          {/* ──────── DESKTOP HERO — Text & Stats (≥lg only) ──────── */}
+          <div ref={heroLeftRef} className="hidden lg:flex flex-col justify-center px-6 lg:px-7 py-4 lg:py-5 w-full overflow-hidden min-w-0">
 
+            {/* Top pill tags */}
             <div className="flex items-center gap-2.5 flex-wrap mb-2.5">
-              <Badge className="bg-amber-500/20 text-amber-300 border border-amber-400/80 px-3 py-1 text-xs font-black tracking-wider uppercase rounded-full shadow-xs backdrop-blur-xs flex items-center gap-1.5">
-                <Leaf className="h-3.5 w-3.5 text-amber-400" />
+              <div className="inline-flex items-center gap-1.5 bg-[#0a2723] border border-emerald-500/80 rounded-full px-3 py-1 text-xs font-black text-emerald-300 uppercase tracking-wider shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                <Leaf className="h-3.5 w-3.5 text-emerald-400" />
                 {t("home.farm_to_table")}
-              </Badge>
-              <div className="flex items-center gap-2 bg-black/40 border border-white/30 rounded-full px-3 py-1 shadow-xs backdrop-blur-xs">
+              </div>
+              <div className="inline-flex items-center gap-2 bg-[#0a2723] border border-emerald-500/80 rounded-full px-3 py-1 text-xs font-black text-emerald-300 uppercase tracking-wider shadow-[0_0_12px_rgba(16,185,129,0.25)]">
                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
-                <span className="text-xs font-black text-emerald-300">
-                  {platformStats?.farmers ?? farmerCount} {t("home.farmers")}
-                </span>
+                <span>{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
               </div>
             </div>
 
-            <h1 className="text-3xl xl:text-4xl font-black text-white mb-2 leading-[1.05] tracking-tight">
-              <span className="block">{t("home.fresh_produce")}</span>
-              <span className="gradient-text block whitespace-nowrap">{t("home.direct_to_you")}</span>
+            {/* Big Headline */}
+            <h1 className="text-3xl xl:text-4xl 2xl:text-[42px] font-black text-white mb-2 leading-[1.05] tracking-tight uppercase">
+              <span className="block">FRESH PRODUCE,</span>
+              <span className="block text-amber-400 drop-shadow-[0_0_18px_rgba(245,158,11,0.45)] whitespace-nowrap">
+                DIRECT TO YOU
+              </span>
             </h1>
 
-            <p className="text-xs sm:text-sm font-semibold text-white/90 mb-3.5 leading-normal max-w-lg">
-              {t("home.hero_description")}
+            {/* Subtitle */}
+            <p className="text-xs sm:text-sm font-medium text-white/80 mb-4 leading-normal max-w-lg">
+              Connecting you directly with local growers, Fair prices, verified quality, and sustainable impact.
             </p>
 
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 mb-3.5 max-w-lg">
-              {[
-                { value: `${platformStats?.farmers ?? farmerCount}`, label: t("home.farmers"), icon: Users, color: "text-primary bg-primary/25" },
-                { value: `${platformStats?.products ?? products.length}`, label: t("home.products"), icon: Sprout, color: "text-emerald-400 bg-emerald-900/60" },
-                { value: `${platformStats?.freeItems ?? shareCareItems.length}`, label: t("home.free_items"), icon: Activity, color: "text-amber-400 bg-amber-900/60" },
-                { value: platformStats?.buyers === undefined ? "—" : `${platformStats.buyers}`, label: t("platform_stats.buyers", "Buyers"), icon: ShoppingBag, color: "text-sky-300 bg-sky-900/60" },
-              ].map(({ value, label, icon: Icon, color }) => (
-                <div key={label} className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl py-1.5 px-2 flex flex-col items-center text-center shadow-xs hover:bg-white/20 transition-all">
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center mx-auto mb-1 ${color}`}>
-                    <Icon className="h-3 w-3" />
+            {/* 4 HUD Stat Cards + 3D Wireframe Cyber Globe with 2027 Badge */}
+            <div className="flex items-center gap-3 mb-4 max-w-xl">
+              {/* 4 Metric Cards */}
+              <div className="grid grid-cols-4 gap-2 flex-1">
+                {/* Farmer Stat Card */}
+                <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-amber-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
+                  <div className="w-5 h-5 rounded-lg flex items-center justify-center mb-1 text-amber-400">
+                    <Users className="h-3.5 w-3.5" />
                   </div>
-                  <span className="text-base sm:text-lg font-black text-white leading-none my-0.5">{value}</span>
-                  <span className="text-[9px] font-black uppercase tracking-[0.08em] text-white/80">{label}</span>
+                  <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
+                    {platformStats?.farmers ?? farmerCount}
+                  </span>
+                  <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-400">
+                    FARMERS
+                  </span>
                 </div>
-              ))}
+
+                {/* Products Stat Card */}
+                <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-cyan-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
+                  <div className="w-5 h-5 rounded-lg flex items-center justify-center mb-1 text-cyan-400">
+                    <Sprout className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
+                    {platformStats?.products ?? products.length}
+                  </span>
+                  <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-400">
+                    PRODUCTS
+                  </span>
+                </div>
+
+                {/* Free Items Stat Card */}
+                <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-orange-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
+                  <div className="w-5 h-5 rounded-lg flex items-center justify-center mb-1 text-orange-400">
+                    <Zap className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
+                    {platformStats?.freeItems ?? shareCareItems.length}
+                  </span>
+                  <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-400">
+                    FREE ITEMS
+                  </span>
+                </div>
+
+                {/* Buyers Stat Card */}
+                <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-blue-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
+                  <div className="w-5 h-5 rounded-lg flex items-center justify-center mb-1 text-blue-400">
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
+                    {platformStats?.buyers ?? 1}
+                  </span>
+                  <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-400">
+                    BUYERS
+                  </span>
+                </div>
+              </div>
+
+              {/* AI status card; the generated backdrop supplies the globe artwork. */}
+              <div className="relative w-28 h-20 shrink-0 hidden sm:flex items-center justify-center">
+                <div className="relative z-10 bg-[#0a1b1a]/88 border border-slate-400/25 rounded-xl px-2.5 py-1.5 text-center shadow-[inset_0_1px_rgba(255,255,255,0.08),0_12px_28px_rgba(0,0,0,0.32)] backdrop-blur-md">
+                  <span className="text-xs font-black text-emerald-300 block leading-tight tracking-wider">
+                    2027
+                  </span>
+                  <span className="text-[8px] font-black uppercase text-white/90 block leading-tight">
+                    AI Crop Intelligence
+                  </span>
+                  <span className="text-[7.5px] font-black uppercase text-emerald-400 flex items-center justify-center gap-1 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3 mb-3.5 flex-wrap">
-              <Button onClick={onBrowse} className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 h-11 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl shadow-md shadow-primary/30 gap-2">
-                {t("home.shop_now")}<ArrowRight className="h-4 w-4" />
+            {/* AI Crop Intelligence & 2027 Field Network */}
+            <div className="space-y-1.5 mb-3.5">
+              <div>
+                <div className="inline-flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/60 rounded-lg px-3 py-1 shadow-xs backdrop-blur-xs">
+                  <Activity className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                  <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">
+                    AI CROP INTELLIGENCE
+                  </span>
+                  <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                    OPTIMAL
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-black text-white tracking-widest drop-shadow-md">
+                <Zap className="h-4 w-4 text-cyan-400 fill-cyan-400 shrink-0" />
+                <span>2027 FIELD NETWORK</span>
+              </div>
+            </div>
+
+            {/* Action Buttons Row */}
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <Button
+                onClick={onBrowse}
+                className="bg-[#0a2220] hover:bg-[#123835] border border-emerald-600/60 hover:border-emerald-400 text-white px-5 h-10 text-xs font-black uppercase tracking-wider rounded-xl shadow-lg gap-2 transition-all"
+              >
+                <span>SHOP NOW</span>
+                <ArrowRight className="h-3.5 w-3.5 text-amber-400" />
               </Button>
-              <Button variant="outline" className="border border-green-400/80 text-white hover:bg-green-500/30 px-6 h-11 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl gap-2 bg-green-500/25 shadow-md" onClick={() => navigate("/map")}>
-                <Satellite className="h-4 w-4 text-green-300" />{t("home.live_map")}
+
+              <Button
+                variant="outline"
+                className="border-2 border-emerald-400 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 px-5 h-10 text-xs font-black uppercase tracking-wider rounded-xl gap-2 shadow-[0_0_18px_rgba(16,185,129,0.35)] cursor-pointer"
+                onClick={() => navigate("/map")}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>LIVE MAP</span>
               </Button>
             </div>
 
-            <div className="flex gap-4 sm:gap-5 flex-wrap items-center">
-              {TRUST_BADGES.map(({ icon: Icon, label, color }) => (
-                <div key={label} className="flex items-center gap-1.5 text-xs text-white font-bold drop-shadow-md">
-                  <Icon className={`h-3.5 w-3.5 shrink-0 ${color}`} />
-                  <span>{t(label)}</span>
-                </div>
-              ))}
+            {/* Trust Badges Row */}
+            <div className="flex gap-3 sm:gap-4 flex-wrap items-center">
+              <div className="flex items-center gap-1 text-[11px] text-emerald-300 font-bold">
+                <Check className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Verified Farms</span>
+              </div>
+              <div className="flex items-center gap-1 text-[11px] text-blue-300 font-bold">
+                <Truck className="h-3.5 w-3.5 text-blue-400" />
+                <span>Farm-to-Door</span>
+              </div>
+              <div className="flex items-center gap-1 text-[11px] text-emerald-300 font-bold">
+                <Leaf className="h-3.5 w-3.5 text-emerald-400" />
+                <span>100% Natural</span>
+              </div>
+              <div className="flex items-center gap-1 text-[11px] text-purple-300 font-bold">
+                <Globe className="h-3.5 w-3.5 text-purple-400" />
+                <span>75+ Regions</span>
+              </div>
+              <div className="bg-[#0c2a27] border border-emerald-500/60 text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Check className="h-2.5 w-2.5" />
+                <span>2027 Target</span>
+              </div>
             </div>
 
           </div>
 
           {/* MOBILE-ONLY compact map */}
           <div className="block lg:hidden relative w-full px-3" style={{ height: mobileMapHeight }}>
-            <div className="w-full h-full rounded-2xl overflow-hidden border border-white/20 shadow-xl shadow-black/30">
+            <div className="w-full h-full rounded-2xl overflow-hidden border border-emerald-700/40 shadow-xl relative">
               <LeafletFarmerMap
                 products={products}
                 onFarmerClick={onFarmerClick}
@@ -348,7 +495,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                   key={mode.id}
                   onClick={() => setHeroMapMode(mode.id)}
                   data-testid={`btn-mobile-map-mode-${mode.id}`}
-                  className={`flex-1 min-w-0 flex items-center justify-center gap-0.5 px-1 py-0.5 rounded-md text-[7px] font-bold border shadow-sm backdrop-blur-md transition-all ${heroMapMode === mode.id ? "bg-green-500 text-white border-green-400" : "bg-black/60 text-white/85 border-white/15"}`}
+                  className={`flex-1 min-w-0 flex items-center justify-center gap-0.5 px-1 py-0.5 rounded-md text-[7px] font-bold border shadow-sm backdrop-blur-md transition-all ${heroMapMode === mode.id ? "bg-emerald-500 text-white border-emerald-400" : "bg-black/60 text-white/85 border-white/15"}`}
                 >
                   <span className="text-[8px] shrink-0">{mode.emoji}</span>
                   <span className="truncate">{mode.label}</span>
@@ -363,7 +510,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             onTouchStart={(e) => { startMobileMapDrag(e.touches[0].clientY); }}
             data-testid="mobile-map-resize-handle"
             title={t("map.drag_to_resize")}
-            className="block lg:hidden mx-3 mt-1.5 mb-2 h-6 rounded-full cursor-row-resize touch-none select-none relative overflow-hidden bg-gradient-to-r from-green-500/20 via-green-400/40 to-green-500/20 border border-green-400/50 shadow-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            className="block lg:hidden mx-3 mt-1.5 mb-2 h-6 rounded-full cursor-row-resize touch-none select-none relative overflow-hidden bg-gradient-to-r from-emerald-500/20 via-emerald-400/40 to-emerald-500/20 border border-emerald-400/50 shadow-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
             <span className="relative z-10 text-[9px] font-black uppercase tracking-wider text-white drop-shadow-xs">
               {t("map.drag_to_resize")}
@@ -378,56 +525,225 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             className="hidden lg:flex flex-col items-center justify-center w-3 cursor-col-resize group flex-shrink-0 z-20 hover:bg-white/5 transition-colors"
           >
             <div className="flex flex-col gap-1">
-              <div className="w-0.5 h-5 rounded-full bg-white/30 group-hover:bg-primary/80 transition-colors" />
-              <div className="w-0.5 h-2 rounded-full bg-white/20 group-hover:bg-primary/60 transition-colors" />
-              <div className="w-0.5 h-5 rounded-full bg-white/30 group-hover:bg-primary/80 transition-colors" />
+              <div className="w-0.5 h-5 rounded-full bg-emerald-500/30 group-hover:bg-emerald-400/80 transition-colors" />
+              <div className="w-0.5 h-2 rounded-full bg-emerald-500/20 group-hover:bg-emerald-400/60 transition-colors" />
+              <div className="w-0.5 h-5 rounded-full bg-emerald-500/30 group-hover:bg-emerald-400/80 transition-colors" />
             </div>
           </div>
 
-          {/* RIGHT — Full-height satellite map */}
+          {/* ──────── DESKTOP SATELLITE HUD CONSOLE (≥lg only) ──────── */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative hidden lg:flex flex-1"
+            className="relative hidden lg:flex flex-1 p-2.5 pl-0"
           >
-            <div className="absolute inset-0 p-3 pl-0">
-              <div className="w-full h-full rounded-2xl overflow-hidden border border-white/20 shadow-xl shadow-black/30">
+            {/* Outer Gunmetal Metallic Bezel Frame */}
+            <div className="relative w-full h-full rounded-3xl p-1 bg-gradient-to-b from-[#163330] via-[#091a18] to-[#040f0e] border-2 border-[#1a4b44] shadow-[0_0_35px_rgba(4,20,18,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col overflow-hidden">
+
+              {/* Top Notch Header */}
+              <div className="flex items-center justify-between px-3 py-1.5 bg-[#061413]/95 border-b border-[#143d37] z-30 rounded-t-2xl">
+                {/* Left Layer Switcher Tabs */}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setHeroTileStyle("standard")}
+                    className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      heroTileStyle === "standard"
+                        ? "bg-amber-400 text-black shadow-xs font-black"
+                        : "bg-[#0b211f] text-slate-300 hover:text-white border border-[#143d37]"
+                    }`}
+                  >
+                    ● STANDARD
+                  </button>
+                  <button
+                    onClick={() => setHeroTileStyle("satellite")}
+                    className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      heroTileStyle === "satellite"
+                        ? "bg-amber-400 text-black shadow-xs font-black"
+                        : "bg-[#0b211f] text-slate-300 hover:text-white border border-[#143d37]"
+                    }`}
+                  >
+                    ● SATELLITE
+                  </button>
+                  <button
+                    onClick={() => setHeroTileStyle("terrain")}
+                    className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      heroTileStyle === "terrain"
+                        ? "bg-amber-400 text-black shadow-xs font-black"
+                        : "bg-[#0b211f] text-slate-300 hover:text-white border border-[#143d37]"
+                    }`}
+                  >
+                    TERRAIN / 3D
+                  </button>
+                  <button
+                    onClick={() => navigate("/map")}
+                    className="px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider bg-[#0b211f] text-slate-300 hover:text-white border border-[#143d37] cursor-pointer"
+                  >
+                    BUYERS VIEW
+                  </button>
+                </div>
+
+                {/* Center AGRI CONNECT HUD Badge */}
+                <div className="bg-gradient-to-r from-[#0d2a27] via-[#103a35] to-[#0d2a27] border border-[#1b554c] rounded-lg px-3 py-0.5 shadow-md flex items-center gap-1.5">
+                  <Leaf className="h-3 w-3 text-emerald-400 fill-emerald-400" />
+                  <span className="text-[11px] font-black tracking-widest text-emerald-300 uppercase">AGRI CONNECT</span>
+                </div>
+
+                {/* Right Status LEDs */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 text-[9px] font-bold text-cyan-400">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    <span>NETWORK</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-400">
+                    <Zap className="h-2.5 w-2.5 text-emerald-400 fill-emerald-400" />
+                    <span>POWER</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Map Viewport with Leaflet & Overlays */}
+              <div className="relative flex-1 w-full overflow-hidden rounded-b-2xl">
                 <LeafletFarmerMap
                   products={products}
                   onFarmerClick={onFarmerClick}
                   height="100%"
                   initialZoom={7}
                   center={[52.3, -1.0]}
-                  showControls={true}
-                  showLayerSwitcher={true}
-                  tileStyle="satellite"
+                  showControls={false}
+                  showLayerSwitcher={false}
+                  tileStyle={heroTileStyle}
                   mapOverlays={HERO_MAP_MODES.find(m => m.id === heroMapMode)?.overlays}
                 />
-              </div>
-              {/* Map mode toggle strip */}
-              <div className="absolute bottom-6 left-3 right-6 z-30 flex items-end justify-between gap-2">
-                <div className="flex flex-wrap gap-1 pointer-events-auto">
-                  {HERO_MAP_MODES.map(mode => (
-                    <button
-                      key={mode.id}
-                      onClick={() => setHeroMapMode(mode.id)}
-                      data-testid={`btn-hero-map-mode-${mode.id}`}
-                      className={`flex items-center gap-0.5 px-2 py-1 rounded-lg text-[9px] font-bold border shadow-md backdrop-blur-md transition-all ${heroMapMode === mode.id ? "bg-green-500 text-white border-green-400 shadow-green-500/30" : "bg-black/60 text-white/85 border-white/15 hover:bg-black/75 hover:border-white/30"}`}
-                    >
-                      <span className="text-[10px]">{mode.emoji}</span>
-                      <span>{mode.label}</span>
-                    </button>
-                  ))}
+
+                {/* Animated Glowing Fair-Price Route Lines Overlay */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-[1000]" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="routeGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.85" />
+                      <stop offset="50%" stopColor="#34d399" stopOpacity="1" />
+                      <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.85" />
+                    </linearGradient>
+                    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  {/* Glowing Route Polyline */}
+                  <path
+                    d="M 120 180 Q 220 140 320 210 T 520 200 T 680 160 T 820 220"
+                    fill="none"
+                    stroke="url(#routeGlow)"
+                    strokeWidth="3.5"
+                    filter="url(#neonGlow)"
+                    strokeDasharray="8 4"
+                    className="animate-pulse"
+                  />
+                  {/* Checkpoint Nodes */}
+                  <circle cx="320" cy="210" r="5" fill="#10b981" stroke="#ffffff" strokeWidth="2" />
+                  <circle cx="520" cy="200" r="6" fill="#38bdf8" stroke="#ffffff" strokeWidth="2" />
+                  <circle cx="680" cy="160" r="5" fill="#fbbf24" stroke="#ffffff" strokeWidth="2" />
+                </svg>
+
+                {/* Floating Top-Left Route Tracker Badge */}
+                <div className="absolute top-3 left-3 z-[1200] bg-[#071917]/90 backdrop-blur-md border border-emerald-600/70 rounded-xl px-2.5 py-1.5 shadow-xl text-white pointer-events-auto">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-300">
+                      CURRENT FAIR-PRICE ROUTES
+                    </span>
+                  </div>
                 </div>
+
+                {/* Floating Top-Center Checkpoint Tracker Badge */}
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1200] bg-[#071917]/90 backdrop-blur-md border border-amber-500/70 rounded-xl px-2.5 py-1 shadow-xl text-white pointer-events-auto">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-300">
+                    QUALITY CHECKPOINTS
+                  </span>
+                </div>
+
+                {/* Floating Weather Card (Bottom Left) */}
+                <div className="absolute bottom-12 left-3 z-[1200] bg-[#071917]/95 backdrop-blur-md border border-emerald-700/60 rounded-xl p-2.5 shadow-2xl text-white w-44 pointer-events-auto">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">WEATHER</span>
+                    <Sun className="h-4 w-4 text-amber-400" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl font-black text-white leading-none">91°F</span>
+                    <span className="text-[10.5px] font-bold text-amber-400">/ 37.1°C</span>
+                    <span className="text-[9px] font-black text-emerald-400 uppercase ml-auto">SUNNY</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[8.5px] text-slate-300 font-bold mt-1.5 pt-1 border-t border-emerald-900/60">
+                    <span className="flex items-center gap-1 text-emerald-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> 0 Online
+                    </span>
+                    <span className="flex items-center gap-1 text-amber-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> 0 Needs
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right-Side Telemetry Panel (Moisture Graph + Soil Analysis) */}
+                <div className="absolute bottom-12 right-3 z-[1200] flex flex-col gap-2 pointer-events-auto">
+                  {/* Moisture Data Widget */}
+                  <div className="bg-[#071917]/95 backdrop-blur-md border border-emerald-700/60 rounded-xl p-2 shadow-2xl text-white w-44">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-300">MOISTURE DATA</span>
+                      <Droplets className="h-3 w-3 text-cyan-400" />
+                    </div>
+                    {/* Live SVG Curve Graph */}
+                    <div className="h-10 w-full bg-[#040f0e] rounded-lg p-1 relative overflow-hidden flex items-end">
+                      <svg className="w-full h-full text-emerald-400" viewBox="0 0 100 40" fill="none" preserveAspectRatio="none">
+                        <path d="M0,30 Q15,10 30,25 T60,15 T85,5 T100,20" fill="none" stroke="#10b981" strokeWidth="2" />
+                        <path d="M0,30 Q15,10 30,25 T60,15 T85,5 T100,20 L100,40 L0,40 Z" fill="rgba(16,185,129,0.15)" />
+                      </svg>
+                      <span className="absolute top-1 left-1 text-[7.5px] text-slate-500 font-mono">90%</span>
+                      <span className="absolute bottom-1 right-1 text-[7.5px] text-emerald-300 font-mono font-bold">28.5%</span>
+                    </div>
+                  </div>
+
+                  {/* Soil Analysis Widget */}
+                  <div className="bg-[#071917]/95 backdrop-blur-md border border-emerald-700/60 rounded-xl p-2 shadow-2xl text-white w-44">
+                    <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-300 block mb-1">
+                      SOIL ANALYSIS
+                    </span>
+                    {/* Strata layer representation */}
+                    <div className="h-6 w-full rounded-md overflow-hidden flex flex-col border border-emerald-900/60">
+                      <div className="h-2 bg-emerald-800/80 w-full" />
+                      <div className="h-2 bg-amber-900/80 w-full" />
+                      <div className="h-2 bg-stone-900 w-full" />
+                    </div>
+                    <span className="text-[8px] text-emerald-300 font-bold block mt-1">
+                      Current Moisture: ~3.8% analysis
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom Center Status Notch */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-[1200] bg-[#071917]/95 border border-emerald-600/70 rounded-full px-4 py-0.5 text-center shadow-xl">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300">
+                    AGRI AI ANALYSIS: OPTIMAL
+                  </span>
+                </div>
+
+                {/* Bottom Right SATELLITE Layer Pill */}
+                <div className="absolute bottom-2 right-3 z-[1200] bg-black/80 border border-amber-400 text-amber-400 text-[9px] font-black uppercase px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-md pointer-events-auto">
+                  <Satellite className="h-3 w-3" />
+                  <span>SATELLITE</span>
+                </div>
+
               </div>
             </div>
           </motion.div>
         </div>
 
-        {/* ─── QUICK ACCESS — full-width, snug and compact ─── */}
-        <div className="px-3 sm:px-6 lg:px-8 pb-1.5 pt-0.5 w-full overflow-hidden">
+        {/* ─── QUICK ACCESS & MY SITES (Cyber-HUD Panoramic Command Deck) ─── */}
+        <div className="px-3 sm:px-5 lg:px-7 pb-2.5 pt-1.5 w-full overflow-hidden space-y-2 relative">
           <HeroServiceGrid />
+          <UserBookmarks />
         </div>
       </div>
 

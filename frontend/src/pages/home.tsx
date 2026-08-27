@@ -17,14 +17,22 @@ import { useCart } from "@/hooks/use-cart";
 import { useTranslation } from "react-i18next";
 import type { Product, ProductFilters as Filters } from "@shared/schema";
 import { useCatalogCategories } from "@/hooks/use-catalog-categories";
+import { categories as staticCategories } from "@/lib/categories";
 import { buildProductDetailUrl } from "@/lib/product-navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 function findCategoryForSubcategory(categories: readonly import("@shared/schema").Category[], subcategoryId: string | null) {
   if (!subcategoryId) return null;
-  return categories.find((category) =>
-    category.subcategories.some((subcategory) => subcategory.id === subcategoryId)
-  )?.id ?? null;
+  const allCats = categories.length > 0 ? categories : staticCategories;
+  return (
+    allCats.find((category) =>
+      category.subcategories.some((subcategory) => subcategory.id === subcategoryId)
+    )?.id ??
+    staticCategories.find((category) =>
+      category.subcategories.some((subcategory) => subcategory.id === subcategoryId)
+    )?.id ??
+    null
+  );
 }
 
 const DIETARY_CHIPS = [
@@ -101,9 +109,10 @@ export default function Home() {
   const requestedSubcategory = urlSubcategory || activeSubcategory || selectedSubcategory;
   const effectiveSubcategory = useMemo(() => {
     if (!selectedCategory || !requestedSubcategory) return undefined;
-    const category = publishedCategories.find(
-      (item) => item.id === selectedCategory,
-    );
+    const allCats = publishedCategories.length > 0 ? publishedCategories : staticCategories;
+    const category =
+      allCats.find((item) => item.id === selectedCategory) ||
+      staticCategories.find((item) => item.id === selectedCategory);
     return category?.subcategories.some(
       (subcategory) => subcategory.id === requestedSubcategory,
     )
@@ -187,10 +196,31 @@ export default function Home() {
   const handleSubcategoryClick = useCallback((subId: string | null) => {
     setActiveSubcategory(subId);
     setActiveSection(null);
-    if (subId && expandedCategory) {
-      setSelectedSubcategory(subId);
+    setSelectedSubcategory(subId || undefined);
+    const qs = new URLSearchParams(window.location.search);
+    if (selectedCategory) qs.set("category", selectedCategory);
+    if (subId) {
+      qs.set("subcategory", subId);
+    } else {
+      qs.delete("subcategory");
+      qs.delete("subcategoryId");
     }
-  }, [expandedCategory]);
+    qs.delete("section");
+    setLocation(`/?${qs.toString()}`);
+  }, [selectedCategory, setLocation]);
+
+  const handleSectionChange = useCallback((section: string | null) => {
+    setActiveSection(section);
+    const qs = new URLSearchParams(window.location.search);
+    if (selectedCategory) qs.set("category", selectedCategory);
+    if (effectiveSubcategory) qs.set("subcategory", effectiveSubcategory);
+    if (section) {
+      qs.set("section", section);
+    } else {
+      qs.delete("section");
+    }
+    setLocation(`/?${qs.toString()}`);
+  }, [selectedCategory, effectiveSubcategory, setLocation]);
 
   const handleCloseSubcategoryPanel = useCallback(() => {
     setExpandedCategory(null);
@@ -277,7 +307,7 @@ export default function Home() {
           <main className="flex-1 overflow-hidden">
             <AnimatePresence mode="wait">
               {showHomepage ? (
-                <div key="homepage-scroll-container" className="h-full overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-gutter:stable] transform-gpu">
+                <div key="homepage-scroll-container" className="h-full overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-gutter:stable] transform-gpu bg-[#061413]">
                   <motion.div
                     key="homepage"
                     initial={{ opacity: 0 }}
@@ -311,7 +341,12 @@ export default function Home() {
                   className="h-full flex flex-col"
                 >
                   {selectedCategory === "dietary" ? (
-                    <DietaryComingSoon products={products} subcategoryId={effectiveSubcategory} />
+                    <DietaryComingSoon
+                      products={products}
+                      subcategoryId={effectiveSubcategory}
+                      activeSection={activeSection}
+                      onSectionChange={handleSectionChange}
+                    />
                   ) : (
                     <ResizableSplit
                       left={
@@ -323,6 +358,8 @@ export default function Home() {
                           onAddToCart={handleAddToCart}
                           onProductClick={handleProductClick}
                           onFarmerClick={handleFarmerClick}
+                          onSubcategoryChange={handleSubcategoryClick}
+                          onSectionChange={handleSectionChange}
                         />
                       }
                       right={<LiveSellersRail mapHeight={400} listHeight={460} />}

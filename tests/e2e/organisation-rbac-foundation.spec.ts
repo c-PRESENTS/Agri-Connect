@@ -52,6 +52,19 @@ const EXPECTED_PERMISSION_CODES = [
   "audit.view",
   "audit.export",
   "security.manage",
+  "partners.view",
+  "partners.manage",
+  "regions.view",
+  "regions.manage",
+  "opportunities.view",
+  "opportunities.manage",
+  "content.view",
+  "content.manage",
+  "orders.view",
+  "orders.manage",
+  "logistics.view",
+  "logistics.manage",
+  "settings.manage",
 ] as const;
 
 const EXPECTED_PLATFORM_ROLE_CODES = [

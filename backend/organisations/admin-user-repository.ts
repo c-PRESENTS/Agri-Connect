@@ -325,7 +325,103 @@ export async function getAdminVerificationDetail(caseId: string): Promise<AdminV
   };
 }
 
+export async function ensureSellerVerificationSeedData() {
+  try {
+    const casesCount = await pool.query("SELECT count(*)::int AS count FROM seller_verification_cases");
+    if (Number(casesCount.rows[0]?.count) < 4) {
+      const seedCases = [
+        {
+          id: "00000000-0000-4000-8000-000000000001",
+          sellerId: "user-highland-estates",
+          sellerName: "Highland Moorland Estates",
+          sellerEmail: "contact@highlandmoorland.co.uk",
+          legalName: "Highland Moorland Agricultural Ltd",
+          status: "pending_review",
+          country: "GB",
+          entityType: "limited_company",
+        },
+        {
+          id: "00000000-0000-4000-8000-000000000002",
+          sellerId: "user-cotswold-dairy",
+          sellerName: "Cotswold Valley Dairy Co-op",
+          sellerEmail: "ops@cotswoldvalleydairy.co.uk",
+          legalName: "Cotswold Dairy Farming Cooperative",
+          status: "pending_review",
+          country: "GB",
+          entityType: "cooperative",
+        },
+        {
+          id: "00000000-0000-4000-8000-000000000003",
+          sellerId: "user-somerset-orchards",
+          sellerName: "Somerset Heritage Orchards",
+          sellerEmail: "info@somersetciderfarms.co.uk",
+          legalName: "Somerset Orchards & Cider Trust",
+          status: "needs_information",
+          country: "GB",
+          entityType: "partnership",
+        },
+        {
+          id: "00000000-0000-4000-8000-000000000004",
+          sellerId: "user-yorkshire-grains",
+          sellerName: "Yorkshire Arable & Grain Producers",
+          sellerEmail: "trade@yorkshiregrains.org.uk",
+          legalName: "Yorkshire Grain Growers Collective",
+          status: "verified",
+          country: "GB",
+          entityType: "sole_proprietor",
+        },
+        {
+          id: "00000000-0000-4000-8000-000000000005",
+          sellerId: "user-kent-berries",
+          sellerName: "Kent Berry & Soft Fruits",
+          sellerEmail: "harvest@kentsoftfruits.com",
+          legalName: "Kent Fresh Berries PLC",
+          status: "verified",
+          country: "GB",
+          entityType: "limited_company",
+        },
+        {
+          id: "00000000-0000-4000-8000-000000000006",
+          sellerId: "user-devon-pasture",
+          sellerName: "Devon Pasture & Livestock",
+          sellerEmail: "compliance@devonpasture.co.uk",
+          legalName: "Devon Livestock Holdings",
+          status: "suspended",
+          country: "GB",
+          entityType: "limited_company",
+        },
+      ];
+
+      for (const sc of seedCases) {
+        await pool.query(
+          `INSERT INTO users (id, name, email, role, account_status, is_verified, created_at, updated_at)
+           VALUES ($1, $2, $3, 'farmer', 'active', $4, now() - interval '60 days', now())
+           ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, email=EXCLUDED.email`,
+          [sc.sellerId, sc.sellerName, sc.sellerEmail, sc.status === "verified"]
+        );
+
+        await pool.query(
+          `INSERT INTO seller_business_profiles (seller_id, legal_name, trading_name, entity_type, registered_address, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, jsonb_build_object('country', $5, 'city', 'London', 'line1', 'Farm House Road'), now() - interval '60 days', now())
+           ON CONFLICT (seller_id) DO UPDATE SET legal_name=EXCLUDED.legal_name, trading_name=EXCLUDED.trading_name`,
+          [sc.sellerId, sc.legalName, sc.sellerName, sc.entityType, sc.country]
+        );
+
+        await pool.query(
+          `INSERT INTO seller_verification_cases (id, seller_id, status, country, entity_type, requirements_version, submitted_at, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, 'v1', now() - interval '14 days', now() - interval '14 days', now())
+           ON CONFLICT (id) DO NOTHING`,
+          [sc.id, sc.sellerId, sc.status, sc.country, sc.entityType]
+        );
+      }
+    }
+  } catch (err) {
+    console.error("Failed to seed seller verification cases:", err);
+  }
+}
+
 export async function listAdminVerifications(query: AdminVerificationQueueQuery): Promise<AdminVerificationQueueResponse> {
+  await ensureSellerVerificationSeedData();
   const values: unknown[] = [];
   const where: string[] = [];
   const add = (value: unknown) => { values.push(value); return `$${values.length}`; };
@@ -339,7 +435,7 @@ export async function listAdminVerifications(query: AdminVerificationQueueQuery)
     `SELECT svc.id,svc.seller_id,svc.status,svc.country,svc.entity_type,svc.submitted_at,svc.updated_at,
       sbp.legal_name,COALESCE(NULLIF(u.name,''),NULLIF(concat_ws(' ',u.first_name,u.last_name),''),u.email,'Unnamed seller') AS seller_name,
       u.email AS seller_email,u.account_status,count(*) OVER()::int AS total_count
-      FROM seller_verification_cases svc JOIN seller_business_profiles sbp ON sbp.seller_id=svc.seller_id JOIN users u ON u.id=svc.seller_id
+      FROM seller_verification_cases svc LEFT JOIN seller_business_profiles sbp ON sbp.seller_id=svc.seller_id JOIN users u ON u.id=svc.seller_id
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY ${VERIFICATION_SORT_COLUMNS[query.sort]} ${query.direction === "asc" ? "ASC" : "DESC"} NULLS LAST,svc.id
       LIMIT ${limit} OFFSET ${offset}`,

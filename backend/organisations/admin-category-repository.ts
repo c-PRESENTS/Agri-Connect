@@ -69,7 +69,7 @@ export async function ensureCanonicalTaxonomyImported(categories: Category[]): P
             OR published_data->>'imageUrl' = '/category-logos/' || canonical_id || '.svg'
           )`,
     );
-    const imported = await client.query("SELECT 1 FROM catalog_taxonomy_imports WHERE import_key='canonical-v2'");
+    const imported = await client.query("SELECT 1 FROM catalog_taxonomy_imports WHERE import_key='canonical-v4'");
     if (imported.rowCount) {
       await client.query("COMMIT");
       return;
@@ -82,7 +82,7 @@ export async function ensureCanonicalTaxonomyImported(categories: Category[]): P
         `INSERT INTO catalog_categories
           (id,canonical_id,parent_id,name,slug,icon,image_url,buyer_visible,seller_only,status,display_order,content,published_data,published_at,created_at,updated_at)
          VALUES ($1,$1,NULL,$2,$3,$4,$5,$6,$7,'published',$8,$9,$10,now(),now(),now())
-         ON CONFLICT (id) DO UPDATE SET canonical_id=EXCLUDED.canonical_id,published_data=COALESCE(catalog_categories.published_data,EXCLUDED.published_data)`,
+         ON CONFLICT (id) DO UPDATE SET canonical_id=EXCLUDED.canonical_id,buyer_visible=EXCLUDED.buyer_visible,seller_only=EXCLUDED.seller_only,published_data=EXCLUDED.published_data,updated_at=now()`,
         [
           category.id,
           category.name,
@@ -110,7 +110,7 @@ export async function ensureCanonicalTaxonomyImported(categories: Category[]): P
           `INSERT INTO catalog_categories
             (id,canonical_id,parent_id,name,slug,icon,image_url,buyer_visible,seller_only,status,display_order,content,published_data,published_at,created_at,updated_at)
            VALUES ($1,$2,$3,$4,$5,'Leaf',$6,$7,$8,'published',$9,$10,$11,now(),now(),now())
-           ON CONFLICT (id) DO UPDATE SET canonical_id=EXCLUDED.canonical_id,published_data=COALESCE(catalog_categories.published_data,EXCLUDED.published_data)`,
+           ON CONFLICT (id) DO UPDATE SET canonical_id=EXCLUDED.canonical_id,buyer_visible=EXCLUDED.buyer_visible,seller_only=EXCLUDED.seller_only,published_data=EXCLUDED.published_data,updated_at=now()`,
           [
             internalId,
             subcategory.id,
@@ -129,7 +129,7 @@ export async function ensureCanonicalTaxonomyImported(categories: Category[]): P
       }
     }
     await client.query(
-      `INSERT INTO catalog_taxonomy_imports(import_key,row_count) VALUES ('canonical-v2',$1)`,
+      `INSERT INTO catalog_taxonomy_imports(import_key,row_count) VALUES ('canonical-v4',$1) ON CONFLICT (import_key) DO NOTHING`,
       [rowCount],
     );
     await client.query("COMMIT");

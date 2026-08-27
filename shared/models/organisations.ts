@@ -77,6 +77,19 @@ export const ADMIN_PERMISSION_CODES = [
   "audit.view",
   "audit.export",
   "security.manage",
+  "partners.view",
+  "partners.manage",
+  "regions.view",
+  "regions.manage",
+  "opportunities.view",
+  "opportunities.manage",
+  "content.view",
+  "content.manage",
+  "orders.view",
+  "orders.manage",
+  "logistics.view",
+  "logistics.manage",
+  "settings.manage",
 ] as const;
 
 export type AdminPermissionCode = (typeof ADMIN_PERMISSION_CODES)[number];

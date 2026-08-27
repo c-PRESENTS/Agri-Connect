@@ -51,23 +51,15 @@ const StudentConfirmLoginPage = lazy(() => import("@/pages/student-confirm-login
 const FulfillmentPage = lazy(() => import("@/pages/fulfillment"));
 const MarketplacePage = lazy(() => import("@/pages/marketplace"));
 const RegionalOrganisationPage = lazy(() => import("@/pages/regional-organisation"));
-const AdminOverviewPage = lazy(() => import("@/pages/admin-overview"));
-const AdminAuditPage = lazy(() => import("@/pages/admin-audit"));
-const AdminUsersPage = lazy(() => import("@/pages/admin-users"));
 const AdminUserDetailPage = lazy(() => import("@/pages/admin-user-detail"));
-const AdminVerificationsPage = lazy(() => import("@/pages/admin-verifications"));
 const AdminVerificationDetailPage = lazy(() => import("@/pages/admin-verification-detail"));
-const AdminProductsPage = lazy(() => import("@/pages/admin-products"));
 const AdminProductDetailPage = lazy(() => import("@/pages/admin-product-detail"));
-const AdminCategoriesPage = lazy(() => import("@/pages/admin-categories"));
-const AdminEmployeesPage = lazy(() => import("@/pages/admin-employees"));
 const AdminEmployeeDetailPage = lazy(() => import("@/pages/admin-employee-detail"));
-const AdminRolesPage = lazy(() => import("@/pages/admin-roles"));
-const AdminSecurityPage = lazy(() => import("@/pages/admin-security"));
 const AcceptInvitationPage = lazy(() => import("@/pages/accept-invitation"));
 const ResetPasswordPage = lazy(() => import("@/pages/reset-password"));
 const VerifyEmailPage = lazy(() => import("@/pages/verify-email"));
 const AdminSignInPage = lazy(() => import("@/pages/admin-sign-in"));
+const OrganisationControlCentrePage = lazy(() => import("@/pages/organization-control-centre"));
 
 export function AppRoutes() {
   return (
@@ -140,49 +132,147 @@ export function AppRoutes() {
         <ProtectedRoute><FulfillmentPage /></ProtectedRoute>
       </Route>
       <Route path="/operator">
-        <AdminAccessRoute permission="dashboard.view"><Redirect to="/admin/overview" /></AdminAccessRoute>
+        <AdminAccessRoute permission="dashboard.view"><Redirect to="/admin/control-centre" /></AdminAccessRoute>
       </Route>
       <Route path="/admin">
-        <AdminAccessRoute permission="dashboard.view"><Redirect to="/admin/overview" /></AdminAccessRoute>
+        <AdminAccessRoute permission="dashboard.view"><Redirect to="/admin/control-centre" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/dashboard">
+        <AdminAccessRoute permission="dashboard.view"><Redirect to="/admin/control-centre" /></AdminAccessRoute>
+      </Route>
+      <Route path="/control-centre">
+        <AdminAccessRoute permission="dashboard.view"><Redirect to="/admin/control-centre" /></AdminAccessRoute>
+      </Route>
+      <Route path="/control-centre/:section">
+        {(params) => (
+          <AdminAccessRoute permission="dashboard.view">
+            <Redirect to={`/admin/control-centre/${params.section}`} />
+          </AdminAccessRoute>
+        )}
+      </Route>
+      <Route path="/dashboard-centre">
+        <AdminAccessRoute permission="dashboard.view"><Redirect to="/admin/control-centre" /></AdminAccessRoute>
+      </Route>
+      <Route path="/dashboard/analytics">
+        <AdminAccessRoute permission="analytics.view"><Redirect to="/admin/control-centre/analytics" /></AdminAccessRoute>
+      </Route>
+      <Route path="/dashboard/revenue">
+        <AdminAccessRoute permission="revenue.view"><Redirect to="/admin/control-centre/revenue" /></AdminAccessRoute>
+      </Route>
+      <Route path="/dashboard/farmers">
+        <AdminAccessRoute permission="users.view"><Redirect to="/admin/control-centre/farmers" /></AdminAccessRoute>
+      </Route>
+      <Route path="/dashboard/sellers">
+        <AdminAccessRoute permission="partners.view"><Redirect to="/admin/control-centre/sellers" /></AdminAccessRoute>
+      </Route>
+      <Route path="/dashboard/security">
+        <AdminAccessRoute permission="security.manage"><Redirect to="/admin/security" /></AdminAccessRoute>
       </Route>
       <Route path="/admin/overview">
-        <AdminAccessRoute permission="dashboard.view"><AdminOverviewPage /></AdminAccessRoute>
+        <AdminAccessRoute permission="dashboard.view"><OrganisationControlCentrePage defaultSection="overview" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/control-centre/:section">
+        {(params) => (
+          <AdminAccessRoute permission="dashboard.view">
+            <OrganisationControlCentrePage defaultSection={params.section as never} />
+          </AdminAccessRoute>
+        )}
+      </Route>
+      <Route path="/admin/control-centre">
+        <AdminAccessRoute permission="dashboard.view"><OrganisationControlCentrePage /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/farmers">
+        <AdminAccessRoute permission="users.view"><OrganisationControlCentrePage defaultSection="farmers" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/sellers">
+        <AdminAccessRoute permission="partners.view"><OrganisationControlCentrePage defaultSection="sellers" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/buyers">
+        <AdminAccessRoute permission="partners.view"><OrganisationControlCentrePage defaultSection="buyers" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/students">
+        <AdminAccessRoute permission="partners.view"><OrganisationControlCentrePage defaultSection="students" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/researchers">
+        <AdminAccessRoute permission="partners.view"><OrganisationControlCentrePage defaultSection="researchers" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/organisations">
+        <AdminAccessRoute permission="organisations.view"><OrganisationControlCentrePage defaultSection="organisations" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/service-providers">
+        <AdminAccessRoute permission="partners.view"><OrganisationControlCentrePage defaultSection="service-providers" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/logistics-partners">
+        <AdminAccessRoute permission="partners.view"><OrganisationControlCentrePage defaultSection="logistics-partners" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/analytics">
+        <AdminAccessRoute permission="analytics.view"><OrganisationControlCentrePage defaultSection="analytics" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/revenue">
+        <AdminAccessRoute permission="revenue.view"><OrganisationControlCentrePage defaultSection="revenue" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/global-operations">
+        <AdminAccessRoute permission="dashboard.view"><OrganisationControlCentrePage defaultSection="global-operations" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/verification">
+        <AdminAccessRoute permission="verification.view"><OrganisationControlCentrePage defaultSection="verification" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/regions">
+        <AdminAccessRoute permission="regions.view"><OrganisationControlCentrePage defaultSection="regions" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/opportunities">
+        <AdminAccessRoute permission="opportunities.view"><OrganisationControlCentrePage defaultSection="opportunities" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/content">
+        <AdminAccessRoute permission="content.view"><OrganisationControlCentrePage defaultSection="content" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/orders">
+        <AdminAccessRoute permission="orders.view"><OrganisationControlCentrePage defaultSection="orders" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/logistics">
+        <AdminAccessRoute permission="logistics.view"><OrganisationControlCentrePage defaultSection="logistics" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/data">
+        <AdminAccessRoute permission="data.export"><OrganisationControlCentrePage defaultSection="data" /></AdminAccessRoute>
+      </Route>
+      <Route path="/admin/settings">
+        <AdminAccessRoute permission="settings.manage"><OrganisationControlCentrePage defaultSection="settings" /></AdminAccessRoute>
       </Route>
       <Route path="/admin/audit">
-        <AdminAccessRoute permission="audit.view"><AdminAuditPage /></AdminAccessRoute>
+        <AdminAccessRoute permission="audit.view"><OrganisationControlCentrePage defaultSection="audit" /></AdminAccessRoute>
       </Route>
       <Route path="/admin/users/:userId">
         <AdminAccessRoute permission="users.view"><AdminUserDetailPage /></AdminAccessRoute>
       </Route>
       <Route path="/admin/users">
-        <AdminAccessRoute permission="users.view"><AdminUsersPage /></AdminAccessRoute>
+        <AdminAccessRoute permission="users.view"><OrganisationControlCentrePage defaultSection="users" /></AdminAccessRoute>
       </Route>
       <Route path="/admin/verifications/:caseId">
         <AdminAccessRoute permission="verification.view"><AdminVerificationDetailPage /></AdminAccessRoute>
       </Route>
       <Route path="/admin/verifications">
-        <AdminAccessRoute permission="verification.view"><AdminVerificationsPage /></AdminAccessRoute>
+        <AdminAccessRoute permission="verification.view"><OrganisationControlCentrePage defaultSection="verification" /></AdminAccessRoute>
       </Route>
       <Route path="/admin/products/:productId">
         <AdminAccessRoute permission="products.view"><AdminProductDetailPage /></AdminAccessRoute>
       </Route>
       <Route path="/admin/products">
-        <AdminAccessRoute permission="products.view"><AdminProductsPage /></AdminAccessRoute>
+        <AdminAccessRoute permission="products.view"><OrganisationControlCentrePage defaultSection="products" /></AdminAccessRoute>
       </Route>
       <Route path="/admin/categories">
-        <AdminAccessRoute permission="categories.view"><AdminCategoriesPage /></AdminAccessRoute>
+        <AdminAccessRoute permission="categories.view"><OrganisationControlCentrePage defaultSection="categories" /></AdminAccessRoute>
       </Route>
       <Route path="/admin/employees/:membershipId">
         <AdminAccessRoute permission="employees.view"><AdminEmployeeDetailPage /></AdminAccessRoute>
       </Route>
       <Route path="/admin/employees">
-        <AdminAccessRoute permission="employees.view"><AdminEmployeesPage /></AdminAccessRoute>
+        <AdminAccessRoute permission="employees.view"><OrganisationControlCentrePage defaultSection="employees" /></AdminAccessRoute>
       </Route>
       <Route path="/admin/roles">
-        <AdminAccessRoute permission="employees.view"><AdminRolesPage /></AdminAccessRoute>
+        <AdminAccessRoute permission="employees.view"><OrganisationControlCentrePage defaultSection="employees" /></AdminAccessRoute>
       </Route>
       <Route path="/admin/security">
-        <AdminAccessRoute permission="security.manage"><AdminSecurityPage /></AdminAccessRoute>
+        <AdminAccessRoute permission="security.manage"><OrganisationControlCentrePage defaultSection="security" /></AdminAccessRoute>
       </Route>
       <Route path="/regional-organisation">
         <ProtectedRoute><RegionalOrganisationPage /></ProtectedRoute>

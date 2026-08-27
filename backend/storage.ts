@@ -113,7 +113,7 @@ export const categoriesData: Category[] = [
     id: "processed",
     name: "Processed & Value-Added",
     icon: "Package",
-    buyerVisible: false,
+    buyerVisible: true,
     subcategories: [
       { id: "spice-powders", name: "Spices & Powders", parentId: "processed", buyerVisible: true },
       { id: "pickles", name: "Pickles & Preserves", parentId: "processed", buyerVisible: true },
@@ -126,7 +126,7 @@ export const categoriesData: Category[] = [
     id: "specialty",
     name: "Specialty & Premium",
     icon: "Award",
-    buyerVisible: false,
+    buyerVisible: true,
     subcategories: [
       { id: "organic", name: "Organic Products", parentId: "specialty", buyerVisible: true },
       { id: "medicinal", name: "Medicinal Plants & Herbs", parentId: "specialty", buyerVisible: true },
@@ -140,7 +140,7 @@ export const categoriesData: Category[] = [
     id: "other-agri",
     name: "Other Agricultural",
     icon: "Wheat",
-    buyerVisible: false,
+    buyerVisible: true,
     subcategories: [
       { id: "plantation", name: "Plantation Crops", parentId: "other-agri", buyerVisible: true },
       { id: "fibre", name: "Fibre Crops", parentId: "other-agri", buyerVisible: true },
@@ -285,7 +285,7 @@ export const categoriesData: Category[] = [
     id: "commercial-crops",
     name: "Commercial & Industrial Crops",
     icon: "Factory",
-    buyerVisible: false,
+    buyerVisible: true,
     subcategories: [
       { id: "sugar-crops", name: "Sugar Crops", parentId: "commercial-crops", buyerVisible: true },
       { id: "beverage-crops", name: "Beverage Crops", parentId: "commercial-crops", buyerVisible: true },
@@ -818,16 +818,6 @@ const taxonomyProductSeedData = Object.entries(subSubcategoryData).flatMap(
 );
 
 const completeProductSeedData = [...productSeedData, ...taxonomyProductSeedData];
-
-const farmerNames = [
-  "James Wilson", "Sarah Thompson", "Michael Brown", "Emma Davies", "Thomas Green",
-  "Lucy Mitchell", "William Taylor", "Sophie Adams", "Oliver White", "Charlotte Evans"
-];
-
-const locations = [
-  "Essex", "Kent", "Norfolk", "Suffolk", "Cambridgeshire",
-  "Oxfordshire", "Somerset", "Devon", "Yorkshire", "Lincolnshire"
-];
 
 // Realistic product images mapping using Unsplash
 const productImages: Record<string, string> = {
@@ -1403,46 +1393,26 @@ export class MemStorage implements IStorage {
   }
 
   private seedProducts() {
-    // UK-based locations for farmers (lat/lng centered around UK)
-    const ukLocations = [
-      { name: "Essex", lat: 51.7356, lng: 0.4685 },
-      { name: "Kent", lat: 51.2787, lng: 0.5217 },
-      { name: "Norfolk", lat: 52.6309, lng: 1.2974 },
-      { name: "Suffolk", lat: 52.1872, lng: 0.9708 },
-      { name: "Cambridgeshire", lat: 52.2053, lng: 0.1218 },
-      { name: "Oxfordshire", lat: 51.7520, lng: -1.2577 },
-      { name: "Somerset", lat: 51.1050, lng: -2.9262 },
-      { name: "Devon", lat: 50.7156, lng: -3.5309 },
-      { name: "Yorkshire", lat: 53.9590, lng: -1.0815 },
-      { name: "Lincolnshire", lat: 53.2344, lng: -0.5383 },
-    ];
-    
     completeProductSeedData.forEach((item, index) => {
-      const farmerIndex = index % farmerNames.length;
-      const farmerName = farmerNames[farmerIndex];
-      const ukLoc = ukLocations[farmerIndex % ukLocations.length];
-      // Add some randomness to locations within the county
-      const lat = ukLoc.lat + (Math.random() - 0.5) * 0.5;
-      const lng = ukLoc.lng + (Math.random() - 0.5) * 0.5;
       const priceVariation = item.basePrice * (0.9 + Math.random() * 0.2);
       
       const product: Product = {
         id: item.id ?? `product-${index + 1}`,
         name: item.name,
-        description: `Fresh ${item.name.toLowerCase()} directly from the farm. High quality and farm fresh produce from ${ukLoc.name}.`,
-        price: parseFloat((priceVariation / 25).toFixed(2)), // Convert ₹ base price to realistic GBP (÷25 ≈ UK farm price)
+        description: `Fresh ${item.name.toLowerCase()} sourced directly. High quality and farm fresh produce.`,
+        price: parseFloat((priceVariation / 25).toFixed(2)),
         unit: item.unit,
         stock: Math.floor(10 + Math.random() * 200),
         categoryId: item.category,
         subcategoryId: item.subcategory,
-        farmerId: `farmer-${farmerIndex + 1}`,
-        farmerName: farmerName,
-        farmerAvatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${farmerName.replace(' ', '')}`,
-        farmerRating: Math.round((3.5 + Math.random() * 1.5) * 10) / 10,
-        farmerLocation: ukLoc.name,
-        farmerLatitude: lat,
-        farmerLongitude: lng,
-        distance: Math.round((0.5 + Math.random() * 15) * 10) / 10,
+        farmerId: "",
+        farmerName: "",
+        farmerAvatar: "",
+        farmerRating: 0,
+        farmerLocation: "",
+        farmerLatitude: 0,
+        farmerLongitude: 0,
+        distance: 0,
         images: [getProductImage(item.name)],
         isOrganic: item.isOrganic,
         isFeatured: Math.random() > 0.7,
@@ -1490,7 +1460,7 @@ export class MemStorage implements IStorage {
               p.categoryId === "other-agri",
           );
         } else {
-          products = products.filter((p) => p.categoryId === filters.categoryId);
+          products = products.filter((p) => p.categoryId === filters.categoryId || p.subcategoryId === filters.categoryId);
         }
       }
       if (filters.subcategoryId) {
@@ -2545,7 +2515,7 @@ class PersistentCommerceStorage extends MemStorage {
             p.categoryId === "other-agri",
         );
       } else {
-        products = products.filter((p) => p.categoryId === filters.categoryId);
+        products = products.filter((p) => p.categoryId === filters.categoryId || p.subcategoryId === filters.categoryId);
       }
     }
     if (filters.subcategoryId) {

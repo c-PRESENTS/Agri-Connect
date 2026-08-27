@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import {
   Plus, MoreVertical, Pencil, Trash2, Globe, Check,
   X, RefreshCw, ChevronLeft, ChevronRight, ExternalLink,
+  Crown, Sun, CloudRain, Shield, Sprout, Leaf,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,9 +21,10 @@ interface Bookmark {
   name: string;
   url: string;
   color: string;
+  iconType?: "gov" | "tnau" | "bbc" | "weather" | "brave" | "agri";
 }
 
-const LS_KEY = "agri-user-bookmarks";
+const LS_KEY = "agri-user-bookmarks-v3";
 const LOCAL_BOOKMARK_FALLBACK_ICON = "/favicon-32x32.png";
 const LOCAL_BOOKMARK_ICONS: Record<string, string> = {
   "agrimarket.gov.in": LOCAL_BOOKMARK_FALLBACK_ICON,
@@ -36,23 +38,25 @@ const AGRICONNECT_HOSTS = new Set([
 const AGRICONNECT_RENDER_HOST_PATTERN =
   /^agri-connect(?:-group)?-[a-z0-9]+\.onrender\.com$/;
 
-const COLORS = [
-  "bg-sky-500","bg-violet-500","bg-emerald-500","bg-amber-500",
-  "bg-rose-500","bg-blue-500","bg-green-500","bg-orange-500",
-];
-
 const DEFAULT_BOOKMARKS: Bookmark[] = [
-  { id: "gov-uk",    name: "GOV.UK",        url: "https://www.gov.uk",            color: "bg-sky-500"     },
-  { id: "tnau",      name: "TNAU Agritech", url: "https://agritech.tnau.ac.in",   color: "bg-emerald-500" },
-  { id: "bbc-food",  name: "BBC Food",      url: "https://www.bbc.co.uk/food",    color: "bg-rose-500"    },
-  { id: "weather",   name: "Weather",       url: "https://wttr.in/?format=html",  color: "bg-blue-500"    },
-  { id: "brave",     name: "Brave Search",  url: "https://search.brave.com",      color: "bg-orange-500"  },
-  { id: "markets",   name: "Agri Markets",  url: "https://www.agrimarket.gov.in", color: "bg-amber-500"   },
+  { id: "gov-uk",    name: "Gov.UK",    url: "https://www.gov.uk",            color: "bg-[#0ea5e9]", iconType: "gov"     },
+  { id: "gds",       name: "GDS",       url: "https://www.gov.uk/design-principles", color: "bg-[#64748b]", iconType: "gov" },
+  { id: "fao",       name: "FAO",       url: "https://www.fao.org",           color: "bg-[#0284c7]", iconType: "agri"    },
+  { id: "bbc-food",  name: "BBC Food",  url: "https://www.bbc.co.uk/food",    color: "bg-[#16a34a]", iconType: "bbc"     },
+  { id: "brave",     name: "Brave",     url: "https://search.brave.com",      color: "bg-[#ea580c]", iconType: "brave"   },
+  { id: "agri-site", name: "Agri Mkt",  url: "https://agrimarket.gov.in",     color: "bg-[#eab308]", iconType: "agri"    },
+  { id: "gov-uk-2",  name: "Gov.UK",    url: "https://www.gov.uk",            color: "bg-[#0ea5e9]", iconType: "gov"     },
+  { id: "gds-2",     name: "GDS",       url: "https://www.gov.uk",            color: "bg-[#475569]", iconType: "gov"     },
+  { id: "tnau",      name: "TNAU",      url: "https://agritech.tnau.ac.in",   color: "bg-[#059669]", iconType: "tnau"    },
+  { id: "weather",   name: "Weather",   url: "https://wttr.in/?format=html",  color: "bg-[#2563eb]", iconType: "weather" },
+  { id: "bbc-food-2",name: "BBC Food",  url: "https://www.bbc.co.uk/food",    color: "bg-[#db2777]", iconType: "bbc"     },
+  { id: "logistics", name: "Logistics", url: "/logistics",                    color: "bg-[#4f46e5]", iconType: "agri"    },
+  { id: "brave-2",   name: "Brave",     url: "https://search.brave.com",      color: "bg-[#d97706]", iconType: "brave"   },
+  { id: "bbc-food-3",name: "BBC Food",  url: "https://www.bbc.co.uk/food",    color: "bg-[#e11d48]", iconType: "bbc"     },
+  { id: "weather-2", name: "Weather",   url: "https://wttr.in/?format=html",  color: "bg-[#3b82f6]", iconType: "weather" },
+  { id: "agri-mkt-2",name: "Agri Mkt",  url: "https://agrimarket.gov.in",     color: "bg-[#ca8a04]", iconType: "agri"    },
 ];
 
-// These sites provide useful server-rendered HTML in AgriConnect's restricted
-// reading preview. Script-heavy or bot-protected sites must open in a real tab
-// so their JavaScript, cookies, redirects, and security checks can work.
 const INLINE_PREVIEW_HOSTS = new Set([
   "gov.uk",
   "www.gov.uk",
@@ -188,7 +192,7 @@ export const UserBookmarks = memo(function UserBookmarks() {
         id: Date.now().toString(),
         name: form.name.trim(),
         url,
-        color: COLORS[bookmarks.length % COLORS.length],
+        color: "bg-[#0284c7]",
       };
       persist([...bookmarks, nb]);
     }
@@ -235,36 +239,111 @@ export const UserBookmarks = memo(function UserBookmarks() {
   const navBack       = () => { try { iframeRef.current?.contentWindow?.history.back();    } catch {} };
   const navForward    = () => { try { iframeRef.current?.contentWindow?.history.forward(); } catch {} };
 
+  const renderIcon = (b: Bookmark) => {
+    if (b.iconType === "gov") {
+      return (
+        <div className="flex flex-col items-center justify-center text-white">
+          <Crown className="w-5 h-5 drop-shadow-xs" />
+        </div>
+      );
+    }
+    if (b.iconType === "tnau") {
+      return (
+        <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center p-0.5 shadow-2xs">
+          <div className="w-full h-full rounded-full border border-emerald-600 flex items-center justify-center bg-emerald-50">
+            <span className="text-[7px] font-black text-emerald-800 leading-none">TN</span>
+          </div>
+        </div>
+      );
+    }
+    if (b.iconType === "bbc") {
+      return (
+        <div className="flex items-center gap-0.5 text-white">
+          <div className="w-1.5 h-1.5 bg-white rounded-2xs" />
+          <div className="w-1.5 h-1.5 bg-white rounded-2xs" />
+          <div className="w-1.5 h-1.5 bg-white rounded-2xs" />
+        </div>
+      );
+    }
+    if (b.iconType === "weather") {
+      return (
+        <div className="flex flex-col items-center justify-center text-yellow-300">
+          <CloudRain className="w-5 h-5 text-white" />
+        </div>
+      );
+    }
+    if (b.iconType === "brave") {
+      return (
+        <div className="w-6 h-6 rounded-md bg-emerald-950 flex items-center justify-center p-1">
+          <Leaf className="w-4 h-4 text-emerald-400" />
+        </div>
+      );
+    }
+    if (b.iconType === "agri") {
+      return (
+        <div className="w-6 h-6 rounded-md bg-emerald-950 flex items-center justify-center p-1">
+          <Sprout className="w-4 h-4 text-emerald-400" />
+        </div>
+      );
+    }
+
+    const favicon = getFavicon(b.url);
+    if (favicon) {
+      return (
+        <img
+          src={favicon}
+          alt=""
+          className="w-5 h-5 object-contain rounded-xs"
+          loading="lazy"
+          onError={handleFaviconError}
+        />
+      );
+    }
+
+    return <span className="text-sm font-black text-white">{getInitial(b.name)}</span>;
+  };
+
   return (
     <>
-      <div className="space-y-2">
-        <div className="flex items-center px-0.5">
-          <span className="text-sm sm:text-base md:text-lg font-black uppercase tracking-[0.14em] text-white drop-shadow-md">{t("home.my_sites")}</span>
+      <div className="w-full bg-[#081716]/78 backdrop-blur-md border border-slate-400/20 rounded-[18px] p-2.5 sm:p-3 shadow-[inset_0_1px_rgba(255,255,255,0.06),0_14px_30px_rgba(0,0,0,0.24)] relative z-10">
+        {/* Header with MY SITES and Center EDIT HUD Notch */}
+        <div className="flex items-center justify-between px-1 mb-1.5">
+          <span className="text-xs sm:text-sm font-black uppercase tracking-[0.14em] text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+            {t("home.my_sites", { defaultValue: "MY SITES" })}
+          </span>
+
+          {/* Center EDIT HUD Notch Button */}
+          <button
+            onClick={openAdd}
+            className="bg-gradient-to-r from-[#0d2a27] via-[#103a35] to-[#0d2a27] border border-[#1b554c] hover:border-emerald-400 text-emerald-300 rounded-lg px-4 py-0.5 text-xs font-black tracking-widest shadow-md uppercase transition-all cursor-pointer"
+          >
+            EDIT
+          </button>
+
+          <div className="w-12" /> {/* Balancing spacer */}
         </div>
 
-        <div className="flex gap-2 sm:gap-2.5 overflow-x-auto no-scrollbar sm:flex-wrap items-center">
-          {bookmarks.map(b => {
-            const favicon = getFavicon(b.url);
+        {/* Sites Row matching screenshot */}
+        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar items-center py-0.5">
+          {bookmarks.map((b, bIdx) => {
             const isActive = panel.open && panel.url === normalizeUrl(b.url);
             return (
-              <div key={b.id} className="relative group shrink-0">
+              <div key={b.id + bIdx} className="relative group shrink-0">
                 <button
                   onClick={() => openPanel(b)}
                   data-testid={`bookmark-${b.id}`}
-                  className={`flex flex-col items-center gap-1 p-1 sm:p-1.5 rounded-xl transition-all duration-150 w-14 sm:w-16 ${
+                  className={`flex flex-col items-center gap-1 p-0.5 rounded-xl transition-all duration-150 w-11 sm:w-12 cursor-pointer ${
                     isActive
-                      ? "bg-white/15 scale-[1.03]"
-                      : "hover:bg-white/10 active:scale-95"
+                      ? "bg-emerald-500/20 ring-1 ring-emerald-400 scale-[1.03]"
+                      : "hover:bg-emerald-900/30 active:scale-95"
                   }`}
                 >
-                  <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center overflow-hidden ${b.color} shadow-xs`}>
-                    {favicon
-                      ? <img src={favicon} alt="" className="w-5.5 h-5.5 sm:w-6 sm:h-6 object-contain"
-                          loading="lazy" onError={handleFaviconError} />
-                      : <span className="text-sm sm:text-base font-black text-white">{getInitial(b.name)}</span>
-                    }
+                  <div
+                    className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-[10px] flex items-center justify-center overflow-hidden ${b.color} shadow-md border border-white/20`}
+                  >
+                    {renderIcon(b)}
                   </div>
-                  <span className="text-[10px] sm:text-[11px] font-bold text-white/90 text-center leading-none w-full truncate">
+                  <span className="text-[9px] sm:text-[9.5px] font-black text-white text-center leading-none w-full truncate drop-shadow-xs">
                     {b.name}
                   </span>
                 </button>
@@ -272,20 +351,20 @@ export const UserBookmarks = memo(function UserBookmarks() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-black/75 border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black/80 border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
                       data-testid={`bookmark-opts-${b.id}`}
                     >
                       <MoreVertical className="h-2.5 w-2.5 text-white" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem onClick={() => openEdit(b)} className="text-xs font-bold gap-2">
+                    <DropdownMenuItem onClick={() => openEdit(b)} className="text-xs font-bold gap-2 cursor-pointer">
                       <Pencil className="h-3.5 w-3.5" /> {t("common.edit")}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openPanel(b)} className="text-xs font-bold gap-2">
+                    <DropdownMenuItem onClick={() => openPanel(b)} className="text-xs font-bold gap-2 cursor-pointer">
                       <Globe className="h-3.5 w-3.5" /> Open site
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => deleteBookmark(b.id)} className="text-xs font-bold gap-2 text-destructive">
+                    <DropdownMenuItem onClick={() => deleteBookmark(b.id)} className="text-xs font-bold gap-2 text-destructive cursor-pointer">
                       <Trash2 className="h-3.5 w-3.5" /> {t("common.delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -294,32 +373,34 @@ export const UserBookmarks = memo(function UserBookmarks() {
             );
           })}
 
+          {/* Add Site Tile matching screenshot */}
           <button
             onClick={openAdd}
             data-testid="bookmark-add-new"
-            className="flex flex-col items-center gap-1 p-1 sm:p-1.5 rounded-xl border border-dashed border-white/30 bg-white/5 hover:border-white/50 hover:bg-white/10 transition-all w-14 sm:w-16 shrink-0"
+            className="flex flex-col items-center gap-1 p-0.5 rounded-xl transition-all w-11 sm:w-12 shrink-0 cursor-pointer hover:bg-white/10 active:scale-95"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl border border-dashed border-white/40 flex items-center justify-center">
-              <Plus className="h-5 w-5 text-white/70" />
+            <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-[10px] border border-dashed border-emerald-400/60 bg-emerald-950/40 hover:border-emerald-400 hover:bg-emerald-900/50 flex items-center justify-center shadow-xs transition-colors">
+              <Plus className="h-4 w-4 text-emerald-300" />
             </div>
-            <span className="text-[10px] sm:text-[11px] font-bold text-white/80 leading-none">{t("home.add_site")}</span>
+            <span className="text-[9px] sm:text-[9.5px] font-black text-emerald-300 leading-none whitespace-nowrap drop-shadow-xs">
+              Add site
+            </span>
           </button>
         </div>
 
         {/* ── Inline mini-browser panel ── */}
         {panel.open && (
           <div
-            className="mt-2 rounded-xl overflow-hidden border border-white/15 shadow-2xl flex flex-col"
+            className="mt-3 rounded-xl overflow-hidden border border-white/20 shadow-2xl flex flex-col"
             style={{ height: panelHeight, minHeight: 220 }}
             data-testid="browser-panel"
           >
             {/* Title bar / traffic lights */}
             <div className="flex items-center gap-2 px-3 py-2 bg-zinc-800/95 border-b border-white/10 shrink-0">
-              {/* macOS traffic-light dots */}
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={closePanel}
-                  className="w-3 h-3 rounded-full bg-[#ff5f57] hover:bg-[#ff3b30] transition-colors border border-black/20"
+                  className="w-3 h-3 rounded-full bg-[#ff5f57] hover:bg-[#ff3b30] transition-colors border border-black/20 cursor-pointer"
                   title={t("common.close")}
                   data-testid="browser-close"
                 />
@@ -330,7 +411,7 @@ export const UserBookmarks = memo(function UserBookmarks() {
               {/* Nav buttons */}
               <button
                 onClick={navBack}
-                className="p-1 rounded text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors"
+                className="p-1 rounded text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
                 title={t("nav.go_back")}
                 data-testid="browser-back"
               >
@@ -338,7 +419,7 @@ export const UserBookmarks = memo(function UserBookmarks() {
               </button>
               <button
                 onClick={navForward}
-                className="p-1 rounded text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors"
+                className="p-1 rounded text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
                 title={t("nav.go_forward")}
                 data-testid="browser-forward"
               >
@@ -346,7 +427,7 @@ export const UserBookmarks = memo(function UserBookmarks() {
               </button>
               <button
                 onClick={refreshIframe}
-                className="p-1 rounded text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors"
+                className="p-1 rounded text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
                 title="Refresh"
                 data-testid="browser-refresh"
               >
@@ -362,7 +443,7 @@ export const UserBookmarks = memo(function UserBookmarks() {
               {/* Open externally */}
               <button
                 onClick={() => window.open(panel.url, "_blank", "noopener,noreferrer")}
-                className="p-1 rounded text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors shrink-0"
+                className="p-1 rounded text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
                 title="Open in browser"
                 data-testid="browser-open-external"
               >
@@ -373,15 +454,15 @@ export const UserBookmarks = memo(function UserBookmarks() {
             {/* Tab strip */}
             <div className="flex items-center px-2 py-1 bg-zinc-900/95 border-b border-white/8 shrink-0">
               <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-t-md bg-zinc-700/60 border border-white/10 border-b-0 text-[10px] text-white/70 max-w-[180px]">
-                {panel.favicon
-                  ? <img src={panel.favicon} alt="" className="w-3 h-3 object-contain"
-                      loading="lazy" onError={handleFaviconError} />
-                  : <Globe className="h-2.5 w-2.5 text-white/40 shrink-0" />
-                }
+                {panel.favicon ? (
+                  <img src={panel.favicon} alt="" className="w-3 h-3 object-contain" loading="lazy" onError={handleFaviconError} />
+                ) : (
+                  <Globe className="h-2.5 w-2.5 text-white/40 shrink-0" />
+                )}
                 <span className="truncate">{panel.title}</span>
                 <button
                   onClick={closePanel}
-                  className="ml-1 p-0.5 rounded-full hover:bg-white/20 transition-colors shrink-0"
+                  className="ml-1 p-0.5 rounded-full hover:bg-white/20 transition-colors shrink-0 cursor-pointer"
                 >
                   <X className="h-2.5 w-2.5" />
                 </button>
@@ -399,53 +480,30 @@ export const UserBookmarks = memo(function UserBookmarks() {
               data-testid="browser-iframe"
             />
 
-            {/* ── Resize handle ── */}
+            {/* Resize handle */}
             <div
               onMouseDown={startResize}
-              className="relative h-10 w-full shrink-0 flex flex-col items-center justify-center gap-1.5 cursor-ns-resize select-none group"
-              style={{ background: "linear-gradient(180deg, #14532d 0%, #166534 60%, #15803d 100%)", boxShadow: "0 -2px 10px rgba(34,197,94,0.25)" }}
+              className="relative h-9 w-full shrink-0 flex flex-col items-center justify-center gap-1 cursor-ns-resize select-none group bg-gradient-to-r from-emerald-950 via-emerald-800 to-emerald-950 border-t border-emerald-500/40"
               data-testid="browser-resize-handle"
             >
-              {/* top accent line */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-green-400/60 group-hover:bg-green-300 transition-colors" />
-
-              {/* grip bar */}
-              <div className="flex gap-[4px] items-center">
-                {[...Array(12)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="rounded-full transition-all duration-100 group-hover:scale-[1.4] group-hover:bg-green-200"
-                    style={{
-                      width: i === 0 || i === 11 ? 3 : 4,
-                      height: i === 0 || i === 11 ? 3 : 4,
-                      background: "rgba(187,247,208,0.7)",
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* label row */}
-              <div className="flex items-center gap-2">
-                <div className="h-[1.5px] w-12 rounded-full bg-green-300/50 group-hover:bg-green-200/90 transition-colors" />
-                <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-green-200/80 group-hover:text-white transition-colors leading-none drop-shadow">
-                  {t("map.drag_to_resize")}
-                </span>
-                <div className="h-[1.5px] w-12 rounded-full bg-green-300/50 group-hover:bg-green-200/90 transition-colors" />
-              </div>
+              <div className="h-1 w-10 rounded-full bg-emerald-300/60 group-hover:bg-emerald-200 transition-colors" />
+              <span className="text-[9px] font-bold tracking-widest uppercase text-emerald-200/80 leading-none">
+                {t("map.drag_to_resize", { defaultValue: "DRAG TO RESIZE" })}
+              </span>
             </div>
           </div>
         )}
       </div>
 
-      {/* ── Add / Edit dialog ── */}
+      {/* Add / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing ? t("nav.edit") + " Site" : t("home.add_site")}</DialogTitle>
+            <DialogTitle>{editing ? t("nav.edit") + " Site" : "Add Site"}</DialogTitle>
             <DialogDescription>
               {editing
                 ? "Update the bookmark name or destination."
-                : "Add a website or an AgriConnect page to your bookmarks."}
+                : "Add a website or an AgriConnect page to your sites."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
@@ -455,7 +513,7 @@ export const UserBookmarks = memo(function UserBookmarks() {
                 id="bm-name"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                placeholder="BBC Food"
+                placeholder="GOV.UK"
                 className="h-8 text-sm"
                 data-testid="input-bookmark-name"
               />
@@ -480,7 +538,7 @@ export const UserBookmarks = memo(function UserBookmarks() {
             <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button size="sm" onClick={saveDialog} disabled={!form.name.trim()} data-testid="button-bookmark-save">
               <Check className="h-3.5 w-3.5 mr-1" />
-              {editing ? t("common.save") : t("home.add_site")}
+              {editing ? t("common.save") : "Add site"}
             </Button>
           </DialogFooter>
         </DialogContent>
