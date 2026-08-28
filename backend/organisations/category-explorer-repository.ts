@@ -191,7 +191,26 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
     const parameter = add(`%${filters.search.trim()}%`);
     conditions.push(`(p.name ILIKE ${parameter} OR p.description ILIKE ${parameter}
       OR COALESCE(p.product_data->>'variety','') ILIKE ${parameter}
-      OR COALESCE(u.name,concat_ws(' ',u.first_name,u.last_name),'') ILIKE ${parameter})`);
+      OR COALESCE(u.name,concat_ws(' ',u.first_name,u.last_name),'') ILIKE ${parameter}
+      OR COALESCE(u.email,'') ILIKE ${parameter}
+      OR p.category_id ILIKE ${parameter}
+      OR p.subcategory_id ILIKE ${parameter}
+      OR EXISTS (
+        SELECT 1
+          FROM catalog_categories search_category
+         WHERE search_category.archived_at IS NULL
+           AND search_category.published_data IS NOT NULL
+           AND search_category.canonical_id=p.category_id
+           AND COALESCE(NULLIF(search_category.published_data->>'name',''),search_category.name) ILIKE ${parameter}
+      )
+      OR EXISTS (
+        SELECT 1
+          FROM catalog_categories search_subcategory
+         WHERE search_subcategory.archived_at IS NULL
+           AND search_subcategory.published_data IS NOT NULL
+           AND search_subcategory.canonical_id=p.subcategory_id
+           AND COALESCE(NULLIF(search_subcategory.published_data->>'name',''),search_subcategory.name) ILIKE ${parameter}
+      ))`);
   }
   if (scope === "local" && regionId) conditions.push(`p.region_id=${add(regionId)}`);
 
@@ -228,7 +247,9 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
 
   let allProducts = (productsResult.rows as Row[]).map((row) => {
     const data = object(row.product_data);
-    const images = Array.isArray(data.images) ? data.images.filter((value) => typeof value === "string") : [];
+    const images = Array.isArray(data.images)
+      ? data.images.flatMap((value) => typeof value === "string" && value.trim() ? [value.trim()] : [])
+      : [];
     const organic = data.isOrganic === true;
     const qualityGrade = text(data.qualityGrade);
     const badgeType = row.is_fresh_pick ? "fresh"
@@ -256,6 +277,7 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
       badge,
       badgeType,
       imageUrl: images[0] ?? null,
+      images,
       sellerName: String(row.seller_name),
       sellerVerified: row.seller_verified === true,
       sellerAvatar: text(row.seller_avatar),
@@ -274,8 +296,34 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
       isOrganic: organic,
       qualityGrade,
       sellerId: String(row.seller_id),
+      searchRank: 0,
     };
   });
+
+  const normalizedSearch = filters.search?.trim().toLocaleLowerCase();
+  if (normalizedSearch) {
+    const taxonomyNamesByCanonicalId = new Map(
+      taxonomyRows.map((row) => [
+        String(row.canonical_id),
+        String(row.name).toLocaleLowerCase(),
+      ]),
+    );
+    for (const product of allProducts) {
+      const name = product.title.toLocaleLowerCase();
+      const variety = product.variety.toLocaleLowerCase();
+      const seller = product.sellerName.toLocaleLowerCase();
+      const category = taxonomyNamesByCanonicalId.get(product.category) ?? "";
+      const subCategory = taxonomyNamesByCanonicalId.get(product.subCategory) ?? "";
+      product.searchRank = name === normalizedSearch ? 0
+        : name.startsWith(normalizedSearch) ? 1
+        : name.includes(normalizedSearch) ? 2
+        : variety.includes(normalizedSearch) ? 3
+        : subCategory.includes(normalizedSearch) ? 4
+        : category.includes(normalizedSearch) ? 5
+        : seller.includes(normalizedSearch) ? 6
+        : 7;
+    }
+  }
 
   const varietyCounts = new Map<string, number>();
   for (const product of allProducts) varietyCounts.set(product.variety, (varietyCounts.get(product.variety) ?? 0) + 1);
@@ -294,7 +342,9 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
   if (filters.sortBy === "price_asc") allProducts.sort((a, b) => a.pricePerKg - b.pricePerKg);
   else if (filters.sortBy === "price_desc") allProducts.sort((a, b) => b.pricePerKg - a.pricePerKg);
   else if (filters.sortBy === "rating") allProducts.sort((a, b) => b.rating - a.rating);
-  else allProducts.sort((a, b) => Number(Boolean(b.badge)) - Number(Boolean(a.badge)) || b.rating - a.rating);
+  else allProducts.sort((a, b) => a.searchRank - b.searchRank
+    || Number(Boolean(b.badge)) - Number(Boolean(a.badge))
+    || b.rating - a.rating);
 
   const filteredProductCount = allProducts.length;
   const approvedSellerIds = new Set(allProducts.map((product) => product.sellerId));
@@ -353,12 +403,28 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
     pool.query(
       `SELECT u.id,COALESCE(NULLIF(u.name,''),NULLIF(concat_ws(' ',u.first_name,u.last_name),''),u.email) AS name,
               COALESCE(u.avatar,u.profile_image_url) AS avatar,COALESCE(u.rating,0) AS rating,
-              u.latitude,u.longitude,count(DISTINCT p.id)::int AS product_count
+              u.latitude,u.longitude,
+              count(DISTINCT p.id) FILTER (WHERE p.moderation_status='approved')::int AS product_count,
+              (u.is_verified=true OR EXISTS (
+                SELECT 1 FROM seller_verification_cases verified_case
+                WHERE verified_case.seller_id=u.id AND verified_case.status='verified'
+                  AND (verified_case.expires_at IS NULL OR verified_case.expires_at>now())
+              )) AS seller_verified,
+              active_session.expires_at AS session_expires_at
          FROM users u
-         JOIN commerce_products p ON p.farmer_id=u.id
+         JOIN LATERAL (
+           SELECT max(session.expire) AS expires_at
+           FROM sessions session
+           WHERE session.sess->>'userId'=u.id AND session.expire>now()
+         ) active_session ON active_session.expires_at IS NOT NULL
+         LEFT JOIN commerce_products p ON p.farmer_id=u.id
          LEFT JOIN seller_region_assignments assignment ON assignment.seller_id=u.id AND assignment.status='active'
-        WHERE u.is_online=true AND ${visibleSellerSql} ${regionClause}
-        GROUP BY u.id ORDER BY u.rating DESC,product_count DESC LIMIT 8`,
+        WHERE u.account_status='active'
+          AND u.auth_method<>'catalog_seed'
+          AND (u.role='farmer' OR u.seller_enabled=true)
+          ${regionId ? "AND (p.region_id=$1 OR assignment.region_id=$1)" : ""}
+        GROUP BY u.id,active_session.expires_at
+        ORDER BY active_session.expires_at DESC,u.rating DESC,product_count DESC LIMIT 8`,
       regionParameter,
     ),
     pool.query(
@@ -496,6 +562,8 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
       id: String(row.id), name: String(row.name), rating: numeric(row.rating),
       distanceKm: distanceKm(selectedRegion?.latitude, selectedRegion?.longitude, row.latitude, row.longitude),
       productCount: numeric(row.product_count), avatar: text(row.avatar), isOnline: true,
+      verified: row.seller_verified === true,
+      sessionExpiresAt: row.session_expires_at ? new Date(row.session_expires_at).toISOString() : null,
     })),
     mapClusters: mapResult.rows.map((row: Row) => ({
       id: String(row.id), name: String(row.name), type: String(row.type),

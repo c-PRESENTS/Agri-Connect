@@ -111,38 +111,38 @@ export function ProductCard({
         </div>
 
         {/* ─── CARD DETAILS ─── */}
-        <div className="p-3.5 sm:p-4 flex flex-col flex-1 justify-between gap-3">
+        <div className="p-4 sm:p-4.5 flex flex-col flex-1 justify-between gap-3">
           <div>
             {/* Product Title & Unit */}
-            <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+            <h3 className="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
               {productName}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-0.5">
               {product.unit || "500g"}
             </p>
 
             {/* Price Row */}
-            <div className="flex items-baseline gap-1.5 mt-2">
-              <span className="text-base sm:text-lg font-black text-emerald-800 dark:text-emerald-400">
+            <div className="flex items-baseline gap-2 mt-2">
+              <span className="text-lg sm:text-xl font-black text-emerald-800 dark:text-emerald-400">
                 {format(product.price, { sourceCurrency: product.currency || "GBP" })}
               </span>
               {originalPrice && (
-                <span className="text-xs text-slate-400 line-through font-semibold">
+                <span className="text-xs sm:text-sm text-slate-400 line-through font-semibold">
                   {format(originalPrice, { sourceCurrency: product.currency || "GBP" })}
                 </span>
               )}
-              <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.2 rounded-md">
+              <span className="text-[11px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md">
                 {discountPct}% OFF
               </span>
             </div>
 
             {/* Seller / Source Info */}
-            <div className="mt-2 text-xs">
-              <p className="font-bold text-slate-700 dark:text-slate-200 truncate">
+            <div className="mt-2.5 text-xs sm:text-sm">
+              <p className="font-black text-slate-800 dark:text-slate-100 truncate">
                 {hasRealSeller ? sellerName : "Direct Marketplace"}
               </p>
-              <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 truncate font-medium">
-                <MapPin className={`h-3 w-3 ${hasRealSeller ? "text-red-400" : "text-emerald-500"} shrink-0`} />
+              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5 truncate font-semibold">
+                <MapPin className={`h-3.5 w-3.5 ${hasRealSeller ? "text-red-400" : "text-emerald-500"} shrink-0`} />
                 <span>
                   {hasRealSeller ? `${sellerLoc} • ${sellerDist.toFixed(0)} km` : "Verified Direct Source"}
                 </span>
@@ -150,15 +150,15 @@ export function ProductCard({
             </div>
 
             {/* Rating & Verified Badge */}
-            <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-border/40 text-[11px] font-bold">
-              <div className="flex items-center gap-1">
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                <span className="font-black text-slate-800 dark:text-slate-200">{rating.toFixed(1)}</span>
-                <span className="text-slate-400 font-semibold">({reviewCount})</span>
+            <div className="flex items-center justify-between gap-2 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-border/40 text-xs font-bold">
+              <div className="flex items-center gap-1.5">
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                <span className="font-black text-slate-900 dark:text-slate-100">{rating.toFixed(1)}</span>
+                <span className="text-slate-400 font-bold">({reviewCount})</span>
               </div>
 
-              <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold">
-                <ShieldCheck className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-black">
+                <ShieldCheck className="h-4 w-4" />
                 <span>Verified</span>
               </div>
             </div>
@@ -167,17 +167,17 @@ export function ProductCard({
           {/* Full-width Add to Cart Button */}
           <Button
             onClick={handleAddToCart}
-            className="w-full mt-2 h-9 bg-emerald-800 hover:bg-emerald-900 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-black text-xs rounded-xl shadow-2xs gap-1.5 transition-colors"
+            className="w-full mt-2 h-10 bg-emerald-800 hover:bg-emerald-900 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl shadow-2xs gap-2 transition-colors cursor-pointer"
             data-testid={`button-add-to-cart-${product.id}`}
           >
             {addedToCart ? (
               <>
-                <Check className="h-4 w-4" />
+                <Check className="h-4 w-4 stroke-[3]" />
                 <span>Added to Cart</span>
               </>
             ) : (
               <>
-                <ShoppingCart className="h-3.5 w-3.5" />
+                <ShoppingCart className="h-4 w-4" />
                 <span>Add to Cart</span>
               </>
             )}

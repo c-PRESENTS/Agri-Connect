@@ -117,7 +117,7 @@ export type RegisteredOrganisation = {
 };
 
 function timeAgo(dateString?: string | null): string {
-  if (!dateString) return "Recently";
+  if (!dateString) return "—";
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -190,15 +190,16 @@ export function AgriOrganisationsManagement({
   const [startModalOpen, setStartModalOpen] = useState(false);
   const [newOrgName, setNewOrgName] = useState("");
   const [newOrgEmail, setNewOrgEmail] = useState("");
-  const [newOrgRegion, setNewOrgRegion] = useState("East Anglia");
-  const [newOrgMemberCount, setNewOrgMemberCount] = useState("100");
-  const [newOrgCrop, setNewOrgCrop] = useState("Wheat, Barley & Arable");
+  const [newOrgRegion, setNewOrgRegion] = useState("");
+  const [newOrgMemberCount, setNewOrgMemberCount] = useState("");
+  const [newOrgCrop, setNewOrgCrop] = useState("");
   const [newOrgContact, setNewOrgContact] = useState("");
 
   // Query applications
   const {
     data: appData,
     isLoading: isLoadingApps,
+    isError: isAppsError,
     refetch: refetchApps,
     isFetching: isFetchingApps,
   } = useQuery<{ applications: OrganisationApplication[] }>({
@@ -213,6 +214,7 @@ export function AgriOrganisationsManagement({
   const {
     data: orgsData,
     isLoading: isLoadingOrgs,
+    isError: isOrgsError,
     refetch: refetchOrgs,
   } = useQuery<{ records: RegisteredOrganisation[] }>({
     queryKey: ["/api/admin/resources/service-providers"],
@@ -277,6 +279,9 @@ export function AgriOrganisationsManagement({
       setStartModalOpen(false);
       setNewOrgName("");
       setNewOrgEmail("");
+      setNewOrgRegion("");
+      setNewOrgMemberCount("");
+      setNewOrgCrop("");
       setNewOrgContact("");
     },
     onError: (err: Error) => {
@@ -421,6 +426,7 @@ export function AgriOrganisationsManagement({
             variant="outline"
             size="sm"
             onClick={handleExportCsv}
+            disabled={filteredApplications.length === 0}
             className="h-9 gap-1.5 border-slate-300 bg-white font-medium text-slate-700 shadow-sm hover:bg-slate-50"
           >
             <Download className="h-3.5 w-3.5" />
@@ -607,12 +613,28 @@ export function AgriOrganisationsManagement({
                         </td>
                       </tr>
                     ))
+                  ) : isAppsError ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-rose-600">
+                        <AlertCircle className="mx-auto mb-2 h-8 w-8 text-rose-400" />
+                        <p className="text-sm font-semibold">Organisation applications could not be loaded</p>
+                        <Button variant="outline" size="sm" className="mt-3" onClick={() => refetchApps()}>
+                          Try again
+                        </Button>
+                      </td>
+                    </tr>
                   ) : paginatedApplications.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-slate-400">
                         <Building2 className="mx-auto mb-2 h-8 w-8 text-slate-300" />
-                        <p className="text-sm font-semibold">No organisation applications found</p>
-                        <p className="text-xs">Submit a new application or adjust your search filter.</p>
+                        <p className="text-sm font-semibold">
+                          {applications.length === 0 ? "No organisation applications yet" : "No organisation applications found"}
+                        </p>
+                        <p className="text-xs">
+                          {applications.length === 0
+                            ? "Real applications will appear here after they are submitted."
+                            : "Adjust your search or status filter."}
+                        </p>
                       </td>
                     </tr>
                   ) : (
@@ -644,10 +666,12 @@ export function AgriOrganisationsManagement({
 
                         <td className="px-4 py-3.5 max-w-xs">
                           <p className="font-semibold text-slate-900 truncate">
-                            {app.applicationData?.region || "UK Regional"}
+                            {app.applicationData?.region || "—"}
                           </p>
                           <p className="text-[10px] text-slate-400 truncate">
-                            {app.applicationData?.primaryCrop || "Agri-Enterprise"} · {app.applicationData?.memberCount ?? 0} members
+                            {[app.applicationData?.primaryCrop, typeof app.applicationData?.memberCount === "number"
+                              ? `${app.applicationData.memberCount} members`
+                              : null].filter(Boolean).join(" · ") || "—"}
                           </p>
                         </td>
 
@@ -757,11 +781,22 @@ export function AgriOrganisationsManagement({
                       </td>
                     </tr>
                   ))
+                ) : isOrgsError ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-rose-600">
+                      <AlertCircle className="mx-auto mb-2 h-8 w-8 text-rose-400" />
+                      <p className="font-semibold">Registered organisations could not be loaded</p>
+                      <Button variant="outline" size="sm" className="mt-3" onClick={() => refetchOrgs()}>
+                        Try again
+                      </Button>
+                    </td>
+                  </tr>
                 ) : registeredOrgs.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-slate-400">
                       <Building className="mx-auto mb-2 h-8 w-8 text-slate-300" />
                       <p className="font-semibold">No registered organisations found</p>
+                      <p className="text-xs">Approved organisations will appear here after registration.</p>
                     </td>
                   </tr>
                 ) : (
@@ -778,7 +813,7 @@ export function AgriOrganisationsManagement({
                       </td>
                       <td className="px-4 py-3.5 capitalize text-slate-700">
                         <Badge variant="outline" className="text-[10px]">
-                          {org.type || "External Body"}
+                          {org.type || "—"}
                         </Badge>
                       </td>
                       <td className="px-4 py-3.5 text-center">
@@ -831,15 +866,15 @@ export function AgriOrganisationsManagement({
                 <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <div className="rounded-lg bg-white/10 p-2.5 text-center">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Region</p>
-                    <p className="text-xs font-bold text-white truncate">{selectedApp.applicationData?.region || "UK Regional"}</p>
+                    <p className="text-xs font-bold text-white truncate">{selectedApp.applicationData?.region || "—"}</p>
                   </div>
                   <div className="rounded-lg bg-white/10 p-2.5 text-center">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Members</p>
-                    <p className="text-base font-black text-lime-300">{selectedApp.applicationData?.memberCount ?? 0}</p>
+                    <p className="text-base font-black text-lime-300">{selectedApp.applicationData?.memberCount ?? "—"}</p>
                   </div>
                   <div className="rounded-lg bg-white/10 p-2.5 text-center">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Documents</p>
-                    <p className="text-base font-black text-white">{selectedApp.applicationData?.documents?.length ?? 1}</p>
+                    <p className="text-base font-black text-white">{selectedApp.applicationData?.documents?.length ?? 0}</p>
                   </div>
                   <div className="rounded-lg bg-white/10 p-2.5 text-center">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Submitted</p>
@@ -865,15 +900,15 @@ export function AgriOrganisationsManagement({
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-100">
                       <span className="text-slate-500">Contact Officer</span>
-                      <span className="font-semibold text-slate-900">{selectedApp.applicationData?.contactPerson || "Lead Executive"}</span>
+                      <span className="font-semibold text-slate-900">{selectedApp.applicationData?.contactPerson || "—"}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-100">
                       <span className="text-slate-500">Registration Number</span>
-                      <span className="font-mono font-semibold text-slate-900">{selectedApp.applicationData?.regNumber || "Pending"}</span>
+                      <span className="font-mono font-semibold text-slate-900">{selectedApp.applicationData?.regNumber || "—"}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-100">
                       <span className="text-slate-500">Primary Agricultural Scope</span>
-                      <span className="font-semibold text-slate-900">{selectedApp.applicationData?.primaryCrop || "Multi-crop agribusiness"}</span>
+                      <span className="font-semibold text-slate-900">{selectedApp.applicationData?.primaryCrop || "—"}</span>
                     </div>
                     {selectedApp.reviewReason && (
                       <div className="pt-2">
@@ -894,15 +929,19 @@ export function AgriOrganisationsManagement({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-xs">
-                    {(selectedApp.applicationData?.documents || ["Incorporation_Cert.pdf", "Financial_Audit_2025.pdf"]).map((doc, idx) => (
-                      <div key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5">
-                        <div className="flex items-center gap-2">
-                          <FileCheck className="h-4 w-4 text-emerald-600" />
-                          <span className="font-semibold text-slate-800">{doc}</span>
+                    {selectedApp.applicationData?.documents?.length ? (
+                      selectedApp.applicationData.documents.map((doc, idx) => (
+                        <div key={`${doc}-${idx}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5">
+                          <div className="flex items-center gap-2">
+                            <FileCheck className="h-4 w-4 text-emerald-600" />
+                            <span className="font-semibold text-slate-800">{doc}</span>
+                          </div>
+                          <Badge variant="outline" className="text-[10px]">Submitted</Badge>
                         </div>
-                        <Badge variant="outline" className="text-[10px]">Verified</Badge>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="py-3 text-center text-slate-400">No compliance documents submitted.</p>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -1043,7 +1082,7 @@ export function AgriOrganisationsManagement({
             <div className="space-y-1">
               <Label className="text-xs font-bold text-slate-700">Organisation Name *</Label>
               <Input
-                placeholder="e.g. East Anglia Agricultural Cooperative"
+                placeholder="Enter the registered organisation name"
                 value={newOrgName}
                 onChange={(e) => setNewOrgName(e.target.value)}
                 className="h-9 text-xs"
@@ -1065,7 +1104,7 @@ export function AgriOrganisationsManagement({
               <div className="space-y-1">
                 <Label className="text-xs font-bold text-slate-700">Region</Label>
                 <Input
-                  placeholder="e.g. South West (Wessex)"
+                  placeholder="Enter the operating region"
                   value={newOrgRegion}
                   onChange={(e) => setNewOrgRegion(e.target.value)}
                   className="h-9 text-xs"
@@ -1075,7 +1114,9 @@ export function AgriOrganisationsManagement({
                 <Label className="text-xs font-bold text-slate-700">Member Count</Label>
                 <Input
                   type="number"
-                  placeholder="100"
+                  min={0}
+                  max={10000000}
+                  placeholder="Enter member count"
                   value={newOrgMemberCount}
                   onChange={(e) => setNewOrgMemberCount(e.target.value)}
                   className="h-9 text-xs"
@@ -1086,7 +1127,7 @@ export function AgriOrganisationsManagement({
             <div className="space-y-1">
               <Label className="text-xs font-bold text-slate-700">Primary Agricultural Scope / Crop</Label>
               <Input
-                placeholder="e.g. Arable Grains, Malting Barley & Seeds"
+                placeholder="Enter the agricultural scope or crops"
                 value={newOrgCrop}
                 onChange={(e) => setNewOrgCrop(e.target.value)}
                 className="h-9 text-xs"
@@ -1096,7 +1137,7 @@ export function AgriOrganisationsManagement({
             <div className="space-y-1">
               <Label className="text-xs font-bold text-slate-700">Contact Person / Officer</Label>
               <Input
-                placeholder="e.g. Arthur Pendelton (Director)"
+                placeholder="Enter the responsible contact person"
                 value={newOrgContact}
                 onChange={(e) => setNewOrgContact(e.target.value)}
                 className="h-9 text-xs"

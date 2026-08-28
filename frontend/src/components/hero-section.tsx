@@ -242,65 +242,65 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
 
             {/* Headline */}
             <div>
-              <h1 className="text-[22px] font-black text-white leading-[1.1] tracking-tight uppercase">
+              <h1 className="text-[24px] sm:text-[26px] font-black text-white leading-[1.15] tracking-tight uppercase">
                 FRESH PRODUCE, <span className="text-amber-400 drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]">DIRECT TO YOU</span>
               </h1>
-              <p className="text-[11px] text-white/70 leading-snug mt-0.5 font-medium">
+              <p className="text-xs sm:text-sm text-white/85 leading-relaxed mt-1 font-semibold">
                 Connecting you directly with local growers, Fair prices, verified quality, and sustainable impact.
               </p>
             </div>
 
             {/* Metric Strip */}
-            <div className="grid grid-cols-4 gap-1.5">
-              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-amber-400 rounded-xl p-1.5 text-center shadow-xs">
-                <span className="text-xs font-black text-white block">{platformStats?.farmers ?? farmerCount}</span>
-                <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-400">Farmers</span>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-amber-400 rounded-xl p-2 text-center shadow-xs">
+                <span className="text-sm font-black text-white block">{platformStats?.farmers ?? farmerCount}</span>
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-300">Farmers</span>
               </div>
-              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-cyan-400 rounded-xl p-1.5 text-center shadow-xs">
-                <span className="text-xs font-black text-white block">{platformStats?.products ?? products.length}</span>
-                <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-400">Products</span>
+              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-cyan-400 rounded-xl p-2 text-center shadow-xs">
+                <span className="text-sm font-black text-white block">{platformStats?.products ?? products.length}</span>
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-300">Products</span>
               </div>
-              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-orange-400 rounded-xl p-1.5 text-center shadow-xs">
-                <span className="text-xs font-black text-white block">{platformStats?.freeItems ?? shareCareItems.length}</span>
-                <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-400">Free Items</span>
+              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-orange-400 rounded-xl p-2 text-center shadow-xs">
+                <span className="text-sm font-black text-white block">{platformStats?.freeItems ?? shareCareItems.length}</span>
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-300">Free Items</span>
               </div>
-              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-blue-400 rounded-xl p-1.5 text-center shadow-xs">
-                <span className="text-xs font-black text-white block">{platformStats?.buyers ?? 1}</span>
-                <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-400">Buyers</span>
+              <div className="bg-[#0b2120]/90 border border-emerald-800/60 border-t-2 border-t-blue-400 rounded-xl p-2 text-center shadow-xs">
+                <span className="text-sm font-black text-white block">{platformStats?.buyers ?? 1}</span>
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-300">Buyers</span>
               </div>
             </div>
 
             {/* AI Crop Intelligence & 2027 Field Network */}
-            <div className="flex items-center justify-between gap-2 py-0.5">
-              <div className="inline-flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/60 rounded-md px-2 py-1 shadow-xs">
-                <Activity className="h-3 w-3 text-emerald-400 shrink-0" />
-                <span className="text-[10px] font-black uppercase tracking-wider text-white">
+            <div className="flex items-center justify-between gap-2 py-1">
+              <div className="inline-flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/60 rounded-lg px-2.5 py-1 shadow-xs">
+                <Activity className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                <span className="text-[11px] font-black uppercase tracking-wider text-white">
                   AI CROP INTELLIGENCE
                 </span>
-                <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 text-[8px] font-black px-1.5 py-0.2 rounded uppercase">
+                <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
                   OPTIMAL
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-black text-white tracking-wider drop-shadow-sm">
-                <Zap className="h-3.5 w-3.5 text-cyan-400 fill-cyan-400 shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-white tracking-wider drop-shadow-sm">
+                <Zap className="h-4 w-4 text-cyan-400 fill-cyan-400 shrink-0" />
                 <span>2027 FIELD NETWORK</span>
               </div>
             </div>
 
             {/* CTAs */}
-            <div className="flex gap-2 mt-0.5">
+            <div className="flex gap-2 mt-1">
               <Button
                 onClick={onBrowse}
                 data-testid="button-mobile-shop-now"
-                className="flex-1 h-10 bg-[#0e2a28] hover:bg-[#143d3a] border border-emerald-600/50 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md gap-1.5 px-2"
+                className="flex-1 h-11 bg-[#0e2a28] hover:bg-[#143d3a] border border-emerald-600/50 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md gap-1.5 px-2"
               >
-                {t("home.shop_now")}<ArrowRight className="h-3.5 w-3.5 text-amber-400" />
+                {t("home.shop_now")}<ArrowRight className="h-4 w-4 text-amber-400" />
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/map")}
                 data-testid="button-mobile-live-map"
-                className="flex-1 h-10 border-2 border-emerald-400 bg-emerald-500/20 text-emerald-300 text-xs font-black uppercase tracking-wider rounded-xl gap-1.5 px-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                className="flex-1 h-11 border-2 border-emerald-400 bg-emerald-500/20 text-emerald-300 text-xs font-black uppercase tracking-wider rounded-xl gap-1.5 px-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
               >
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 {t("home.live_map")}
@@ -309,22 +309,22 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
           </div>
 
           {/* ──────── DESKTOP HERO — Text & Stats (≥lg only) ──────── */}
-          <div ref={heroLeftRef} className="hidden lg:flex flex-col justify-center px-6 lg:px-7 py-4 lg:py-5 w-full overflow-hidden min-w-0">
+          <div ref={heroLeftRef} className="hidden lg:flex flex-col justify-center px-6 lg:px-8 py-5 lg:py-6 w-full overflow-hidden min-w-0">
 
             {/* Top pill tags */}
-            <div className="flex items-center gap-2.5 flex-wrap mb-2.5">
-              <div className="inline-flex items-center gap-1.5 bg-[#0a2723] border border-emerald-500/80 rounded-full px-3 py-1 text-xs font-black text-emerald-300 uppercase tracking-wider shadow-[0_0_12px_rgba(16,185,129,0.25)]">
-                <Leaf className="h-3.5 w-3.5 text-emerald-400" />
+            <div className="flex items-center gap-2.5 flex-wrap mb-3">
+              <div className="inline-flex items-center gap-1.5 bg-[#0a2723] border border-emerald-500/80 rounded-full px-3.5 py-1 text-xs font-black text-emerald-300 uppercase tracking-wider shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                <Leaf className="h-4 w-4 text-emerald-400" />
                 {t("home.farm_to_table")}
               </div>
-              <div className="inline-flex items-center gap-2 bg-[#0a2723] border border-emerald-500/80 rounded-full px-3 py-1 text-xs font-black text-emerald-300 uppercase tracking-wider shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+              <div className="inline-flex items-center gap-2 bg-[#0a2723] border border-emerald-500/80 rounded-full px-3.5 py-1 text-xs font-black text-emerald-300 uppercase tracking-wider shadow-[0_0_12px_rgba(16,185,129,0.25)]">
                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
                 <span>{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
               </div>
             </div>
 
             {/* Big Headline */}
-            <h1 className="text-3xl xl:text-4xl 2xl:text-[42px] font-black text-white mb-2 leading-[1.05] tracking-tight uppercase">
+            <h1 className="text-3xl xl:text-4xl 2xl:text-5xl font-black text-white mb-2 leading-[1.05] tracking-tight uppercase">
               <span className="block">FRESH PRODUCE,</span>
               <span className="block text-amber-400 drop-shadow-[0_0_18px_rgba(245,158,11,0.45)] whitespace-nowrap">
                 DIRECT TO YOU
@@ -332,7 +332,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             </h1>
 
             {/* Subtitle */}
-            <p className="text-xs sm:text-sm font-medium text-white/80 mb-4 leading-normal max-w-lg">
+            <p className="text-sm sm:text-base font-bold text-white/90 mb-4 leading-relaxed max-w-lg">
               Connecting you directly with local growers, Fair prices, verified quality, and sustainable impact.
             </p>
 
@@ -342,52 +342,52 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
               <div className="grid grid-cols-4 gap-2 flex-1">
                 {/* Farmer Stat Card */}
                 <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-amber-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
-                  <div className="w-5 h-5 rounded-lg flex items-center justify-center mb-1 text-amber-400">
-                    <Users className="h-3.5 w-3.5" />
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center mb-1 text-amber-400">
+                    <Users className="h-4 w-4" />
                   </div>
                   <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
                     {platformStats?.farmers ?? farmerCount}
                   </span>
-                  <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-400">
+                  <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
                     FARMERS
                   </span>
                 </div>
 
                 {/* Products Stat Card */}
                 <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-cyan-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
-                  <div className="w-5 h-5 rounded-lg flex items-center justify-center mb-1 text-cyan-400">
-                    <Sprout className="h-3.5 w-3.5" />
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center mb-1 text-cyan-400">
+                    <Sprout className="h-4 w-4" />
                   </div>
                   <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
                     {platformStats?.products ?? products.length}
                   </span>
-                  <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-400">
+                  <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
                     PRODUCTS
                   </span>
                 </div>
 
                 {/* Free Items Stat Card */}
                 <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-orange-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
-                  <div className="w-5 h-5 rounded-lg flex items-center justify-center mb-1 text-orange-400">
-                    <Zap className="h-3.5 w-3.5" />
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center mb-1 text-orange-400">
+                    <Zap className="h-4 w-4" />
                   </div>
                   <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
                     {platformStats?.freeItems ?? shareCareItems.length}
                   </span>
-                  <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-400">
+                  <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
                     FREE ITEMS
                   </span>
                 </div>
 
                 {/* Buyers Stat Card */}
                 <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-blue-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
-                  <div className="w-5 h-5 rounded-lg flex items-center justify-center mb-1 text-blue-400">
-                    <ShoppingBag className="h-3.5 w-3.5" />
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center mb-1 text-blue-400">
+                    <ShoppingBag className="h-4 w-4" />
                   </div>
                   <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
                     {platformStats?.buyers ?? 1}
                   </span>
-                  <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-400">
+                  <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
                     BUYERS
                   </span>
                 </div>
@@ -399,10 +399,10 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                   <span className="text-xs font-black text-emerald-300 block leading-tight tracking-wider">
                     2027
                   </span>
-                  <span className="text-[8px] font-black uppercase text-white/90 block leading-tight">
+                  <span className="text-[8.5px] font-black uppercase text-white/90 block leading-tight">
                     AI Crop Intelligence
                   </span>
-                  <span className="text-[7.5px] font-black uppercase text-emerald-400 flex items-center justify-center gap-1 mt-0.5">
+                  <span className="text-[8px] font-black uppercase text-emerald-400 flex items-center justify-center gap-1 mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active
                   </span>
                 </div>
@@ -410,14 +410,14 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             </div>
 
             {/* AI Crop Intelligence & 2027 Field Network */}
-            <div className="space-y-1.5 mb-3.5">
+            <div className="space-y-2 mb-4">
               <div>
                 <div className="inline-flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/60 rounded-lg px-3 py-1 shadow-xs backdrop-blur-xs">
-                  <Activity className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                  <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">
+                  <Activity className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
                     AI CROP INTELLIGENCE
                   </span>
-                  <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                  <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 text-[9.5px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
                     OPTIMAL
                   </span>
                 </div>
@@ -432,15 +432,15 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             <div className="flex items-center gap-3 mb-4 flex-wrap">
               <Button
                 onClick={onBrowse}
-                className="bg-[#0a2220] hover:bg-[#123835] border border-emerald-600/60 hover:border-emerald-400 text-white px-5 h-10 text-xs font-black uppercase tracking-wider rounded-xl shadow-lg gap-2 transition-all"
+                className="bg-[#0a2220] hover:bg-[#123835] border border-emerald-600/60 hover:border-emerald-400 text-white px-6 h-11 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl shadow-lg gap-2 transition-all"
               >
                 <span>SHOP NOW</span>
-                <ArrowRight className="h-3.5 w-3.5 text-amber-400" />
+                <ArrowRight className="h-4 w-4 text-amber-400" />
               </Button>
 
               <Button
                 variant="outline"
-                className="border-2 border-emerald-400 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 px-5 h-10 text-xs font-black uppercase tracking-wider rounded-xl gap-2 shadow-[0_0_18px_rgba(16,185,129,0.35)] cursor-pointer"
+                className="border-2 border-emerald-400 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 px-6 h-11 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl gap-2 shadow-[0_0_18px_rgba(16,185,129,0.35)] cursor-pointer"
                 onClick={() => navigate("/map")}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -449,25 +449,25 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             </div>
 
             {/* Trust Badges Row */}
-            <div className="flex gap-3 sm:gap-4 flex-wrap items-center">
-              <div className="flex items-center gap-1 text-[11px] text-emerald-300 font-bold">
-                <Check className="h-3.5 w-3.5 text-emerald-400" />
+            <div className="flex gap-3.5 sm:gap-5 flex-wrap items-center">
+              <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-black">
+                <Check className="h-4 w-4 text-emerald-400 stroke-[2.5]" />
                 <span>Verified Farms</span>
               </div>
-              <div className="flex items-center gap-1 text-[11px] text-blue-300 font-bold">
-                <Truck className="h-3.5 w-3.5 text-blue-400" />
+              <div className="flex items-center gap-1.5 text-xs text-blue-300 font-black">
+                <Truck className="h-4 w-4 text-blue-400 stroke-[2.5]" />
                 <span>Farm-to-Door</span>
               </div>
-              <div className="flex items-center gap-1 text-[11px] text-emerald-300 font-bold">
-                <Leaf className="h-3.5 w-3.5 text-emerald-400" />
+              <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-black">
+                <Leaf className="h-4 w-4 text-emerald-400 stroke-[2.5]" />
                 <span>100% Natural</span>
               </div>
-              <div className="flex items-center gap-1 text-[11px] text-purple-300 font-bold">
-                <Globe className="h-3.5 w-3.5 text-purple-400" />
+              <div className="flex items-center gap-1.5 text-xs text-purple-300 font-black">
+                <Globe className="h-4 w-4 text-purple-400 stroke-[2.5]" />
                 <span>75+ Regions</span>
               </div>
-              <div className="bg-[#0c2a27] border border-emerald-500/60 text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
-                <Check className="h-2.5 w-2.5" />
+              <div className="bg-[#0c2a27] border border-emerald-500/60 text-emerald-300 text-[11px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <Check className="h-3 w-3 stroke-[2.5]" />
                 <span>2027 Target</span>
               </div>
             </div>
@@ -542,61 +542,61 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             <div className="relative w-full h-full rounded-3xl p-1 bg-gradient-to-b from-[#163330] via-[#091a18] to-[#040f0e] border-2 border-[#1a4b44] shadow-[0_0_35px_rgba(4,20,18,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col overflow-hidden">
 
               {/* Top Notch Header */}
-              <div className="flex items-center justify-between px-3 py-1.5 bg-[#061413]/95 border-b border-[#143d37] z-30 rounded-t-2xl">
+              <div className="flex items-center justify-between px-3.5 py-2 bg-[#061413]/95 border-b border-[#143d37] z-30 rounded-t-2xl gap-3">
                 {/* Left Layer Switcher Tabs */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 bg-[#030c0b]/90 p-1 rounded-xl border border-[#143d37]">
                   <button
                     onClick={() => setHeroTileStyle("standard")}
-                    className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                       heroTileStyle === "standard"
-                        ? "bg-amber-400 text-black shadow-xs font-black"
-                        : "bg-[#0b211f] text-slate-300 hover:text-white border border-[#143d37]"
+                        ? "bg-amber-400 text-amber-950 shadow-sm font-black"
+                        : "text-slate-300 hover:text-white hover:bg-[#0b211f]"
                     }`}
                   >
-                    ● STANDARD
+                    STANDARD
                   </button>
                   <button
                     onClick={() => setHeroTileStyle("satellite")}
-                    className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                       heroTileStyle === "satellite"
-                        ? "bg-amber-400 text-black shadow-xs font-black"
-                        : "bg-[#0b211f] text-slate-300 hover:text-white border border-[#143d37]"
+                        ? "bg-amber-400 text-amber-950 shadow-sm font-black"
+                        : "text-slate-300 hover:text-white hover:bg-[#0b211f]"
                     }`}
                   >
-                    ● SATELLITE
+                    SATELLITE
                   </button>
                   <button
                     onClick={() => setHeroTileStyle("terrain")}
-                    className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                       heroTileStyle === "terrain"
-                        ? "bg-amber-400 text-black shadow-xs font-black"
-                        : "bg-[#0b211f] text-slate-300 hover:text-white border border-[#143d37]"
+                        ? "bg-amber-400 text-amber-950 shadow-sm font-black"
+                        : "text-slate-300 hover:text-white hover:bg-[#0b211f]"
                     }`}
                   >
                     TERRAIN / 3D
                   </button>
                   <button
                     onClick={() => navigate("/map")}
-                    className="px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider bg-[#0b211f] text-slate-300 hover:text-white border border-[#143d37] cursor-pointer"
+                    className="px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-300 hover:text-emerald-200 hover:bg-[#0b211f] transition-all cursor-pointer"
                   >
                     BUYERS VIEW
                   </button>
                 </div>
 
                 {/* Center AGRI CONNECT HUD Badge */}
-                <div className="bg-gradient-to-r from-[#0d2a27] via-[#103a35] to-[#0d2a27] border border-[#1b554c] rounded-lg px-3 py-0.5 shadow-md flex items-center gap-1.5">
-                  <Leaf className="h-3 w-3 text-emerald-400 fill-emerald-400" />
-                  <span className="text-[11px] font-black tracking-widest text-emerald-300 uppercase">AGRI CONNECT</span>
+                <div className="bg-gradient-to-r from-[#0d2a27] via-[#103a35] to-[#0d2a27] border border-[#1b554c] rounded-xl px-3.5 py-1 shadow-md flex items-center gap-2 shrink-0">
+                  <Leaf className="h-4 w-4 text-emerald-400 fill-emerald-400" />
+                  <span className="text-xs font-black tracking-widest text-emerald-300 uppercase">AGRI CONNECT</span>
                 </div>
 
                 {/* Right Status LEDs */}
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-[9px] font-bold text-cyan-400">
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-950/40 border border-cyan-700/40 text-[10px] font-black tracking-wider text-cyan-300">
                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                     <span>NETWORK</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-400">
-                    <Zap className="h-2.5 w-2.5 text-emerald-400 fill-emerald-400" />
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-700/40 text-[10px] font-black tracking-wider text-emerald-300">
+                    <Zap className="h-3 w-3 text-emerald-400 fill-emerald-400" />
                     <span>POWER</span>
                   </div>
                 </div>
@@ -658,12 +658,6 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                   </div>
                 </div>
 
-                {/* Floating Top-Center Checkpoint Tracker Badge */}
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1200] bg-[#071917]/90 backdrop-blur-md border border-amber-500/70 rounded-xl px-2.5 py-1 shadow-xl text-white pointer-events-auto">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-300">
-                    QUALITY CHECKPOINTS
-                  </span>
-                </div>
 
                 {/* Floating Weather Card (Bottom Left) */}
                 <div className="absolute bottom-12 left-3 z-[1200] bg-[#071917]/95 backdrop-blur-md border border-emerald-700/60 rounded-xl p-2.5 shadow-2xl text-white w-44 pointer-events-auto">
@@ -723,17 +717,14 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                 </div>
 
                 {/* Bottom Center Status Notch */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-[1200] bg-[#071917]/95 border border-emerald-600/70 rounded-full px-4 py-0.5 text-center shadow-xl">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300">
-                    AGRI AI ANALYSIS: OPTIMAL
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-[1200] bg-[#071917]/95 border-2 border-emerald-500/80 rounded-full px-4 py-1 text-center shadow-xl flex items-center gap-2 whitespace-nowrap">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10.5px] sm:text-xs font-black uppercase tracking-wider text-emerald-300">
+                    AgriConnect AI Powered Map
                   </span>
                 </div>
 
-                {/* Bottom Right SATELLITE Layer Pill */}
-                <div className="absolute bottom-2 right-3 z-[1200] bg-black/80 border border-amber-400 text-amber-400 text-[9px] font-black uppercase px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-md pointer-events-auto">
-                  <Satellite className="h-3 w-3" />
-                  <span>SATELLITE</span>
-                </div>
+
 
               </div>
             </div>

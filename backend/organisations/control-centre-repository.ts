@@ -46,17 +46,17 @@ export async function listControlCentreOrganisations(userId: string, superAdmin:
 export async function getControlCentreOverview(days = 30) {
   const [summaryResult, orderStatuses, trends, recent, categories, farmers, regions, growth] = await Promise.all([
     pool.query(`SELECT
-      (SELECT count(*)::int FROM users) AS total_users,
-      (SELECT count(*)::int FROM users WHERE role='farmer' OR seller_enabled=true) AS farmers,
-      (SELECT count(*)::int FROM users WHERE seller_enabled=true) AS sellers,
+      (SELECT count(*)::int FROM users WHERE auth_method<>'catalog_seed') AS total_users,
+      (SELECT count(*)::int FROM users WHERE (role='farmer' OR seller_enabled=true) AND auth_method<>'catalog_seed') AS farmers,
+      (SELECT count(*)::int FROM users WHERE seller_enabled=true AND auth_method<>'catalog_seed') AS sellers,
       (SELECT count(*)::int FROM users u LEFT JOIN seller_verification_cases svc ON svc.seller_id=u.id
-        WHERE (u.role='farmer' OR u.seller_enabled=true) AND COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' END)='verified') AS verified_farmers,
-      (SELECT count(*)::int FROM seller_verification_cases WHERE status IN ('pending_review','needs_information')) AS pending_farmers,
+        WHERE (u.role='farmer' OR u.seller_enabled=true) AND u.auth_method<>'catalog_seed' AND COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' END)='verified') AS verified_farmers,
+      (SELECT count(*)::int FROM seller_verification_cases svc JOIN users u ON u.id=svc.seller_id WHERE u.auth_method<>'catalog_seed' AND svc.status IN ('pending_review','needs_information')) AS pending_farmers,
       (SELECT count(*)::int FROM commerce_products) AS products,
       (SELECT count(*)::int FROM commerce_orders) AS orders,
       (SELECT COALESCE(sum(total_minor),0)::text FROM commerce_orders WHERE currency='GBP' AND status NOT IN ('cancelled','refunded')) AS revenue_minor,
-      (SELECT count(*)::int FROM users WHERE created_at>=date_trunc('month',now())) AS new_users,
-      (SELECT count(DISTINCT user_id)::int FROM account_login_events WHERE outcome='success' AND occurred_at>=now()-interval '30 days') AS active_users,
+      (SELECT count(*)::int FROM users WHERE created_at>=date_trunc('month',now()) AND auth_method<>'catalog_seed') AS new_users,
+      (SELECT count(DISTINCT user_id)::int FROM account_login_events ale JOIN users u ON u.id=ale.user_id WHERE ale.outcome='success' AND ale.occurred_at>=now()-interval '30 days' AND u.auth_method<>'catalog_seed') AS active_users,
       (SELECT count(*)::int FROM commerce_orders WHERE created_at>=date_trunc('month',now())) AS new_orders,
       (SELECT COALESCE(sum(total_minor),0)::text FROM commerce_orders WHERE currency='GBP' AND status NOT IN ('cancelled','refunded') AND created_at>=date_trunc('month',now())) AS gmv_minor,
       (SELECT count(*)::int FROM market_regions WHERE active=true) AS regions,
@@ -79,14 +79,15 @@ export async function getControlCentreOverview(days = 30) {
         count(DISTINCT p.id)::int AS products,COALESCE(sum(oi.unit_price_minor*oi.quantity) FILTER (WHERE oi.currency='GBP'),0)::text AS revenue_minor
       FROM users u LEFT JOIN commerce_products p ON p.farmer_id=u.id
       LEFT JOIN commerce_order_items oi ON oi.seller_id=u.id
-      WHERE u.role='farmer' OR u.seller_enabled=true
+      WHERE (u.role='farmer' OR u.seller_enabled=true) AND u.auth_method<>'catalog_seed'
       GROUP BY u.id ORDER BY sum(oi.unit_price_minor*oi.quantity) DESC NULLS LAST,u.rating DESC LIMIT 6`),
     pool.query(`SELECT mr.name AS region,count(DISTINCT sra.seller_id)::int AS farmers
       FROM market_regions mr LEFT JOIN seller_region_assignments sra ON sra.region_id=mr.id AND sra.status='active'
-      WHERE mr.active=true GROUP BY mr.id,mr.name ORDER BY farmers DESC,mr.name LIMIT 8`),
+      LEFT JOIN users u ON u.id=sra.seller_id
+      WHERE mr.active=true AND (u.id IS NULL OR u.auth_method<>'catalog_seed') GROUP BY mr.id,mr.name ORDER BY farmers DESC,mr.name LIMIT 8`),
     pool.query(`WITH months AS (SELECT generate_series(date_trunc('month',now())-interval '5 months',date_trunc('month',now()),'1 month') AS month)
       SELECT to_char(months.month,'Mon YYYY') AS label,
-        (SELECT count(*)::int FROM users u WHERE (u.role='farmer' OR u.seller_enabled=true) AND u.created_at<months.month+interval '1 month') AS farmers
+        (SELECT count(*)::int FROM users u WHERE (u.role='farmer' OR u.seller_enabled=true) AND u.auth_method<>'catalog_seed' AND u.created_at<months.month+interval '1 month') AS farmers
       FROM months ORDER BY months.month`),
   ]);
   const row = summaryResult.rows[0] ?? {};
@@ -105,12 +106,7 @@ export async function getControlCentreOverview(days = 30) {
     topFarmers: farmers.rows.map((item: Record<string, unknown>) => ({ id: String(item.id), name: String(item.name), avatar: item.avatar ? String(item.avatar) : undefined, rating: number(item.rating), products: number(item.products), revenue: number(item.revenue_minor) / 100 })),
     regions: regions.rows.map((item: Record<string, unknown>) => ({ region: String(item.region), farmers: number(item.farmers) })),
     farmerGrowth: growth.rows.map((item: Record<string, unknown>) => ({ label: String(item.label), farmers: number(item.farmers) })),
-    scoring: [
-      { label: "Distance priority", value: 40, color: "#159a78" },
-      { label: "Stock priority", value: 30, color: "#84cc16" },
-      { label: "Rating priority", value: 20, color: "#f59e0b" },
-      { label: "Recency priority", value: 10, color: "#8b5cf6" },
-    ],
+    scoring: [],
     currency: "GBP",
     generatedAt: new Date().toISOString(),
   };
@@ -118,7 +114,7 @@ export async function getControlCentreOverview(days = 30) {
 
 export async function listControlCentreFarmers(input: { page: number; pageSize: number; search?: string; status?: string; region?: string; registeredDate?: string }) {
   const values: unknown[] = [];
-  const where = ["(u.role='farmer' OR u.seller_enabled=true)"];
+  const where = ["(u.role='farmer' OR u.seller_enabled=true)", "u.auth_method<>'catalog_seed'"];
   const add = (value: unknown) => { values.push(value); return `$${values.length}`; };
   if (input.search) where.push(`lower(concat_ws(' ',u.name,u.first_name,u.last_name,u.email)) LIKE ${add(`%${input.search.toLowerCase()}%`)}`);
   if (input.status === "verified") where.push("COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' END)='verified'");
@@ -261,135 +257,6 @@ export async function createControlCentreBuyer(input: {
   }
 }
 
-export async function ensureStudentRegistrySeedData() {
-  try {
-    const countRes = await pool.query("SELECT count(*)::int AS count FROM student_registry");
-    if (Number(countRes.rows[0]?.count) === 0) {
-      const seedStudents = [
-        {
-          id: "stud-harper-01",
-          email: "emma.watson@harper-adams.ac.uk",
-          number: "HA-2024-8841",
-          level: "UG",
-          programme: "BSc (Hons) Agriculture with Farm Business Management",
-          dept: "Department of Agriculture and Environment",
-          status: "active",
-        },
-        {
-          id: "stud-rau-02",
-          email: "liam.davies@rau.ac.uk",
-          number: "RAU-2023-4412",
-          level: "PG",
-          programme: "MSc Sustainable Agriculture & Food Security",
-          dept: "School of Agriculture, Food and Environment",
-          status: "active",
-        },
-        {
-          id: "stud-reading-03",
-          email: "charlotte.smith@reading.ac.uk",
-          number: "RDG-2022-9014",
-          level: "PhD",
-          programme: "PhD Soil Carbon Sequestration & Agronomy",
-          dept: "School of Agriculture, Policy and Development",
-          status: "active",
-        },
-        {
-          id: "stud-nottingham-04",
-          email: "james.wilson@nottingham.ac.uk",
-          number: "NOTT-2024-1189",
-          level: "UG",
-          programme: "BSc Agricultural and Crop Science",
-          dept: "School of Biosciences",
-          status: "active",
-        },
-        {
-          id: "stud-aberystwyth-05",
-          email: "sophie.taylor@aber.ac.uk",
-          number: "ABER-2023-7723",
-          level: "PG",
-          programme: "MSc Livestock Science & Animal Breeding",
-          dept: "Institute of Biological, Environmental & Rural Sciences",
-          status: "active",
-        },
-        {
-          id: "stud-sruc-06",
-          email: "alex.murray@sruc.ac.uk",
-          number: "SRUC-2022-3390",
-          level: "PhD",
-          programme: "PhD Precision Agriculture & Autonomous Agri-Tech",
-          dept: "Rural Economy, Environment and Society",
-          status: "active",
-        },
-        {
-          id: "res-rothamsted-01",
-          email: "eleanor.vance@rothamsted.ac.uk",
-          number: "RES-ROTH-1092",
-          level: "PhD",
-          programme: "Precision Soil Microbiome Dynamics & Nitrogen Leaching",
-          dept: "Sustainable Agricultural Sciences (Rothamsted Research)",
-          status: "active",
-        },
-        {
-          id: "res-jic-02",
-          email: "m.thorne@jic.ac.uk",
-          number: "RES-JIC-3310",
-          level: "Postdoc",
-          programme: "CRISPR-Enhanced Wheat Drought Resistance & Grain Yield",
-          dept: "Crop Genetics & Molecular Biology (John Innes Centre)",
-          status: "active",
-        },
-        {
-          id: "res-reading-03",
-          email: "s.jenkins@reading.ac.uk",
-          number: "RES-RDG-0044",
-          level: "PI",
-          programme: "Satellite Hyperspectral Monitoring of Crop Moisture Stress",
-          dept: "School of Agriculture, Policy & Development",
-          status: "active",
-        },
-        {
-          id: "res-wur-04",
-          email: "dirk.vandijk@wur.nl",
-          number: "RES-WUR-8821",
-          level: "Postdoc",
-          programme: "Closed-Loop Greenhouse Robotics & Autonomous Fertigation",
-          dept: "Farm Technology Group (Wageningen University)",
-          status: "active",
-        },
-        {
-          id: "res-rau-05",
-          email: "tariq.mansoor@rau.ac.uk",
-          number: "RES-RAU-5520",
-          level: "PhD",
-          programme: "Regenerative Agroforestry Systems & Soil Carbon Sequestration",
-          dept: "Centre for Rural Ecology & Regenerative Land",
-          status: "active",
-        },
-        {
-          id: "res-harper-06",
-          email: "f.macleod@harper-adams.ac.uk",
-          number: "RES-HAU-0118",
-          level: "PI",
-          programme: "Autonomous Field Swarms & Drone Agronomy Diagnostics",
-          dept: "Hands-Free Farm Robotics Hub (Harper Adams)",
-          status: "active",
-        },
-      ];
-
-      for (const s of seedStudents) {
-        await pool.query(
-          `INSERT INTO student_registry(id, institutional_email, student_number, study_level, programme, department, enrolment_status, access_expires_at, created_at, updated_at)
-           VALUES($1, $2, $3, $4, $5, $6, $7, now() + interval '365 days', now() - interval '30 days', now())
-           ON CONFLICT DO NOTHING`,
-          [s.id, s.email, s.number, s.level, s.programme, s.dept, s.status]
-        );
-      }
-    }
-  } catch (err) {
-    console.error("Failed to seed student registry:", err);
-  }
-}
-
 export async function getControlCentreStudentDetail(studentId: string) {
   const result = await pool.query(
     `SELECT sr.id,
@@ -409,7 +276,9 @@ export async function getControlCentreStudentDetail(studentId: string) {
     FROM student_registry sr
     LEFT JOIN student_entitlements se ON se.student_registry_id=sr.id
     LEFT JOIN users u ON u.id=se.user_id
-    WHERE sr.id=$1 OR sr.institutional_email=$1 LIMIT 1`,
+    WHERE (sr.id=$1 OR sr.institutional_email=$1)
+      AND sr.id NOT LIKE 'res-%'
+    LIMIT 1`,
     [studentId]
   );
   const row = result.rows[0];
@@ -599,7 +468,9 @@ export async function getControlCentreResearcherDetail(researcherId: string) {
     FROM student_registry sr
     LEFT JOIN student_entitlements se ON se.student_registry_id=sr.id
     LEFT JOIN users u ON u.id=se.user_id
-    WHERE sr.id=$1 OR sr.institutional_email=$1 LIMIT 1`,
+    WHERE (sr.id=$1 OR sr.institutional_email=$1)
+      AND sr.id LIKE 'res-%'
+    LIMIT 1`,
     [researcherId]
   );
   const row = result.rows[0];
@@ -715,87 +586,12 @@ export async function updateControlCentreResearcher(input: {
   });
 }
 
-export async function ensureLogisticsPartnersSeedData() {
-  try {
-    const countRes = await pool.query("SELECT count(*)::int AS count FROM users WHERE role='logistics'");
-    if (Number(countRes.rows[0]?.count) === 0) {
-      const seedPartners = [
-        {
-          id: "log-agrifreight-01",
-          name: "AgriFreight Cool-Chain UK Ltd",
-          email: "dispatch@agrifreight.co.uk",
-          phone: "+44 1603 882910",
-          location: "East Anglia (Norwich Hub)",
-          status: "active",
-          rating: 4.9,
-        },
-        {
-          id: "log-midlands-02",
-          name: "Midlands Grain & Bulk Haulage Ltd",
-          email: "operations@midlandsbulk.co.uk",
-          phone: "+44 116 496 0231",
-          location: "East Midlands (Leicester Hub)",
-          status: "active",
-          rating: 4.8,
-        },
-        {
-          id: "log-cotswolds-03",
-          name: "Cotswolds Livestock & Agri-Transporters",
-          email: "transport@cotswoldagri.co.uk",
-          phone: "+44 1285 719820",
-          location: "South West (Cirencester Hub)",
-          status: "active",
-          rating: 5.0,
-        },
-        {
-          id: "log-yorkshire-04",
-          name: "Yorkshire Freight & Rural Express",
-          email: "logistics@yorkshirerural.co.uk",
-          phone: "+44 1904 621450",
-          location: "Yorkshire & Humber (York Terminal)",
-          status: "active",
-          rating: 4.7,
-        },
-        {
-          id: "log-highlands-05",
-          name: "Highland Fresh Route Logistics",
-          email: "routes@highlandfresh.scot",
-          phone: "+44 1463 239011",
-          location: "Scottish Highlands (Inverness Hub)",
-          status: "active",
-          rating: 4.9,
-        },
-        {
-          id: "log-severn-06",
-          name: "Severn Valley Agricultural Freight",
-          email: "fleet@severnagri.co.uk",
-          phone: "+44 1452 301299",
-          location: "West Midlands & Wales (Gloucester Hub)",
-          status: "active",
-          rating: 4.8,
-        },
-      ];
-
-      for (const p of seedPartners) {
-        await pool.query(
-          `INSERT INTO users(id, name, email, phone, location, role, account_status, is_verified, rating, created_at, updated_at)
-           VALUES($1, $2, $3, $4, $5, 'logistics', $6, true, $7, now() - interval '60 days', now())
-           ON CONFLICT (id) DO UPDATE SET role='logistics', location=EXCLUDED.location`,
-          [p.id, p.name, p.email, p.phone, p.location, p.status, p.rating]
-        );
-      }
-    }
-  } catch (err) {
-    console.error("Failed to seed logistics partners:", err);
-  }
-}
-
 export async function getControlCentreLogisticsPartnerDetail(partnerId: string) {
   const result = await pool.query(
     `SELECT u.id,
       COALESCE(NULLIF(u.name,''),u.email,u.id) AS name,
       u.email, u.phone, u.avatar,
-      COALESCE(u.location,'UK Distribution Hub') AS location,
+      u.location,
       COALESCE(u.account_status,'active') AS status,
       u.rating::float8 AS rating,
       u.is_verified AS "isVerified",
@@ -821,9 +617,9 @@ export async function getControlCentreLogisticsPartnerDetail(partnerId: string) 
     email: String(row.email),
     phone: row.phone ?? undefined,
     avatar: row.avatar ?? undefined,
-    location: String(row.location),
+    location: row.location == null ? undefined : String(row.location),
     status: String(row.status),
-    rating: Number(row.rating || 4.9),
+    rating: row.rating == null ? undefined : Number(row.rating),
     isVerified: Boolean(row.isVerified),
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt),
@@ -858,9 +654,9 @@ export async function createControlCentreLogisticsPartner(input: {
 
     const created = await client.query(
       `INSERT INTO users(id, name, email, phone, location, role, account_status, is_verified, rating, created_at, updated_at)
-       VALUES($1, $2, $3, $4, $5, 'logistics', 'active', true, 4.9, now(), now())
+       VALUES($1, $2, $3, $4, $5, 'logistics', 'active', false, 0, now(), now())
        RETURNING id, name, email, phone, location, role, account_status AS status, is_verified AS "isVerified", rating, created_at AS "createdAt"`,
-      [id, input.name.trim(), email, input.phone?.trim() || null, input.location?.trim() || "UK Central Distribution Depot"]
+      [id, input.name.trim(), email, input.phone?.trim() || null, input.location?.trim() || null]
     );
 
     await client.query(
@@ -964,13 +760,13 @@ export async function createControlCentreFarmer(input: {
       `INSERT INTO users(id, name, email, phone, location, role, seller_enabled, is_verified, profile_complete, account_status, created_at, updated_at)
        VALUES($1, $2, $3, $4, $5, 'farmer', true, $6, true, 'active', now(), now())
        RETURNING id, name, email, phone, location AS region, is_verified AS "isVerified", account_status AS status, created_at AS "createdAt"`,
-      [id, input.name.trim(), email, input.phone?.trim() || null, input.region?.trim() || "Essex", input.isVerified === true]
+      [id, input.name.trim(), email, input.phone?.trim() || null, input.region?.trim() || "Maharashtra", input.isVerified === true]
     );
 
     if (input.isVerified) {
       await client.query(
         `INSERT INTO seller_verification_cases(seller_id, status, country, entity_type, requirements_version, submitted_at, reviewed_at, reviewed_by, expires_at)
-         VALUES($1, 'verified', 'GB', 'individual', 'v1', now(), now(), $2, now() + interval '365 days')
+         VALUES($1, 'verified', 'IN', 'individual', 'v1', now(), now(), $2, now() + interval '365 days')
          ON CONFLICT (seller_id) DO UPDATE SET status='verified', reviewed_at=now(), reviewed_by=$2, expires_at=now() + interval '365 days'`,
         [id, input.actorUserId]
       );
@@ -1118,116 +914,7 @@ export async function bulkMutateFarmers(input: {
   }
 }
 
-export async function ensureOrganisationApplicationsSeedData() {
-  try {
-    const countRes = await pool.query("SELECT count(*)::int AS count FROM organisation_applications");
-    if (Number(countRes.rows[0]?.count) === 0) {
-      const seedApps = [
-        {
-          id: "app-org-eastanglia-01",
-          name: "East Anglia Agricultural Cooperative",
-          email: "ea.coop@agri-east.co.uk",
-          status: "pending_review",
-          data: {
-            regNumber: "COOP-UK-88491",
-            region: "East Anglia",
-            memberCount: 420,
-            primaryCrop: "Barley, Sugar Beet & Milling Wheat",
-            contactPerson: "Arthur Pendelton (Managing Director)",
-            documents: ["Incorporation_Cert.pdf", "Financial_Audit_2025.pdf", "FSA_Accreditation.pdf"],
-          },
-        },
-        {
-          id: "app-org-wessex-02",
-          name: "Wessex Grain & Pulse Producers Federation",
-          email: "operations@wessexgrains.org.uk",
-          status: "documents_required",
-          reason: "Please supply updated VAT certificate and soil testing accreditation.",
-          data: {
-            regNumber: "FED-WX-22019",
-            region: "South West (Wessex)",
-            memberCount: 185,
-            primaryCrop: "Field Beans, Peas & Milling Wheat",
-            contactPerson: "Claire Beauchamp",
-            documents: ["Membership_Registry.pdf"],
-          },
-        },
-        {
-          id: "app-org-yorkshire-03",
-          name: "Yorkshire Organic Dairies & Pastures Ltd",
-          email: "compliance@yorkshiredairy.co.uk",
-          status: "approved",
-          reason: "Full organic certification verified by Soil Association.",
-          data: {
-            regNumber: "LTD-YRK-44021",
-            region: "Yorkshire & Humber",
-            memberCount: 95,
-            primaryCrop: "Organic Raw Milk, Artisan Cheeses & Pasture Feeds",
-            contactPerson: "George H. Bradley",
-            documents: ["Organic_Cert.pdf", "Companies_House_Filing.pdf"],
-          },
-        },
-        {
-          id: "app-org-highland-04",
-          name: "Scottish Highlands Seed Federation",
-          email: "registry@highlandseeds.scot",
-          status: "pending_review",
-          data: {
-            regNumber: "SCOT-SHS-99120",
-            region: "Highlands & Islands",
-            memberCount: 310,
-            primaryCrop: "Certified Seed Potatoes & Heritage Oats",
-            contactPerson: "Ian MacIntyre",
-            documents: ["Seed_Certification_Scotland.pdf", "Traceability_Audit.pdf"],
-          },
-        },
-        {
-          id: "app-org-kent-05",
-          name: "Kent Fruit & Top-Fruit Orchard Consortium",
-          email: "contact@kentorchards.co.uk",
-          status: "pending_review",
-          data: {
-            regNumber: "CON-KNT-55410",
-            region: "South East (Kent)",
-            memberCount: 140,
-            primaryCrop: "Braeburn Apples, Conference Pears & Cherries",
-            contactPerson: "Victoria Palmer",
-            documents: ["Red_Tractor_Assurance.pdf", "Cool_Chain_Logistics.pdf"],
-          },
-        },
-        {
-          id: "app-org-midlands-06",
-          name: "Midlands Livestock & Wool Producers Guild",
-          email: "admin@midlandslivestock.org.uk",
-          status: "approved",
-          reason: "Approved after DEFRA livestock health audit and traceability verification.",
-          data: {
-            regNumber: "GUILD-MDL-77123",
-            region: "West Midlands",
-            memberCount: 520,
-            primaryCrop: "Grass-Fed Beef, Sheep & British Wool",
-            contactPerson: "Richard Sterling",
-            documents: ["DEFRA_Compliance.pdf", "Auction_Protocol.pdf"],
-          },
-        },
-      ];
-
-      for (const app of seedApps) {
-        await pool.query(
-          `INSERT INTO organisation_applications(id, organisation_name, official_email, status, submitted_at, review_reason, application_data, created_at, updated_at)
-           VALUES($1, $2, $3, $4, now() - interval '5 days', $5, $6, now() - interval '5 days', now())
-           ON CONFLICT DO NOTHING`,
-          [app.id, app.name, app.email, app.status, app.reason ?? null, app.data]
-        );
-      }
-    }
-  } catch (err) {
-    console.error("Failed to seed organisation applications:", err);
-  }
-}
-
 export async function listOrganisationApplications() {
-  await ensureOrganisationApplicationsSeedData();
   const result = await pool.query(`SELECT id,organisation_id AS "organisationId",applicant_user_id AS "applicantUserId",
     organisation_name AS "organisationName",official_email AS "officialEmail",status,submitted_at AS "submittedAt",
     reviewed_at AS "reviewedAt",review_reason AS "reviewReason",application_data AS "applicationData",created_at AS "createdAt",updated_at AS "updatedAt"
@@ -1244,6 +931,11 @@ export async function createOrganisationApplication(input: {
   contactPerson?: string;
 }) {
   const id = `app-org-${Date.now().toString(36)}`;
+  const applicationData: Record<string, string | number> = {};
+  if (input.region?.trim()) applicationData.region = input.region.trim();
+  if (input.memberCount !== undefined) applicationData.memberCount = input.memberCount;
+  if (input.primaryCrop?.trim()) applicationData.primaryCrop = input.primaryCrop.trim();
+  if (input.contactPerson?.trim()) applicationData.contactPerson = input.contactPerson.trim();
   const created = await pool.query(
     `INSERT INTO organisation_applications(id, organisation_name, official_email, status, submitted_at, application_data, created_at, updated_at)
      VALUES($1, $2, $3, 'pending_review', now(), $4, now(), now())
@@ -1252,12 +944,7 @@ export async function createOrganisationApplication(input: {
       id,
       input.organisationName.trim(),
       input.officialEmail.trim().toLowerCase(),
-      {
-        region: input.region?.trim() || "UK Regional",
-        memberCount: input.memberCount || 100,
-        primaryCrop: input.primaryCrop?.trim() || "Agricultural Enterprises",
-        contactPerson: input.contactPerson?.trim() || "Managing Director",
-      },
+      applicationData,
     ]
   );
   return created.rows[0];
@@ -1303,13 +990,6 @@ export async function reviewOrganisationApplication(input: { id: string; status:
 }
 
 export async function listControlCentreResources(module: ControlCentreResourceModule) {
-  if (module === "students" || module === "researchers") {
-    await ensureStudentRegistrySeedData();
-  }
-  if (module === "logistics-partners") {
-    await ensureLogisticsPartnersSeedData();
-  }
-
   const queries: Record<ControlCentreResourceModule, string> = {
     sellers: `SELECT u.id,
       COALESCE(NULLIF(u.name,''),NULLIF(concat_ws(' ',u.first_name,u.last_name),''),u.email,u.id) AS name,
@@ -1355,6 +1035,7 @@ export async function listControlCentreResources(module: ControlCentreResourceMo
       FROM student_registry sr
       LEFT JOIN student_entitlements se ON se.student_registry_id=sr.id
       LEFT JOIN users u ON u.id=se.user_id
+      WHERE sr.id NOT LIKE 'res-%'
       ORDER BY sr.updated_at DESC LIMIT 300`,
     researchers: `SELECT sr.id,
       COALESCE(u.name, split_part(sr.institutional_email, '@', 1)) AS name,
@@ -1372,18 +1053,19 @@ export async function listControlCentreResources(module: ControlCentreResourceMo
       FROM student_registry sr
       LEFT JOIN student_entitlements se ON se.student_registry_id=sr.id
       LEFT JOIN users u ON u.id=se.user_id
-      WHERE sr.study_level='PhD' OR sr.study_level='Postdoc' OR sr.study_level='PI' OR sr.id LIKE 'res-%'
+      WHERE sr.id LIKE 'res-%'
       ORDER BY sr.updated_at DESC LIMIT 300`,
-    "service-providers": `SELECT o.id,o.name,o.official_email AS email,o.status,o.type,o.updated_at AS "updatedAt"
+    "service-providers": `SELECT o.id,o.name,o.slug,o.official_email AS email,o.official_email AS "officialEmail",
+      o.status,o.type,o.verified_at AS "verifiedAt",o.updated_at AS "updatedAt"
       FROM organisations o WHERE o.type='external' ORDER BY o.updated_at DESC LIMIT 200`,
     "logistics-partners": `SELECT id,
       COALESCE(NULLIF(name,''),email,id) AS name,
       email, phone, avatar,
-      COALESCE(location,'UK Distribution Hub') AS location,
+      location,
       COALESCE(account_status,'active') AS status,
-      COALESCE(rating,4.9)::float8 AS rating,
+      rating::float8 AS rating,
       is_verified AS "isVerified",
-      (SELECT count(*)::int FROM commerce_orders o WHERE o.status='shipped') AS "activeDeliveries",
+      NULL::int AS "activeDeliveries",
       created_at AS "createdAt",
       updated_at AS "updatedAt"
       FROM users WHERE role='logistics' ORDER BY updated_at DESC LIMIT 200`,
@@ -1463,89 +1145,9 @@ export async function listControlCentreResources(module: ControlCentreResourceMo
       LEFT JOIN users u ON u.id=os.updated_by
       ORDER BY os.updated_at DESC LIMIT 200`,
   };
-  if (module === "regions") await ensureMarketRegionsSeedData();
   if (module === "content") await ensureContentSeedData();
-  if (module === "orders" || module === "logistics") await ensureCommerceOrdersSeedData();
-  if (module === "settings") await ensureOrganisationSettingsSeedData();
   const result = await pool.query(queries[module]);
   return { records: result.rows, generatedAt: new Date().toISOString() };
-}
-
-export async function ensureOrganisationSettingsSeedData() {
-  try {
-    const count = await pool.query("SELECT count(*)::int AS count FROM organisation_settings");
-    if (Number(count.rows[0]?.count) < 8) {
-      const org = await pool.query("SELECT id FROM organisations LIMIT 1");
-      const user = await pool.query("SELECT id FROM users WHERE role='super_admin' OR role='admin' LIMIT 1");
-      const orgId = org.rows[0]?.id ?? "agriconnect-platform";
-      const userId = user.rows[0]?.id ?? null;
-
-      const seeds = [
-        {
-          key: "trading_engine_enabled",
-          value: { enabled: true, mode: "ACTIVE_LIVE", description: "Global order placement, cart settlement, and marketplace checkout transactions" },
-          version: 1,
-        },
-        {
-          key: "vat_engine_active",
-          value: { enabled: true, standardRatePercent: 20.0, zeroRatedProduce: true, description: "Automatic HMRC UK VAT computation and EU reverse-charge invoicing" },
-          version: 1,
-        },
-        {
-          key: "ai_matchmaker_active",
-          value: { enabled: true, maxCandidates: 12, minScoreThreshold: 0.75, description: "Autonomous crop and harvest commodity matching for wholesale buyers" },
-          version: 2,
-        },
-        {
-          key: "escrow_inspection_hours",
-          value: { hours: 48, coldChainAuditRequired: true, description: "Mandatory holding window for cold-chain verification prior to fund release" },
-          version: 1,
-        },
-        {
-          key: "commission_rate_bps",
-          value: { bps: 350, formatted: "3.50%", description: "Platform revenue commission rate across sovereign regional agricultural transactions" },
-          version: 3,
-        },
-        {
-          key: "default_flat_shipping_minor",
-          value: { minorUnits: 2500, formatted: "£25.00", currency: "GBP", description: "Standard flat-rate regional road logistics freight fee" },
-          version: 1,
-        },
-        {
-          key: "session_lease_hours",
-          value: { hours: 24, cascadeOnRoleChange: true, description: "Authoritative PostgreSQL session lease duration before forced re-authentication" },
-          version: 1,
-        },
-        {
-          key: "cold_chain_max_temp_celsius",
-          value: { maxTemp: 8.0, unit: "CELSIUS", alertSeverity: "CRITICAL", description: "Maximum refrigerated temperature before dispatch transit alarm trigger" },
-          version: 1,
-        },
-        {
-          key: "max_login_attempts_window_minutes",
-          value: { windowMinutes: 15, maxAttempts: 10, description: "Brute-force lockout sliding window protection for administrative accounts" },
-          version: 1,
-        },
-        {
-          key: "password_max_age_days",
-          value: { maxAgeDays: 90, enforceComplexity: true, description: "Mandatory credential rotation policy for privileged operator accounts" },
-          version: 1,
-        },
-      ];
-
-      for (const s of seeds) {
-        await pool.query(
-          `INSERT INTO organisation_settings (organisation_id, setting_key, value, version, updated_by, updated_at)
-           VALUES ($1, $2, $3, $4, $5, now())
-           ON CONFLICT (organisation_id, setting_key) DO UPDATE
-           SET value=EXCLUDED.value, updated_at=now()`,
-          [orgId, s.key, JSON.stringify(s.value), s.version, userId]
-        );
-      }
-    }
-  } catch (err) {
-    console.error("Failed to seed organisation settings:", err);
-  }
 }
 
 export async function ensureContentSeedData() {
@@ -1777,153 +1379,7 @@ export async function deleteControlCentreContent(
   }
 }
 
-export async function ensureCommerceOrdersSeedData() {
-  try {
-    const count = await pool.query("SELECT count(*)::int AS count FROM commerce_orders");
-    if (Number(count.rows[0]?.count) < 6) {
-      const orders = [
-        {
-          id: "ord-highland-001",
-          orderNumber: "AGC26-682208",
-          buyerId: "user-somerset-orchards",
-          status: "paid",
-          paymentMethod: "stripe_card",
-          paymentStatus: "paid",
-          currency: "GBP",
-          subtotalMinor: 45000,
-          taxMinor: 0,
-          deliveryFeeMinor: 3000,
-          shippingTotalMinor: 3000,
-          totalMinor: 48000,
-          orderData: {
-            customerName: "Somerset Heritage Orchards",
-            customerEmail: "info@somersetciderfarms.co.uk",
-            shippingAddress: { line1: "Meadow Farmhouse", city: "Glastonbury", postalCode: "BA6 8ND", country: "GB" },
-            carrier: "DPD Fresh Direct",
-            trackingNumber: "DPD-UK-991204",
-          },
-        },
-        {
-          id: "ord-cotswold-002",
-          orderNumber: "AGC26-993345",
-          buyerId: "user-devon-pasture",
-          status: "shipped",
-          paymentMethod: "bank_transfer",
-          paymentStatus: "paid",
-          currency: "GBP",
-          subtotalMinor: 120000,
-          taxMinor: 0,
-          deliveryFeeMinor: 5000,
-          shippingTotalMinor: 5000,
-          totalMinor: 125000,
-          orderData: {
-            customerName: "Devon Pasture & Livestock",
-            customerEmail: "compliance@devonpasture.co.uk",
-            shippingAddress: { line1: "Exmoor Valley Estate", city: "Barnstaple", postalCode: "EX31 4AB", country: "GB" },
-            carrier: "AgriLogistics Freight Ltd",
-            trackingNumber: "AGF-FREIGHT-88231",
-          },
-        },
-        {
-          id: "ord-yorkshire-003",
-          orderNumber: "AGC26-897778",
-          buyerId: "user-kent-berries",
-          status: "delivered",
-          paymentMethod: "stripe_card",
-          paymentStatus: "paid",
-          currency: "GBP",
-          subtotalMinor: 68000,
-          taxMinor: 0,
-          deliveryFeeMinor: 4000,
-          shippingTotalMinor: 4000,
-          totalMinor: 72000,
-          orderData: {
-            customerName: "Kent Berry & Soft Fruits",
-            customerEmail: "harvest@kentsoftfruits.com",
-            shippingAddress: { line1: "Orchard View Drive", city: "Canterbury", postalCode: "CT1 2YZ", country: "GB" },
-            carrier: "Royal Mail Special Delivery",
-            trackingNumber: "RM-UK-38194012",
-          },
-        },
-        {
-          id: "ord-somerset-004",
-          orderNumber: "AGC26-890964",
-          buyerId: "user-highland-estates",
-          status: "placed",
-          paymentMethod: "invoice_net30",
-          paymentStatus: "pending",
-          currency: "GBP",
-          subtotalMinor: 17000,
-          taxMinor: 0,
-          deliveryFeeMinor: 1500,
-          shippingTotalMinor: 1500,
-          totalMinor: 18500,
-          orderData: {
-            customerName: "Highland Moorland Estates",
-            customerEmail: "contact@highlandmoorland.co.uk",
-            shippingAddress: { line1: "Cairngorms Estate House", city: "Aviemore", postalCode: "PH22 1ST", country: "GB" },
-            carrier: "Standard Farm Dispatch",
-          },
-        },
-        {
-          id: "ord-wessex-005",
-          orderNumber: "AGC26-431336",
-          buyerId: "user-cotswold-dairy",
-          status: "processing",
-          paymentMethod: "stripe_card",
-          paymentStatus: "paid",
-          currency: "GBP",
-          subtotalMinor: 32000,
-          taxMinor: 0,
-          deliveryFeeMinor: 2000,
-          shippingTotalMinor: 2000,
-          totalMinor: 34000,
-          orderData: {
-            customerName: "Cotswold Valley Dairy Co-op",
-            customerEmail: "ops@cotswoldvalleydairy.co.uk",
-            shippingAddress: { line1: "Churn Valley Park", city: "Cirencester", postalCode: "GL7 1AA", country: "GB" },
-            carrier: "DPD Fresh Direct",
-            trackingNumber: "DPD-UK-771923",
-          },
-        },
-        {
-          id: "ord-fens-006",
-          orderNumber: "AGC26-538238",
-          buyerId: "user-yorkshire-grains",
-          status: "cancelled",
-          paymentMethod: "stripe_card",
-          paymentStatus: "pending",
-          currency: "GBP",
-          subtotalMinor: 9000,
-          taxMinor: 0,
-          deliveryFeeMinor: 500,
-          shippingTotalMinor: 500,
-          totalMinor: 9500,
-          orderData: {
-            customerName: "Yorkshire Arable & Grain Producers",
-            customerEmail: "trade@yorkshiregrains.org.uk",
-            shippingAddress: { line1: "Wolds View", city: "Driffield", postalCode: "YO25 6XX", country: "GB" },
-            cancellationReason: "Buyer requested cancellation prior to packing",
-          },
-        },
-      ];
-
-      for (const ord of orders) {
-        await pool.query(
-          `INSERT INTO commerce_orders (id, order_number, buyer_id, status, payment_method, payment_status, currency, subtotal_minor, tax_minor, delivery_fee_minor, shipping_total_minor, total_minor, order_data, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now() - interval '5 days', now())
-           ON CONFLICT (id) DO UPDATE SET status=EXCLUDED.status, payment_status=EXCLUDED.payment_status, total_minor=EXCLUDED.total_minor, order_data=EXCLUDED.order_data`,
-          [ord.id, ord.orderNumber, ord.buyerId, ord.status, ord.paymentMethod, ord.paymentStatus, ord.currency, ord.subtotalMinor, ord.taxMinor, ord.deliveryFeeMinor, ord.shippingTotalMinor, ord.totalMinor, ord.orderData]
-        );
-      }
-    }
-  } catch (err) {
-    console.error("Failed to seed commerce orders:", err);
-  }
-}
-
 export async function getControlCentreOrderDetail(orderId: string) {
-  await ensureCommerceOrdersSeedData();
   const orderResult = await pool.query(
     `SELECT o.id, o.order_number AS "orderNumber", o.status, o.payment_status AS "paymentStatus", o.payment_method AS "paymentMethod", o.currency,
        o.subtotal_minor::text AS "subtotalMinor", o.tax_minor::text AS "taxMinor", o.delivery_fee_minor::text AS "deliveryFeeMinor",
@@ -2032,79 +1488,7 @@ export async function updateControlCentreOrderStatus(input: {
   }
 }
 
-export async function ensureMarketRegionsSeedData() {
-  try {
-    const count = await pool.query("SELECT count(*)::int AS count FROM market_regions");
-    if (Number(count.rows[0]?.count) < 8) {
-      const seedRegions = [
-        { id: "reg-highlands", code: "UK-SCT-HL", name: "Highlands & Grampians Hub", country: "GB", type: "regional_hub", lat: 57.300, lng: -4.200 },
-        { id: "reg-cotswolds", code: "UK-ENG-CS", name: "Cotswolds & Severn Agricultural Zone", country: "GB", type: "market_zone", lat: 51.850, lng: -2.000 },
-        { id: "reg-yorkshire", code: "UK-ENG-YK", name: "Yorkshire Dales & Vale Farming District", country: "GB", type: "market_zone", lat: 54.100, lng: -1.500 },
-        { id: "reg-east-anglia", code: "UK-ENG-EA", name: "East Anglia & Fens Arable Corridor", country: "GB", type: "logistics_hub", lat: 52.400, lng: 0.500 },
-        { id: "reg-somerset", code: "UK-ENG-WS", name: "Somerset & Wessex Dairy Belt", country: "GB", type: "market_zone", lat: 51.100, lng: -2.700 },
-        { id: "reg-kent", code: "UK-ENG-KT", name: "Kent & Garden of England Produce Zone", country: "GB", type: "market_zone", lat: 51.250, lng: 0.750 },
-        { id: "reg-northumberland", code: "UK-ENG-NB", name: "Borders & Northumberland Livestock District", country: "GB", type: "market_zone", lat: 55.300, lng: -2.000 },
-        { id: "reg-cornwall", code: "UK-ENG-CW", name: "Cornwall & Devonian Coastal Pastures", country: "GB", type: "market_zone", lat: 50.350, lng: -4.850 },
-      ];
-
-      for (const r of seedRegions) {
-        await pool.query(
-          `INSERT INTO market_regions (id, code, name, country_code, type, latitude, longitude, active, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, true, now() - interval '90 days', now())
-           ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, code=EXCLUDED.code, latitude=EXCLUDED.latitude, longitude=EXCLUDED.longitude, active=true`,
-          [r.id, r.code, r.name, r.country, r.type, r.lat, r.lng]
-        );
-      }
-    }
-
-    // Link regions to approved organisations if not already assigned
-    const orgs = await pool.query("SELECT id FROM organisations WHERE status='approved' LIMIT 5");
-    const regions = await pool.query("SELECT id FROM market_regions WHERE active=true");
-    if (orgs.rowCount && regions.rowCount) {
-      for (const org of orgs.rows) {
-        for (const reg of regions.rows) {
-          await pool.query(
-            `INSERT INTO organisation_region_assignments (organisation_id, region_id, status, created_at, updated_at)
-             VALUES ($1, $2, 'active', now() - interval '30 days', now())
-             ON CONFLICT (organisation_id, region_id) DO UPDATE SET status='active'`,
-            [org.id, reg.id]
-          );
-        }
-      }
-    }
-
-    // Link products to market regions if region_id is null or empty
-    await pool.query(`
-      UPDATE commerce_products
-      SET region_id = sub.reg_id
-      FROM (
-        SELECT id, (ARRAY['reg-highlands', 'reg-cotswolds', 'reg-yorkshire', 'reg-east-anglia', 'reg-somerset', 'reg-kent', 'reg-northumberland', 'reg-cornwall'])[1 + (abs(hashtext(id)) % 8)] AS reg_id
-        FROM commerce_products
-        WHERE region_id IS NULL OR region_id = ''
-      ) sub
-      WHERE commerce_products.id = sub.id
-    `);
-
-    // Ensure farmers/sellers are linked to regions
-    const sellers = await pool.query("SELECT id FROM users WHERE role='farmer' OR role='seller' LIMIT 20");
-    if (sellers.rowCount && regions.rowCount) {
-      for (const s of sellers.rows) {
-        const targetRegion = regions.rows[Math.abs(s.id.charCodeAt(0) || 0) % regions.rowCount].id;
-        await pool.query(
-          `INSERT INTO seller_region_assignments (seller_id, region_id, status, created_at, updated_at)
-           VALUES ($1, $2, 'active', now() - interval '60 days', now())
-           ON CONFLICT (seller_id, region_id) DO UPDATE SET status='active'`,
-          [s.id, targetRegion]
-        );
-      }
-    }
-  } catch (err) {
-    console.error("Failed to seed market regions:", err);
-  }
-}
-
 export async function getControlCentreRegionDetail(regionId: string) {
-  await ensureMarketRegionsSeedData();
   const regionResult = await pool.query(
     `SELECT mr.*,
        (SELECT count(*)::int FROM seller_region_assignments sra WHERE sra.region_id=mr.id AND sra.status='active') AS "activeSellers",
@@ -2276,7 +1660,7 @@ export async function mutateControlCentreResource(input: {
       allowed: { suspend: { from: ["active"], to: "suspended" }, reactivate: { from: ["suspended"], to: "active" } },
     },
     researchers: {
-      select: "SELECT id,enrolment_status AS status FROM student_registry WHERE id=$1 AND study_level='PhD' FOR UPDATE",
+      select: "SELECT id,enrolment_status AS status FROM student_registry WHERE id=$1 AND id LIKE 'res-%' FOR UPDATE",
       update: "UPDATE student_registry SET enrolment_status=$2,updated_at=now() WHERE id=$1 RETURNING id,enrolment_status AS status,updated_at AS \"updatedAt\"",
       allowed: { suspend: { from: ["active"], to: "suspended" }, reactivate: { from: ["suspended"], to: "active" } },
     },
@@ -2382,7 +1766,6 @@ export async function setOrganisationOperationalSetting(input: OrganisationOpera
 }
 
 export async function getGlobalOperationsMap(input: { country?: string; regionId?: string }) {
-  await ensureMarketRegionsSeedData();
   const values: unknown[] = [];
   const where = ["mr.active=true"];
   const add = (value: unknown) => { values.push(value); return `$${values.length}`; };
@@ -2391,8 +1774,8 @@ export async function getGlobalOperationsMap(input: { country?: string; regionId
 
   const result = await pool.query(
     `SELECT mr.id, mr.name, mr.code, mr.country_code AS country, mr.type, mr.latitude, mr.longitude,
-       COALESCE(o.id, 'org-main') AS organisation_id,
-       COALESCE(o.name, 'AgriConnect Platform Org') AS organisation_name,
+       o.id AS organisation_id,
+       o.name AS organisation_name,
        (SELECT count(DISTINCT sra.seller_id)::int FROM seller_region_assignments sra WHERE sra.region_id=mr.id AND sra.status='active') AS sellers,
        (SELECT count(*)::int FROM commerce_products p WHERE p.region_id=mr.id) AS products
      FROM market_regions mr
@@ -2433,9 +1816,9 @@ export async function getGlobalOperationsMap(input: { country?: string; regionId
       id: String(item.id),
       name: String(item.name),
       code: String(item.code),
-      type: String(item.type || "market_zone"),
-      organisationId: String(item.organisation_id),
-      organisationName: String(item.organisation_name),
+      type: item.type == null ? undefined : String(item.type),
+      organisationId: item.organisation_id == null ? null : String(item.organisation_id),
+      organisationName: item.organisation_name == null ? null : String(item.organisation_name),
       country: String(item.country),
       latitude: item.latitude == null ? undefined : Number(item.latitude),
       longitude: item.longitude == null ? undefined : Number(item.longitude),
@@ -2455,7 +1838,27 @@ export async function getGlobalOperationsMap(input: { country?: string; regionId
 }
 
 export async function getControlCentreAnalytics(days = 30) {
-  const overview = await getControlCentreOverview(days);
+  const [overview, operationalMetricsResult] = await Promise.all([
+    getControlCentreOverview(days),
+    pool.query(`SELECT
+      CASE
+        WHEN count(*) FILTER (WHERE status NOT IN ('cancelled','refunded')) = 0 THEN NULL
+        ELSE round(
+          100.0 * count(*) FILTER (WHERE status='delivered') /
+          count(*) FILTER (WHERE status NOT IN ('cancelled','refunded')),
+          1
+        )
+      END AS fulfillment_rate,
+      (SELECT CASE WHEN count(*) = 0 THEN NULL ELSE round(
+        100.0 * count(*) FILTER (
+          WHERE lower(COALESCE(product_data->>'isOrganic','false'))='true'
+        ) / count(*),
+        1
+      ) END FROM commerce_products) AS organic_ratio
+      FROM commerce_orders
+      WHERE created_at >= now() - ($1 || ' days')::interval`, [days]),
+  ]);
+  const operationalMetrics = operationalMetricsResult.rows[0] ?? {};
   let localNeedsList: Array<Record<string, unknown>> = [];
   try {
     const needsRes = await pool.query(`SELECT id, product_name AS "productName", quantity, unit, urgency, location, buyer_name AS "buyerName", created_at AS "createdAt"
@@ -2497,17 +1900,11 @@ export async function getControlCentreAnalytics(days = 30) {
     ],
     trends: overview.trends,
     overview,
-    categoryYields: categoryDetails.length ? categoryDetails : overview.topCategories.map((c: { category: string; products: number; value: number }) => ({
-      category: c.category,
-      products: c.products,
-      totalStock: c.products * 120,
-      growers: Math.max(1, Math.round(c.products / 3)),
-      revenue: c.value,
-    })),
+    categoryYields: categoryDetails,
     localDemandAlerts: localNeedsList,
-    fulfillmentRate: 98.4,
-    organicRatio: 42.6,
-    estimatedLocalMilesSaved: 14250,
+    fulfillmentRate: operationalMetrics.fulfillment_rate == null ? null : number(operationalMetrics.fulfillment_rate),
+    organicRatio: operationalMetrics.organic_ratio == null ? null : number(operationalMetrics.organic_ratio),
+    estimatedLocalMilesSaved: null,
     currency: overview.currency,
     reportingWindowDays: days,
     generatedAt: overview.generatedAt,
@@ -2521,7 +1918,10 @@ export async function getControlCentreRevenue(days = 30, selectedCurrency = "all
     COALESCE(sum(total_minor) FILTER (WHERE status='refunded'),0)::text AS refunded_minor,
     COALESCE(sum(subtotal_minor) FILTER (WHERE status NOT IN ('cancelled','refunded')),0)::text AS subtotal_minor,
     COALESCE(sum(delivery_fee_minor) FILTER (WHERE status NOT IN ('cancelled','refunded')),0)::text AS delivery_minor
-    FROM commerce_orders GROUP BY currency ORDER BY currency`);
+    FROM commerce_orders
+    WHERE created_at >= NOW() - ($1 || ' days')::interval
+      AND ($2='all' OR currency=$2)
+    GROUP BY currency ORDER BY currency`, [days, selectedCurrency]);
 
   const currencies = result.rows.map((item: Record<string, unknown>) => ({
     id: String(item.currency),
@@ -2546,24 +1946,40 @@ export async function getControlCentreRevenue(days = 30, selectedCurrency = "all
        COALESCE(sum(delivery_fee_minor) FILTER (WHERE status NOT IN ('cancelled', 'refunded')), 0)::text as delivery_minor,
        COALESCE(sum(total_minor) FILTER (WHERE status = 'refunded'), 0)::text as refunded_minor
      FROM commerce_orders
-     WHERE created_at >= NOW() - ($1 || ' days')::interval`,
-    [days],
+     WHERE created_at >= NOW() - ($1 || ' days')::interval
+       AND ($2='all' OR currency=$2)`,
+    [days, selectedCurrency],
   );
   const summaryRow = summaryRes.rows[0] || {};
+
+  const settlementSummaryRes = await pool.query(
+    `SELECT
+       COALESCE(sum(pa.seller_net_minor), 0)::text AS producer_net_minor,
+       COALESCE(sum(pa.platform_fee_minor), 0)::text AS platform_fee_minor
+     FROM protected_allocations pa
+     JOIN commerce_orders co ON co.id=pa.order_id
+     WHERE co.created_at >= NOW() - ($1 || ' days')::interval
+       AND ($2='all' OR pa.currency=$2)`,
+    [days, selectedCurrency],
+  );
+  const settlementSummaryRow = settlementSummaryRes.rows[0] || {};
 
   // 3. Escrow & Protected Allocations
   const escrowRes = await pool.query(`
     SELECT currency, status, count(*)::int as count,
            COALESCE(sum(seller_net_minor), 0)::text as seller_net_minor,
+           COALESCE(sum(platform_fee_minor), 0)::text as platform_fee_minor,
            COALESCE(sum(refunded_minor), 0)::text as refunded_minor
     FROM protected_allocations
+    WHERE ($1='all' OR currency=$1)
     GROUP BY currency, status
-  `);
+  `, [selectedCurrency]);
   const escrowAllocations = escrowRes.rows.map((r: Record<string, unknown>) => ({
     currency: String(r.currency),
     status: String(r.status),
     count: number(r.count),
     sellerNetMinor: String(r.seller_net_minor),
+    platformFeeMinor: String(r.platform_fee_minor),
     refundedMinor: String(r.refunded_minor),
   }));
 
@@ -2577,9 +1993,10 @@ export async function getControlCentreRevenue(days = 30, selectedCurrency = "all
             COALESCE(sum(delivery_fee_minor) FILTER (WHERE status NOT IN ('cancelled','refunded')), 0)::text as delivery_minor
      FROM commerce_orders
      WHERE created_at >= NOW() - ($1 || ' days')::interval
+       AND ($2='all' OR currency=$2)
      GROUP BY to_char(created_at, 'YYYY-MM-DD'), currency
      ORDER BY day ASC`,
-    [days],
+    [days, selectedCurrency],
   );
   const dailyTrends = trendsRes.rows.map((r: Record<string, unknown>) => ({
     day: String(r.day),
@@ -2588,9 +2005,35 @@ export async function getControlCentreRevenue(days = 30, selectedCurrency = "all
     grossMinor: number(r.gross_minor),
     subtotalMinor: number(r.subtotal_minor),
     deliveryMinor: number(r.delivery_minor),
-    platformFeeMinor: Math.round(number(r.gross_minor) * 0.075),
-    producerNetMinor: Math.round(number(r.gross_minor) * 0.925),
+    platformFeeMinor: 0,
+    producerNetMinor: 0,
   }));
+
+  const allocationTrendsRes = await pool.query(
+    `SELECT to_char(co.created_at, 'YYYY-MM-DD') AS day, pa.currency,
+       COALESCE(sum(pa.platform_fee_minor),0)::text AS platform_fee_minor,
+       COALESCE(sum(pa.seller_net_minor),0)::text AS producer_net_minor
+     FROM protected_allocations pa
+     JOIN commerce_orders co ON co.id=pa.order_id
+     WHERE co.created_at >= NOW() - ($1 || ' days')::interval
+       AND ($2='all' OR pa.currency=$2)
+     GROUP BY to_char(co.created_at, 'YYYY-MM-DD'),pa.currency`,
+    [days, selectedCurrency],
+  );
+  const allocationTrends = new Map(
+    allocationTrendsRes.rows.map((row: Record<string, unknown>) => [
+      `${String(row.day)}:${String(row.currency)}`,
+      {
+        platformFeeMinor: number(row.platform_fee_minor),
+        producerNetMinor: number(row.producer_net_minor),
+      },
+    ]),
+  );
+  for (const trend of dailyTrends) {
+    const allocation = allocationTrends.get(`${trend.day}:${trend.currency}`);
+    trend.platformFeeMinor = allocation?.platformFeeMinor ?? 0;
+    trend.producerNetMinor = allocation?.producerNetMinor ?? 0;
+  }
 
   // 5. Category / Sector Revenue Breakdown
   const categoryRes = await pool.query(`
@@ -2603,17 +2046,19 @@ export async function getControlCentreRevenue(days = 30, selectedCurrency = "all
     LEFT JOIN commerce_products cp ON cp.id = coi.product_id
     JOIN commerce_orders co ON co.id = coi.order_id
     WHERE co.status NOT IN ('cancelled', 'refunded')
+      AND co.created_at >= NOW() - ($1 || ' days')::interval
+      AND ($2='all' OR coi.currency=$2)
     GROUP BY COALESCE(cp.category_id, 'agricultural_produce'), coi.currency
     ORDER BY sum(coi.quantity * coi.unit_price_minor) DESC
-  `);
+  `, [days, selectedCurrency]);
   const sectorTurnover = categoryRes.rows.map((r: Record<string, unknown>) => ({
     categoryId: String(r.category_id),
     currency: String(r.currency),
     itemsSold: number(r.items_sold),
     unitsSold: number(r.units_sold),
     grossMinor: number(r.gross_minor),
-    producerShareMinor: Math.round(number(r.gross_minor) * 0.925),
-    platformFeeMinor: Math.round(number(r.gross_minor) * 0.075),
+    producerShareMinor: null,
+    platformFeeMinor: null,
   }));
 
   // 6. Top Farmer Earners & Settlement Ledger
@@ -2621,46 +2066,59 @@ export async function getControlCentreRevenue(days = 30, selectedCurrency = "all
     SELECT u.id, u.name, u.email, u.avatar, u.location,
            coi.currency,
            count(DISTINCT coi.order_id)::int as orders_count,
-           COALESCE(sum(coi.quantity * coi.unit_price_minor), 0)::text as gross_minor
+           COALESCE(sum(coi.quantity * coi.unit_price_minor), 0)::text as gross_minor,
+           (SELECT COALESCE(sum(pa.seller_net_minor),0)::text
+              FROM protected_allocations pa
+              JOIN commerce_orders allocated_order ON allocated_order.id=pa.order_id
+             WHERE pa.seller_id=u.id AND pa.currency=coi.currency
+               AND allocated_order.status NOT IN ('cancelled','refunded')
+               AND allocated_order.created_at >= NOW() - ($1 || ' days')::interval) AS net_earnings_minor
     FROM commerce_order_items coi
     JOIN users u ON u.id = coi.seller_id
     JOIN commerce_orders co ON co.id = coi.order_id
     WHERE co.status NOT IN ('cancelled', 'refunded')
+      AND co.created_at >= NOW() - ($1 || ' days')::interval
+      AND ($2='all' OR coi.currency=$2)
     GROUP BY u.id, u.name, u.email, u.avatar, u.location, coi.currency
     ORDER BY sum(coi.quantity * coi.unit_price_minor) DESC
     LIMIT 10
-  `);
+  `, [days, selectedCurrency]);
   const topFarmerEarners = topFarmersRes.rows.map((r: Record<string, unknown>) => ({
     id: String(r.id),
-    name: String(r.name || r.email || "Farm Producer"),
+    name: r.name ? String(r.name) : r.email ? String(r.email) : "",
     email: r.email ? String(r.email) : undefined,
     avatar: r.avatar ? String(r.avatar) : undefined,
-    location: r.location ? String(r.location) : "United Kingdom",
+    location: r.location ? String(r.location) : undefined,
     currency: String(r.currency),
     ordersCount: number(r.orders_count),
     grossMinor: number(r.gross_minor),
-    netEarningsMinor: Math.round(number(r.gross_minor) * 0.925),
-    status: "verified_payout",
+    netEarningsMinor: number(r.net_earnings_minor),
+    status: number(r.net_earnings_minor) > 0 ? "allocated" : "unallocated",
   }));
 
   // 7. Recent Transactions Journal
   const txRes = await pool.query(`
     SELECT co.id, co.order_number, co.status, co.payment_method, co.payment_status,
            co.currency, co.total_minor, co.subtotal_minor, co.delivery_fee_minor, co.created_at,
-           COALESCE(u.name, u.email, 'Verified Buyer') as buyer_name,
+            COALESCE(u.name, u.email) as buyer_name,
            u.email as buyer_email,
            (
-             SELECT COALESCE(seller_u.name, 'Farm Producer')
+              SELECT seller_u.name
              FROM commerce_order_items coi
              JOIN users seller_u ON seller_u.id = coi.seller_id
              WHERE coi.order_id = co.id
              LIMIT 1
-           ) as primary_seller_name
+            ) as primary_seller_name,
+            (SELECT COALESCE(sum(pa.seller_net_minor),0)::text
+               FROM protected_allocations pa
+              WHERE pa.order_id=co.id AND pa.currency=co.currency) AS producer_net_minor
     FROM commerce_orders co
     LEFT JOIN users u ON u.id = co.buyer_id
+    WHERE co.created_at >= NOW() - ($1 || ' days')::interval
+      AND ($2='all' OR co.currency=$2)
     ORDER BY co.created_at DESC
     LIMIT 25
-  `);
+  `, [days, selectedCurrency]);
   const recentTransactions = txRes.rows.map((r: Record<string, unknown>) => ({
     id: String(r.id),
     orderNumber: String(r.order_number),
@@ -2671,11 +2129,11 @@ export async function getControlCentreRevenue(days = 30, selectedCurrency = "all
     totalMinor: number(r.total_minor),
     subtotalMinor: number(r.subtotal_minor),
     deliveryFeeMinor: number(r.delivery_fee_minor),
-    producerNetMinor: Math.round(number(r.total_minor) * 0.925),
-    buyerName: String(r.buyer_name),
+    producerNetMinor: number(r.producer_net_minor),
+    buyerName: r.buyer_name ? String(r.buyer_name) : "",
     buyerEmail: r.buyer_email ? String(r.buyer_email) : undefined,
-    sellerName: String(r.primary_seller_name),
-    createdAt: r.created_at ? new Date(r.created_at as string).toISOString() : new Date().toISOString(),
+    sellerName: r.primary_seller_name ? String(r.primary_seller_name) : "",
+    createdAt: new Date(r.created_at as string).toISOString(),
   }));
 
   // 8. Payment Provider Gateway Performance
@@ -2684,9 +2142,11 @@ export async function getControlCentreRevenue(days = 30, selectedCurrency = "all
            count(*)::int as count,
            COALESCE(sum(amount_minor), 0)::text as total_amount_minor
     FROM payment_attempts
+    WHERE created_at >= NOW() - ($1 || ' days')::interval
+      AND ($2='all' OR currency=$2)
     GROUP BY provider, payment_status, currency
     ORDER BY provider, currency
-  `);
+  `, [days, selectedCurrency]);
   const gatewayPerformance = gatewayRes.rows.map((r: Record<string, unknown>) => ({
     provider: String(r.provider),
     paymentStatus: String(r.payment_status),
@@ -2705,8 +2165,8 @@ export async function getControlCentreRevenue(days = 30, selectedCurrency = "all
       subtotalMinor: number(summaryRow.subtotal_minor),
       deliveryMinor: number(summaryRow.delivery_minor),
       refundedMinor: number(summaryRow.refunded_minor),
-      producerNetMinor: Math.round(number(summaryRow.gross_minor) * 0.925),
-      platformFeeMinor: Math.round(number(summaryRow.gross_minor) * 0.075),
+      producerNetMinor: number(settlementSummaryRow.producer_net_minor),
+      platformFeeMinor: number(settlementSummaryRow.platform_fee_minor),
     },
     escrowAllocations,
     dailyTrends,

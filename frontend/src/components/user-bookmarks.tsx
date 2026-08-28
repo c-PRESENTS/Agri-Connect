@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import {
   Plus, MoreVertical, Pencil, Trash2, Globe, Check,
   X, RefreshCw, ChevronLeft, ChevronRight, ExternalLink,
-  Crown, Sun, CloudRain, Shield, Sprout, Leaf,
+  Crown, Sun, CloudRain, Shield, Sprout, Leaf, RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -303,87 +303,166 @@ export const UserBookmarks = memo(function UserBookmarks() {
     return <span className="text-sm font-black text-white">{getInitial(b.name)}</span>;
   };
 
+  const [editMode, setEditMode] = useState(false);
+
+  const moveLeft = (id: string) => {
+    const idx = bookmarks.findIndex(b => b.id === id);
+    if (idx <= 0) return;
+    const next = [...bookmarks];
+    const temp = next[idx - 1];
+    next[idx - 1] = next[idx];
+    next[idx] = temp;
+    persist(next);
+  };
+
+  const moveRight = (id: string) => {
+    const idx = bookmarks.findIndex(b => b.id === id);
+    if (idx < 0 || idx >= bookmarks.length - 1) return;
+    const next = [...bookmarks];
+    const temp = next[idx + 1];
+    next[idx + 1] = next[idx];
+    next[idx] = temp;
+    persist(next);
+  };
+
+  const resetDefaults = () => {
+    persist(DEFAULT_BOOKMARKS);
+    setEditMode(false);
+  };
+
   return (
     <>
-      <div className="w-full bg-[#081716]/78 backdrop-blur-md border border-slate-400/20 rounded-[18px] p-2.5 sm:p-3 shadow-[inset_0_1px_rgba(255,255,255,0.06),0_14px_30px_rgba(0,0,0,0.24)] relative z-10">
-        {/* Header with MY SITES and Center EDIT HUD Notch */}
-        <div className="flex items-center justify-between px-1 mb-1.5">
+      <div className="w-full bg-[#081716]/78 backdrop-blur-md border border-slate-400/20 rounded-[18px] p-2.5 sm:p-3.5 shadow-[inset_0_1px_rgba(255,255,255,0.06),0_14px_30px_rgba(0,0,0,0.24)] relative z-10">
+        {/* Header with MY SITES and Right Controls matching Quick Access */}
+        <div className="flex items-center justify-between px-1 mb-2">
           <span className="text-xs sm:text-sm font-black uppercase tracking-[0.14em] text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">
             {t("home.my_sites", { defaultValue: "MY SITES" })}
           </span>
 
-          {/* Center EDIT HUD Notch Button */}
-          <button
-            onClick={openAdd}
-            className="bg-gradient-to-r from-[#0d2a27] via-[#103a35] to-[#0d2a27] border border-[#1b554c] hover:border-emerald-400 text-emerald-300 rounded-lg px-4 py-0.5 text-xs font-black tracking-widest shadow-md uppercase transition-all cursor-pointer"
-          >
-            EDIT
-          </button>
+          <div className="flex items-center gap-2">
+            {editMode && (
+              <button
+                onClick={resetDefaults}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white bg-[#0a2321] border border-emerald-700/40 hover:border-emerald-500 transition-all cursor-pointer shadow-2xs"
+                title="Reset to default sites"
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span>Reset</span>
+              </button>
+            )}
 
-          <div className="w-12" /> {/* Balancing spacer */}
+
+            <button
+              onClick={() => setEditMode(m => !m)}
+              data-testid="my-sites-edit"
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black border transition-all shadow-xs cursor-pointer ${
+                editMode
+                  ? "bg-amber-400 text-amber-950 border-amber-400 shadow-amber-400/30"
+                  : "bg-[#0c2927] text-emerald-300 border-emerald-600/60 hover:bg-[#123835] hover:border-emerald-400"
+              }`}
+            >
+              {editMode ? (
+                <><Check className="h-3.5 w-3.5 stroke-[2.5]" /> {t("nav.done", { defaultValue: "Done" })}</>
+              ) : (
+                <><Pencil className="h-3.5 w-3.5" /> Edit</>
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Sites Row matching screenshot */}
-        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar items-center py-0.5">
-          {bookmarks.map((b, bIdx) => {
+        {/* 10-Column Responsive Grid matching Quick Access */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-1.5">
+          {bookmarks.map((b, idx) => {
             const isActive = panel.open && panel.url === normalizeUrl(b.url);
+
             return (
-              <div key={b.id + bIdx} className="relative group shrink-0">
+              <div key={b.id + idx} className="relative group min-w-0">
                 <button
-                  onClick={() => openPanel(b)}
+                  type="button"
+                  onClick={() => {
+                    if (editMode) {
+                      openEdit(b);
+                    } else {
+                      openPanel(b);
+                    }
+                  }}
                   data-testid={`bookmark-${b.id}`}
-                  className={`flex flex-col items-center gap-1 p-0.5 rounded-xl transition-all duration-150 w-11 sm:w-12 cursor-pointer ${
-                    isActive
-                      ? "bg-emerald-500/20 ring-1 ring-emerald-400 scale-[1.03]"
-                      : "hover:bg-emerald-900/30 active:scale-95"
+                  className={`relative w-full h-[52px] sm:h-[55px] flex flex-col items-center justify-center gap-0.5 rounded-[11px] border transition-all duration-150 py-1 px-1.5 shadow-md cursor-pointer group-hover:-translate-y-0.5 ${
+                    editMode
+                      ? "bg-[#0c2e2a] border-2 border-amber-400 text-white shadow-amber-400/20"
+                      : isActive
+                      ? "ring-2 ring-emerald-400 bg-[#123835] border-emerald-400 text-white"
+                      : "bg-[#0a2321] hover:bg-[#103330] border-emerald-700/50 hover:border-emerald-400/90 text-white active:scale-95"
                   }`}
                 >
                   <div
-                    className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-[10px] flex items-center justify-center overflow-hidden ${b.color} shadow-md border border-white/20`}
+                    className="w-5 h-5 rounded-md flex items-center justify-center overflow-hidden shrink-0 shadow-xs"
                   >
                     {renderIcon(b)}
                   </div>
-                  <span className="text-[9px] sm:text-[9.5px] font-black text-white text-center leading-none w-full truncate drop-shadow-xs">
+                  <span className="text-[10.5px] sm:text-xs font-black text-white text-center leading-tight w-full truncate drop-shadow px-0.5">
                     {b.name}
                   </span>
                 </button>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black/80 border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
-                      data-testid={`bookmark-opts-${b.id}`}
-                    >
-                      <MoreVertical className="h-2.5 w-2.5 text-white" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem onClick={() => openEdit(b)} className="text-xs font-bold gap-2 cursor-pointer">
-                      <Pencil className="h-3.5 w-3.5" /> {t("common.edit")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openPanel(b)} className="text-xs font-bold gap-2 cursor-pointer">
-                      <Globe className="h-3.5 w-3.5" /> Open site
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => deleteBookmark(b.id)} className="text-xs font-bold gap-2 text-destructive cursor-pointer">
-                      <Trash2 className="h-3.5 w-3.5" /> {t("common.delete")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Edit Mode Controls - High contrast & crystal clear */}
+                {editMode && (
+                  <div className="absolute inset-0 rounded-[11px] pointer-events-none z-20">
+                    <div className="absolute top-0.5 left-0.5 flex items-center gap-0.5 pointer-events-auto">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); moveLeft(b.id); }}
+                        disabled={idx === 0}
+                        className="w-4.5 h-4.5 rounded bg-black/90 border border-white/80 text-white flex items-center justify-center hover:bg-emerald-600 disabled:opacity-20 shadow-md transition-all cursor-pointer"
+                        title="Move Left"
+                      >
+                        <ChevronLeft className="h-3 w-3 stroke-[3]" />
+                      </button>
+                    </div>
+
+                    <div className="absolute top-0.5 right-0.5 flex items-center gap-0.5 pointer-events-auto">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); openEdit(b); }}
+                        className="w-4.5 h-4.5 rounded bg-amber-400 border border-black/60 text-black flex items-center justify-center hover:bg-amber-300 shadow-md transition-all cursor-pointer"
+                        title="Edit Site Name & URL"
+                      >
+                        <Pencil className="h-2.5 w-2.5 stroke-[2.5]" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); deleteBookmark(b.id); }}
+                        className="w-4.5 h-4.5 rounded bg-red-600 border border-white/90 text-white flex items-center justify-center hover:bg-red-500 shadow-md transition-all cursor-pointer"
+                        title="Delete Site"
+                      >
+                        <X className="h-3 w-3 stroke-[3]" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); moveRight(b.id); }}
+                        disabled={idx === bookmarks.length - 1}
+                        className="w-4.5 h-4.5 rounded bg-black/90 border border-white/80 text-white flex items-center justify-center hover:bg-emerald-600 disabled:opacity-20 shadow-md transition-all cursor-pointer"
+                        title="Move Right"
+                      >
+                        <ChevronRight className="h-3 w-3 stroke-[3]" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
 
-          {/* Add Site Tile matching screenshot */}
+          {/* Add Site Tile (Card) */}
           <button
+            type="button"
             onClick={openAdd}
             data-testid="bookmark-add-new"
-            className="flex flex-col items-center gap-1 p-0.5 rounded-xl transition-all w-11 sm:w-12 shrink-0 cursor-pointer hover:bg-white/10 active:scale-95"
+            className="w-full h-[52px] sm:h-[55px] flex flex-col items-center justify-center gap-0.5 rounded-[11px] border border-dashed border-emerald-400/70 bg-[#061917]/90 hover:bg-[#0a2724] hover:border-emerald-300 transition-all text-white py-1 px-1.5 shadow-xs cursor-pointer group hover:-translate-y-0.5 active:scale-95"
           >
-            <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-[10px] border border-dashed border-emerald-400/60 bg-emerald-950/40 hover:border-emerald-400 hover:bg-emerald-900/50 flex items-center justify-center shadow-xs transition-colors">
-              <Plus className="h-4 w-4 text-emerald-300" />
-            </div>
-            <span className="text-[9px] sm:text-[9.5px] font-black text-emerald-300 leading-none whitespace-nowrap drop-shadow-xs">
-              Add site
+            <Plus className="h-4 w-4 text-emerald-400 group-hover:scale-110 transition-transform stroke-[2.5]" />
+            <span className="text-[10.5px] sm:text-xs font-black text-white text-center leading-tight">
+              Add Site
             </span>
           </button>
         </div>

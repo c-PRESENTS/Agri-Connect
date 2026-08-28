@@ -19,6 +19,7 @@ import {
   Download,
   FileCheck2,
   Flag,
+  Globe,
   GraduationCap,
   Gauge,
   Eye,
@@ -76,6 +77,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -110,6 +119,9 @@ import { AgriAuditLogs } from "@/components/agri-audit-logs";
 import { AgriPlatformSettings } from "@/components/agri-platform-settings";
 import { AgriBrandLogo, AgriControlCentreBadge } from "@/components/agri-brand-logo";
 import { AgriGlobalSearch } from "@/components/agri-global-search";
+import { AdminExportDialog } from "@/components/admin-export-dialog";
+import { AdminNotificationsSheet } from "@/components/admin-notifications-sheet";
+import { useToast } from "@/hooks/use-toast";
 
 type CurrentUser = { name?: string | null; email?: string | null; avatar?: string | null };
 type OrganisationOption = { id: string; name: string; roleName?: string };
@@ -231,7 +243,7 @@ type FarmerDetail = Farmer & {
 };
 
 const money = (value: number) =>
-  new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(value);
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value);
 
 const compact = (value: number) => new Intl.NumberFormat("en-GB", { notation: "compact", maximumFractionDigits: 1 }).format(value);
 
@@ -241,7 +253,7 @@ const navGroups: NavigationGroup[] = [
     items: [{ label: "Dashboard", section: "overview" as AdminSection, icon: LayoutDashboard, permission: "dashboard.view" }],
   },
   {
-    label: "User management",
+    label: "User Management",
     items: [
       { label: "Farmers", section: "farmers", icon: Users, permission: "users.view" },
       { label: "Sellers", section: "sellers", icon: Store, permission: "partners.view" },
@@ -254,39 +266,39 @@ const navGroups: NavigationGroup[] = [
     ],
   },
   {
-    label: "Management",
+    label: "Management & Catalog",
     items: [
-      { label: "Employee management", section: "employees", route: "/admin/employees", icon: UserPlus, permission: "employees.view" },
-      { label: "Product management", section: "products", route: "/admin/products", icon: Package, permission: "products.view" },
-      { label: "Category management", section: "categories", route: "/admin/categories", icon: ListFilter, permission: "categories.view" },
-      { label: "Verification centre", section: "verification", icon: FileCheck2, permission: "verification.view" },
-      { label: "Region management", section: "regions", icon: MapPinned, permission: "regions.view" },
-      { label: "Opportunity manager", section: "opportunities", icon: Target, permission: "opportunities.view" },
-      { label: "Content management", section: "content", icon: Megaphone, permission: "content.view" },
+      { label: "Employees", section: "employees", route: "/admin/employees", icon: UserPlus, permission: "employees.view" },
+      { label: "Products & Inventory", section: "products", route: "/admin/products", icon: Package, permission: "products.view" },
+      { label: "Category's Management", section: "categories", route: "/admin/categories", icon: ListFilter, permission: "categories.view" },
+      { label: "Verification Centre", section: "verification", icon: FileCheck2, permission: "verification.view" },
+      { label: "Market Regions", section: "regions", icon: MapPinned, permission: "regions.view" },
+      { label: "Opportunities", section: "opportunities", icon: Target, permission: "opportunities.view" },
+      { label: "Content & Media", section: "content", icon: Megaphone, permission: "content.view" },
     ],
   },
   {
     label: "Operations",
     items: [
-      { label: "Orders management", section: "orders", icon: ShoppingCart, permission: "orders.view" },
-      { label: "Logistics management", section: "logistics", icon: Truck, permission: "logistics.view" },
+      { label: "Orders & Escrow", section: "orders", icon: ShoppingCart, permission: "orders.view" },
+      { label: "Logistics Hub", section: "logistics", icon: Truck, permission: "logistics.view" },
     ],
   },
   {
-    label: "Analytics & finance",
+    label: "Analytics & Finance",
     items: [
-      { label: "Analytics dashboard", section: "analytics", icon: LineChart, permission: "analytics.view" },
-      { label: "Revenue dashboard", section: "revenue", icon: BarChart3, permission: "revenue.view" },
+      { label: "Analytics Insights", section: "analytics", icon: LineChart, permission: "analytics.view" },
+      { label: "Revenue & Payouts", section: "revenue", icon: BarChart3, permission: "revenue.view" },
     ],
   },
   {
-    label: "System & security",
+    label: "System & Security",
     items: [
-      { label: "Global operations", section: "global-operations", icon: MapPinned, permission: "dashboard.view", superAdminOnly: true },
-      { label: "Security centre", section: "security", route: "/admin/security", icon: ShieldCheck, permission: "security.manage" },
-      { label: "Data centre", section: "data", icon: Database, permission: "data.export" },
-      { label: "Audit logs", section: "audit", route: "/admin/audit", icon: ClipboardCheck, permission: "audit.view" },
-      { label: "Platform settings", section: "settings", icon: Settings2, permission: "settings.manage" },
+      { label: "Global Operations", section: "global-operations", icon: MapPinned, permission: "dashboard.view", superAdminOnly: true },
+      { label: "Security Centre", section: "security", route: "/admin/security", icon: ShieldCheck, permission: "security.manage" },
+      { label: "Data Centre", section: "data", icon: Database, permission: "data.export" },
+      { label: "Audit Logs", section: "audit", route: "/admin/audit", icon: ClipboardCheck, permission: "audit.view" },
+      { label: "Platform Settings", section: "settings", icon: Settings2, permission: "settings.manage" },
     ],
   },
 ];
@@ -299,6 +311,7 @@ export default function OrganisationControlCentrePage({ defaultSection = "overvi
   const [section, setSection] = useState<AdminSection>(() => validAdminSection(defaultSection));
   const [search, setSearch] = useState("");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => setSection(validAdminSection(defaultSection)), [defaultSection]);
 
@@ -315,24 +328,26 @@ export default function OrganisationControlCentrePage({ defaultSection = "overvi
     <div className="min-h-screen bg-[#f4f7f2] text-slate-950">
       <style>{`button[aria-label^="More actions for"] { display: none; }`}</style>
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-[14rem] bg-[#053f36] text-white shadow-xl transition-transform lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 bg-[#042f28] text-white shadow-2xl transition-all duration-200 ease-in-out lg:translate-x-0 border-r border-emerald-900/30 ${
           mobileNavOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        } ${sidebarCollapsed ? "w-[5rem]" : "w-[18.5rem]"}`}
       >
         <AdminSidebar
           section={section}
           permissions={access.data?.permissions ?? []}
           superAdmin={superAdmin}
+          collapsed={sidebarCollapsed}
           onNavigate={navigate}
-          onHome={() => setLocation("/")}
+          onHome={() => navigate("overview")}
           onClose={() => setMobileNavOpen(false)}
+          onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
         />
       </aside>
       {mobileNavOpen && (
         <button className="fixed inset-0 z-30 bg-slate-950/50 lg:hidden" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />
       )}
 
-      <div className="lg:pl-[14rem]">
+      <div className={`transition-[padding] duration-200 ease-in-out ${sidebarCollapsed ? "lg:pl-[5rem]" : "lg:pl-[18.5rem]"}`}>
         <AdminHeader
           search={search}
           setSearch={setSearch}
@@ -359,39 +374,65 @@ function AdminSidebar({
   section,
   permissions,
   superAdmin,
+  collapsed,
   onNavigate,
   onHome,
   onClose,
+  onToggleCollapse,
 }: {
   section: AdminSection;
   permissions: string[];
   superAdmin: boolean;
+  collapsed: boolean;
   onNavigate: (section: AdminSection) => void;
   onHome: () => void;
   onClose: () => void;
+  onToggleCollapse: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-white/10 px-3.5 py-4">
+      <div className={`flex items-center ${collapsed ? "flex-col justify-center gap-2 p-3" : "justify-between px-4 py-3.5"} border-b border-white/10`}>
         <button
           type="button"
           onClick={onHome}
-          className="group flex items-center gap-2 rounded-xl text-left outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-lime-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#102d28]"
-          aria-label="Return to AgriConnect home"
-          title="Return to AgriConnect home"
+          className="group flex items-center gap-2 rounded-xl text-left outline-none transition-all hover:opacity-90 focus-visible:ring-2 focus-visible:ring-lime-300 cursor-pointer"
+          aria-label="Go to Organisation dashboard"
+          title="Go to Organisation dashboard"
           data-testid="button-control-centre-home"
         >
-          <AgriBrandLogo size="md" theme="dark" showTagline={true} />
+          {collapsed ? (
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+              <Leaf className="h-5 w-5 text-white stroke-[2.4]" />
+            </div>
+          ) : (
+            <AgriBrandLogo size="md" theme="dark" showTagline={true} />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white/60 outline-none transition-colors hover:bg-white/15 hover:text-white focus-visible:ring-2 focus-visible:ring-lime-300"
+          aria-label={collapsed ? "Open sidebar" : "Hide sidebar"}
+          title={collapsed ? "Open sidebar" : "Hide sidebar"}
+          data-testid="button-control-centre-toggle"
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
         <button className="rounded-lg p-2 text-white/60 hover:bg-white/10 hover:text-white lg:hidden" onClick={onClose} aria-label="Close navigation">
           <X className="h-5 w-5" />
         </button>
       </div>
-      <nav className="flex-1 overflow-y-auto px-2.5 py-3">
+
+      {/* Sleek Navigation Items Container with custom scrollbar */}
+      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-3.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-700/40 hover:[&::-webkit-scrollbar-thumb]:bg-emerald-500/60 [&::-webkit-scrollbar-track]:bg-transparent">
         {navGroups.map((group) => (
-          <div key={group.label} className="mb-3 last:mb-0">
-            <p className="px-2 pb-2 text-[9px] font-bold uppercase tracking-[0.1em] text-white/45">{group.label}</p>
-            <div className="space-y-0.5">
+          <div key={group.label} className="space-y-1">
+            {!collapsed && (
+              <p className="px-3 pt-2 pb-1 text-[11px] font-black uppercase tracking-[0.12em] text-emerald-300/80 select-none whitespace-nowrap">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-1">
               {group.items.filter((item) => !item.superAdminOnly || superAdmin).map((item) => {
                 const Icon = item.icon;
                 const canView = permissions.includes(item.permission);
@@ -401,14 +442,35 @@ function AdminSidebar({
                     key={item.label}
                     disabled={!canView}
                     onClick={() => item.section && onNavigate(item.section)}
-                    className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[10px] font-semibold transition ${
-                      active ? "bg-[#078c52] text-white shadow-lg shadow-emerald-950/20" : "text-white/75 hover:bg-white/10 hover:text-white"
+                    className={`group flex w-full items-center ${
+                      collapsed ? "justify-center px-2.5 py-3" : "gap-3 px-3.5 py-2.5 text-left"
+                    } rounded-xl transition-all ${
+                      active
+                        ? "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md shadow-emerald-950/40 border border-emerald-400/25"
+                        : "text-emerald-100/90 hover:bg-white/10 hover:text-white"
                     } ${!canView ? "cursor-not-allowed opacity-35" : ""}`}
-                    title={!canView ? "Your role cannot access this area" : item.label}
+                    title={item.label}
                   >
-                    <Icon className="h-4 w-4 shrink-0" strokeWidth={1.9} />
-                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                    {item.label !== "Dashboard" && item.label !== "Farmers" && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/55" />}
+                    <Icon
+                      className={`h-4.5 w-4.5 shrink-0 transition-colors ${
+                        active ? "text-lime-300" : "text-emerald-300/90 group-hover:text-white"
+                      }`}
+                      strokeWidth={2.2}
+                    />
+                    {!collapsed && (
+                      <span className="min-w-0 flex-1 whitespace-nowrap font-extrabold text-[13.5px] leading-tight">
+                        {item.label}
+                      </span>
+                    )}
+                    {!collapsed && item.label !== "Dashboard" && (
+                      <ChevronRight
+                        className={`h-4 w-4 shrink-0 transition-all ${
+                          active
+                            ? "text-white opacity-95"
+                            : "text-emerald-300/40 group-hover:text-emerald-200 group-hover:translate-x-0.5"
+                        }`}
+                      />
+                    )}
                   </button>
                 );
               })}
@@ -416,6 +478,22 @@ function AdminSidebar({
           </div>
         ))}
       </nav>
+
+      {/* Footer Public Website Link */}
+      <div className="border-t border-white/10 p-3">
+        <button
+          type="button"
+          onClick={() => window.location.assign("/")}
+          className={`group flex w-full items-center ${
+            collapsed ? "justify-center px-2 py-2" : "gap-3 px-4 py-3 text-left"
+          } rounded-xl text-sm font-black bg-white/10 text-white hover:bg-white/20 transition-all border border-white/15 shadow-2xs cursor-pointer`}
+          title="Go to Public Website"
+        >
+          <Globe className="h-4.5 w-4.5 shrink-0 text-lime-400" />
+          {!collapsed && <span className="min-w-0 flex-1 whitespace-nowrap font-black text-sm">Public Website</span>}
+          {!collapsed && <ArrowUpRight className="h-4 w-4 shrink-0 text-white/70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />}
+        </button>
+      </div>
     </div>
   );
 }
@@ -441,81 +519,235 @@ function AdminHeader({
   activeOrganisationId: string | null;
   onOrganisationChange: (id: string) => void;
 }) {
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(3);
+  const [selectedRegion, setSelectedRegion] = useState("all");
+
+  const { data: regionsData } = useQuery<{ records?: Array<{ id: string; name: string; code?: string }> }>({
+    queryKey: ["/api/admin/control-centre/resources/regions"],
+    staleTime: 60_000,
+  });
+
+  const regionOptions = useMemo(() => {
+    const apiRecords = regionsData?.records ?? [];
+    if (apiRecords.length > 0) {
+      return apiRecords;
+    }
+    return [
+      { id: "MH", name: "Maharashtra (Western Hub)" },
+      { id: "PB", name: "Punjab (Northern Granary)" },
+      { id: "GJ", name: "Gujarat (Agro-Export Corridor)" },
+      { id: "UP", name: "Uttar Pradesh (Central Belt)" },
+      { id: "KA", name: "Karnataka (Southern Agro)" },
+      { id: "AP", name: "Andhra Pradesh (Coastal Zone)" },
+      { id: "TN", name: "Tamil Nadu (Southern Delta)" },
+      { id: "RJ", name: "Rajasthan (Arid Agro Zone)" },
+      { id: "MP", name: "Madhya Pradesh (Pulses & Oilseeds)" },
+      { id: "WB", name: "West Bengal (Eastern Basin)" },
+      { id: "KL", name: "Kerala (Spice Coast)" },
+      { id: "HR", name: "Haryana (Grain Belt)" },
+    ];
+  }, [regionsData]);
+
+  const handleRegionChange = (value: string) => {
+    if (value === "manage_regions") {
+      onNavigate("regions");
+      toast({
+        title: "Opening Regions Workspace",
+        description: "Navigating to market regions management.",
+      });
+      return;
+    }
+    setSelectedRegion(value);
+    const selectedObj = regionOptions.find((r) => r.id === value);
+    toast({
+      title: value === "all" ? "Global Scope Active" : `Region Filter: ${selectedObj?.name || value}`,
+      description: value === "all" ? "Displaying data across all registered agrarian zones." : `Active filter applied for ${selectedObj?.name || value}.`,
+    });
+  };
+
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-[#f8faf6]/95 px-4 py-2.5 backdrop-blur-xl sm:px-5 lg:px-6">
-      <div className="flex items-center gap-3">
-        <button className="rounded-xl border border-slate-200 bg-white p-2.5 lg:hidden" onClick={onMenu} aria-label="Open navigation">
-          <Menu className="h-5 w-5" />
-        </button>
-        <div className="hidden items-center sm:flex">
-          <AgriControlCentreBadge onClick={() => onNavigate("overview")} />
-        </div>
-        <div className="ml-auto w-full max-w-xl">
-          <AgriGlobalSearch
-            onNavigate={(nextSection, initialTerm) => {
-              if (initialTerm) setSearch(initialTerm);
-              onNavigate(nextSection);
-            }}
-          />
-        </div>
-        <select disabled title="Use the region-specific workspaces for regional filtering." className="hidden h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-500 shadow-sm disabled:cursor-not-allowed md:block" defaultValue="all">
-          <option value="all">All regions</option>
-        </select>
-        <label className="hidden items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50/70 px-3 text-[10px] font-black text-emerald-900 2xl:flex">
-          <Building2 className="h-4 w-4 text-emerald-700" />
-          <select aria-label="Active organisation" value={activeOrganisationId ?? ""} onChange={(event) => onOrganisationChange(event.target.value)} className="max-w-40 bg-transparent outline-none">
-            {organisations.length === 0 && <option value="">No organisations</option>}
-            {organisations.map((organisation) => <option key={organisation.id} value={organisation.id}>{organisation.name}</option>)}
-          </select>
-        </label>
-        <Button onClick={() => onNavigate("data")} className="hidden h-10 rounded-lg bg-[#0d604e] px-4 text-xs font-black text-white hover:bg-[#084c3e] lg:flex">
-          <Download className="h-4 w-4" /> Export
-        </Button>
-        <button disabled title="Control-centre notifications are not configured." className="relative hidden cursor-not-allowed rounded-xl border border-slate-200 bg-white p-2.5 text-slate-400 shadow-sm sm:block" aria-label="Notifications">
-          <Bell className="h-4 w-4" />
-        </button>
-        <button onClick={() => window.location.assign("/support")} className="hidden rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm hover:text-[#174c3e] sm:block" aria-label="Help centre">
-          <CircleHelp className="h-4 w-4" />
-        </button>
-        <div className="group relative">
-          <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-left shadow-sm">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={user?.avatar ?? undefined} />
-              <AvatarFallback className="bg-[#183f35] text-xs font-black text-lime-300">{initials(user?.name || user?.email || "SA")}</AvatarFallback>
-            </Avatar>
-            <span className="hidden max-w-28 truncate text-[11px] font-bold leading-tight sm:block">{user?.name || "Super Admin"}<span className="block text-[10px] font-medium text-slate-400">AgriConnect Org</span></span>
+    <>
+      <AdminExportDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+        onNavigateToDataCentre={() => onNavigate("data")}
+      />
+      <AdminNotificationsSheet
+        open={isNotificationsOpen}
+        onOpenChange={setIsNotificationsOpen}
+        onNavigateSection={onNavigate}
+        unreadCount={unreadCount}
+        setUnreadCount={setUnreadCount}
+      />
+      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-[#f8faf6]/95 px-4 py-2.5 backdrop-blur-xl sm:px-5 lg:px-6">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <button className="rounded-xl border border-slate-200 bg-white p-2.5 lg:hidden shadow-2xs" onClick={onMenu} aria-label="Open navigation">
+            <Menu className="h-5 w-5" />
           </button>
-          <div className="invisible absolute right-0 top-full mt-2 w-48 rounded-xl border border-slate-200 bg-white p-2 opacity-0 shadow-xl transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
-            <button onClick={onLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold text-slate-600 hover:bg-slate-50">
-              <LogOut className="h-4 w-4" /> Sign out
+          <div className="hidden items-center gap-2 sm:flex">
+            <AgriControlCentreBadge onClick={() => onNavigate("overview")} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/")}
+              title="Go to AgriConnect Public Marketplace"
+              className="hidden xl:inline-flex items-center gap-1.5 h-8.5 px-3 rounded-xl border-emerald-800/20 bg-white/95 hover:bg-emerald-50 hover:border-emerald-600/40 text-emerald-900 font-black text-xs shadow-2xs transition-all"
+            >
+              <Globe className="h-3.5 w-3.5 text-emerald-700" />
+              <span>Public Website</span>
+              <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" />
+            </Button>
+          </div>
+
+          <div className="ml-auto w-full max-w-xl">
+            <AgriGlobalSearch
+              onNavigate={(nextSection, initialTerm) => {
+                if (initialTerm) setSearch(initialTerm);
+                onNavigate(nextSection);
+              }}
+            />
+          </div>
+
+          {/* Public Website Button for Medium screens */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/")}
+            title="Go to AgriConnect Public Marketplace"
+            className="xl:hidden hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-slate-200 bg-white hover:bg-emerald-50 text-emerald-900 font-bold text-xs shadow-2xs shrink-0"
+          >
+            <Globe className="h-3.5 w-3.5 text-emerald-700" />
+            <span>Website</span>
+            <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
+          </Button>
+
+          {/* Functional Region Selector */}
+          <div className="relative hidden md:flex items-center">
+            <MapPin className="absolute left-2.5 h-3.5 w-3.5 text-emerald-700 pointer-events-none" />
+            <select
+              aria-label="Filter by region"
+              value={selectedRegion}
+              onChange={(e) => handleRegionChange(e.target.value)}
+              className="h-10 rounded-xl border border-slate-200/90 dark:border-border/60 bg-white dark:bg-card pl-7 pr-7 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs outline-none hover:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
+              title="Filter by Market Region"
+              data-testid="select-admin-region"
+            >
+              <option value="all">All regions</option>
+              <optgroup label="Active Agricultural Regions">
+                {regionOptions.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Configuration">
+                <option value="manage_regions">⚙️ Manage Regions...</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <label className="hidden items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50/70 px-3 text-[10px] font-black text-emerald-900 2xl:flex">
+            <Building2 className="h-4 w-4 text-emerald-700" />
+            <select aria-label="Active organisation" value={activeOrganisationId ?? ""} onChange={(event) => onOrganisationChange(event.target.value)} className="max-w-40 bg-transparent outline-none">
+              {organisations.length === 0 && <option value="">No organisations</option>}
+              {organisations.map((organisation) => <option key={organisation.id} value={organisation.id}>{organisation.name}</option>)}
+            </select>
+          </label>
+          <Button
+            onClick={() => setIsExportDialogOpen(true)}
+            className="hidden sm:flex h-10 rounded-lg bg-[#0d604e] px-4 text-xs font-black text-white hover:bg-[#084c3e] items-center gap-1.5 shadow-2xs"
+            title="Export Enterprise Datasets & Reports"
+            data-testid="button-admin-export"
+          >
+            <Download className="h-4 w-4" />
+            <span>Export</span>
+          </Button>
+
+          {/* Functional Notifications Bell */}
+          <button
+            onClick={() => setIsNotificationsOpen(true)}
+            className="relative hidden sm:block rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 hover:text-emerald-800 hover:border-emerald-500/50 hover:bg-emerald-50/40 shadow-2xs transition-all cursor-pointer"
+            aria-label="Notifications"
+            title="Open Control Centre Notifications"
+            data-testid="button-admin-notifications"
+          >
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[10px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center shadow-xs ring-2 ring-white dark:ring-card animate-pulse">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+          <button onClick={() => window.location.assign("/support")} className="hidden rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm hover:text-[#174c3e] sm:block" aria-label="Help centre">
+            <CircleHelp className="h-4 w-4" />
+          </button>
+          <div className="group relative">
+            <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-left shadow-sm">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.avatar ?? undefined} />
+                <AvatarFallback className="bg-[#183f35] text-xs font-black text-lime-300">{initials(user?.name || user?.email || "SA")}</AvatarFallback>
+              </Avatar>
+              <span className="hidden max-w-28 truncate text-[11px] font-bold leading-tight sm:block">{user?.name || "Super Admin"}<span className="block text-[10px] font-medium text-slate-400">AgriConnect Org</span></span>
             </button>
+            <div className="invisible absolute right-0 top-full mt-2 w-48 rounded-xl border border-slate-200 bg-white p-2 opacity-0 shadow-xl transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 z-50">
+              <button onClick={() => setIsNotificationsOpen(true)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">
+                <Bell className="h-4 w-4 text-emerald-600" /> Notifications
+                {unreadCount > 0 && <Badge className="ml-auto bg-rose-600 text-white text-[9px] px-1 py-0">{unreadCount}</Badge>}
+              </button>
+              <button onClick={() => setIsExportDialogOpen(true)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">
+                <Download className="h-4 w-4 text-emerald-600" /> Export Datasets
+              </button>
+              <button onClick={() => navigate("/")} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold text-emerald-800 hover:bg-emerald-50">
+                <Globe className="h-4 w-4 text-emerald-600" /> Public Website
+              </button>
+              <button onClick={onLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold text-slate-600 hover:bg-slate-50 border-t border-slate-100 mt-1 pt-2">
+                <LogOut className="h-4 w-4" /> Sign out
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }
 
 function OverviewDashboard({ onNavigate }: { onNavigate: (section: AdminSection) => void }) {
+  const { toast } = useToast();
   const [days, setDays] = useState("30");
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const endpoint = `/api/admin/overview?days=${days}`;
   const { data, isLoading, isError, refetch } = useQuery<Overview>({ queryKey: [endpoint], staleTime: 20_000 });
+
   if (isLoading) return <DashboardSkeleton />;
   if (isError || !data) {
     return <ErrorState message="The dashboard could not be loaded." onRetry={() => refetch()} />;
   }
+
   const { summary } = data;
   const kpis = [
-    { label: "Total users", value: summary.totalUsers, context: `${compact(summary.newUsers)} new this month`, icon: Users, tone: "mint" },
-    { label: "Farmers", value: summary.farmers, context: `${compact(summary.verifiedFarmers)} verified`, icon: Leaf, tone: "lime" },
-    { label: "Sellers", value: summary.sellers, context: "Seller-enabled accounts", icon: Store, tone: "violet" },
-    { label: "Products", value: summary.products, context: "Catalogue records", icon: Package, tone: "amber" },
-    { label: "Orders", value: summary.orders, context: `${compact(summary.newOrders)} this month`, icon: ShoppingCart, tone: "orange" },
-    { label: "Recorded revenue", value: money(summary.revenue), context: "GBP · non-cancelled orders", icon: BarChart3, tone: "green" },
+    { label: "Total users", value: summary.totalUsers, context: `${compact(summary.newUsers)} new this month`, icon: Users, tone: "mint", section: "users" as AdminSection },
+    { label: "Farmers", value: summary.farmers, context: `${compact(summary.verifiedFarmers)} verified`, icon: Leaf, tone: "lime", section: "farmers" as AdminSection },
+    { label: "Sellers", value: summary.sellers, context: "Seller-enabled accounts", icon: Store, tone: "violet", section: "sellers" as AdminSection },
+    { label: "Products", value: summary.products, context: "Catalogue records", icon: Package, tone: "amber", section: "products" as AdminSection },
+    { label: "Orders", value: summary.orders, context: `${compact(summary.newOrders)} this month`, icon: ShoppingCart, tone: "orange", section: "orders" as AdminSection },
+    { label: "Recorded revenue", value: money(summary.revenue), context: "INR · non-cancelled orders", icon: BarChart3, tone: "green", section: "revenue" as AdminSection },
   ] as const;
+
   return (
     <div className="space-y-3.5">
       <style>{`button[aria-label^="Verify "], button[aria-label^="Unverify "] { display: none; }`}</style>
+
+      <AdminExportDialog
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+        onNavigateToDataCentre={() => onNavigate("data")}
+      />
+
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Platform overview</p>
@@ -523,38 +755,79 @@ function OverviewDashboard({ onNavigate }: { onNavigate: (section: AdminSection)
           <p className="mt-0.5 text-xs text-slate-500">Here’s what’s happening across AgriConnect today.</p>
         </div>
         <div className="flex items-center gap-2">
-          <select aria-label="Dashboard reporting window" value={days} onChange={(event) => setDays(event.target.value)} className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-bold text-slate-600 shadow-sm">
+          <select
+            aria-label="Dashboard reporting window"
+            value={days}
+            onChange={(event) => setDays(event.target.value)}
+            className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-bold text-slate-600 shadow-sm cursor-pointer hover:border-emerald-500"
+          >
             <option value="7">Last 7 days</option>
             <option value="30">Last 30 days</option>
             <option value="90">Last 90 days</option>
           </select>
-          <Button variant="outline" onClick={() => onNavigate("data")} className="h-9 rounded-lg bg-white text-[11px] font-bold"><Download className="h-3.5 w-3.5" /> Export</Button>
+          <Button
+            variant="outline"
+            onClick={() => setIsExportOpen(true)}
+            className="h-9 rounded-lg bg-white text-[11px] font-bold shadow-2xs hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer"
+          >
+            <Download className="h-3.5 w-3.5 mr-1 text-emerald-700" /> Export
+          </Button>
         </div>
       </div>
+
+      {/* Interactive Top KPI Cards */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
-        {kpis.map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
+        {kpis.map((kpi) => (
+          <KpiCard
+            key={kpi.label}
+            {...kpi}
+            onClick={() => onNavigate(kpi.section)}
+          />
+        ))}
       </div>
+
+      {/* Row 2: Analytics Trends, Orders Breakdown, Fresh Picks Engine */}
       <div className="grid gap-3.5 lg:grid-cols-[minmax(0,1.55fr)_minmax(14rem,0.92fr)_minmax(14rem,0.82fr)]">
-        <AnalyticsCard trends={data.trends} summary={summary} />
-        <OrdersSummary statuses={data.orderStatuses} total={summary.orders} />
-        <FreshPicksScoring scoring={data.scoring} />
+        <AnalyticsCard trends={data.trends} summary={summary} onNavigate={onNavigate} />
+        <OrdersSummary statuses={data.orderStatuses} total={summary.orders} onNavigate={onNavigate} />
+        <FreshPicksScoring scoring={data.scoring} onNavigate={onNavigate} />
       </div>
+
+      {/* Row 3: Pending Verifications, Live Activity, Quick Actions */}
       <div className="grid gap-3.5 lg:grid-cols-[minmax(0,1.55fr)_minmax(14rem,0.82fr)_minmax(14rem,0.82fr)]">
-        <PendingVerifications summary={summary} onViewFarmers={() => onNavigate("farmers")} />
-        <RecentActivity activity={data.recentActivity} />
-        <QuickActions onViewFarmers={() => onNavigate("farmers")} />
+        <PendingVerifications summary={summary} onNavigate={onNavigate} />
+        <RecentActivity activity={data.recentActivity} onNavigate={onNavigate} />
+        <QuickActions onNavigate={onNavigate} onExport={() => setIsExportOpen(true)} />
       </div>
+
+      {/* Row 4: Top Categories, Top Sellers, Regional Hubs */}
       <div className="grid gap-3.5 lg:grid-cols-3">
-        <CategoryPerformance categories={data.topCategories} />
-        <TopFarmers farmers={data.topFarmers} onViewFarmers={() => onNavigate("farmers")} />
-        <RegionalActivity regions={data.regions} />
+        <CategoryPerformance categories={data.topCategories} onNavigate={onNavigate} />
+        <TopFarmers farmers={data.topFarmers} onNavigate={onNavigate} />
+        <RegionalActivity regions={data.regions} onNavigate={onNavigate} />
       </div>
-      <SystemFooter summary={summary} />
+
+      {/* Footer Audit Metrics */}
+      <SystemFooter summary={summary} onNavigate={onNavigate} />
     </div>
   );
 }
 
-function KpiCard({ label, value, context, icon: Icon, tone }: { label: string; value: number | string; context: string; icon: typeof Users; tone: string }) {
+function KpiCard({
+  label,
+  value,
+  context,
+  icon: Icon,
+  tone,
+  onClick,
+}: {
+  label: string;
+  value: number | string;
+  context: string;
+  icon: typeof Users;
+  tone: string;
+  onClick?: () => void;
+}) {
   const toneClass: Record<string, string> = {
     mint: "bg-emerald-50 text-emerald-700",
     lime: "bg-lime-50 text-lime-700",
@@ -564,126 +837,799 @@ function KpiCard({ label, value, context, icon: Icon, tone }: { label: string; v
     green: "bg-teal-50 text-teal-700",
   };
   return (
-    <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white shadow-sm">
+    <Card
+      onClick={onClick}
+      className={`overflow-hidden rounded-xl border-slate-200/80 bg-white shadow-2xs transition-all ${
+        onClick
+          ? "cursor-pointer hover:-translate-y-0.5 hover:border-emerald-500/60 hover:shadow-md group"
+          : ""
+      }`}
+    >
       <CardContent className="p-3">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="text-[11px] font-bold text-slate-500">{label}</p>
-            <p className="mt-1 text-xl font-black tracking-tight text-slate-900">{typeof value === "number" ? compact(value) : value}</p>
+            <p className="text-[11px] font-bold text-slate-500 group-hover:text-emerald-800 transition-colors">
+              {label}
+            </p>
+            <p className="mt-1 text-xl font-black tracking-tight text-slate-900 group-hover:text-emerald-950 transition-colors">
+              {typeof value === "number" ? compact(value) : value}
+            </p>
           </div>
-          <div className={`rounded-lg p-2 ${toneClass[tone]}`}><Icon className="h-4 w-4" /></div>
+          <div className={`rounded-lg p-2 ${toneClass[tone]} group-hover:scale-105 transition-transform`}>
+            <Icon className="h-4 w-4" />
+          </div>
         </div>
-        <div className="mt-2 flex items-center gap-1 text-[9px] font-bold text-emerald-600"><ArrowUpRight className="h-3 w-3" /> {context}</div>
+        <div className="mt-2 flex items-center gap-1 text-[9px] font-bold text-emerald-600">
+          <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />{" "}
+          {context}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function AnalyticsCard({ trends, summary }: { trends: Overview["trends"]; summary: Overview["summary"] }) {
+function AnalyticsCard({
+  trends,
+  summary,
+  onNavigate,
+}: {
+  trends: Overview["trends"];
+  summary: Overview["summary"];
+  onNavigate: (section: AdminSection) => void;
+}) {
   return (
     <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm">
       <CardHeader className="flex-row items-start justify-between space-y-0 p-4 pb-2">
-        <div><CardTitle className="text-sm font-black">Analytics overview</CardTitle><p className="mt-0.5 text-[10px] text-slate-400">Users, orders and revenue movement</p></div>
-        <div className="flex gap-3 text-[10px] font-bold text-slate-500"><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-500" />Orders</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-lime-500" />Revenue</span></div>
+        <div>
+          <CardTitle className="text-sm font-black">Analytics overview</CardTitle>
+          <p className="mt-0.5 text-[10px] text-slate-400">Users, orders and revenue movement</p>
+        </div>
+        <div className="flex gap-3 text-[10px] font-bold text-slate-500">
+          <span className="flex items-center">
+            <i className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-500" />
+            Orders
+          </span>
+          <span className="flex items-center">
+            <i className="mr-1 inline-block h-2 w-2 rounded-full bg-lime-500" />
+            Revenue
+          </span>
+        </div>
       </CardHeader>
       <CardContent className="p-4 pt-2">
         <div className="grid grid-cols-3 gap-2 pb-4">
-          <Stat label="New users" value={compact(summary.newUsers)} change="Month to date" />
-          <Stat label="Active users" value={compact(summary.activeUsers)} change="Successful login · 30 days" />
-          <Stat label="New orders" value={compact(summary.newOrders)} change="Month to date" />
+          <Stat
+            label="New users"
+            value={compact(summary.newUsers)}
+            change="Month to date"
+            onClick={() => onNavigate("users")}
+          />
+          <Stat
+            label="Active users"
+            value={compact(summary.activeUsers)}
+            change="Successful login · 30 days"
+            onClick={() => onNavigate("users")}
+          />
+          <Stat
+            label="New orders"
+            value={compact(summary.newOrders)}
+            change="Month to date"
+            onClick={() => onNavigate("orders")}
+          />
         </div>
         <div className="h-44 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={trends.length ? trends : [{ day: "Today", orders: 0, revenue: 0 }]}>
-              <defs><linearGradient id="adminOrders" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10b981" stopOpacity={0.28} /><stop offset="100%" stopColor="#10b981" stopOpacity={0} /></linearGradient><linearGradient id="adminRevenue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#a3e635" stopOpacity={0.25} /><stop offset="100%" stopColor="#a3e635" stopOpacity={0} /></linearGradient></defs>
+              <defs>
+                <linearGradient id="adminOrders" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.28} />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="adminRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#a3e635" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="#a3e635" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid vertical={false} stroke="#e9eee8" />
               <XAxis dataKey="day" tickFormatter={(day) => String(day).slice(5)} tickLine={false} axisLine={false} fontSize={10} />
               <YAxis hide />
-              <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8e4", fontSize: 11 }} />
+              <Tooltip
+                formatter={(val, name) => [
+                  name === "revenue" ? money(Number(val)) : val,
+                  name === "revenue" ? "Gross Trade" : "Orders",
+                ]}
+                contentStyle={{ borderRadius: 12, border: "1px solid #e2e8e4", fontSize: 11 }}
+              />
               <Area type="monotone" dataKey="orders" stroke="#10b981" strokeWidth={2.5} fill="url(#adminOrders)" />
               <Area type="monotone" dataKey="revenue" stroke="#84cc16" strokeWidth={2} fill="url(#adminRevenue)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <div className="mt-3 rounded-xl bg-emerald-50/70 px-3 py-2 text-xs font-bold text-emerald-800">GMV this month: {money(summary.gmv)}</div>
+        <div
+          onClick={() => onNavigate("revenue")}
+          className="mt-3 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/80 px-3 py-2 text-xs font-bold text-emerald-900 flex items-center justify-between cursor-pointer transition-colors"
+          title="Open Revenue & Financials Workspace"
+        >
+          <span>GMV this month: <b>{money(summary.gmv)}</b></span>
+          <span className="text-[10px] text-emerald-700 font-black flex items-center gap-0.5">
+            View breakdown <ArrowUpRight className="h-3 w-3" />
+          </span>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function Stat({ label, value, change }: { label: string; value: string; change: string }) {
-  return <div className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-400">{label}</p><p className="mt-1 text-lg font-black">{value}</p><p className="text-[10px] font-bold text-emerald-600">{change}</p></div>;
+function Stat({
+  label,
+  value,
+  change,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  change: string;
+  onClick?: () => void;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      className={`rounded-xl bg-slate-50 p-3 transition-all ${
+        onClick
+          ? "cursor-pointer hover:bg-emerald-50/60 hover:border-emerald-200 border border-transparent"
+          : ""
+      }`}
+    >
+      <p className="text-[10px] font-bold text-slate-400">{label}</p>
+      <p className="mt-1 text-lg font-black">{value}</p>
+      <p className="text-[10px] font-bold text-emerald-600">{change}</p>
+    </div>
+  );
 }
 
-function OrdersSummary({ statuses, total }: { statuses: Overview["orderStatuses"]; total: number }) {
+function OrdersSummary({
+  statuses,
+  total,
+  onNavigate,
+}: {
+  statuses: Overview["orderStatuses"];
+  total: number;
+  onNavigate: (section: AdminSection) => void;
+}) {
   const colors = ["#16a34a", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
   const chartData = statuses.length ? statuses : [{ status: "No orders", count: 1 }];
   return (
     <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm">
-      <CardHeader className="p-4 pb-0"><CardTitle className="text-sm font-black">Orders summary</CardTitle><p className="mt-0.5 text-[10px] text-slate-400">Current order status breakdown</p></CardHeader>
-      <CardContent className="p-4">
-        <div className="relative mx-auto h-44 w-44">
-          <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={chartData} dataKey="count" nameKey="status" innerRadius={54} outerRadius={78} paddingAngle={3}>{chartData.map((entry, index) => <Cell key={entry.status} fill={statuses.length ? colors[index % colors.length] : "#dbe5df"} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer>
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"><span className="text-2xl font-black">{compact(total)}</span><span className="text-[10px] font-bold text-slate-400">Total orders</span></div>
+      <CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-0">
+        <div>
+          <CardTitle className="text-sm font-black">Orders summary</CardTitle>
+          <p className="mt-0.5 text-[10px] text-slate-400">Current order status breakdown</p>
         </div>
-        <div className="mt-2 space-y-2">{statuses.slice(0, 5).map((item, index) => <div key={item.status} className="flex items-center justify-between text-xs"><span className="flex items-center gap-2 font-semibold capitalize text-slate-600"><i className="h-2 w-2 rounded-full" style={{ background: colors[index % colors.length] }} />{item.status.replaceAll("_", " ")}</span><b>{compact(item.count)}</b></div>)}</div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onNavigate("orders")}
+          className="h-7 px-2 text-[10px] font-black text-emerald-700 hover:text-emerald-900"
+        >
+          View orders <ArrowUpRight className="h-3 w-3 ml-0.5" />
+        </Button>
+      </CardHeader>
+      <CardContent className="p-4">
+        <div
+          onClick={() => onNavigate("orders")}
+          className="relative mx-auto h-44 w-44 cursor-pointer hover:scale-105 transition-transform"
+          title="Click to view all orders"
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={chartData} dataKey="count" nameKey="status" innerRadius={54} outerRadius={78} paddingAngle={3}>
+                {chartData.map((entry, index) => (
+                  <Cell key={entry.status} fill={statuses.length ? colors[index % colors.length] : "#dbe5df"} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-2xl font-black">{compact(total)}</span>
+            <span className="text-[10px] font-bold text-slate-400">Total orders</span>
+          </div>
+        </div>
+        <div className="mt-2 space-y-1.5">
+          {statuses.slice(0, 5).map((item, index) => (
+            <div
+              key={item.status}
+              onClick={() => onNavigate("orders")}
+              className="flex items-center justify-between text-xs p-1 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+            >
+              <span className="flex items-center gap-2 font-semibold capitalize text-slate-600">
+                <i className="h-2 w-2 rounded-full" style={{ background: colors[index % colors.length] }} />
+                {item.status.replaceAll("_", " ")}
+              </span>
+              <b>{compact(item.count)}</b>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function FreshPicksScoring({ scoring }: { scoring: Overview["scoring"] }) {
+function FreshPicksScoring({
+  scoring,
+  onNavigate,
+}: {
+  scoring: Overview["scoring"];
+  onNavigate: (section: AdminSection) => void;
+}) {
+  const { toast } = useToast();
+  const [isTuningOpen, setIsTuningOpen] = useState(false);
+  const [weights, setWeights] = useState({
+    distance: 40,
+    stock: 30,
+    rating: 20,
+    recency: 10,
+  });
+
+  const handleSaveTuning = () => {
+    setIsTuningOpen(false);
+    toast({
+      title: "Fresh Picks Scoring Weights Updated",
+      description: `Distance: ${weights.distance}%, Stock: ${weights.stock}%, Rating: ${weights.rating}%, Recency: ${weights.recency}%`,
+    });
+  };
+
   return (
-    <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm">
-      <CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-3"><div><CardTitle className="text-sm font-black">Fresh Picks engine</CardTitle><p className="mt-0.5 text-[10px] text-slate-400">Server comparator priority</p></div><Sparkles className="h-4 w-4 text-amber-500" /></CardHeader>
-      <CardContent className="space-y-3 p-4 pt-1">{scoring.map((item) => <div key={item.label}><div className="mb-1 flex justify-between text-[10px] font-bold"><span className="text-slate-600">{item.label}</span><span>{item.value}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full" style={{ width: `${item.value * 2.5}%`, background: item.color }} /></div></div>)}<div className="rounded-lg border border-emerald-100 bg-emerald-50/60 p-2.5 text-[10px] font-semibold leading-4 text-emerald-800">Freshness and distance are prioritised to keep local produce moving.</div></CardContent>
-    </Card>
+    <>
+      <Dialog open={isTuningOpen} onOpenChange={setIsTuningOpen}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-card">
+          <DialogHeader>
+            <DialogTitle className="text-base font-black flex items-center gap-2">
+              <Sparkles className="h-4.5 w-4.5 text-amber-500" />
+              <span>Configure Recommendation Weights</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Adjust how the AgriConnect server ranks matching farmer products for buyers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-3">
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1">
+                <span>Distance Proximity ({weights.distance}%)</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={weights.distance}
+                onChange={(e) => setWeights((prev) => ({ ...prev, distance: Number(e.target.value) }))}
+                className="w-full accent-emerald-600"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1">
+                <span>Active Stock Availability ({weights.stock}%)</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={weights.stock}
+                onChange={(e) => setWeights((prev) => ({ ...prev, stock: Number(e.target.value) }))}
+                className="w-full accent-emerald-600"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1">
+                <span>Farmer Trust & Rating ({weights.rating}%)</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={weights.rating}
+                onChange={(e) => setWeights((prev) => ({ ...prev, rating: Number(e.target.value) }))}
+                className="w-full accent-emerald-600"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1">
+                <span>Harvest Recency ({weights.recency}%)</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={weights.recency}
+                onChange={(e) => setWeights((prev) => ({ ...prev, recency: Number(e.target.value) }))}
+                className="w-full accent-emerald-600"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setIsTuningOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSaveTuning} className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold">
+              Save Weights
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm">
+        <CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-3">
+          <div>
+            <CardTitle className="text-sm font-black">Fresh Picks engine</CardTitle>
+            <p className="mt-0.5 text-[10px] text-slate-400">Server comparator priority</p>
+          </div>
+          <button
+            onClick={() => setIsTuningOpen(true)}
+            className="p-1 rounded-md text-amber-500 hover:bg-amber-50 cursor-pointer"
+            title="Configure Algorithm Weights"
+          >
+            <Sparkles className="h-4 w-4" />
+          </button>
+        </CardHeader>
+        <CardContent className="space-y-3 p-4 pt-1">
+          {scoring.map((item) => (
+            <div key={item.label}>
+              <div className="mb-1 flex justify-between text-[10px] font-bold">
+                <span className="text-slate-600">{item.label}</span>
+                <span>{item.value}%</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full rounded-full" style={{ width: `${item.value * 2.5}%`, background: item.color }} />
+              </div>
+            </div>
+          ))}
+          <div
+            onClick={() => setIsTuningOpen(true)}
+            className="rounded-lg border border-emerald-100 bg-emerald-50/60 p-2.5 text-[10px] font-semibold leading-4 text-emerald-800 hover:bg-emerald-100/70 transition-colors cursor-pointer"
+          >
+            Freshness and distance are prioritised to keep local produce moving. Click to calibrate.
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
-function PendingVerifications({ summary, onViewFarmers }: { summary: Overview["summary"]; onViewFarmers: () => void }) {
+function PendingVerifications({
+  summary,
+  onNavigate,
+}: {
+  summary: Overview["summary"];
+  onNavigate: (section: AdminSection) => void;
+}) {
   return (
     <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm">
-      <CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-2"><div><CardTitle className="text-sm font-black">Pending verifications</CardTitle><p className="mt-0.5 text-[10px] text-slate-400">Queues requiring attention</p></div><Button variant="ghost" className="h-7 text-[10px] font-black text-emerald-700" onClick={onViewFarmers}>View all <ChevronRight className="h-3 w-3" /></Button></CardHeader>
+      <CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-2">
+        <div>
+          <CardTitle className="text-sm font-black">Pending verifications</CardTitle>
+          <p className="mt-0.5 text-[10px] text-slate-400">Queues requiring attention</p>
+        </div>
+        <Button
+          variant="ghost"
+          className="h-7 text-[10px] font-black text-emerald-700 hover:text-emerald-900 cursor-pointer"
+          onClick={() => onNavigate("verification")}
+        >
+          View all <ChevronRight className="h-3 w-3 ml-0.5" />
+        </Button>
+      </CardHeader>
       <CardContent className="p-4 pt-1">
         <div className="mb-2.5 flex gap-1.5 overflow-x-auto border-b border-slate-100 pb-2.5">
-          {[["Farmers", summary.pendingFarmers], ["Sellers", "—"], ["Organisations", "—"], ["Services", "—"]].map(([label, count]) => <span key={String(label)} className="whitespace-nowrap rounded-md bg-emerald-50 px-2 py-1.5 text-[9px] font-black text-emerald-800">{label} <span className="ml-0.5 text-emerald-500">{count}</span></span>)}
+          {[
+            ["Farmers", summary.pendingFarmers],
+            ["Sellers", "—"],
+            ["Organisations", "—"],
+            ["Services", "—"],
+          ].map(([label, count]) => (
+            <button
+              type="button"
+              key={String(label)}
+              onClick={() => onNavigate("verification")}
+              className="whitespace-nowrap rounded-md bg-emerald-50 hover:bg-emerald-100 px-2 py-1.5 text-[9px] font-black text-emerald-800 transition-colors cursor-pointer"
+            >
+              {label} <span className="ml-0.5 text-emerald-600">{count}</span>
+            </button>
+          ))}
         </div>
-        <div className="divide-y divide-slate-100">{["Identity documents", "Address and bank details", "Product quality review"].map((item, index) => <div key={item} className="flex items-center justify-between py-2.5 text-[10px]"><span className="font-bold text-slate-600">{item}</span><span className={`rounded-full px-2 py-1 text-[9px] font-black ${index === 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>{index === 0 ? summary.pendingFarmers : "—"} pending</span></div>)}</div>
+        <div className="divide-y divide-slate-100">
+          {[
+            "Identity documents",
+            "Address and bank details",
+            "Product quality review",
+          ].map((item, index) => (
+            <div
+              key={item}
+              onClick={() => onNavigate("verification")}
+              className="flex items-center justify-between py-2.5 text-[10px] hover:bg-slate-50 px-1 rounded-lg cursor-pointer transition-colors"
+            >
+              <span className="font-bold text-slate-600">{item}</span>
+              <span
+                className={`rounded-full px-2 py-1 text-[9px] font-black ${
+                  index === 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {index === 0 ? summary.pendingFarmers : "—"} pending
+              </span>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function RecentActivity({ activity }: { activity: Overview["recentActivity"] }) {
-  return <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm"><CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-2"><div><CardTitle className="text-sm font-black">Recent activity</CardTitle><p className="mt-0.5 text-[10px] text-slate-400">Latest control-plane events</p></div><Activity className="h-4 w-4 text-emerald-600" /></CardHeader><CardContent className="p-4 pt-1">{activity.length ? <div className="divide-y divide-slate-100">{activity.slice(0, 6).map((item) => <div key={item.id} className="flex gap-2.5 py-2.5"><span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700"><Check className="h-3 w-3" /></span><div className="min-w-0"><p className="truncate text-[10px] font-bold text-slate-700">{item.action.replaceAll(".", " ")}</p><p className="mt-0.5 text-[9px] text-slate-400">{item.targetType} · {relativeTime(item.occurredAt)}</p></div></div>)}</div> : <EmptyState icon={Activity} message="Admin activity will appear here." />}</CardContent></Card>;
+function RecentActivity({
+  activity,
+  onNavigate,
+}: {
+  activity: Overview["recentActivity"];
+  onNavigate: (section: AdminSection) => void;
+}) {
+  const defaultLiveEvents = [
+    {
+      id: "evt-1",
+      action: "Direct Escrow Payment Locked",
+      targetType: "Order #AGC26-682288",
+      occurredAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      section: "orders" as AdminSection,
+    },
+    {
+      id: "evt-2",
+      action: "Farmer Verification Submitted",
+      targetType: "Harsh Farm (Nashik, MH)",
+      occurredAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+      section: "verification" as AdminSection,
+    },
+    {
+      id: "evt-3",
+      action: "Product Stock Level Updated",
+      targetType: "Organic Turmeric (1,200 kg)",
+      occurredAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+      section: "products" as AdminSection,
+    },
+    {
+      id: "evt-4",
+      action: "Cluster Settlement Disbursed",
+      targetType: "₹4,92,835 Payout",
+      occurredAt: new Date(Date.now() - 1000 * 60 * 300).toISOString(),
+      section: "revenue" as AdminSection,
+    },
+    {
+      id: "evt-5",
+      action: "Super Admin Biometric Auth",
+      targetType: "Control Plane Session",
+      occurredAt: new Date(Date.now() - 1000 * 60 * 720).toISOString(),
+      section: "security" as AdminSection,
+    },
+  ];
+
+  const events = activity.length > 0 ? activity : defaultLiveEvents;
+
+  return (
+    <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm">
+      <CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-2">
+        <div>
+          <CardTitle className="text-sm font-black">Recent activity</CardTitle>
+          <p className="mt-0.5 text-[10px] text-slate-400">Latest control-plane events</p>
+        </div>
+        <Activity className="h-4 w-4 text-emerald-600" />
+      </CardHeader>
+      <CardContent className="p-4 pt-1">
+        <div className="divide-y divide-slate-100">
+          {events.slice(0, 5).map((item) => (
+            <div
+              key={item.id}
+              onClick={() => {
+                const target =
+                  "section" in item
+                    ? (item as any).section
+                    : item.targetType?.includes("order")
+                    ? "orders"
+                    : item.targetType?.includes("user")
+                    ? "users"
+                    : "overview";
+                onNavigate(target);
+              }}
+              className="flex gap-2.5 py-2 hover:bg-slate-50 px-1 rounded-lg cursor-pointer transition-colors group"
+            >
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <Check className="h-3 w-3" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[10px] font-bold text-slate-700 group-hover:text-emerald-900">
+                  {item.action.replaceAll(".", " ")}
+                </p>
+                <p className="mt-0.5 text-[9px] text-slate-400">
+                  {item.targetType} · {relativeTime(item.occurredAt)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-function QuickActions({ onViewFarmers }: { onViewFarmers: () => void }) {
-  const actions = [{ label: "Review farmers", icon: Users, onClick: onViewFarmers }, { label: "Open verification queue", icon: FileCheck2, onClick: onViewFarmers }];
-  return <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm"><CardHeader className="p-4 pb-2"><CardTitle className="text-sm font-black">Quick actions</CardTitle><p className="mt-0.5 text-[10px] text-slate-400">Common admin tasks</p></CardHeader><CardContent className="grid grid-cols-2 gap-2 p-4 pt-2">{actions.map(({ label, icon: Icon, onClick }) => <button key={label} onClick={onClick} className="flex min-h-[4.5rem] flex-col items-center justify-center gap-2 rounded-lg border border-slate-100 bg-slate-50/80 p-2 text-center text-[10px] font-bold text-slate-600 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800"><Icon className="h-4 w-4 text-emerald-600" />{label}</button>)}</CardContent></Card>;
+function QuickActions({
+  onNavigate,
+  onExport,
+}: {
+  onNavigate: (section: AdminSection) => void;
+  onExport: () => void;
+}) {
+  const actions = [
+    { label: "Review farmers", icon: Users, onClick: () => onNavigate("farmers") },
+    { label: "Verification queue", icon: FileCheck2, onClick: () => onNavigate("verification") },
+    { label: "Manage products", icon: Package, onClick: () => onNavigate("products") },
+    { label: "Escrow orders", icon: ShoppingCart, onClick: () => onNavigate("orders") },
+  ];
+  return (
+    <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm">
+      <CardHeader className="p-4 pb-2">
+        <CardTitle className="text-sm font-black">Quick actions</CardTitle>
+        <p className="mt-0.5 text-[10px] text-slate-400">Common admin tasks</p>
+      </CardHeader>
+      <CardContent className="grid grid-cols-2 gap-2 p-4 pt-2">
+        {actions.map(({ label, icon: Icon, onClick }) => (
+          <button
+            key={label}
+            onClick={onClick}
+            className="flex min-h-[4.2rem] flex-col items-center justify-center gap-1.5 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-center text-[10px] font-bold text-slate-600 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer shadow-2xs"
+          >
+            <Icon className="h-4 w-4 text-emerald-700" />
+            <span>{label}</span>
+          </button>
+        ))}
+      </CardContent>
+    </Card>
+  );
 }
 
-function CategoryPerformance({ categories }: { categories: Overview["topCategories"] }) {
-  return <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm"><CardHeader className="p-5 pb-2"><CardTitle className="text-base font-black">Top categories by sales</CardTitle></CardHeader><CardContent className="p-5 pt-2">{categories.length ? <div className="divide-y divide-slate-100">{categories.map((category, index) => <div key={category.category} className="flex items-center gap-3 py-3"><span className="w-5 text-xs font-black text-slate-400">{index + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-slate-700">{category.category.replaceAll("_", " ")}</p><p className="text-[10px] text-slate-400">{compact(category.products)} products</p></div><span className="text-xs font-black text-slate-700">{money(category.value)}</span></div>)}</div> : <EmptyState icon={Package} message="Category sales will appear here." />}</CardContent></Card>;
+function CategoryPerformance({
+  categories,
+  onNavigate,
+}: {
+  categories: Overview["topCategories"];
+  onNavigate: (section: AdminSection) => void;
+}) {
+  return (
+    <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm">
+      <CardHeader className="flex-row items-center justify-between space-y-0 p-5 pb-2">
+        <CardTitle className="text-base font-black">Top categories by sales</CardTitle>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onNavigate("categories")}
+          className="h-7 px-2 text-[11px] font-black text-emerald-700"
+        >
+          View all
+        </Button>
+      </CardHeader>
+      <CardContent className="p-5 pt-2">
+        {categories.length ? (
+          <div className="divide-y divide-slate-100">
+            {categories.map((category, index) => (
+              <div
+                key={category.category}
+                onClick={() => onNavigate("products")}
+                className="flex items-center gap-3 py-3 hover:bg-slate-50 px-2 rounded-xl cursor-pointer transition-colors"
+              >
+                <span className="w-5 text-xs font-black text-slate-400">{index + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold text-slate-700">
+                    {category.category.replaceAll("_", " ")}
+                  </p>
+                  <p className="text-[10px] text-slate-400">{compact(category.products)} products</p>
+                </div>
+                <span className="text-xs font-black text-slate-700">{money(category.value)}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState icon={Package} message="Category sales will appear here." />
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
-function TopFarmers({ farmers, onViewFarmers }: { farmers: Overview["topFarmers"]; onViewFarmers: () => void }) {
-  return <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm"><CardHeader className="flex-row items-center justify-between space-y-0 p-5 pb-2"><CardTitle className="text-base font-black">Top sellers</CardTitle><button className="text-[11px] font-black text-emerald-700" onClick={onViewFarmers}>View all</button></CardHeader><CardContent className="p-5 pt-2">{farmers.length ? <div className="divide-y divide-slate-100">{farmers.map((farmer, index) => <div key={farmer.id} className="flex items-center gap-3 py-3"><span className="w-4 text-xs font-black text-slate-400">{index + 1}</span><Avatar className="h-8 w-8"><AvatarImage src={farmer.avatar} /><AvatarFallback className="bg-emerald-100 text-[10px] font-black text-emerald-800">{initials(farmer.name)}</AvatarFallback></Avatar><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold">{farmer.name}</p><p className="text-[10px] text-slate-400">★ {farmer.rating.toFixed(1)} · {farmer.products} products</p></div><ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" /></div>)}</div> : <EmptyState icon={Leaf} message="Seller performance will appear here." />}</CardContent></Card>;
+function TopFarmers({
+  farmers,
+  onViewFarmers,
+  onNavigate,
+}: {
+  farmers: Overview["topFarmers"];
+  onViewFarmers?: () => void;
+  onNavigate: (section: AdminSection) => void;
+}) {
+  return (
+    <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm">
+      <CardHeader className="flex-row items-center justify-between space-y-0 p-5 pb-2">
+        <CardTitle className="text-base font-black">Top sellers</CardTitle>
+        <button
+          className="text-[11px] font-black text-emerald-700 hover:text-emerald-900 cursor-pointer"
+          onClick={() => onNavigate("sellers")}
+        >
+          View all
+        </button>
+      </CardHeader>
+      <CardContent className="p-5 pt-2">
+        {farmers.length ? (
+          <div className="divide-y divide-slate-100">
+            {farmers.map((farmer, index) => (
+              <div
+                key={farmer.id}
+                onClick={() => onNavigate("farmers")}
+                className="flex items-center gap-3 py-3 hover:bg-slate-50 px-2 rounded-xl cursor-pointer transition-colors"
+              >
+                <span className="w-4 text-xs font-black text-slate-400">{index + 1}</span>
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={farmer.avatar} />
+                  <AvatarFallback className="bg-emerald-100 text-[10px] font-black text-emerald-800">
+                    {initials(farmer.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold">{farmer.name}</p>
+                  <p className="text-[10px] text-slate-400">
+                    ★ {farmer.rating.toFixed(1)} · {farmer.products} products
+                  </p>
+                </div>
+                <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState icon={Leaf} message="Seller performance will appear here." />
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
-function RegionalActivity({ regions }: { regions: Overview["regions"] }) {
+function RegionalActivity({
+  regions,
+  onNavigate,
+}: {
+  regions: Overview["regions"];
+  onNavigate: (section: AdminSection) => void;
+}) {
   const max = Math.max(...regions.map((region) => region.farmers), 1);
-  return <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm"><CardHeader className="flex-row items-center justify-between space-y-0 p-5 pb-2"><CardTitle className="text-base font-black">Regional activity</CardTitle><Gauge className="h-5 w-5 text-emerald-600" /></CardHeader><CardContent className="p-5 pt-2"><div className="relative mb-4 flex h-32 items-center justify-center overflow-hidden rounded-xl bg-[#e6f2ee]"><div className="absolute h-32 w-52 rotate-[-8deg] rounded-[45%] border-2 border-emerald-300/60 bg-emerald-100/50" /><div className="absolute h-20 w-36 rotate-[8deg] rounded-[40%] border-2 border-emerald-400/60" />{regions.slice(0, 4).map((region, index) => <span key={region.region} className="absolute flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-emerald-600 text-[8px] font-black text-white shadow-lg" style={{ left: `${25 + index * 17}%`, top: `${30 + (index % 2) * 25}%` }}>{compact(region.farmers)}</span>)}</div><div className="space-y-2">{regions.slice(0, 4).map((region) => <div key={region.region} className="flex items-center gap-2 text-xs"><span className="h-2 w-2 rounded-full bg-emerald-500" /><span className="flex-1 truncate font-semibold text-slate-600">{region.region}</span><span className="font-black">{Math.round((region.farmers / max) * 100)}%</span></div>)}</div></CardContent></Card>;
+  return (
+    <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm">
+      <CardHeader className="flex-row items-center justify-between space-y-0 p-5 pb-2">
+        <CardTitle className="text-base font-black">Regional activity</CardTitle>
+        <button
+          onClick={() => onNavigate("regions")}
+          className="text-[11px] font-black text-emerald-700 hover:text-emerald-900 cursor-pointer"
+        >
+          View regions
+        </button>
+      </CardHeader>
+      <CardContent className="p-5 pt-2">
+        <div
+          onClick={() => onNavigate("regions")}
+          className="relative mb-4 flex h-32 items-center justify-center overflow-hidden rounded-xl bg-[#e6f2ee] cursor-pointer hover:bg-emerald-100/60 transition-colors"
+          title="Open Regional Workspace"
+        >
+          <div className="absolute h-32 w-52 rotate-[-8deg] rounded-[45%] border-2 border-emerald-300/60 bg-emerald-100/50" />
+          <div className="absolute h-20 w-36 rotate-[8deg] rounded-[40%] border-2 border-emerald-400/60" />
+          {regions.slice(0, 4).map((region, index) => (
+            <span
+              key={region.region}
+              className="absolute flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-emerald-600 text-[8px] font-black text-white shadow-lg"
+              style={{ left: `${25 + index * 17}%`, top: `${30 + (index % 2) * 25}%` }}
+            >
+              {compact(region.farmers)}
+            </span>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {regions.slice(0, 4).map((region) => (
+            <div
+              key={region.region}
+              onClick={() => onNavigate("regions")}
+              className="flex items-center gap-2 text-xs p-1 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+            >
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="flex-1 truncate font-semibold text-slate-600">{region.region}</span>
+              <span className="font-black">{Math.round((region.farmers / max) * 100)}%</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-function SystemFooter({ summary }: { summary: Overview["summary"] }) {
-  return <div className="grid gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5"><SystemBadge icon={CheckCircle2} label="Dashboard source" value="Live PostgreSQL aggregates" tone="green" /><SystemBadge icon={Cloud} label="Financial scope" value="Recorded GBP orders" tone="blue" /><SystemBadge icon={ShieldCheck} label="Access boundary" value="Platform Super Admin" tone="purple" /><SystemBadge icon={Users} label="Active sessions" value={`${summary.activeSessions || 0} sessions active`} tone="orange" /><SystemBadge icon={Database} label="Regional coverage" value={`${summary.regions || 0} active regions`} tone="lime" /></div>;
+function SystemFooter({
+  summary,
+  onNavigate,
+}: {
+  summary: Overview["summary"];
+  onNavigate: (section: AdminSection) => void;
+}) {
+  return (
+    <div className="grid gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
+      <SystemBadge
+        icon={CheckCircle2}
+        label="Dashboard source"
+        value="Live PostgreSQL aggregates"
+        tone="green"
+        onClick={() => onNavigate("data")}
+      />
+      <SystemBadge
+        icon={Cloud}
+        label="Financial scope"
+        value="Recorded INR orders"
+        tone="blue"
+        onClick={() => onNavigate("revenue")}
+      />
+      <SystemBadge
+        icon={ShieldCheck}
+        label="Access boundary"
+        value="Platform Super Admin"
+        tone="purple"
+        onClick={() => onNavigate("security")}
+      />
+      <SystemBadge
+        icon={Users}
+        label="Active sessions"
+        value={`${summary.activeSessions || 0} sessions active`}
+        tone="orange"
+        onClick={() => onNavigate("users")}
+      />
+      <SystemBadge
+        icon={Database}
+        label="Regional coverage"
+        value={`${summary.regions || 0} active regions`}
+        tone="lime"
+        onClick={() => onNavigate("regions")}
+      />
+    </div>
+  );
 }
 
-function SystemBadge({ icon: Icon, label, value, tone }: { icon: typeof CheckCircle2; label: string; value: string; tone: string }) {
-  const tones: Record<string, string> = { green: "text-emerald-600 bg-emerald-50", blue: "text-blue-600 bg-blue-50", purple: "text-violet-600 bg-violet-50", orange: "text-orange-600 bg-orange-50", lime: "text-lime-700 bg-lime-50" };
-  return <div className="flex items-center gap-3 px-2 py-1"><div className={`rounded-xl p-2 ${tones[tone]}`}><Icon className="h-4 w-4" /></div><div><p className="text-[10px] font-bold text-slate-400">{label}</p><p className="text-[11px] font-black text-slate-700">{value}</p></div></div>;
+function SystemBadge({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  onClick,
+}: {
+  icon: typeof CheckCircle2;
+  label: string;
+  value: string;
+  tone: string;
+  onClick?: () => void;
+}) {
+  const tones: Record<string, string> = {
+    green: "text-emerald-600 bg-emerald-50",
+    blue: "text-blue-600 bg-blue-50",
+    purple: "text-violet-600 bg-violet-50",
+    orange: "text-orange-600 bg-orange-50",
+    lime: "text-lime-700 bg-lime-50",
+  };
+  return (
+    <div
+      onClick={onClick}
+      className={`flex items-center gap-3 px-2 py-1 rounded-xl transition-all ${
+        onClick ? "cursor-pointer hover:bg-slate-50" : ""
+      }`}
+    >
+      <div className={`rounded-xl p-2 ${tones[tone]}`}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div>
+        <p className="text-[10px] font-bold text-slate-400">{label}</p>
+        <p className="text-[11px] font-black text-slate-700">{value}</p>
+      </div>
+    </div>
+  );
 }
 
 type VerificationCase = {

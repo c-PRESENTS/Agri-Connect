@@ -2,6 +2,7 @@ export const PUBLIC_ROUTE_LINKS = [
   { path: "/", seoKey: "home" },
   { path: "/categories", seoKey: "home" },
   { path: "/login", seoKey: "login" },
+  { path: "/admin/sign-in", seoKey: "login" },
   { path: "/dashboard", seoKey: "dashboard" },
   { path: "/dashboard/photo-sell", seoKey: "photoSell" },
   { path: "/dashboard/list-product", seoKey: "photoSell" },
@@ -47,6 +48,10 @@ export const PUBLIC_ROUTE_LINKS = [
 ] as const;
 
 export const DYNAMIC_ROUTE_LINKS = [
+  { pattern: /^\/admin(?:\/.*)?$/, seoKey: "dashboard" },
+  { pattern: /^\/control-centre(?:\/.*)?$/, seoKey: "dashboard" },
+  { pattern: /^\/dashboard-centre(?:\/.*)?$/, seoKey: "dashboard" },
+  { pattern: /^\/regional-organisation(?:\/.*)?$/, seoKey: "dashboard" },
   { pattern: /^\/products\/[^/]+$/, seoKey: "productDetail" },
   { pattern: /^\/sellers\/[^/]+$/, seoKey: "sellerProfile" },
   { pattern: /^\/ship\/track\/[^/]+$/, seoKey: "shipTrack" },

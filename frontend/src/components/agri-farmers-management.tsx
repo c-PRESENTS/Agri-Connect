@@ -140,11 +140,11 @@ type Overview = {
 };
 
 function formatMoney(amount: number): string {
-  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(amount);
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
 }
 
 function compactNumber(value: number): string {
-  return new Intl.NumberFormat("en-GB", { notation: "compact", maximumFractionDigits: 1 }).format(value);
+  return new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 }).format(value);
 }
 
 function initials(value: string) {
@@ -193,7 +193,7 @@ export function AgriFarmersManagement({
   const [newFarmerName, setNewFarmerName] = useState("");
   const [newFarmerEmail, setNewFarmerEmail] = useState("");
   const [newFarmerPhone, setNewFarmerPhone] = useState("");
-  const [newFarmerRegion, setNewFarmerRegion] = useState("Essex");
+  const [newFarmerRegion, setNewFarmerRegion] = useState("Maharashtra");
   const [newFarmerVerified, setNewFarmerVerified] = useState(true);
 
   // Form states for Edit Farmer
@@ -522,25 +522,46 @@ export function AgriFarmersManagement({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {items.map((farmer) => {
-                  const isSelected = selectedFarmer === farmer.id;
-                  return (
-                    <tr
-                      key={farmer.id}
-                      className={`group transition hover:bg-emerald-50/35 ${isSelected ? "bg-emerald-50/50" : ""}`}
-                    >
-                      <td className="px-4 py-2.5">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(farmer.id)}
-                          onChange={() =>
-                            setSelectedIds((ids) =>
-                              ids.includes(farmer.id) ? ids.filter((id) => id !== farmer.id) : [...ids, farmer.id]
-                            )
-                          }
-                          aria-label={`Select ${farmer.name}`}
-                        />
-                      </td>
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="py-14 text-center">
+                      <div className="mx-auto flex max-w-md flex-col items-center justify-center text-center">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 mb-3 shadow-inner">
+                          <Sprout className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-sm font-black text-slate-800">No registered farmers found</h3>
+                        <p className="mt-1 text-xs text-slate-500 max-w-sm">
+                          There are currently no registered farmers on the platform. When farmers register or are added by an administrator, they will appear in this directory.
+                        </p>
+                        <Button
+                          onClick={() => setAddFarmerOpen(true)}
+                          className="mt-4 h-8 rounded-xl bg-[#0d604e] px-3.5 text-xs font-bold text-white shadow-sm hover:bg-[#094d42]"
+                        >
+                          <Plus className="mr-1.5 h-3.5 w-3.5" /> Add first farmer
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((farmer) => {
+                    const isSelected = selectedFarmer === farmer.id;
+                    return (
+                      <tr
+                        key={farmer.id}
+                        className={`group transition hover:bg-emerald-50/35 ${isSelected ? "bg-emerald-50/50" : ""}`}
+                      >
+                        <td className="px-4 py-2.5">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(farmer.id)}
+                            onChange={() =>
+                              setSelectedIds((ids) =>
+                                ids.includes(farmer.id) ? ids.filter((id) => id !== farmer.id) : [...ids, farmer.id]
+                              )
+                            }
+                            aria-label={`Select ${farmer.name}`}
+                          />
+                        </td>
 
                       <td className="px-2 py-2.5">
                         <button className="flex items-center gap-2.5 text-left" onClick={() => setSelectedFarmer(farmer.id)}>
@@ -679,7 +700,7 @@ export function AgriFarmersManagement({
                       </td>
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           </div>
@@ -854,7 +875,7 @@ export function AgriFarmersManagement({
                 <Input
                   value={newFarmerPhone}
                   onChange={(e) => setNewFarmerPhone(e.target.value)}
-                  placeholder="+44 7911 123456"
+                  placeholder="+91 98765 43210"
                   className="mt-1 h-9 rounded-xl text-xs"
                 />
               </div>
@@ -865,7 +886,22 @@ export function AgriFarmersManagement({
                   onChange={(e) => setNewFarmerRegion(e.target.value)}
                   className="mt-1 h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700"
                 >
-                  {["Essex", "Kent", "Norfolk", "Suffolk", "Lincolnshire", "Cambridgeshire", "Somerset", "Oxfordshire"].map((r) => (
+                  {[
+                    "Maharashtra",
+                    "Punjab",
+                    "Gujarat",
+                    "Uttar Pradesh",
+                    "Karnataka",
+                    "Tamil Nadu",
+                    "Rajasthan",
+                    "Andhra Pradesh",
+                    "Madhya Pradesh",
+                    "Haryana",
+                    "West Bengal",
+                    "Kerala",
+                    "Bihar",
+                    "Odisha",
+                  ].map((r) => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
@@ -1011,7 +1047,22 @@ export function AgriFarmersManagement({
               }
               className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800"
             >
-              {["Essex", "Kent", "Norfolk", "Suffolk", "Lincolnshire", "Cambridgeshire", "Somerset", "Oxfordshire", "Yorkshire"].map((r) => (
+              {[
+                "Maharashtra",
+                "Punjab",
+                "Gujarat",
+                "Uttar Pradesh",
+                "Karnataka",
+                "Tamil Nadu",
+                "Rajasthan",
+                "Andhra Pradesh",
+                "Madhya Pradesh",
+                "Haryana",
+                "West Bengal",
+                "Kerala",
+                "Bihar",
+                "Odisha",
+              ].map((r) => (
                 <option key={r} value={r}>{r}</option>
               ))}
             </select>
@@ -1166,26 +1217,30 @@ function TopPerformingFarmers({ farmers, onSelect }: { farmers: Overview["topFar
         <span className="text-[10px] font-bold text-emerald-700">Live Revenue</span>
       </CardHeader>
       <CardContent className="space-y-1.5 p-3">
-        {farmers.slice(0, 5).map((farmer, index) => (
-          <button
-            key={farmer.id}
-            className="flex w-full items-center gap-2 rounded-xl p-1.5 text-left transition hover:bg-emerald-50"
-            onClick={() => onSelect(farmer.id)}
-          >
-            <span className="w-3 text-[10px] font-black text-slate-400">{index + 1}</span>
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={farmer.avatar} />
-              <AvatarFallback className="bg-emerald-100 text-[9px] font-black text-emerald-800">
-                {initials(farmer.name)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{farmer.name}</span>
-            <span className="text-right text-[10px] font-black text-slate-700">
-              {farmer.revenue ? formatMoney(farmer.revenue) : "—"}
-              <span className="block text-[9px] font-bold text-amber-600">★ {farmer.rating.toFixed(1)}</span>
-            </span>
-          </button>
-        ))}
+        {farmers.length > 0 ? (
+          farmers.slice(0, 5).map((farmer, index) => (
+            <button
+              key={farmer.id}
+              className="flex w-full items-center gap-2 rounded-xl p-1.5 text-left transition hover:bg-emerald-50"
+              onClick={() => onSelect(farmer.id)}
+            >
+              <span className="w-3 text-[10px] font-black text-slate-400">{index + 1}</span>
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={farmer.avatar} />
+                <AvatarFallback className="bg-emerald-100 text-[9px] font-black text-emerald-800">
+                  {initials(farmer.name)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{farmer.name}</span>
+              <span className="text-right text-[10px] font-black text-slate-700">
+                {farmer.revenue ? formatMoney(farmer.revenue) : "—"}
+                <span className="block text-[9px] font-bold text-amber-600">★ {farmer.rating.toFixed(1)}</span>
+              </span>
+            </button>
+          ))
+        ) : (
+          <EmptyState icon={Leaf} message="No registered farmers with sales yet." />
+        )}
       </CardContent>
     </Card>
   );

@@ -254,29 +254,29 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
         <Input
           ref={inputRef}
           type="search"
-          placeholder={t("search.placeholder", "Search for products, farmers, categories...")}
+          placeholder={t("search.placeholder", "Search produce, farmers, categories...")}
           value={inputVal}
           onChange={handleChange}
           onFocus={() => setOpen(true)}
-          className="pl-4 pr-24 h-10 text-xs sm:text-sm font-medium bg-white dark:bg-card border border-slate-200 dark:border-border/80 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 transition-all rounded-xl w-full placeholder:text-slate-400"
+          className="pl-4.5 pr-26 h-11 text-xs sm:text-sm font-bold bg-white dark:bg-card border border-slate-200 dark:border-border/80 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 transition-all rounded-xl w-full placeholder:text-slate-400/90"
           data-testid="input-search"
         />
         {inputVal && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-22 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+            className="absolute right-24 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1.5"
             data-testid="button-search-clear"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4.5 w-4.5" />
           </button>
         )}
         <button
           type="submit"
-          className="absolute right-1 top-1/2 -translate-y-1/2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs sm:text-sm font-black px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
           data-testid="button-search-submit"
         >
-          <Search className="h-3.5 w-3.5" />
+          <Search className="h-4 w-4 stroke-[2.5]" />
           <span>Search</span>
         </button>
       </form>

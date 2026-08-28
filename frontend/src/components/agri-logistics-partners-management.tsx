@@ -92,7 +92,7 @@ export type LogisticsPartnerRecord = {
   status: "active" | "suspended" | string;
   rating?: number | null;
   isVerified?: boolean;
-  activeDeliveries?: number;
+  activeDeliveries?: number | null;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -103,9 +103,9 @@ export type LogisticsPartnerDetail = {
   email: string;
   phone?: string;
   avatar?: string;
-  location: string;
+  location?: string;
   status: string;
-  rating: number;
+  rating?: number;
   isVerified: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -119,7 +119,7 @@ export type LogisticsPartnerDetail = {
 };
 
 function timeAgo(dateString?: string): string {
-  if (!dateString) return "Recently";
+  if (!dateString) return "—";
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -198,10 +198,10 @@ export function AgriLogisticsPartnersManagement({
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
-  const [newLocation, setNewLocation] = useState("East Anglia (Norwich Hub)");
+  const [newLocation, setNewLocation] = useState("");
 
   // Query logistics partners
-  const { data: partnersData, isLoading, refetch, isFetching } = useQuery<{ records: LogisticsPartnerRecord[] }>({
+  const { data: partnersData, isLoading, isError, refetch, isFetching } = useQuery<{ records: LogisticsPartnerRecord[] }>({
     queryKey: ["/api/admin/resources/logistics-partners"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/admin/resources/logistics-partners");
@@ -262,17 +262,18 @@ export function AgriLogisticsPartnersManagement({
   const stats = useMemo(() => {
     const total = partners.length;
     const active = partners.filter((p) => p.status === "active").length;
-    const liveShipments = partners.reduce((sum, p) => sum + (p.activeDeliveries ?? 2), 0);
-    const refrigerated = partners.filter((p) => p.name.toLowerCase().includes("cool") || p.name.toLowerCase().includes("fresh")).length || 2;
-    const bulkGrain = partners.filter((p) => p.name.toLowerCase().includes("grain") || p.name.toLowerCase().includes("bulk")).length || 2;
+    const recordedDeliveryCounts = partners
+      .map((partner) => partner.activeDeliveries)
+      .filter((value): value is number => typeof value === "number");
+    const liveShipments = recordedDeliveryCounts.length
+      ? recordedDeliveryCounts.reduce((sum, value) => sum + value, 0)
+      : null;
     const suspended = partners.filter((p) => p.status === "suspended").length;
 
     return {
       total,
       active,
       liveShipments,
-      refrigerated,
-      bulkGrain,
       suspended,
     };
   }, [partners]);
@@ -295,6 +296,7 @@ export function AgriLogisticsPartnersManagement({
       setNewName("");
       setNewEmail("");
       setNewPhone("");
+      setNewLocation("");
     },
     onError: (err: Error) => {
       toast({ title: "Onboarding failed", description: err.message, variant: "destructive" });
@@ -347,8 +349,8 @@ export function AgriLogisticsPartnersManagement({
       `"${p.phone || ""}"`,
       `"${p.location || ""}"`,
       `"${p.status}"`,
-      `"${p.rating || 4.9}"`,
-      `"${p.activeDeliveries ?? 0}"`,
+      `"${p.rating ?? ""}"`,
+      `"${p.activeDeliveries ?? ""}"`,
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
@@ -409,6 +411,7 @@ export function AgriLogisticsPartnersManagement({
             variant="outline"
             size="sm"
             onClick={handleExportCsv}
+            disabled={filteredPartners.length === 0}
             className="h-9 gap-1.5 border-slate-300 bg-white font-medium text-slate-700 shadow-sm hover:bg-slate-50"
           >
             <Download className="h-3.5 w-3.5" />
@@ -446,24 +449,24 @@ export function AgriLogisticsPartnersManagement({
         />
         <StatCard
           title="Refrigerated / Chill"
-          value={stats.refrigerated.toLocaleString()}
-          subtitle="Multi-temp cold-chain"
+          value="No data"
+          subtitle="Capabilities not recorded"
           icon={ThermometerSnowflake}
           iconBg="bg-blue-50"
           iconColor="text-blue-600"
         />
         <StatCard
           title="Bulk Grain & Tipper"
-          value={stats.bulkGrain.toLocaleString()}
-          subtitle="Heavy arable haulage"
+          value="No data"
+          subtitle="Capabilities not recorded"
           icon={Box}
           iconBg="bg-amber-50"
           iconColor="text-amber-600"
         />
         <StatCard
           title="Live Shipments"
-          value={stats.liveShipments.toLocaleString()}
-          subtitle="Deliveries in transit"
+          value={stats.liveShipments == null ? "No data" : stats.liveShipments.toLocaleString()}
+          subtitle="Linked delivery records"
           icon={Navigation2}
           iconBg="bg-teal-50"
           iconColor="text-teal-600"
@@ -613,12 +616,28 @@ export function AgriLogisticsPartnersManagement({
                     </td>
                   </tr>
                 ))
+              ) : isError ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-rose-600">
+                    <AlertCircle className="mx-auto mb-2 h-8 w-8 text-rose-400" />
+                    <p className="text-sm font-semibold">Logistics partners could not be loaded</p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>
+                      Try again
+                    </Button>
+                  </td>
+                </tr>
               ) : paginatedPartners.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
                     <Truck className="mx-auto mb-2 h-8 w-8 text-slate-300" />
-                    <p className="text-sm font-semibold">No logistics partner records found</p>
-                    <p className="text-xs">Enroll a new freight partner or adjust your search filter.</p>
+                    <p className="text-sm font-semibold">
+                      {partners.length === 0 ? "No logistics partners registered" : "No logistics partner records found"}
+                    </p>
+                    <p className="text-xs">
+                      {partners.length === 0
+                        ? "Real partner records will appear here after onboarding."
+                        : "Adjust your search or filters."}
+                    </p>
                   </td>
                 </tr>
               ) : (
@@ -662,7 +681,7 @@ export function AgriLogisticsPartnersManagement({
                       <td className="px-4 py-3.5 max-w-xs">
                         <div className="flex items-center gap-1.5 text-slate-800">
                           <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                          <span className="truncate">{partner.location || "UK Distribution Hub"}</span>
+                          <span className="truncate">{partner.location || "—"}</span>
                         </div>
                       </td>
 
@@ -673,7 +692,7 @@ export function AgriLogisticsPartnersManagement({
                       <td className="px-4 py-3.5 text-center">
                         <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">
                           <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                          {partner.rating?.toFixed(1) || "4.9"}
+                          {typeof partner.rating === "number" ? partner.rating.toFixed(1) : "—"}
                         </span>
                       </td>
 
@@ -696,7 +715,7 @@ export function AgriLogisticsPartnersManagement({
 
                       <td className="px-4 py-3.5 text-center">
                         <Badge variant="outline" className="bg-slate-50 font-mono text-[11px]">
-                          {partner.activeDeliveries ?? 0} active
+                          {typeof partner.activeDeliveries === "number" ? `${partner.activeDeliveries} active` : "—"}
                         </Badge>
                       </td>
 
@@ -861,20 +880,22 @@ export function AgriLogisticsPartnersManagement({
                 <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <div className="rounded-lg bg-white/10 p-2.5 text-center">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Rating</p>
-                    <p className="text-base font-black text-lime-300">{partnerDetail.rating?.toFixed(1) || "4.9"} ★</p>
+                    <p className="text-base font-black text-lime-300">
+                      {typeof partnerDetail.rating === "number" ? `${partnerDetail.rating.toFixed(1)} ★` : "—"}
+                    </p>
                   </div>
                   <div className="rounded-lg bg-white/10 p-2.5 text-center">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Carrier Hub</p>
-                    <p className="text-xs font-bold text-white truncate">{partnerDetail.location}</p>
+                    <p className="text-xs font-bold text-white truncate">{partnerDetail.location || "—"}</p>
                   </div>
                   <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Verified</p>
-                    <p className="text-xs font-bold text-white">DEFRA / FTA</p>
+                    <p className="text-[10px] uppercase tracking-wider text-white/60">Account Verified</p>
+                    <p className="text-xs font-bold text-white">{partnerDetail.isVerified ? "Yes" : "No"}</p>
                   </div>
                   <div className="rounded-lg bg-white/10 p-2.5 text-center">
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Member Since</p>
                     <p className="text-[11px] font-medium text-white/80">
-                      {partnerDetail.createdAt ? new Date(partnerDetail.createdAt).toLocaleDateString("en-GB") : "Active"}
+                      {partnerDetail.createdAt ? new Date(partnerDetail.createdAt).toLocaleDateString("en-GB") : "—"}
                     </p>
                   </div>
                 </div>
@@ -905,11 +926,11 @@ export function AgriLogisticsPartnersManagement({
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-100">
                         <span className="text-slate-500">Depot Hub & Region</span>
-                        <span className="font-semibold text-slate-900 max-w-[220px] text-right">{partnerDetail.location}</span>
+                        <span className="font-semibold text-slate-900 max-w-[220px] text-right">{partnerDetail.location || "—"}</span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Compliance & Roadworthiness</span>
-                        <span className="font-bold text-emerald-700">Verified FTA Compliant</span>
+                        <span className="text-slate-500">Account Verification</span>
+                        <span className="font-bold text-slate-900">{partnerDetail.isVerified ? "Verified" : "Not verified"}</span>
                       </div>
                       <div className="flex justify-between py-1">
                         <span className="text-slate-500">Operating Status</span>
@@ -983,7 +1004,7 @@ export function AgriLogisticsPartnersManagement({
             <div className="space-y-1">
               <Label className="text-xs font-bold text-slate-700">Company / Carrier Name *</Label>
               <Input
-                placeholder="e.g. AgriFreight Cool-Chain UK Ltd"
+                placeholder="Enter the carrier name"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 className="h-9 text-xs"
@@ -1004,7 +1025,7 @@ export function AgriLogisticsPartnersManagement({
             <div className="space-y-1">
               <Label className="text-xs font-bold text-slate-700">Telephone / 24/7 Ops Desk</Label>
               <Input
-                placeholder="+44 1603 882910"
+                placeholder="Enter an operations phone number"
                 value={newPhone}
                 onChange={(e) => setNewPhone(e.target.value)}
                 className="h-9 text-xs"
@@ -1014,7 +1035,7 @@ export function AgriLogisticsPartnersManagement({
             <div className="space-y-1">
               <Label className="text-xs font-bold text-slate-700">Depot Hub & Primary Operating Region</Label>
               <Input
-                placeholder="e.g. East Anglia (Norwich Hub)"
+                placeholder="Enter the depot or operating region"
                 value={newLocation}
                 onChange={(e) => setNewLocation(e.target.value)}
                 className="h-9 text-xs"
