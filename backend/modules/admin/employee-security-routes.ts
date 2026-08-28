@@ -15,7 +15,7 @@ import { isAuthenticated } from "../../auth";
 import { requireRecentAuthentication } from "../../auth/session-security";
 import { authStorage } from "../../auth/storage";
 import { requireAdminPermission } from "../../organisations/access";
-import { getAdminEmployeeDetail, listAdminEmployees, listUserSecurityEvents, listUserSessions } from "../../organisations/admin-employee-repository";
+import { getAdminEmployeeDetail, listAdminEmployees, listUserSecurityEvents, listUserSessions, getSecurityPosture } from "../../organisations/admin-employee-repository";
 import {
   beginTotpEnrollment,
   changeEmployeeRole,
@@ -113,8 +113,13 @@ export function registerEmployeeSecurityRoutes(app: Express) {
   app.get("/api/admin/security", isAuthenticated, requireAdminPermission("security.manage"), async (req, res) => {
     try {
       const userId = req.session.userId!;
-      const [mfa, sessions, events] = await Promise.all([getMfaState(userId), listUserSessions(userId, req.sessionID), listUserSecurityEvents(userId)]);
-      return res.json({ mfa, sessions, events, generatedAt: new Date().toISOString() });
+      const [mfa, sessions, events, posture] = await Promise.all([
+        getMfaState(userId),
+        listUserSessions(userId, req.sessionID),
+        listUserSecurityEvents(userId),
+        getSecurityPosture(userId),
+      ]);
+      return res.json({ mfa, sessions, events, posture, generatedAt: new Date().toISOString() });
     } catch (error) { return sendError(error, res); }
   });
 

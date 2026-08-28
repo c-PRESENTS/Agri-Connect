@@ -32,9 +32,16 @@ export function ProductCard({
 
   const cityName = liveLoc?.label || "Coimbatore, TN";
   const productName = product.name?.trim() || "Unnamed Product";
-  const sellerName = product.farmerName?.trim() || "Green Fields Farm";
+  const hasRealSeller = Boolean(
+    product.farmerName?.trim() &&
+    !product.farmerId?.startsWith("farmer-") &&
+    !product.farmerId?.startsWith("catalog-") &&
+    product.farmerName !== "Verified Seller" &&
+    product.farmerName !== "Green Fields Farm"
+  );
+  const sellerName = hasRealSeller ? product.farmerName!.trim() : "";
   const sellerLoc = product.farmerLocation || cityName;
-  const sellerDist = typeof product.distance === "number" ? product.distance : 3;
+  const sellerDist = typeof product.distance === "number" ? product.distance : 0;
   const rating = Number.isFinite(product.farmerRating) && product.farmerRating > 0 ? product.farmerRating : (Number.isFinite(product.rating) ? product.rating : 4.6);
   const reviewCount = product.reviewCount || 96;
 
@@ -129,14 +136,16 @@ export function ProductCard({
               </span>
             </div>
 
-            {/* Seller Info */}
+            {/* Seller / Source Info */}
             <div className="mt-2 text-xs">
               <p className="font-bold text-slate-700 dark:text-slate-200 truncate">
-                {sellerName}
+                {hasRealSeller ? sellerName : "Direct Marketplace"}
               </p>
               <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 truncate font-medium">
-                <MapPin className="h-3 w-3 text-red-400 shrink-0" />
-                <span>{sellerLoc} • {sellerDist.toFixed(0)} km</span>
+                <MapPin className={`h-3 w-3 ${hasRealSeller ? "text-red-400" : "text-emerald-500"} shrink-0`} />
+                <span>
+                  {hasRealSeller ? `${sellerLoc} • ${sellerDist.toFixed(0)} km` : "Verified Direct Source"}
+                </span>
               </p>
             </div>
 

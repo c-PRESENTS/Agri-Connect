@@ -127,6 +127,40 @@ export function registerCatalogRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/sellers", async (_req, res) => {
+    try {
+      const products = await storage.getVerifiedDatabaseSellerProducts();
+      const sellersMap = new Map<string, any>();
+      for (const p of products) {
+        if (!p.farmerId || p.farmerId.startsWith("farmer-") || p.farmerId.startsWith("catalog-")) continue;
+        if (!p.farmerName?.trim()) continue;
+        const existing = sellersMap.get(p.farmerId);
+        if (existing) {
+          existing.productCount += 1;
+          existing.topProducts.push(p);
+        } else {
+          sellersMap.set(p.farmerId, {
+            id: p.farmerId,
+            name: p.farmerName.trim(),
+            avatar: p.farmerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(p.farmerName)}`,
+            rating: Number.isFinite(p.farmerRating) && p.farmerRating > 0 ? p.farmerRating : (Number.isFinite(p.rating) ? p.rating : 4.5),
+            location: p.farmerLocation || "",
+            latitude: typeof p.farmerLatitude === "number" ? p.farmerLatitude : 0,
+            longitude: typeof p.farmerLongitude === "number" ? p.farmerLongitude : 0,
+            isOnline: p.farmerIsOnline !== false,
+            isVerified: p.farmerIsVerified !== false,
+            productCount: 1,
+            distanceKm: typeof p.distance === "number" ? p.distance : 0,
+            topProducts: [p],
+          });
+        }
+      }
+      res.json(Array.from(sellersMap.values()));
+    } catch {
+      res.status(500).json({ error: "Failed to fetch sellers" });
+    }
+  });
+
   app.get("/api/products/:id", async (req, res) => {
     try {
       const publicProduct = await storage.getProduct(req.params.id);

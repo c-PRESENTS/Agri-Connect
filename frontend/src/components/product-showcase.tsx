@@ -9,24 +9,53 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { resolveCategoryImage, handleCategoryImageError } from "@/lib/categories";
+import { resolveCategoryImage, handleCategoryImageError, categories as staticCategories } from "@/lib/categories";
 import { useCatalogCategories } from "@/hooks/use-catalog-categories";
 import type { Product } from "@shared/schema";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { FavoriteProductButton } from "./favorite-product-button";
 import { useCurrency } from "@/contexts/currency-context";
 import { useLiveLocation } from "@/contexts/live-location-context";
+import { getSubSubcategories, type SubSubItem } from "@/lib/sub-subcategories";
 
 interface ProductShowcaseProps {
   categoryId: string | null;
   subcategoryId: string | null;
-  activeSection: string | null;
+  activeSection?: string | null;
   searchQuery?: string;
   onAddToCart?: (product: Product) => void;
   onProductClick?: (product: Product) => void;
   onSectionVisible?: (sectionTitle: string) => void;
   onFarmerClick?: (farmerId: string) => void;
-  onSubcategoryChange?: (subcategoryId: string) => void;
+  onSubcategoryChange?: (subcategoryId: string | null) => void;
+  onSectionChange?: (sectionTitle: string | null) => void;
+}
+
+function productMatchesSection(product: Product, section: SubSubItem): boolean {
+  const pName = (product.name || "").toLowerCase();
+  const pDesc = (product.description || "").toLowerCase();
+  const pSub = (product.subcategoryId || "").toLowerCase();
+  const secTitle = section.title.toLowerCase();
+
+  if (pName.includes(secTitle) || pDesc.includes(secTitle) || pSub.includes(secTitle)) {
+    return true;
+  }
+  const rootSecTitle = secTitle.replace(/s$/, "");
+  if (rootSecTitle.length > 3 && (pName.includes(rootSecTitle) || pDesc.includes(rootSecTitle))) {
+    return true;
+  }
+
+  return section.items.some((item) => {
+    const itemLower = item.toLowerCase();
+    const cleanItem = itemLower.replace(/\s*\(.*?\)\s*/g, "").trim();
+    return (
+      pName.includes(itemLower) ||
+      pDesc.includes(itemLower) ||
+      pName.includes(cleanItem) ||
+      cleanItem.includes(pName) ||
+      itemLower.includes(pName)
+    );
+  });
 }
 
 const SUBCATEGORY_ICONS: Record<string, string> = {
@@ -74,9 +103,16 @@ const ShowcaseProductCard = memo(function ShowcaseProductCard({
     return originalPrice ? format(originalPrice, { sourceCurrency: product.currency || "GBP" }) : null;
   }, [format, originalPrice, product.currency]);
 
-  const sellerTitle = product.farmerName || "Green Fields Farm";
+  const hasRealSeller = Boolean(
+    product.farmerName?.trim() &&
+    !product.farmerId?.startsWith("farmer-") &&
+    !product.farmerId?.startsWith("catalog-") &&
+    product.farmerName !== "Verified Seller" &&
+    product.farmerName !== "Green Fields Farm"
+  );
+  const sellerTitle = hasRealSeller ? product.farmerName!.trim() : "";
   const sellerLoc = product.farmerLocation || cityName;
-  const sellerDist = typeof product.distance === "number" ? product.distance : idx + 2;
+  const sellerDist = typeof product.distance === "number" ? product.distance : 0;
   const rating =
     typeof product.farmerRating === "number" && product.farmerRating > 0
       ? product.farmerRating
@@ -150,15 +186,15 @@ const ShowcaseProductCard = memo(function ShowcaseProductCard({
             </span>
           </div>
 
-          {/* Seller Name & Location */}
+          {/* Seller / Source Name & Location */}
           <div className="mt-2 text-xs">
             <p className="font-bold text-slate-700 dark:text-slate-200 truncate">
-              {sellerTitle}
+              {hasRealSeller ? sellerTitle : "Direct Marketplace"}
             </p>
             <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 truncate font-medium">
-              <MapPin className="h-3 w-3 text-red-400 shrink-0" />
+              <MapPin className={`h-3 w-3 ${hasRealSeller ? "text-red-400" : "text-emerald-500"} shrink-0`} />
               <span>
-                {sellerLoc} • {sellerDist.toFixed(0)} km
+                {hasRealSeller ? `${sellerLoc} • ${sellerDist.toFixed(0)} km` : "Verified Direct Source"}
               </span>
             </p>
           </div>
@@ -206,10 +242,12 @@ const ShowcaseProductCard = memo(function ShowcaseProductCard({
 export function ProductShowcase({
   categoryId,
   subcategoryId: initialSubcategory,
+  activeSection,
   searchQuery = "",
   onAddToCart,
   onProductClick,
   onSubcategoryChange,
+  onSectionChange,
 }: ProductShowcaseProps) {
   const { t } = useTranslation();
   const { data: publishedCategories = [] } = useCatalogCategories("buyer");
@@ -226,21 +264,51 @@ export function ProductShowcase({
   const cityName = liveLoc?.label || "Coimbatore, TN";
 
   useEffect(() => {
-    setSelectedSubcategory(initialSubcategory);
-  }, [initialSubcategory]);
+    setSelectedSubcategory(initialSubcategory || null);
+  }, [categoryId, initialSubcategory]);
+
+  const allKnownCategories = useMemo(() => {
+    return publishedCategories.length > 0 ? publishedCategories : staticCategories;
+  }, [publishedCategories]);
 
   const effectiveCategory = useMemo(() => {
-    return publishedCategories.find((c) => c.id === categoryId) || publishedCategories[0] || null;
-  }, [publishedCategories, categoryId]);
+    if (!categoryId) return allKnownCategories[0] || null;
+    return (
+      allKnownCategories.find((c) => c.id === categoryId) ||
+      staticCategories.find((c) => c.id === categoryId) ||
+      allKnownCategories[0] ||
+      null
+    );
+  }, [allKnownCategories, categoryId]);
 
   const subcategoriesList = useMemo(() => {
     if (!effectiveCategory) return [];
     return effectiveCategory.subcategories || [];
   }, [effectiveCategory]);
 
+  const validSubcategory = useMemo(() => {
+    if (!selectedSubcategory) return null;
+    return subcategoriesList.some((s) => s.id === selectedSubcategory) ? selectedSubcategory : null;
+  }, [selectedSubcategory, subcategoriesList]);
+
+  // Sub-sections (Level 3 items: Cookware, Storage, Cleaning, Appliances, etc.)
+  const availableSections = useMemo(() => {
+    if (!validSubcategory) return [];
+    return getSubSubcategories(validSubcategory);
+  }, [validSubcategory]);
+
+  const activeSectionItem = useMemo(() => {
+    if (!activeSection || availableSections.length === 0) return null;
+    return (
+      availableSections.find(
+        (s) => s.title.toLowerCase() === activeSection.toLowerCase()
+      ) || null
+    );
+  }, [activeSection, availableSections]);
+
   const queryParams = new URLSearchParams();
   if (categoryId) queryParams.set("categoryId", categoryId);
-  if (selectedSubcategory) queryParams.set("subcategoryId", selectedSubcategory);
+  if (validSubcategory) queryParams.set("subcategoryId", validSubcategory);
   if (searchQuery.trim()) queryParams.set("search", searchQuery.trim());
   const queryString = queryParams.toString();
 
@@ -257,6 +325,13 @@ export function ProductShowcase({
       list = list.filter((p) => p.isOrganic);
     }
 
+    if (activeSectionItem) {
+      const sectionFiltered = list.filter((p) => productMatchesSection(p, activeSectionItem));
+      if (sectionFiltered.length > 0) {
+        list = sectionFiltered;
+      }
+    }
+
     if (sortBy === "price_asc") {
       list.sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (sortBy === "price_desc") {
@@ -268,12 +343,24 @@ export function ProductShowcase({
     }
 
     return list;
-  }, [allProducts, sortBy, onlyOrganic]);
+  }, [allProducts, sortBy, onlyOrganic, activeSectionItem]);
 
   // Distinct verified sellers count
   const verifiedSellersCount = useMemo(() => {
-    const sellerIds = new Set(products.map((p) => p.farmerId).filter(Boolean));
-    return sellerIds.size || Math.min(10, products.length);
+    const sellerIds = new Set(
+      products
+        .filter(
+          (p) =>
+            p.farmerId &&
+            !p.farmerId.startsWith("farmer-") &&
+            !p.farmerId.startsWith("catalog-") &&
+            p.farmerName?.trim() &&
+            p.farmerName !== "Verified Seller" &&
+            p.farmerName !== "Green Fields Farm",
+        )
+        .map((p) => p.farmerId),
+    );
+    return sellerIds.size;
   }, [products]);
 
   // Stable Add to cart callback
@@ -403,6 +490,66 @@ export function ProductShowcase({
             </span>
           </button>
         </div>
+
+        {/* ─── 1.5. SUB-SECTIONS PILL BAR (LEVEL 3 SECTIONS) ─── */}
+        {availableSections.length > 0 && (
+          <div className="px-3 sm:px-6 py-2 border-t border-slate-200/60 dark:border-border/40 bg-slate-50/70 dark:bg-muted/20">
+            <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:none">
+              <span className="text-[10.5px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider shrink-0 mr-1">
+                Sections:
+              </span>
+
+              {/* "All Sections" Pill */}
+              <button
+                type="button"
+                onClick={() => onSectionChange?.(null)}
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all shrink-0 border ${
+                  !activeSectionItem
+                    ? "bg-amber-400 text-amber-950 border-amber-500 shadow-2xs font-black dark:bg-amber-400 dark:text-amber-950"
+                    : "bg-white dark:bg-card text-slate-700 dark:text-slate-300 border-slate-200 dark:border-border/80 hover:border-emerald-500 hover:text-emerald-800"
+                }`}
+              >
+                All Sections ({allProducts.length})
+              </button>
+
+              {availableSections.map((sec) => {
+                const isSecActive = activeSectionItem?.title.toLowerCase() === sec.title.toLowerCase();
+                const count = allProducts.filter((p) => productMatchesSection(p, sec)).length;
+                return (
+                  <button
+                    key={sec.title}
+                    type="button"
+                    onClick={() => {
+                      if (isSecActive) {
+                        onSectionChange?.(null);
+                      } else {
+                        onSectionChange?.(sec.title);
+                      }
+                    }}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 ${
+                      isSecActive
+                        ? "bg-amber-400 text-amber-950 border-amber-500 shadow-2xs font-black dark:bg-amber-400 dark:text-amber-950"
+                        : "bg-white dark:bg-card text-slate-700 dark:text-slate-300 border-slate-200 dark:border-border/80 hover:border-emerald-500 hover:text-emerald-800"
+                    }`}
+                  >
+                    <span>{sec.title}</span>
+                    {count > 0 && (
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
+                          isSecActive
+                            ? "bg-amber-500/40 text-amber-950"
+                            : "bg-slate-100 dark:bg-muted text-slate-600 dark:text-slate-300"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ─── SCROLLABLE MAIN PRODUCT SHOWCASE AREA ─── */}
@@ -411,11 +558,27 @@ export function ProductShowcase({
           {/* ─── 2. CATEGORY HEADER & CONTROLS ─── */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-card p-4 rounded-2xl border border-slate-200/80 dark:border-border/60 shadow-2xs">
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                {activeTitle}
-              </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                  {activeTitle}
+                </h1>
+                {activeSectionItem && (
+                  <span className="bg-amber-100 text-amber-950 dark:bg-amber-950/80 dark:text-amber-300 text-xs font-black px-2.5 py-0.5 rounded-full border border-amber-400/80 flex items-center gap-1.5 shadow-2xs">
+                    <span>{activeSectionItem.title}</span>
+                    <button
+                      type="button"
+                      onClick={() => onSectionChange?.(null)}
+                      className="ml-0.5 text-amber-800 hover:text-red-600 dark:text-amber-300 dark:hover:text-red-400 font-black leading-none"
+                      title="Clear section filter"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
-                {products.length} items from {verifiedSellersCount} verified sellers
+                {products.length} item{products.length === 1 ? "" : "s"} {verifiedSellersCount > 0 ? `from ${verifiedSellersCount} verified sellers` : "available in marketplace"}
+                {activeSectionItem && ` in ${activeSectionItem.title}`}
               </p>
             </div>
 

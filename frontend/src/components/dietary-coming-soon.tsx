@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/currency-context";
 import { apiRequest } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
+import { getSubSubcategories, type SubSubItem } from "@/lib/sub-subcategories";
 
 export interface DietaryProductItem {
   id: string;
@@ -251,9 +252,13 @@ const STATIC_PLAN: DietaryPlanData = {
 export function DietaryComingSoon({
   products = [],
   subcategoryId,
+  activeSection: propSection,
+  onSectionChange,
 }: {
   products?: Product[];
   subcategoryId?: string;
+  activeSection?: string | null;
+  onSectionChange?: (section: string | null) => void;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -270,6 +275,25 @@ export function DietaryComingSoon({
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get("subcategory") || urlParams.get("subcategoryId") || "keto";
   }, [subcategoryId, location]);
+
+  const currentSection = useMemo(() => {
+    if (propSection !== undefined) return propSection;
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get("section") || null;
+  }, [propSection, location]);
+
+  const availableSections = useMemo(() => {
+    return getSubSubcategories(effectiveSubcategory);
+  }, [effectiveSubcategory]);
+
+  const activeSectionItem = useMemo(() => {
+    if (!currentSection || availableSections.length === 0) return null;
+    return (
+      availableSections.find(
+        (s) => s.title.toLowerCase() === currentSection.toLowerCase(),
+      ) || null
+    );
+  }, [currentSection, availableSections]);
 
   // Fetch real database-backed plan from backend API
   const { data: plan = STATIC_PLAN, isLoading } = useQuery<DietaryPlanData>({
@@ -397,6 +421,102 @@ export function DietaryComingSoon({
 
       {/* ─── MAIN CONTAINER ─── */}
       <div className="max-w-[1550px] mx-auto p-4 sm:p-6 space-y-6">
+        {/* ─── 0.5. DIETARY SUB-SECTIONS PILL BAR ─── */}
+        {availableSections.length > 0 && (
+          <div className="bg-white dark:bg-card px-4 py-2.5 rounded-2xl border border-slate-200/80 dark:border-border/80 shadow-2xs">
+            <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:none">
+              <span className="text-[10.5px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider shrink-0 mr-1">
+                Sub-Sections:
+              </span>
+
+              {/* "All Meals" Pill */}
+              <button
+                type="button"
+                onClick={() => {
+                  const qs = new URLSearchParams(window.location.search);
+                  qs.set("category", "dietary");
+                  qs.set("subcategory", effectiveSubcategory);
+                  qs.delete("section");
+                  setLocation(`/?${qs.toString()}`);
+                  onSectionChange?.(null);
+                }}
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all shrink-0 border ${
+                  !activeSectionItem
+                    ? "bg-amber-400 text-amber-950 border-amber-500 shadow-2xs font-black dark:bg-amber-400 dark:text-amber-950"
+                    : "bg-slate-50 dark:bg-muted text-slate-700 dark:text-slate-300 border-slate-200 dark:border-border/80 hover:border-emerald-500 hover:text-emerald-800"
+                }`}
+              >
+                All Meals & Plan
+              </button>
+
+              {availableSections.map((sec) => {
+                const isSecActive = activeSectionItem?.title.toLowerCase() === sec.title.toLowerCase();
+                return (
+                  <button
+                    key={sec.title}
+                    type="button"
+                    onClick={() => {
+                      const qs = new URLSearchParams(window.location.search);
+                      qs.set("category", "dietary");
+                      qs.set("subcategory", effectiveSubcategory);
+                      if (isSecActive) {
+                        qs.delete("section");
+                        onSectionChange?.(null);
+                      } else {
+                        qs.set("section", sec.title);
+                        onSectionChange?.(sec.title);
+                      }
+                      setLocation(`/?${qs.toString()}`);
+                    }}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 ${
+                      isSecActive
+                        ? "bg-amber-400 text-amber-950 border-amber-500 shadow-2xs font-black dark:bg-amber-400 dark:text-amber-950"
+                        : "bg-slate-50 dark:bg-muted text-slate-700 dark:text-slate-300 border-slate-200 dark:border-border/80 hover:border-emerald-500 hover:text-emerald-800"
+                    }`}
+                  >
+                    <span>{sec.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ─── 0.6. ACTIVE FOCUSED SECTION SHOWCASE BANNER ─── */}
+        {activeSectionItem && (
+          <div className="bg-gradient-to-r from-amber-50 via-amber-100/50 to-emerald-50 dark:from-amber-950/30 dark:via-amber-900/20 dark:to-emerald-950/30 rounded-2xl border-2 border-amber-400/90 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="bg-amber-400 text-amber-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-md">
+                  Active Section Focus
+                </span>
+                <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-slate-100">
+                  {activeSectionItem.title}
+                </h3>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                Targeted items & ingredients: <span className="font-bold text-slate-900 dark:text-slate-100">{activeSectionItem.items.join(" • ")}</span>
+              </p>
+            </div>
+
+            <Button
+              size="sm"
+              onClick={() => {
+                const qs = new URLSearchParams(window.location.search);
+                qs.set("category", "dietary");
+                qs.set("subcategory", effectiveSubcategory);
+                qs.delete("section");
+                setLocation(`/?${qs.toString()}`);
+                onSectionChange?.(null);
+              }}
+              variant="outline"
+              className="border-amber-400/80 bg-white/80 dark:bg-card text-xs font-black text-amber-950 dark:text-amber-300 hover:bg-amber-100 shrink-0 rounded-xl h-8 px-3"
+            >
+              Clear Focus (View All)
+            </Button>
+          </div>
+        )}
+
         {/* ─── 1. REAL SELLER / CREATOR PROFILE CARD FROM DATABASE ─── */}
         <div className="bg-white dark:bg-card rounded-2xl border border-slate-200/80 dark:border-border/80 p-5 shadow-2xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="flex items-start gap-4 flex-1">
@@ -530,16 +650,36 @@ export function DietaryComingSoon({
                 {plan.meals.map((meal: DietaryMealItem) => {
                   const isAdded = addedBundles.has(meal.id);
                   const hasAvailableProducts = meal.products.some((product) => product.availableForCart === true);
+                  const matchesActiveSection = activeSectionItem
+                    ? meal.products.some((p) =>
+                        activeSectionItem.items.some(
+                          (item) =>
+                            p.name.toLowerCase().includes(item.toLowerCase()) ||
+                            item.toLowerCase().includes(p.name.toLowerCase()) ||
+                            meal.title.toLowerCase().includes(item.toLowerCase()),
+                        ) ||
+                        meal.title.toLowerCase().includes(activeSectionItem.title.toLowerCase()) ||
+                        meal.mealType.toLowerCase().includes(activeSectionItem.title.toLowerCase())
+                      )
+                    : false;
 
                 return (
                   <div
                     key={meal.id}
-                    className="bg-white dark:bg-card rounded-2xl border border-slate-200/80 dark:border-border/80 p-4 sm:p-4.5 shadow-2xs hover:shadow-xs transition-all duration-200"
+                    className={`bg-white dark:bg-card rounded-2xl border p-4 sm:p-4.5 shadow-2xs hover:shadow-xs transition-all duration-200 ${
+                      matchesActiveSection
+                        ? "border-amber-500 ring-2 ring-amber-400/60 bg-amber-50/15 dark:bg-amber-950/10"
+                        : "border-slate-200/80 dark:border-border/80"
+                    }`}
                   >
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
                       {/* Column 1: Time & Meal Type */}
                       <div className="w-24 shrink-0 flex flex-col items-center justify-center text-center">
-                        <div className="h-8 w-8 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800 flex items-center justify-center shadow-2xs">
+                        <div className={`h-8 w-8 rounded-full border flex items-center justify-center shadow-2xs ${
+                          matchesActiveSection
+                            ? "bg-amber-400 border-amber-500 text-amber-950"
+                            : "bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800"
+                        }`}>
                           {getMealIcon(meal.iconType)}
                         </div>
                         <span className="text-xs font-black text-slate-900 dark:text-slate-100 mt-1 whitespace-nowrap">
@@ -548,6 +688,11 @@ export function DietaryComingSoon({
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                           {meal.mealType}
                         </span>
+                        {matchesActiveSection && (
+                          <span className="mt-1 bg-amber-400 text-amber-950 text-[8.5px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider">
+                            ★ {activeSectionItem?.title}
+                          </span>
+                        )}
                       </div>
 
                       {/* Column 2: Image & Title */}

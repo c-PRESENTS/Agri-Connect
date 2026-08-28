@@ -10,11 +10,12 @@ import {
   Star, Package, MapPin, Wifi, Map, Mountain, Globe,
   Satellite, Navigation, Plus, X, Users, ShoppingBag,
   BarChart3, Flame, Clock, Phone, CheckCircle2, AlertCircle,
-  Locate, AlertTriangle
+  Locate, AlertTriangle, Landmark,
 } from "lucide-react";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { getPublicLocationLabel, hasValidCoordinates, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product, LocalNeed } from "@shared/schema";
+import { sampleLandListings } from "@/lib/logistics-data";
 import { apiRequest } from "@/lib/queryClient";
 import { useCurrency } from "@/contexts/currency-context";
 import { useLiveLocation } from "@/contexts/live-location-context";
@@ -53,7 +54,7 @@ export interface LeafletFarmerMapProps {
   tileStyle?: LayerKey;
   showLayerSwitcher?: boolean;
   showHeatmap?: boolean;
-  mapOverlays?: { farmers?: boolean; needs?: boolean; heatmap?: boolean };
+  mapOverlays?: { farmers?: boolean; needs?: boolean; heatmap?: boolean; land?: boolean };
   /** When set, the map flies to this farmer and opens their popup. Used to
    *  sync external selection (e.g. clicking a row in the seller list) with
    *  the map view. */
@@ -66,6 +67,14 @@ const makeFarmerIcon = (isOnline: boolean, selected: boolean = false) => L.divIc
   iconSize: [22, 22],
   iconAnchor: [11, 22],
   popupAnchor: [0, -24],
+});
+
+const makeLandIcon = () => L.divIcon({
+  html: `<div style="width:24px;height:24px;border-radius:8px;background:linear-gradient(135deg,#059669,#10b981);border:2px solid white;box-shadow:0 3px 8px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;color:white;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`,
+  className: "",
+  iconSize: [24, 24],
+  iconAnchor: [12, 24],
+  popupAnchor: [0, -26],
 });
 
 const makeNeedIcon = (urgency: string) => {
@@ -220,10 +229,32 @@ function SelectedFarmerController({
 function InvalidateSizeOnMount() {
   const map = useMap();
   useEffect(() => {
-    const t1 = setTimeout(() => map.invalidateSize(), 100);
-    const t2 = setTimeout(() => map.invalidateSize(), 500);
-    const t3 = setTimeout(() => map.invalidateSize(), 1000);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    const container = map.getContainer();
+    let frame: number | null = null;
+
+    const syncMapToContainer = () => {
+      if (frame != null) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        const bounds = container.getBoundingClientRect();
+        if (bounds.width > 0 && bounds.height > 0) {
+          map.invalidateSize({ animate: false, pan: false });
+        }
+      });
+    };
+
+    syncMapToContainer();
+    const observer = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(syncMapToContainer)
+      : null;
+    observer?.observe(container);
+
+    const fallback = setTimeout(syncMapToContainer, 500);
+    return () => {
+      observer?.disconnect();
+      clearTimeout(fallback);
+      if (frame != null) window.cancelAnimationFrame(frame);
+    };
   }, [map]);
   return null;
 }
@@ -244,6 +275,12 @@ export function LeafletFarmerMap({
   const { location: liveLocation } = useLiveLocation();
   const markersRef = useRef<Record<string, L.Marker>>({});
   const [activeLayer, setActiveLayer] = useState<LayerKey>(tileStyle);
+
+  useEffect(() => {
+    if (tileStyle) {
+      setActiveLayer(tileStyle);
+    }
+  }, [tileStyle]);
   const layerLabel = (key: LayerKey) => t(`map.layer_${key}`);
   const [_showFarmers, _setShowFarmers] = useState(true);
   const [_showNeeds, _setShowNeeds] = useState(true);
@@ -251,6 +288,7 @@ export function LeafletFarmerMap({
   const showFarmers = mapOverlays !== undefined ? (mapOverlays.farmers ?? true) : _showFarmers;
   const showNeeds = mapOverlays !== undefined ? (mapOverlays.needs ?? false) : _showNeeds;
   const showHeatmap = mapOverlays !== undefined ? (mapOverlays.heatmap ?? false) : _showHeatmap;
+  const showLand = mapOverlays !== undefined ? (mapOverlays.land ?? false) : false;
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [userAccuracy, setUserAccuracy] = useState<number | null>(null);
   const [userHeading, setUserHeading] = useState<number | null>(null);
@@ -387,6 +425,8 @@ export function LeafletFarmerMap({
   }, [locateError]);
 
   const farmerMarkers: FarmerMarker[] = products.reduce((acc, product) => {
+    if (!product.farmerId || product.farmerId.startsWith("farmer-") || product.farmerId.startsWith("catalog-")) return acc;
+    if (!product.farmerName || product.farmerName === "Verified Seller" || product.farmerName === "Green Fields Farm") return acc;
     if (!hasValidPublicCoordinates(product.farmerLatitude, product.farmerLongitude)) return acc;
     const existing = acc.find(m => m.id === product.farmerId);
     if (existing) {
@@ -398,7 +438,7 @@ export function LeafletFarmerMap({
     } else {
       acc.push({
         id: product.farmerId,
-        name: product.farmerName?.trim() || "Seller not specified",
+        name: product.farmerName.trim(),
         avatar: product.farmerAvatar || "",
         latitude: product.farmerLatitude,
         longitude: product.farmerLongitude,
@@ -414,8 +454,22 @@ export function LeafletFarmerMap({
     return acc;
   }, [] as FarmerMarker[]);
 
-  const unmappedFarmerCount = new Set(products.map((product) => product.farmerId))
-    .size - farmerMarkers.length;
+  const unmappedFarmerCount = Math.max(
+    0,
+    new Set(
+      products
+        .filter(
+          (p) =>
+            p.farmerId &&
+            !p.farmerId.startsWith("farmer-") &&
+            !p.farmerId.startsWith("catalog-") &&
+            p.farmerName &&
+            p.farmerName !== "Verified Seller" &&
+            p.farmerName !== "Green Fields Farm",
+        )
+        .map((product) => product.farmerId),
+    ).size - farmerMarkers.length,
+  );
   const mappableLocalNeeds = localNeeds.filter((need) =>
     hasValidCoordinates(need.latitude, need.longitude),
   );
@@ -486,54 +540,56 @@ export function LeafletFarmerMap({
       )}
 
       {/* ── RIGHT SIDE BUTTONS ── */}
-      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 z-[1000] flex flex-col gap-1.5">
-        {/* Locate me / Live tracking toggle (Google-Maps-style) */}
-        <button
-          onClick={handleLocate}
-          data-testid="btn-locate-me"
-          className={`w-9 h-9 flex items-center justify-center rounded-xl backdrop-blur-md border shadow-md transition-all relative ${
-            tracking
-              ? "bg-blue-500 text-white border-blue-400 hover:bg-blue-600"
-              : "bg-background/95 border-border/60 hover:bg-primary hover:text-primary-foreground hover:border-primary"
-          }`}
-          title={tracking ? t("map.stop_tracking") : t("map.track_location")}
-        >
-          {locating ? (
-            <Navigation className="h-4 w-4 animate-spin text-blue-500" />
-          ) : (
-            <Locate className="h-4 w-4" />
-          )}
-          {tracking && (
-            <span className="absolute -top-0.5 -right-0.5 inline-flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500 ring-2 ring-background" />
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setNearbyOnly((current) => !current)}
-          disabled={!userPos}
-          data-testid="btn-located-filter"
-          className={`w-9 h-9 flex items-center justify-center rounded-xl backdrop-blur-md border shadow-md transition-all ${
-            nearbyOnly ? "bg-blue-500 text-white border-blue-400" : "bg-background/95 border-border/60 hover:bg-primary hover:text-primary-foreground hover:border-primary"
-          } disabled:cursor-not-allowed disabled:opacity-50`}
-          title={userPos ? "Show public farm markers within 50 km" : "Locate yourself to filter nearby public farm markers"}
-        >
-          <MapPin className="h-4 w-4" />
-        </button>
-        {/* Post a Need */}
-        <button onClick={() => setPostPanel(true)} data-testid="btn-post-need"
-          className="w-9 h-9 flex items-center justify-center rounded-xl bg-primary text-primary-foreground border border-primary/50 shadow-md hover:bg-primary/90 transition-all"
-          title={t("map.post_a_need")}>
-          <Plus className="h-4 w-4" />
-        </button>
-        {/* Zoom to Chelmsford */}
-        <button onClick={() => setFlyTo([51.7356, 0.4685])} data-testid="btn-chelmsford"
-          className="w-9 h-9 flex items-center justify-center rounded-xl bg-background/95 backdrop-blur-md border border-border/60 shadow-md hover:bg-amber-50 hover:border-amber-300 transition-all"
-          title="Fly to Chelmsford">
-          <MapPin className="h-3.5 w-3.5 text-amber-600" />
-        </button>
-      </div>
+      {showControls && (
+        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 z-[1000] flex flex-col gap-1.5">
+          {/* Locate me / Live tracking toggle (Google-Maps-style) */}
+          <button
+            onClick={handleLocate}
+            data-testid="btn-locate-me"
+            className={`w-9 h-9 flex items-center justify-center rounded-xl backdrop-blur-md border shadow-md transition-all relative ${
+              tracking
+                ? "bg-blue-500 text-white border-blue-400 hover:bg-blue-600"
+                : "bg-background/95 border-border/60 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+            }`}
+            title={tracking ? t("map.stop_tracking") : t("map.track_location")}
+          >
+            {locating ? (
+              <Navigation className="h-4 w-4 animate-spin text-blue-500" />
+            ) : (
+              <Locate className="h-4 w-4" />
+            )}
+            {tracking && (
+              <span className="absolute -top-0.5 -right-0.5 inline-flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500 ring-2 ring-background" />
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setNearbyOnly((current) => !current)}
+            disabled={!userPos}
+            data-testid="btn-located-filter"
+            className={`w-9 h-9 flex items-center justify-center rounded-xl backdrop-blur-md border shadow-md transition-all ${
+              nearbyOnly ? "bg-blue-500 text-white border-blue-400" : "bg-background/95 border-border/60 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+            } disabled:cursor-not-allowed disabled:opacity-50`}
+            title={userPos ? "Show public farm markers within 50 km" : "Locate yourself to filter nearby public farm markers"}
+          >
+            <MapPin className="h-4 w-4" />
+          </button>
+          {/* Post a Need */}
+          <button onClick={() => setPostPanel(true)} data-testid="btn-post-need"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-primary text-primary-foreground border border-primary/50 shadow-md hover:bg-primary/90 transition-all"
+            title={t("map.post_a_need")}>
+            <Plus className="h-4 w-4" />
+          </button>
+          {/* Zoom to Chelmsford */}
+          <button onClick={() => setFlyTo([51.7356, 0.4685])} data-testid="btn-chelmsford"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-background/95 backdrop-blur-md border border-border/60 shadow-md hover:bg-amber-50 hover:border-amber-300 transition-all"
+            title="Fly to Chelmsford">
+            <MapPin className="h-3.5 w-3.5 text-amber-600" />
+          </button>
+        </div>
+      )}
 
       {/* ── MAP ── */}
       <MapContainer center={safeCenter} zoom={safeInitialZoom} style={{ width: "100%", height: "100%" }} zoomControl={false} attributionControl={false} scrollWheelZoom={false}>
@@ -663,6 +719,36 @@ export function LeafletFarmerMap({
           </Marker>
         ))}
 
+        {/* Land & Lots markers */}
+        {showLand && sampleLandListings.map(land => (
+          <Marker key={land.id} position={[land.latitude, land.longitude]} icon={makeLandIcon()}>
+            <Popup minWidth={230} maxWidth={270}>
+              <div className="p-0.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <Badge className="text-[9px] bg-emerald-600 text-white font-bold uppercase">{land.type} Land</Badge>
+                  <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-300">£{land.rentPerMonth}/mo</span>
+                </div>
+                <div className="font-bold text-sm leading-snug mb-1">{land.title}</div>
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
+                  <MapPin className="h-3 w-3 text-emerald-600" />
+                  <span>{land.location}</span>
+                  <span>·</span>
+                  <span className="font-bold text-foreground">{land.area} {land.areaUnit}</span>
+                </div>
+                <div className="text-[10px] text-muted-foreground line-clamp-2 mb-2">
+                  {land.description}
+                </div>
+                <a
+                  href={`/land-leasing?id=${land.id}`}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                >
+                  <Landmark className="h-3 w-3" /> View Land Details
+                </a>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
         {/* User location: GPS accuracy halo + pulsing dot */}
         {userPos && userAccuracy && userAccuracy < 5000 && (
           <Circle
@@ -714,19 +800,21 @@ export function LeafletFarmerMap({
         </div>
       )}
 
-      {unmappedFarmerCount > 0 && (
+      {showControls && unmappedFarmerCount > 0 && (
         <div className="absolute bottom-2.5 left-2.5 z-[1000] translate-y-10 sm:translate-y-0 sm:left-auto sm:right-2.5 sm:bottom-12 max-w-[230px] rounded-lg border border-border/60 bg-background/95 px-2 py-1.5 text-[10px] text-muted-foreground shadow-md" data-testid="map-location-fallback">
           {unmappedFarmerCount} seller {unmappedFarmerCount === 1 ? "location is" : "locations are"} not mapped because public coordinates are unavailable. Location not specified.
         </div>
       )}
 
       {/* Active layer badge — hidden on mobile */}
-      <div className="absolute bottom-2.5 right-2.5 z-[1000] hidden sm:block">
-        <div className="bg-background/95 backdrop-blur-md border border-border/60 rounded-xl px-2 py-1.5 shadow-md flex items-center gap-1.5">
-          {(() => { const Icon = TILE_LAYERS[activeLayer].icon; return <Icon className="h-3 w-3 text-primary" />; })()}
-          <span className="text-[9px] font-bold text-primary uppercase tracking-wide">{layerLabel(activeLayer)}</span>
+      {showControls && (
+        <div className="absolute bottom-2.5 right-2.5 z-[1000] hidden sm:block">
+          <div className="bg-background/95 backdrop-blur-md border border-border/60 rounded-xl px-2 py-1.5 shadow-md flex items-center gap-1.5">
+            {(() => { const Icon = TILE_LAYERS[activeLayer].icon; return <Icon className="h-3 w-3 text-primary" />; })()}
+            <span className="text-[9px] font-bold text-primary uppercase tracking-wide">{layerLabel(activeLayer)}</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── POST A NEED PANEL ── */}
       {postPanel && (

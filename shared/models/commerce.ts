@@ -61,6 +61,24 @@ export const commerceCarts = pgTable(
   (table) => [uniqueIndex("commerce_carts_user_idx").on(table.userId)],
 );
 
+export const commerceSavedProducts = pgTable(
+  "commerce_saved_products",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    productId: varchar("product_id")
+      .notNull()
+      .references(() => commerceProducts.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("commerce_saved_products_user_product_unique").on(table.userId, table.productId),
+    index("commerce_saved_products_user_created_idx").on(table.userId, table.createdAt),
+  ],
+);
+
 export const commerceCartItems = pgTable(
   "commerce_cart_items",
   {

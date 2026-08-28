@@ -1,7 +1,9 @@
 {
   "nav": {
-    "help": "Help",
+    "help": "Farmer Help Point",
+    "farmer_help": "Farmer Help Point",
     "student_help": "Student Help Point",
+    "my_sites": "My Sites",
     "land": "Land",
     "share": "Share",
     "ship": "Ship",
@@ -38,13 +40,15 @@
   },
   "category": {
     "daily": "Daily",
+    "fresh_produce": "Bulk & Wholesale",
+    "livestock": "Livestock",
     "inputs": "Inputs",
     "processed": "Processed",
     "specialty": "Specialty",
     "other_agri": "Other Agri",
     "market": "Complete Supermarket",
     "dietary": "Dietary",
-    "modern": "Modern",
+    "modern": "Modern Farming",
     "services": "Services",
     "commercial": "Commercial",
     "bio": "Bio",

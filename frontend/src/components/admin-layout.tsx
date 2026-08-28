@@ -30,12 +30,13 @@ import {
 import { useAdminAccess } from "@/hooks/use-admin-access";
 import { useAuth } from "@/hooks/use-auth";
 import { adminRouteLabel, visibleAdminNavigation } from "@/lib/admin-navigation";
+import { AgriBrandLogo } from "./agri-brand-logo";
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const access = useAdminAccess();
   const { user, logout } = useAuth();
-  const navigation = visibleAdminNavigation(access.data?.permissions ?? []);
+  const navigation = visibleAdminNavigation(access.data?.permissions ?? [], access.data?.role?.isSuperAdmin === true);
   const displayName = user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Admin employee";
   const initials = displayName.split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join("").toUpperCase();
 
@@ -44,13 +45,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       <Sidebar collapsible="offcanvas" data-testid="admin-sidebar">
         <SidebarHeader className="border-b p-4">
           <Link href="/admin/overview" className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-              <Leaf className="h-5 w-5" />
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-black">AgriConnect</span>
-              <span className="block truncate text-xs text-muted-foreground">Organisation Portal</span>
-            </span>
+            <AgriBrandLogo size="md" theme="light" showTagline={true} />
           </Link>
         </SidebarHeader>
         <SidebarContent>

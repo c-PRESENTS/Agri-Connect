@@ -100,6 +100,8 @@ export class CommerceRepository {
       >();
       const farmerRegionIds = new Map<string, string>();
       for (const product of products) {
+        if (!product.farmerId || product.farmerId.startsWith("farmer-") || product.farmerId.startsWith("catalog-")) continue;
+        if (!product.farmerName?.trim()) continue;
         if (!catalogFarmers.has(product.farmerId)) {
           catalogFarmers.set(product.farmerId, {
             farmerId: product.farmerId,

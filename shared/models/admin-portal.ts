@@ -36,6 +36,9 @@ export interface AdminAuditEventSummary {
   targetId: string | null;
   organisation: AdminAuditOrganisation;
   permissionCode: string | null;
+  requestId?: string | null;
+  changes?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
   occurredAt: string;
 }
 
@@ -118,6 +121,13 @@ export interface AdminAuditPage {
     totalPages: number;
   };
   filters: AdminAuditFilterMetadata;
+  metrics?: {
+    total: number;
+    successCount: number;
+    failedCount: number;
+    privileged24h: number;
+    distinctActors: number;
+  };
   generatedAt: string;
 }
 

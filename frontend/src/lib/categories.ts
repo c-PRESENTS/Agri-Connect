@@ -487,7 +487,7 @@ export const categories: Category[] = [
     id: "processed",
     name: "Processed & Value-Added",
     icon: "Package",
-    buyerVisible: false,
+    buyerVisible: true,
     subcategories: [
       { id: "spice-powders", name: "Spices & Powders", parentId: "processed" },
       { id: "pickles", name: "Pickles & Preserves", parentId: "processed" },
@@ -500,7 +500,7 @@ export const categories: Category[] = [
     id: "specialty",
     name: "Specialty & Premium",
     icon: "Award",
-    buyerVisible: false,
+    buyerVisible: true,
     subcategories: [
       { id: "organic", name: "Organic Products", parentId: "specialty" },
       { id: "medicinal", name: "Medicinal Plants & Herbs", parentId: "specialty" },
@@ -514,7 +514,7 @@ export const categories: Category[] = [
     id: "other-agri",
     name: "Other Agricultural",
     icon: "Wheat",
-    buyerVisible: false,
+    buyerVisible: true,
     subcategories: [
       { id: "plantation", name: "Plantation Crops", parentId: "other-agri" },
       { id: "fibre", name: "Fibre Crops", parentId: "other-agri" },
@@ -654,7 +654,7 @@ export const categories: Category[] = [
     id: "commercial-crops",
     name: "Commercial & Industrial Crops",
     icon: "Factory",
-    buyerVisible: false,
+    buyerVisible: true,
     subcategories: [
       { id: "sugar-crops", name: "Sugar Crops", parentId: "commercial-crops", buyerVisible: true },
       { id: "beverage-crops", name: "Beverage Crops (Tea/Coffee/Cocoa)", parentId: "commercial-crops", buyerVisible: true },

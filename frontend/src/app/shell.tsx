@@ -9,6 +9,7 @@ const MobileNavSheet = lazy(() => import("@/components/mobile-nav-sheet").then((
 
 const FULLSCREEN_ROUTES = ["/", "/map"];
 const NO_RAIL_ROUTES = ["/login"];
+const NO_RAIL_ROUTE_PREFIXES = ["/admin"];
 // Informational and feature pages own their page-level layout and should not be
 // squeezed into the commerce/Quick Shop split view. In particular,
 // FarmersHelp owns a nested full-height sidebar/scroll area.
@@ -37,7 +38,11 @@ function SkipLink() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const isNoRail = NO_RAIL_ROUTES.includes(location);
+  const isNoRail =
+    NO_RAIL_ROUTES.includes(location) ||
+    NO_RAIL_ROUTE_PREFIXES.some(
+      (route) => location === route || location.startsWith(`${route}/`),
+    );
   const isFullScreen = FULLSCREEN_ROUTES.includes(location);
   const showMarketPanel = !NO_MARKET_PANEL_ROUTES.some(
     (route) => location === route || (route !== "/" && location.startsWith(`${route}/`)),

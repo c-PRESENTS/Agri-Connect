@@ -7,6 +7,7 @@ import {
   FileText, ShoppingCart, LayoutDashboard, Camera, Settings,
   ShoppingBasket, Wrench, Package, Award, Wheat, Store,
   Salad, Factory, Leaf, Briefcase, Sparkles, Grid3X3,
+  GraduationCap, Boxes, Beef, Warehouse, Network,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -31,9 +32,15 @@ const ALL_APPS: AppItem[] = [
   { id: "logistics",     path: "/logistics",               icon: Truck,           label: "ship.title",            fallbackLabel: "Logistics & Delivery", color: "from-violet-500 to-purple-600",    public: true },
   { id: "agritech",      path: "/agritech",                icon: Cpu,             label: "home.agritech",         fallbackLabel: "AgriTech",         color: "from-sky-500 to-blue-600",        public: true },
   { id: "schemes",       path: "/government-schemes",      icon: FileText,        label: "home.govt_schemes",     fallbackLabel: "Govt Schemes",     color: "from-emerald-500 to-green-600",    public: true },
-  { id: "learn",         path: "/farmers-help",            icon: Sprout,          label: "help.title",            fallbackLabel: "Help",             color: "from-lime-500 to-green-600",       public: true },
-  { id: "modern-farming",path: "/?category=modern-farming",icon: Sparkles,        label: "category.modern",       fallbackLabel: "Modern",           color: "from-yellow-500 to-amber-600",     public: true },
-  { id: "dietary",       path: "/?category=dietary",       icon: Salad,           label: "category.dietary",      fallbackLabel: "Dietary",          color: "from-red-500 to-rose-600",        public: true, comingSoon: true },
+  { id: "learn",         path: "/farmers-help",            icon: Sprout,          label: "help.title",            fallbackLabel: "Farmer Help Point", color: "from-lime-500 to-green-600",       public: true },
+  { id: "student-help",  path: "/farmers-help/student",    icon: GraduationCap,   label: "nav.student_help",      fallbackLabel: "Student Help Point", color: "from-indigo-500 to-violet-600",   public: true },
+  { id: "sites",         path: "/my-sites",                icon: Network,         label: "nav.my_sites",          fallbackLabel: "My Sites",         color: "from-teal-500 to-cyan-600",        public: true },
+  { id: "daily",         path: "/?category=daily-needs",   icon: ShoppingBasket,  label: "category.daily",        fallbackLabel: "Daily Needs",      color: "from-green-500 to-emerald-600",    public: true },
+  { id: "fresh",         path: "/?category=fresh-produce", icon: Boxes,           label: "category.fresh_produce", fallbackLabel: "Bulk & Wholesale", color: "from-emerald-500 to-teal-600",   public: true },
+  { id: "livestock",     path: "/?category=livestock",     icon: Beef,            label: "category.livestock",    fallbackLabel: "Livestock & Poultry", color: "from-rose-500 to-red-600",       public: true },
+  { id: "inputs",        path: "/?category=inputs-tools",  icon: Wrench,          label: "category.inputs",       fallbackLabel: "Inputs & Tools",   color: "from-blue-500 to-indigo-600",      public: true },
+  { id: "modern-farming",path: "/?category=modern-farming",icon: Sparkles,        label: "category.modern",       fallbackLabel: "Modern Farming",   color: "from-yellow-500 to-amber-600",     public: true },
+  { id: "dietary",       path: "/?category=dietary",       icon: Salad,           label: "category.dietary",      fallbackLabel: "Dietary",          color: "from-red-500 to-rose-600",        public: true },
   { id: "supermarket",   path: "/?category=supermarket",   icon: Store,           label: "home.supermarket",      fallbackLabel: "Supermarket",      color: "from-orange-500 to-red-600",      public: true },
   { id: "commercial",    path: "/?category=commercial-crops", icon: Factory,      label: "category.commercial",   fallbackLabel: "Commercial",       color: "from-stone-500 to-neutral-600",   public: true },
   { id: "bio",           path: "/?category=bio-products",  icon: Leaf,            label: "category.bio",          fallbackLabel: "Bio",              color: "from-teal-500 to-emerald-600",    public: true },

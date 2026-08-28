@@ -15,6 +15,7 @@ export * from "./models/admin-user-management";
 export * from "./models/product-moderation";
 export * from "./models/catalog-categories";
 export * from "./models/admin-employees";
+export * from "./models/organisation-control-centre";
 export * from "./models/messaging";
 export * from "./models/user-addresses";
 export * from "./models/seller-verification";
