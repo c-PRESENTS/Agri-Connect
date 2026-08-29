@@ -104,9 +104,9 @@ export function LiveSellersRail({
   // 3. Filter and localize sellers dynamically with distance calculations
   const sellers: SellerEntry[] = useMemo(() => {
     const list = rawSellers
-      .filter((s) => s.id && !s.id.startsWith("farmer-") && !s.id.startsWith("catalog-") && s.name && s.name !== "Verified Seller")
+      .filter((seller) => seller.id && seller.name && seller.isVerified === true)
       .map((s) => {
-        let dist = s.distanceKm || 0;
+        let dist = s.distanceKm ?? 0;
         if (liveLoc?.latitude && liveLoc?.longitude && s.latitude && s.longitude) {
           dist = calculateHaversineKm(liveLoc.latitude, liveLoc.longitude, s.latitude, s.longitude);
         }
@@ -116,31 +116,8 @@ export function LiveSellersRail({
         };
       });
 
-    if (isSeller && user && !list.some((s) => s.id === user.id)) {
-      const userLat = user.latitude || liveLoc?.latitude || 0;
-      const userLng = user.longitude || liveLoc?.longitude || 0;
-      let dist = 0;
-      if (liveLoc?.latitude && liveLoc?.longitude && userLat && userLng) {
-        dist = calculateHaversineKm(liveLoc.latitude, liveLoc.longitude, userLat, userLng);
-      }
-      list.unshift({
-        id: user.id,
-        name: user.name || "My Verified Farm Store",
-        avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || "Seller")}`,
-        rating: 5.0,
-        location: user.location || cityName,
-        latitude: userLat,
-        longitude: userLng,
-        isOnline: true,
-        isVerified: true,
-        productCount: 0,
-        distanceKm: dist,
-        topProducts: [],
-      });
-    }
-
     return list.sort((a, b) => b.productCount - a.productCount);
-  }, [rawSellers, liveLoc, isSeller, user, cityName]);
+  }, [rawSellers, liveLoc]);
 
   // 4. Resolve local demand opportunity from database
   const topOpportunity = useMemo(() => {

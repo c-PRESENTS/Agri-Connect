@@ -244,70 +244,70 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-background">
       <TopNavigation />
-      <div className="mx-auto w-full max-w-4xl space-y-8 px-4 py-8 sm:px-8">
-        <div className="flex items-center gap-4 mb-8">
+      <div className="mx-auto w-full max-w-6xl space-y-4 px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3">
           <Link href="/dashboard">
-            <Button variant="outline" size="icon" className="h-12 w-12 rounded-xl border-2" data-testid="button-back-dashboard">
-              <ArrowLeft className="h-6 w-6" />
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg" data-testid="button-back-dashboard">
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight" data-testid="text-settings-heading">
+          <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl" data-testid="text-settings-heading">
             {t("settings.title", "Account Settings")}
           </h1>
         </div>
 
-        <Card className="border-2 rounded-2xl shadow-lg">
-          <CardHeader className="p-6 sm:p-8 pb-4 border-b border-border/40">
-            <CardTitle className="text-2xl sm:text-3xl font-black flex items-center gap-3">
-              <User className="h-7 w-7 text-primary" />
+        <Card className="rounded-xl border shadow-md">
+          <CardHeader className="border-b border-border/40 p-4 pb-3 sm:p-5 sm:pb-4">
+            <CardTitle className="flex items-center gap-2 text-xl font-black sm:text-2xl">
+              <User className="h-5 w-5 text-primary" />
               {t("settings.profile", "Profile")}
             </CardTitle>
-            <CardDescription className="text-base font-bold text-foreground/70 mt-1">{t("settings.your_info", "Edit your account information")}</CardDescription>
+            <CardDescription className="mt-0.5 text-sm font-bold text-foreground/70">{t("settings.your_info", "Edit your account information")}</CardDescription>
           </CardHeader>
-          <CardContent className="p-6 sm:p-8 space-y-6">
-            <div className="grid sm:grid-cols-2 gap-6">
+          <CardContent className="space-y-4 p-4 sm:p-5">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="firstName" className="text-sm sm:text-base font-black uppercase tracking-wider text-foreground mb-2 block">First name</Label>
+                <Label htmlFor="firstName" className="mb-1.5 block text-xs font-black uppercase tracking-wider text-foreground">First name</Label>
                 <Input
                   id="firstName"
                   value={form.firstName}
                   onChange={(e) => updateField("firstName", e.target.value)}
                   aria-invalid={!form.firstName.trim()}
-                  className="h-13 text-base sm:text-lg font-bold rounded-xl border-2 px-4"
+                  className="h-10 rounded-lg border px-3 text-sm font-bold"
                   data-testid="input-first-name"
                 />
               </div>
               <div>
-                <Label htmlFor="lastName" className="text-sm sm:text-base font-black uppercase tracking-wider text-foreground mb-2 block">Last name</Label>
+                <Label htmlFor="lastName" className="mb-1.5 block text-xs font-black uppercase tracking-wider text-foreground">Last name</Label>
                 <Input
                   id="lastName"
                   value={form.lastName}
                   onChange={(e) => updateField("lastName", e.target.value)}
-                  className="h-13 text-base sm:text-lg font-bold rounded-xl border-2 px-4"
+                  className="h-10 rounded-lg border px-3 text-sm font-bold"
                   data-testid="input-last-name"
                 />
               </div>
               <div>
-                <Label htmlFor="phone" className="text-sm sm:text-base font-black uppercase tracking-wider text-foreground mb-2 block">Phone</Label>
+                <Label htmlFor="phone" className="mb-1.5 block text-xs font-black uppercase tracking-wider text-foreground">Phone</Label>
                 <Input
                   id="phone"
                   value={form.phone}
                   onChange={(e) => updateField("phone", e.target.value)}
                   placeholder="+44 7700 900000"
                   aria-invalid={!phoneIsValid}
-                  className="h-13 text-base sm:text-lg font-bold rounded-xl border-2 px-4"
+                  className="h-10 rounded-lg border px-3 text-sm font-bold"
                   data-testid="input-phone"
                 />
               </div>
               <div>
-                <Label htmlFor="city" className="text-sm sm:text-base font-black uppercase tracking-wider text-foreground mb-2 block">Location</Label>
-                <div className="grid grid-cols-[minmax(0,1fr)_minmax(160px,0.9fr)] gap-3">
+                <Label htmlFor="city" className="mb-1.5 block text-xs font-black uppercase tracking-wider text-foreground">Location</Label>
+                <div className="grid grid-cols-[minmax(0,1fr)_minmax(140px,0.8fr)] gap-2">
                   <Input
                     id="city"
                     value={form.city}
                     onChange={(e) => updateField("city", e.target.value)}
                     placeholder="City"
-                    className="h-13 text-base sm:text-lg font-bold rounded-xl border-2 px-4"
+                    className="h-10 rounded-lg border px-3 text-sm font-bold"
                     data-testid="input-location-city"
                   />
                   <Popover open={countryPickerOpen} onOpenChange={setCountryPickerOpen}>
@@ -317,16 +317,16 @@ export default function SettingsPage() {
                         variant="outline"
                         role="combobox"
                         aria-expanded={countryPickerOpen}
-                        className="h-13 justify-between overflow-hidden px-4 text-base font-black rounded-xl border-2"
+                        className="h-10 justify-between overflow-hidden rounded-lg border px-3 text-sm font-black"
                         data-testid="button-country-picker"
                       >
                         <span className="flex min-w-0 items-center gap-2">
-                          <CountryFlag code={form.countryCode} className="h-5 w-7 shrink-0 rounded-md object-cover" />
+                          <CountryFlag code={form.countryCode} className="h-4 w-6 shrink-0 rounded object-cover" />
                           <span className="truncate">
                             {form.countryCode ? getName(form.countryCode) : "Country"}
                           </span>
                         </span>
-                        <ChevronsUpDown className="ml-2 h-5 w-5 shrink-0 opacity-50" />
+                        <ChevronsUpDown className="ml-1.5 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent align="end" className="w-[280px] p-0">
@@ -360,15 +360,15 @@ export default function SettingsPage() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <p className="mt-2 flex items-center gap-1.5 text-sm font-bold text-muted-foreground">
-                  <MapPin className="h-4 w-4 text-primary shrink-0" />
+                <p className="mt-1.5 flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
                   Country updates for common cities; you can still override it.
                 </p>
               </div>
-              <div className="grid grid-cols-1 gap-4 border-t-2 border-border/40 pt-6 sm:col-span-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(180px,0.85fr)]">
-                <div className="flex min-h-28 min-w-0 flex-col justify-between overflow-hidden rounded-2xl border-2 border-border/80 bg-muted/30 p-4 shadow-xs sm:col-span-2 lg:col-span-1 lg:p-5">
-                  <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
-                    <Label className="flex min-w-0 items-center gap-2 text-xs font-black uppercase tracking-wide text-muted-foreground sm:text-sm">
+              <div className="grid grid-cols-1 gap-3 border-t border-border/40 pt-4 sm:col-span-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(170px,0.8fr)]">
+                <div className="flex min-h-20 min-w-0 flex-col justify-between overflow-hidden rounded-xl border border-border/80 bg-muted/30 p-3 shadow-xs sm:col-span-2 lg:col-span-1">
+                  <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
+                    <Label className="flex min-w-0 items-center gap-1.5 text-xs font-black uppercase tracking-wide text-muted-foreground">
                       <Mail className="h-4 w-4 text-primary shrink-0" />
                       <span className="truncate">Email</span>
                     </Label>
@@ -376,13 +376,13 @@ export default function SettingsPage() {
                       <Badge className="shrink-0 rounded-lg border-none bg-amber-400 px-2.5 py-0.5 text-[10px] font-black text-black shadow-2xs sm:text-xs">Verified</Badge>
                     )}
                   </div>
-                  <p className="min-w-0 truncate text-sm font-bold text-foreground sm:text-base" title={user?.email || "Not set"} data-testid="text-profile-email">
+                  <p className="min-w-0 truncate text-sm font-bold text-foreground" title={user?.email || "Not set"} data-testid="text-profile-email">
                     {user?.email || "Not set"}
                   </p>
                 </div>
-                <div className="flex min-h-28 min-w-0 flex-col justify-between overflow-hidden rounded-2xl border-2 border-border/80 bg-muted/30 p-4 shadow-xs lg:p-5">
-                  <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
-                    <Label className="flex min-w-0 items-center gap-2 text-xs font-black uppercase tracking-wide text-muted-foreground sm:text-sm">
+                <div className="flex min-h-20 min-w-0 flex-col justify-between overflow-hidden rounded-xl border border-border/80 bg-muted/30 p-3 shadow-xs">
+                  <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
+                    <Label className="flex min-w-0 items-center gap-1.5 text-xs font-black uppercase tracking-wide text-muted-foreground">
                       <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span className="truncate">Phone status</span>
                     </Label>
@@ -390,47 +390,47 @@ export default function SettingsPage() {
                       <Badge className="shrink-0 rounded-lg border-none bg-amber-400 px-2.5 py-0.5 text-[10px] font-black text-black shadow-2xs sm:text-xs">Verified</Badge>
                     )}
                   </div>
-                  <p className="min-w-0 truncate text-sm font-bold text-foreground sm:text-base" title={form.phone || "Not set"}>{form.phone || "Not set"}</p>
+                  <p className="min-w-0 truncate text-sm font-bold text-foreground" title={form.phone || "Not set"}>{form.phone || "Not set"}</p>
                 </div>
-                <div className="flex min-h-28 min-w-0 flex-col justify-between overflow-hidden rounded-2xl border-2 border-border/80 bg-muted/30 p-4 shadow-xs lg:p-5">
-                  <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
-                    <Label className="flex min-w-0 items-center gap-2 text-xs font-black uppercase tracking-wide text-muted-foreground sm:text-sm">
+                <div className="flex min-h-20 min-w-0 flex-col justify-between overflow-hidden rounded-xl border border-border/80 bg-muted/30 p-3 shadow-xs">
+                  <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
+                    <Label className="flex min-w-0 items-center gap-1.5 text-xs font-black uppercase tracking-wide text-muted-foreground">
                       <User className="h-4 w-4 text-primary shrink-0" />
                       <span className="whitespace-nowrap">Account role</span>
                     </Label>
                   </div>
-                  <p className="truncate text-base font-black capitalize text-foreground sm:text-lg" data-testid="text-profile-role">{user?.role || "buyer"}</p>
+                  <p className="truncate text-sm font-black capitalize text-foreground" data-testid="text-profile-role">{user?.role || "buyer"}</p>
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-border/40">
-              <div className="min-h-6 text-base font-bold" aria-live="polite">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/40 pt-3">
+              <div className="min-h-5 text-sm font-bold" aria-live="polite">
                 {validationMessage ? (
                   <span className="text-destructive font-black">{validationMessage}</span>
                 ) : showSavedStatus ? (
-                  <span className="flex items-center gap-2 text-emerald-700 font-black">
-                    <CheckCircle2 className="h-5 w-5" />
+                  <span className="flex items-center gap-1.5 font-black text-emerald-700">
+                    <CheckCircle2 className="h-4 w-4" />
                     Changes saved
                   </span>
                 ) : null}
               </div>
-              <div className="flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto">
+              <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
                 <Button
                   variant="outline"
                   onClick={logout}
-                  className="h-13 rounded-xl border-2 px-6 text-base font-black text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/30"
+                  className="h-10 rounded-lg border px-4 text-sm font-black text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/30"
                   data-testid="button-logout"
                 >
-                  <LogOut className="mr-2 h-5 w-5" />
+                  <LogOut className="mr-1.5 h-4 w-4" />
                   {t("nav.signout", "Sign out")}
                 </Button>
                 <Button
                   onClick={() => updateProfile.mutate()}
                   disabled={updateProfile.isPending || !isDirty || Boolean(validationMessage)}
-                  className="h-13 px-8 text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg rounded-xl"
+                  className="h-10 rounded-lg bg-amber-400 px-5 text-sm font-black uppercase tracking-wider text-black shadow-md hover:bg-amber-500"
                   data-testid="button-save-profile"
                 >
-                  {updateProfile.isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                  {updateProfile.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
                   Save changes
                 </Button>
               </div>
@@ -438,14 +438,14 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-2 rounded-2xl shadow-lg">
-          <CardHeader className="p-6 sm:p-8 flex-row items-center justify-between gap-4 space-y-0">
+        <Card className="rounded-xl border shadow-md">
+          <CardHeader className="flex-row items-center justify-between gap-3 space-y-0 p-4 sm:p-5">
             <div>
-              <CardTitle className="text-2xl sm:text-3xl font-black flex items-center gap-3">
-                <ShieldCheck className="h-7 w-7 text-primary" />
+              <CardTitle className="flex items-center gap-2 text-xl font-black sm:text-2xl">
+                <ShieldCheck className="h-5 w-5 text-primary" />
                 {t("settings.security", "Security")}
               </CardTitle>
-              <CardDescription className="text-base font-bold text-foreground/70 mt-1">Password and two-factor authentication controls.</CardDescription>
+              <CardDescription className="mt-0.5 text-sm font-bold text-foreground/70">Password and two-factor authentication controls.</CardDescription>
             </div>
             <ComingSoonBadge />
           </CardHeader>

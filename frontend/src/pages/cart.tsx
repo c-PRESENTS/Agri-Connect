@@ -106,25 +106,26 @@ export default function CartPage() {
         </Button>
       </div>
 
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 pb-32 md:pb-12 space-y-8">
-        <div className="mb-8 rounded-3xl border-2 border-border/80 bg-card px-4 py-6 shadow-md sm:px-8">
-          <CheckoutProgress currentStep={1} />
+      <main className="mx-auto w-full max-w-[1440px] px-3 py-3 pb-32 sm:px-5 sm:py-4 md:pb-8 lg:px-6">
+        <div className="rounded-2xl border border-border/80 bg-card px-3 py-3 shadow-sm sm:px-5">
+          <CheckoutProgress currentStep={1} compact />
         </div>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight" data-testid="text-cart-heading">
+        <h1 className="my-3 text-2xl font-black tracking-tight text-foreground sm:my-4 sm:text-3xl" data-testid="text-cart-heading">
           {t("cart.title", "Your Cart")}{" "}
-          <span className="text-muted-foreground text-xl sm:text-2xl font-bold">({items.length})</span>
+          <span className="text-base font-bold text-muted-foreground sm:text-lg">({items.length})</span>
         </h1>
 
-        <Card className="border-2 border-border/80 rounded-3xl shadow-md overflow-hidden">
-          <CardHeader className="pb-4 bg-muted/20 border-b border-border/60">
-            <CardTitle className="text-xl sm:text-2xl font-black flex items-center gap-3 text-foreground">
-              <ShoppingBag className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_390px]">
+        <Card className="overflow-hidden rounded-2xl border border-border/80 shadow-sm">
+          <CardHeader className="border-b border-border/60 bg-muted/20 px-4 py-3">
+            <CardTitle className="flex items-center gap-2 text-base font-black text-foreground sm:text-lg">
+              <ShoppingBag className="h-5 w-5 text-primary" />
               {t("cart.order_items", "Order Items")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <ScrollArea className="max-h-[60vh]">
-              <div className="space-y-5">
+          <CardContent className="p-2.5 sm:p-3">
+            <ScrollArea className="max-h-[calc(100vh-15rem)] min-h-[22rem]">
+              <div className="space-y-2 pr-1">
                 <AnimatePresence>
                   {items.map((item) => (
                     <motion.div
@@ -133,10 +134,10 @@ export default function CartPage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
-                      className="flex gap-4 sm:gap-6 p-4 rounded-2xl border-2 border-border/50 hover:border-primary/40 bg-card hover:bg-muted/20 transition-all shadow-xs"
+                      className="flex gap-3 rounded-xl border border-border/60 bg-card p-2.5 shadow-xs transition-all hover:border-primary/40 hover:bg-muted/20 sm:p-3"
                       data-testid={`cart-item-${item.id}`}
                     >
-                      <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-2xl overflow-hidden bg-muted flex-shrink-0 border-2 border-border/60 shadow-xs">
+                      <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted shadow-xs sm:h-24 sm:w-24">
                         <SafeProductImage
                           src={resolveProductImageForProduct(item.product).src}
                           fallbackSrc={resolveProductImageForProduct(item.product).fallbackSrc}
@@ -147,35 +148,35 @@ export default function CartPage() {
                       <div className="flex-1 min-w-0 flex flex-col justify-between">
                         <div>
                           <h4
-                            className="font-black text-base sm:text-lg md:text-xl text-foreground uppercase tracking-wide truncate"
+                            className="truncate text-sm font-black uppercase tracking-wide text-foreground sm:text-base"
                             data-testid={`text-cart-item-name-${item.id}`}
                           >
                             {item.product.name}
                           </h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Avatar className="h-5 w-5 sm:h-6 sm:w-6 border">
+                          <div className="mt-0.5 flex items-center gap-1.5">
+                            <Avatar className="h-4 w-4 border sm:h-5 sm:w-5">
                               <AvatarImage src={item.product.farmerAvatar} />
                               <AvatarFallback className="text-[10px] font-black">
                                 {item.product.farmerName[0]}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-xs sm:text-sm font-bold text-muted-foreground truncate">
+                            <span className="truncate text-[11px] font-bold text-muted-foreground sm:text-xs">
                               {item.product.farmerName}
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
+                        <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
                           <div className="flex flex-col">
-                            <span className="font-black text-base sm:text-lg text-primary" data-testid={`text-cart-unit-price-${item.id}`}>
+                            <span className="text-sm font-black text-primary sm:text-base" data-testid={`text-cart-unit-price-${item.id}`}>
                               {format(item.product.price, {
                                 sourceCurrency: item.product.currency || "GBP",
                                 includeCode: true,
                               })}/{item.product.unit}
                             </span>
-                            <p className="text-xs sm:text-sm font-bold text-muted-foreground mt-0.5">
+                            <p className="mt-0.5 text-[11px] font-bold text-muted-foreground sm:text-xs">
                               {t("cart.line_total", "Line total")}:{" "}
-                              <span className="font-black text-foreground text-sm sm:text-base" data-testid={`text-cart-line-total-${item.id}`}>
+                              <span className="text-xs font-black text-foreground sm:text-sm" data-testid={`text-cart-line-total-${item.id}`}>
                                 {format(item.product.price * item.quantity, {
                                   sourceCurrency: item.product.currency || "GBP",
                                   includeCode: true,
@@ -184,11 +185,11 @@ export default function CartPage() {
                             </p>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <Button
                               size="icon"
                               variant="outline"
-                              className="h-9 w-9 rounded-xl border-2 hover:border-primary"
+                              className="h-8 w-8 rounded-lg border hover:border-primary"
                               onClick={() =>
                                 updateItem.mutate({
                                   itemId: item.id,
@@ -202,7 +203,7 @@ export default function CartPage() {
                               <Minus className="h-4 w-4 stroke-[3]" />
                             </Button>
                             <span
-                              className="w-10 text-center text-base sm:text-lg font-black text-foreground"
+                              className="w-7 text-center text-sm font-black text-foreground"
                               data-testid={`text-quantity-${item.id}`}
                             >
                               {item.quantity}
@@ -210,7 +211,7 @@ export default function CartPage() {
                             <Button
                               size="icon"
                               variant="outline"
-                              className="h-9 w-9 rounded-xl border-2 hover:border-primary"
+                              className="h-8 w-8 rounded-lg border hover:border-primary"
                               onClick={() =>
                                 updateItem.mutate({
                                   itemId: item.id,
@@ -243,13 +244,13 @@ export default function CartPage() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-10 w-10 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        className="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => removeItem.mutate(item.id)}
                         disabled={removeItem.isPending}
                         aria-label={`Remove ${item.product.name} from cart`}
                         data-testid={`button-remove-${item.id}`}
                       >
-                        <Trash2 className="h-5 w-5" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </motion.div>
                   ))}
@@ -259,42 +260,42 @@ export default function CartPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-border/80 rounded-3xl shadow-md p-2">
-          <CardContent className="p-6 sm:p-8 space-y-6">
-            <div className="space-y-4 text-base sm:text-lg">
+        <Card className="rounded-2xl border border-border/80 shadow-sm xl:sticky xl:top-3">
+          <CardContent className="space-y-5 p-5 sm:p-6">
+            <div className="space-y-3.5 text-base">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-muted-foreground">{t("cart.subtotal", "Subtotal")}</span>
-                <span className="font-black text-foreground text-lg sm:text-xl" data-testid="text-subtotal">{format(subtotal, { includeCode: true })}</span>
+                <span className="font-extrabold text-foreground/75">{t("cart.subtotal", "Subtotal")}</span>
+                <span className="text-lg font-black text-foreground" data-testid="text-subtotal">{format(subtotal, { includeCode: true })}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-bold text-muted-foreground">{t("cart.delivery", "Delivery")}</span>
-                <span className="font-bold text-foreground/80 text-sm sm:text-base" data-testid="text-delivery-fee">Calculated at checkout</span>
+                <span className="font-extrabold text-foreground/75">{t("cart.delivery", "Delivery")}</span>
+                <span className="text-right text-sm font-bold leading-snug text-foreground/85" data-testid="text-delivery-fee">Calculated at checkout</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-bold text-muted-foreground">Taxes</span>
-                <span className="font-bold text-foreground/80 text-sm sm:text-base" data-testid="text-cart-tax">Included where applicable</span>
+                <span className="font-extrabold text-foreground/75">Taxes</span>
+                <span className="text-right text-sm font-bold leading-snug text-foreground/85" data-testid="text-cart-tax">Included where applicable</span>
               </div>
-              <Separator className="my-4 h-0.5" />
+              <Separator className="my-4" />
               <div className="flex justify-between items-center">
-                <span className="font-black text-xl sm:text-2xl uppercase tracking-wider text-foreground">{t("cart.total", "Total")}</span>
-                <span className="font-black text-2xl sm:text-3xl text-primary" data-testid="text-total">{format(total, { includeCode: true })}</span>
+                <span className="text-lg font-black uppercase tracking-wide text-foreground">{t("cart.total", "Total")}</span>
+                <span className="text-2xl font-black tracking-tight text-primary" data-testid="text-total">{format(total, { includeCode: true })}</span>
               </div>
             </div>
 
-            <div className="space-y-3 pt-2">
+            <div className="hidden space-y-2.5 pt-1 md:block">
               <Button
-                className="w-full h-14 sm:h-16 gap-3 text-base sm:text-lg font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg transition-transform hover:scale-[1.01]"
+                className="h-12 w-full gap-2 bg-amber-400 px-3 text-sm font-black uppercase tracking-wide text-black shadow-md transition-transform hover:scale-[1.01] hover:bg-amber-500 sm:text-[15px]"
                 onClick={handleCheckout}
                 data-testid="button-checkout"
               >
                 {isAuthenticated
                   ? `${t("cart.checkout", "Proceed to Checkout")} • ${format(total, { includeCode: true })}`
                   : t("cart.login_to_checkout", "Sign in to checkout")}
-                <ArrowRight className="h-6 w-6 stroke-[3]" />
+                <ArrowRight className="h-5 w-5 shrink-0 stroke-[3]" />
               </Button>
               <Button
                 variant="outline"
-                className="w-full h-12 text-sm sm:text-base font-black uppercase tracking-wider border-2 hover:bg-muted"
+                className="h-11 w-full border text-sm font-black uppercase tracking-wide hover:bg-muted"
                 onClick={() => setLocation("/")}
                 data-testid="button-continue-shopping"
               >
@@ -303,7 +304,8 @@ export default function CartPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -245,56 +245,56 @@ export default function LogisticsPage() {
     return (
       <Card 
         key={partner.id} 
-        className="hover-elevate cursor-pointer border-2 border-border/80 rounded-2xl shadow-md hover:shadow-xl transition-all"
+        className="hover-elevate cursor-pointer border border-border/80 rounded-xl shadow-sm hover:shadow-md transition-all"
         onClick={() => setSelectedPartner(partner)}
         data-testid={`card-partner-${partner.id}`}
       >
-        <CardContent className="p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-xl ${typeColors[partner.type]}`}>
-                <TypeIcon className="w-6 h-6" />
+        <CardContent className="p-3.5 sm:p-4">
+          <div className="flex items-start justify-between gap-2.5 mb-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className={`p-2.5 rounded-lg shrink-0 ${typeColors[partner.type]}`}>
+                <TypeIcon className="w-5 h-5" />
               </div>
-              <div>
-                <h3 className="font-black text-base sm:text-lg text-foreground">{partner.name}</h3>
-                <p className="text-sm font-bold text-muted-foreground capitalize">{partner.type.replace("-", " ")}</p>
+              <div className="min-w-0">
+                <h3 className="font-black text-sm sm:text-base text-foreground truncate">{partner.name}</h3>
+                <p className="text-xs font-bold text-muted-foreground capitalize">{partner.type.replace("-", " ")}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-              <span className="text-base font-black">{partner.rating}</span>
+            <div className="flex items-center gap-1 shrink-0">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-sm font-black">{partner.rating}</span>
             </div>
           </div>
 
-          <p className="text-sm font-bold text-foreground/80 mb-4">{partner.coverage}</p>
+          <p className="text-xs font-bold text-foreground/80 mb-2.5 line-clamp-2">{partner.coverage}</p>
 
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-1.5 mb-2.5">
             {partner.coldChain && (
-              <Badge variant="secondary" className="text-sm font-black px-3 py-1 rounded-lg">
-                <Snowflake className="w-4 h-4 mr-1.5" />
+              <Badge variant="secondary" className="text-[11px] font-black px-2 py-0.5 rounded-md">
+                <Snowflake className="w-3.5 h-3.5 mr-1" />
                 Cold Chain
               </Badge>
             )}
             {partner.tracking && (
-              <Badge variant="secondary" className="text-sm font-black px-3 py-1 rounded-lg">
-                <MapPin className="w-4 h-4 mr-1.5" />
+              <Badge variant="secondary" className="text-[11px] font-black px-2 py-0.5 rounded-md">
+                <MapPin className="w-3.5 h-3.5 mr-1" />
                 Tracking
               </Badge>
             )}
             {partner.insurance && (
-              <Badge variant="secondary" className="text-sm font-black px-3 py-1 rounded-lg">
-                <Shield className="w-4 h-4 mr-1.5" />
+              <Badge variant="secondary" className="text-[11px] font-black px-2 py-0.5 rounded-md">
+                <Shield className="w-3.5 h-3.5 mr-1" />
                 Insured
               </Badge>
             )}
           </div>
 
-          <div className="flex items-center justify-between text-sm sm:text-base pt-2 border-t border-border/40">
-            <div className="flex items-center gap-1.5 font-bold text-muted-foreground">
-              <Clock className="w-4 h-4" />
+          <div className="flex items-center justify-between gap-2 text-xs pt-2 border-t border-border/40">
+            <div className="flex items-center gap-1 font-bold text-muted-foreground min-w-0">
+              <Clock className="w-3.5 h-3.5 shrink-0" />
               <span>{partner.deliveryTime}</span>
             </div>
-            <span className="font-black text-base sm:text-lg text-primary">
+            <span className="font-black text-sm text-primary text-right">
               {formatPriceRange(partner.priceRange)}
             </span>
           </div>
@@ -412,48 +412,48 @@ export default function LogisticsPage() {
     <div className="min-h-screen bg-background">
       <TopNavigation />
       <SplitMapLayout mapProps={{ title: "Sellers along your routes", subtitle: "Tap a pin to view seller listings" }}>
-        <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
+        <div className="w-full px-3 py-3 sm:px-5 sm:py-4 lg:px-6 space-y-4">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight" data-testid="text-logistics-heading">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight" data-testid="text-logistics-heading">
                   {t("logistics.title", "Logistics & Delivery")}
                 </h1>
-                <ComingSoonBadge />
+                <ComingSoonBadge className="!px-3 !py-1.5 !text-sm sm:!text-base" />
               </div>
-              <p className="text-base sm:text-lg font-bold text-foreground/80 mt-2">
+              <p className="text-sm sm:text-base font-bold text-foreground/80 mt-1">
                 {t("logistics.subtitle", "Book parcel shipping, explore trusted carriers, join milk runs, and collaborate on shared regional transport.")}
               </p>
             </div>
             <Button
-              size="lg"
+              size="sm"
               onClick={() => handleTabChange("shipping")}
-              className="h-12 px-6 text-sm sm:text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg rounded-xl shrink-0"
+              className="h-9 px-4 text-xs sm:text-sm font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-md rounded-lg shrink-0"
               data-testid="button-quick-send"
             >
-              <Plus className="h-5 w-5 mr-1.5" />{t("ship.send_parcel_button", "Send Parcel")}
+              <Plus className="h-4 w-4 mr-1" />{t("ship.send_parcel_button", "Send Parcel")}
             </Button>
           </div>
 
           {/* Quick Tracking Bar */}
-          <Card className="bg-amber-500/10 border-2 border-amber-300 rounded-2xl shadow-md">
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex items-center gap-3">
-                <Search className="h-6 w-6 text-muted-foreground flex-shrink-0" />
+          <Card className="bg-amber-500/10 border border-amber-300 rounded-xl shadow-sm">
+            <CardContent className="p-2.5 sm:p-3">
+              <div className="flex items-center gap-2.5">
+                <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <Input
                   placeholder={t("ship_track.tracking_number_placeholder", "Enter tracking ID or order reference (e.g. AGC-789456)...")}
                   value={trackInput}
                   onChange={(e) => setTrackInput(e.target.value.toUpperCase())}
                   onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-                  className="border-0 bg-transparent focus-visible:ring-0 px-0 text-base sm:text-lg font-black font-mono h-12"
+                  className="border-0 bg-transparent focus-visible:ring-0 px-0 text-sm font-black font-mono h-9"
                   data-testid="input-track-quick"
                 />
                 <Button 
-                  size="lg" 
+                  size="sm"
                   onClick={handleTrack} 
                   disabled={!trackInput.trim()} 
-                  className="h-12 px-6 text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-md rounded-xl" 
+                  className="h-9 px-4 text-xs sm:text-sm font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-sm rounded-lg"
                   data-testid="button-track-quick"
                 >
                   {t("ship_track.track_button", "Track")}
@@ -463,74 +463,74 @@ export default function LogisticsPage() {
           </Card>
 
           {/* Unified Tabs */}
-          <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
-            <TabsList className="h-auto flex-wrap gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm justify-start">
+          <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-4">
+            <TabsList className="h-auto flex-wrap gap-1.5 border border-emerald-300 bg-emerald-50/90 p-1.5 rounded-xl shadow-sm justify-start">
               <TabsTrigger 
                 value="partners" 
-                className="px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs" 
+                className="px-3 py-2 text-[11px] sm:text-xs font-black uppercase tracking-wide rounded-lg text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs"
                 data-testid="tab-partners"
               >
-                <Truck className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <Truck className="w-4 h-4 mr-1.5" />
                 {t("logistics.partners_tab", "Logistics Partners")}
               </TabsTrigger>
 
               <TabsTrigger 
                 value="shipping" 
-                className="px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs" 
+                className="px-3 py-2 text-[11px] sm:text-xs font-black uppercase tracking-wide rounded-lg text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs"
                 data-testid="tab-shipping"
               >
-                <Send className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <Send className="w-4 h-4 mr-1.5" />
                 {t("ship.shipping_management", "Shipping & Send")}
               </TabsTrigger>
 
               <TabsTrigger 
                 value="milk-run" 
-                className="px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs" 
+                className="px-3 py-2 text-[11px] sm:text-xs font-black uppercase tracking-wide rounded-lg text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs"
                 data-testid="tab-milk-run"
               >
-                <Route className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <Route className="w-4 h-4 mr-1.5" />
                 {t("logistics.milk_run_tab", "Milk Run Routes")}
               </TabsTrigger>
 
               <TabsTrigger 
                 value="tracking" 
-                className="px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs" 
+                className="px-3 py-2 text-[11px] sm:text-xs font-black uppercase tracking-wide rounded-lg text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs"
                 data-testid="tab-tracking"
               >
-                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <MapPin className="w-4 h-4 mr-1.5" />
                 {t("logistics.tracking_tab", "Track Shipment")}
               </TabsTrigger>
 
               <TabsTrigger 
                 value="collaboration" 
-                className="px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs" 
+                className="px-3 py-2 text-[11px] sm:text-xs font-black uppercase tracking-wide rounded-lg text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs"
                 data-testid="tab-collaboration"
               >
-                <Handshake className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <Handshake className="w-4 h-4 mr-1.5" />
                 {t("logistics.collaboration_tab", "Collaboration Hub")}
               </TabsTrigger>
             </TabsList>
 
             {/* 1. LOGISTICS PARTNERS TAB */}
-            <TabsContent value="partners" className="space-y-6">
-              <div className="flex flex-col lg:flex-row gap-4 mb-6">
+            <TabsContent value="partners" className="space-y-4">
+              <div className="flex flex-col xl:flex-row gap-2.5 mb-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder={t("logistics.search_placeholder", "Search logistics partners...")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 h-12 text-base font-bold rounded-xl border-2"
+                    className="pl-9 h-9 text-sm font-bold rounded-lg border"
                     data-testid="input-search-partners"
                   />
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {["all", "international", "national", "hyperlocal", "cold-chain", "freight"].map((type) => (
                     <Button
                       key={type}
                       variant={selectedType === type ? "default" : "outline"}
-                      size="lg"
-                      className={`h-12 px-5 text-sm sm:text-base font-black rounded-xl border-2 capitalize ${selectedType === type ? "bg-emerald-700 hover:bg-emerald-800 text-white" : ""}`}
+                      size="sm"
+                      className={`h-9 px-3 text-xs sm:text-sm font-black rounded-lg border capitalize ${selectedType === type ? "bg-emerald-700 hover:bg-emerald-800 text-white" : ""}`}
                       onClick={() => setSelectedType(type)}
                       data-testid={`button-filter-${type}`}
                     >
@@ -540,7 +540,7 @@ export default function LogisticsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(245px,1fr))] gap-3">
                 {filteredPartners.map(renderPartnerCard)}
               </div>
 
@@ -557,12 +557,12 @@ export default function LogisticsPage() {
               )}
 
               {/* Carrier Aggregator Ecosystem */}
-              <div className="mt-8 space-y-4">
-                <h3 className="text-xl font-black text-foreground flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-primary" />
+              <div className="mt-5 space-y-3">
+                <h3 className="text-lg font-black text-foreground flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-primary" />
                   Integrated Carrier Network
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2.5">
                   {[
                     { name: "Royal Mail", icon: Truck, color: "text-red-600", svc: "UK · Tracked 24/48", from: 4.99 },
                     { name: "Evri", icon: Truck, color: "text-blue-600", svc: "UK · Economical courier", from: 3.95 },
@@ -598,10 +598,10 @@ export default function LogisticsPage() {
             </TabsContent>
 
             {/* 2. SHIPPING & SEND MANAGEMENT TAB */}
-            <TabsContent value="shipping" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 items-start">
+            <TabsContent value="shipping" className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4 items-start">
                 {/* Send Parcel Wizard */}
-                <Card className="border-2 rounded-3xl shadow-md">
+                <Card className="border rounded-2xl shadow-sm">
                   <CardHeader className="pb-3 border-b bg-muted/20">
                     <CardTitle className="text-lg sm:text-xl font-black flex items-center gap-2 text-foreground">
                       <Send className="h-5 w-5 text-primary" />
@@ -611,7 +611,7 @@ export default function LogisticsPage() {
                       Instant multi-carrier rate calculation and scheduled pickup booking.
                     </p>
                   </CardHeader>
-                  <CardContent className="p-4 sm:p-6">
+                  <CardContent className="p-3 sm:p-4">
                     <SendParcelWizard />
                   </CardContent>
                 </Card>
@@ -809,12 +809,12 @@ export default function LogisticsPage() {
             </TabsContent>
 
             {/* 4. TRACK SHIPMENT TAB */}
-            <TabsContent value="tracking" className="space-y-6">
-              <Card className="rounded-3xl border-2 shadow-md">
-                <CardContent className="p-6 sm:p-10">
-                  <div className="max-w-lg mx-auto text-center space-y-4">
-                    <Package className="w-12 h-12 mx-auto text-primary" />
-                    <h3 className="text-2xl font-black text-foreground">Live Shipment Tracking</h3>
+            <TabsContent value="tracking" className="space-y-4">
+              <Card className="rounded-2xl border shadow-sm">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="max-w-2xl mx-auto text-center space-y-3">
+                    <Package className="w-9 h-9 mx-auto text-primary" />
+                    <h3 className="text-xl font-black text-foreground">Live Shipment Tracking</h3>
                     <p className="text-sm font-bold text-muted-foreground">
                       Enter any AgriConnect parcel ID, order number, or partner tracking code to view live status.
                     </p>
@@ -824,10 +824,10 @@ export default function LogisticsPage() {
                         value={trackInput}
                         onChange={(e) => setTrackInput(e.target.value.toUpperCase())}
                         onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-                        className="flex-1 h-12 text-base font-mono font-bold rounded-xl border-2"
+                        className="flex-1 h-10 text-sm font-mono font-bold rounded-lg border"
                         data-testid="input-tracking-id-full"
                       />
-                      <Button size="lg" onClick={handleTrack} disabled={!trackInput.trim()} className="h-12 px-6 font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black rounded-xl shadow-md" data-testid="button-track-full">
+                      <Button size="sm" onClick={handleTrack} disabled={!trackInput.trim()} className="h-10 px-5 font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black rounded-lg shadow-sm" data-testid="button-track-full">
                         Track
                       </Button>
                     </div>
@@ -836,14 +836,14 @@ export default function LogisticsPage() {
               </Card>
 
               {/* Sample Tracking Progress Preview */}
-              <Card className="rounded-3xl border-2 shadow-sm">
+              <Card className="rounded-2xl border shadow-sm">
                 <CardHeader className="bg-muted/20 border-b">
                   <CardTitle className="text-base font-black flex items-center justify-between">
                     <span>Sample Live Route Progress</span>
                     <Badge className="bg-blue-500 font-bold text-xs">In Transit</Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-5 sm:p-6 space-y-4">
+                <CardContent className="p-4 space-y-3">
                   <div className="space-y-3">
                     {[
                       { status: "Dispatched from Farm / Hub", time: "08:30 AM", done: true },
@@ -871,13 +871,13 @@ export default function LogisticsPage() {
             </TabsContent>
 
             {/* 5. LOGISTICS COLLABORATION TAB */}
-            <TabsContent value="collaboration" className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <TabsContent value="collaboration" className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                 {opportunities.map((item) => (
-                  <Card key={item.title} className="border-2 rounded-2xl shadow-xs">
-                    <CardContent className="p-5 space-y-2">
-                      <div className="p-3 bg-primary/10 rounded-2xl w-fit">
-                        <item.icon className="h-6 w-6 text-primary" />
+                  <Card key={item.title} className="border rounded-xl shadow-xs">
+                    <CardContent className="p-4 space-y-1.5">
+                      <div className="p-2.5 bg-primary/10 rounded-xl w-fit">
+                        <item.icon className="h-5 w-5 text-primary" />
                       </div>
                       <h3 className="font-black text-base text-foreground">{item.title}</h3>
                       <p className="text-xs font-bold text-muted-foreground leading-relaxed">{item.description}</p>
@@ -886,9 +886,9 @@ export default function LogisticsPage() {
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-4">
                 {/* Interest Registration Form */}
-                <Card className="border-2 rounded-3xl shadow-md overflow-hidden">
+                <Card className="border rounded-2xl shadow-sm overflow-hidden">
                   <CardHeader className="bg-muted/20 border-b">
                     <CardTitle className="text-xl font-black text-foreground">
                       Register Logistics Collaboration Interest
@@ -897,7 +897,7 @@ export default function LogisticsPage() {
                       Join regional pilots for shared freight, cold-chain routing, or warehouse fulfilment hubs.
                     </p>
                   </CardHeader>
-                  <CardContent className="p-5 sm:p-6">
+                  <CardContent className="p-4 sm:p-5">
                     {registered ? (
                       <div className="p-6 text-center space-y-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl border border-emerald-300">
                         <CheckCircle2 className="h-10 w-10 mx-auto text-emerald-600" />
@@ -919,9 +919,9 @@ export default function LogisticsPage() {
                           }
                           registerInterest.mutate(form);
                         }}
-                        className="space-y-4"
+                        className="space-y-3"
                       >
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1.5">
                             <Label className="text-xs font-black">Contact Name *</Label>
                             <Input
@@ -945,7 +945,7 @@ export default function LogisticsPage() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1.5">
                             <Label className="text-xs font-black">Organisation / Company Name</Label>
                             <Input
@@ -966,7 +966,7 @@ export default function LogisticsPage() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1.5">
                             <Label className="text-xs font-black">Collaboration Type</Label>
                             <Select
@@ -1001,14 +1001,14 @@ export default function LogisticsPage() {
                             value={form.details}
                             onChange={(e) => setForm({ ...form, details: e.target.value })}
                             placeholder="Tell us about your fleet, daily routes, refrigeration capabilities, or warehouse storage..."
-                            className="rounded-xl border-2 min-h-24"
+                            className="rounded-lg border min-h-20"
                           />
                         </div>
 
                         <Button
                           type="submit"
                           disabled={registerInterest.isPending}
-                          className="w-full h-12 text-sm font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg rounded-xl"
+                          className="w-full h-10 text-xs sm:text-sm font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-sm rounded-lg"
                         >
                           {registerInterest.isPending ? "Submitting..." : "Submit Collaboration Request"}
                         </Button>
@@ -1018,11 +1018,11 @@ export default function LogisticsPage() {
                 </Card>
 
                 {/* Launch Steps */}
-                <Card className="border-2 rounded-3xl shadow-sm bg-muted/20">
-                  <CardHeader>
+                <Card className="border rounded-2xl shadow-sm bg-muted/20">
+                  <CardHeader className="pb-3">
                     <CardTitle className="text-lg font-black text-foreground">Pilot Onboarding Steps</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3">
                     {launchSteps.map((step, idx) => (
                       <div key={idx} className="flex items-start gap-3">
                         <div className="h-7 w-7 rounded-xl bg-primary text-primary-foreground font-black text-xs flex items-center justify-center shrink-0">

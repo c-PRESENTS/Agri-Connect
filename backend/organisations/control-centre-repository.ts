@@ -46,17 +46,17 @@ export async function listControlCentreOrganisations(userId: string, superAdmin:
 export async function getControlCentreOverview(days = 30) {
   const [summaryResult, orderStatuses, trends, recent, categories, farmers, regions, growth] = await Promise.all([
     pool.query(`SELECT
-      (SELECT count(*)::int FROM users WHERE auth_method<>'catalog_seed') AS total_users,
-      (SELECT count(*)::int FROM users WHERE (role='farmer' OR seller_enabled=true) AND auth_method<>'catalog_seed') AS farmers,
-      (SELECT count(*)::int FROM users WHERE seller_enabled=true AND auth_method<>'catalog_seed') AS sellers,
+      (SELECT count(*)::int FROM users WHERE auth_method IS DISTINCT FROM 'catalog_seed') AS total_users,
+      (SELECT count(*)::int FROM users WHERE (role='farmer' OR seller_enabled=true) AND auth_method IS DISTINCT FROM 'catalog_seed') AS farmers,
+      (SELECT count(*)::int FROM users WHERE seller_enabled=true AND auth_method IS DISTINCT FROM 'catalog_seed') AS sellers,
       (SELECT count(*)::int FROM users u LEFT JOIN seller_verification_cases svc ON svc.seller_id=u.id
-        WHERE (u.role='farmer' OR u.seller_enabled=true) AND u.auth_method<>'catalog_seed' AND COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' END)='verified') AS verified_farmers,
-      (SELECT count(*)::int FROM seller_verification_cases svc JOIN users u ON u.id=svc.seller_id WHERE u.auth_method<>'catalog_seed' AND svc.status IN ('pending_review','needs_information')) AS pending_farmers,
+        WHERE (u.role='farmer' OR u.seller_enabled=true) AND u.auth_method IS DISTINCT FROM 'catalog_seed' AND svc.status='verified') AS verified_farmers,
+      (SELECT count(*)::int FROM seller_verification_cases svc JOIN users u ON u.id=svc.seller_id WHERE u.auth_method IS DISTINCT FROM 'catalog_seed' AND svc.status IN ('pending_review','needs_information')) AS pending_farmers,
       (SELECT count(*)::int FROM commerce_products) AS products,
       (SELECT count(*)::int FROM commerce_orders) AS orders,
       (SELECT COALESCE(sum(total_minor),0)::text FROM commerce_orders WHERE currency='GBP' AND status NOT IN ('cancelled','refunded')) AS revenue_minor,
-      (SELECT count(*)::int FROM users WHERE created_at>=date_trunc('month',now()) AND auth_method<>'catalog_seed') AS new_users,
-      (SELECT count(DISTINCT user_id)::int FROM account_login_events ale JOIN users u ON u.id=ale.user_id WHERE ale.outcome='success' AND ale.occurred_at>=now()-interval '30 days' AND u.auth_method<>'catalog_seed') AS active_users,
+      (SELECT count(*)::int FROM users WHERE created_at>=date_trunc('month',now()) AND auth_method IS DISTINCT FROM 'catalog_seed') AS new_users,
+      (SELECT count(DISTINCT user_id)::int FROM account_login_events ale JOIN users u ON u.id=ale.user_id WHERE ale.outcome='success' AND ale.occurred_at>=now()-interval '30 days' AND u.auth_method IS DISTINCT FROM 'catalog_seed') AS active_users,
       (SELECT count(*)::int FROM commerce_orders WHERE created_at>=date_trunc('month',now())) AS new_orders,
       (SELECT COALESCE(sum(total_minor),0)::text FROM commerce_orders WHERE currency='GBP' AND status NOT IN ('cancelled','refunded') AND created_at>=date_trunc('month',now())) AS gmv_minor,
       (SELECT count(*)::int FROM market_regions WHERE active=true) AS regions,
@@ -79,15 +79,15 @@ export async function getControlCentreOverview(days = 30) {
         count(DISTINCT p.id)::int AS products,COALESCE(sum(oi.unit_price_minor*oi.quantity) FILTER (WHERE oi.currency='GBP'),0)::text AS revenue_minor
       FROM users u LEFT JOIN commerce_products p ON p.farmer_id=u.id
       LEFT JOIN commerce_order_items oi ON oi.seller_id=u.id
-      WHERE (u.role='farmer' OR u.seller_enabled=true) AND u.auth_method<>'catalog_seed'
+      WHERE (u.role='farmer' OR u.seller_enabled=true) AND u.auth_method IS DISTINCT FROM 'catalog_seed'
       GROUP BY u.id ORDER BY sum(oi.unit_price_minor*oi.quantity) DESC NULLS LAST,u.rating DESC LIMIT 6`),
     pool.query(`SELECT mr.name AS region,count(DISTINCT sra.seller_id)::int AS farmers
       FROM market_regions mr LEFT JOIN seller_region_assignments sra ON sra.region_id=mr.id AND sra.status='active'
       LEFT JOIN users u ON u.id=sra.seller_id
-      WHERE mr.active=true AND (u.id IS NULL OR u.auth_method<>'catalog_seed') GROUP BY mr.id,mr.name ORDER BY farmers DESC,mr.name LIMIT 8`),
+      WHERE mr.active=true AND (u.id IS NULL OR u.auth_method IS DISTINCT FROM 'catalog_seed') GROUP BY mr.id,mr.name ORDER BY farmers DESC,mr.name LIMIT 8`),
     pool.query(`WITH months AS (SELECT generate_series(date_trunc('month',now())-interval '5 months',date_trunc('month',now()),'1 month') AS month)
       SELECT to_char(months.month,'Mon YYYY') AS label,
-        (SELECT count(*)::int FROM users u WHERE (u.role='farmer' OR u.seller_enabled=true) AND u.auth_method<>'catalog_seed' AND u.created_at<months.month+interval '1 month') AS farmers
+        (SELECT count(*)::int FROM users u WHERE (u.role='farmer' OR u.seller_enabled=true) AND u.auth_method IS DISTINCT FROM 'catalog_seed' AND u.created_at<months.month+interval '1 month') AS farmers
       FROM months ORDER BY months.month`),
   ]);
   const row = summaryResult.rows[0] ?? {};
@@ -114,10 +114,10 @@ export async function getControlCentreOverview(days = 30) {
 
 export async function listControlCentreFarmers(input: { page: number; pageSize: number; search?: string; status?: string; region?: string; registeredDate?: string }) {
   const values: unknown[] = [];
-  const where = ["(u.role='farmer' OR u.seller_enabled=true)", "u.auth_method<>'catalog_seed'"];
+  const where = ["(u.role='farmer' OR u.seller_enabled=true)", "u.auth_method IS DISTINCT FROM 'catalog_seed'"];
   const add = (value: unknown) => { values.push(value); return `$${values.length}`; };
   if (input.search) where.push(`lower(concat_ws(' ',u.name,u.first_name,u.last_name,u.email)) LIKE ${add(`%${input.search.toLowerCase()}%`)}`);
-  if (input.status === "verified") where.push("COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' END)='verified'");
+  if (input.status === "verified") where.push("svc.status='verified'");
   if (input.status === "pending") where.push("COALESCE(svc.status,'not_started') IN ('not_started','in_progress','pending_review','needs_information')");
   if (input.region) where.push(`lower(COALESCE(mr.name,u.location,''))=lower(${add(input.region)})`);
   if (input.registeredDate) where.push(`u.created_at::date=${add(input.registeredDate)}::date`);
@@ -126,8 +126,8 @@ export async function listControlCentreFarmers(input: { page: number; pageSize: 
   const result = await pool.query(`SELECT u.id,
       COALESCE(NULLIF(u.name,''),NULLIF(concat_ws(' ',u.first_name,u.last_name),''),u.email,'Unnamed farmer') AS name,
       COALESCE(u.avatar,u.profile_image_url) AS avatar,u.email,COALESCE(mr.name,u.location,'Unassigned') AS region,
-      COALESCE(u.rating,0) AS rating,COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' ELSE 'not_started' END) AS status,
-      (COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' END)='verified') AS is_verified,
+      COALESCE(u.rating,0) AS rating,COALESCE(svc.status,'not_started') AS status,
+      (svc.status='verified') AS is_verified,
       u.created_at,(SELECT count(*)::int FROM commerce_products p WHERE p.farmer_id=u.id) AS products,
       (SELECT COALESCE(sum(p.stock),0)::int FROM commerce_products p WHERE p.farmer_id=u.id) AS stock,
       count(*) OVER()::int AS total_count
@@ -148,8 +148,8 @@ export async function getControlCentreFarmerDetail(userId: string) {
       COALESCE(NULLIF(u.name,''),NULLIF(concat_ws(' ',u.first_name,u.last_name),''),u.email,'Unnamed farmer') AS name,
       COALESCE(u.avatar,u.profile_image_url) AS avatar,u.email,u.phone,COALESCE(mr.name,u.location,'Unassigned') AS region,
       COALESCE(u.rating,0) AS rating,COALESCE(u.review_count,0) AS review_count,
-      COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' ELSE 'not_started' END) AS status,
-      (COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' END)='verified') AS is_verified,
+      COALESCE(svc.status,'not_started') AS status,
+      (svc.status='verified') AS is_verified,
       svc.id AS verification_case_id,svc.status AS verification_status,svc.expires_at,u.created_at,
       (SELECT count(*)::int FROM commerce_products p WHERE p.farmer_id=u.id) AS products,
       (SELECT COALESCE(sum(p.stock),0)::int FROM commerce_products p WHERE p.farmer_id=u.id) AS stock,
@@ -997,8 +997,8 @@ export async function listControlCentreResources(module: ControlCentreResourceMo
       COALESCE(mr.name,u.location,'Unassigned') AS region,u.role,
       COALESCE(u.rating,0)::float8 AS rating,COALESCE(u.review_count,0)::int AS "reviewCount",
       COALESCE(u.account_status,'active') AS status,
-      (COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' END)='verified') AS "isVerified",
-      COALESCE(svc.status,CASE WHEN u.is_verified THEN 'verified' ELSE 'not_started' END) AS verification,
+      (svc.status='verified') AS "isVerified",
+      COALESCE(svc.status,'not_started') AS verification,
       (SELECT count(*)::int FROM commerce_products p WHERE p.farmer_id=u.id) AS products,
       (SELECT count(DISTINCT oi.order_id)::int FROM commerce_order_items oi WHERE oi.seller_id=u.id) AS orders,
       (SELECT COALESCE(sum(oi.unit_price_minor*oi.quantity),0)::text FROM commerce_order_items oi WHERE oi.seller_id=u.id AND oi.currency='GBP') AS "revenueMinor",
@@ -2020,7 +2020,7 @@ export async function getControlCentreRevenue(days = 30, selectedCurrency = "all
      GROUP BY to_char(co.created_at, 'YYYY-MM-DD'),pa.currency`,
     [days, selectedCurrency],
   );
-  const allocationTrends = new Map(
+  const allocationTrends = new Map<string, { platformFeeMinor: number; producerNetMinor: number }>(
     allocationTrendsRes.rows.map((row: Record<string, unknown>) => [
       `${String(row.day)}:${String(row.currency)}`,
       {

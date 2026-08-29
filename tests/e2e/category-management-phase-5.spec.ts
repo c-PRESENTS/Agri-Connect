@@ -76,6 +76,7 @@ test.describe("organisation admin portal Phase 5", () => {
     ]);
     await repository.ensureCanonicalTaxonomyImported(storageModule.categoriesData);
     const actorId = randomUUID();
+    const sellerId = randomUUID();
     const suffix = randomUUID().slice(0, 8);
     const productId = `phase5-${randomUUID()}`;
     const actor = {
@@ -86,6 +87,7 @@ test.describe("organisation admin portal Phase 5", () => {
     const createdIds: string[] = [];
     try {
       await pool.query("INSERT INTO users(id,email,auth_method,role,name,profile_complete,account_status) VALUES ($1,$2,'password','admin','Phase 5 Reviewer',true,'active')", [actorId, `${actorId}@example.invalid`]);
+      await pool.query("INSERT INTO users(id,email,auth_method,role,seller_enabled,name,profile_complete,account_status) VALUES ($1,$2,'password','farmer',true,'Phase 5 Test Seller',true,'active')", [sellerId, `${sellerId}@example.invalid`]);
       const root = await service.createCategory(actor, { parentId: null, name: `Phase 5 Root ${suffix}`, slug: `phase-5-root-${suffix}`, icon: "Leaf", imageUrl: "/category-logos/fresh-produce.svg", buyerVisible: true, sellerOnly: false, translations: {}, content: { description: "Lifecycle test" } });
       createdIds.push(root.id);
       expect((await repository.listPublishedTaxonomy("buyer")).some((category) => category.id === root.id)).toBe(false);
@@ -113,8 +115,8 @@ test.describe("organisation admin portal Phase 5", () => {
       const publishedFirst = await service.transitionCategory(first.id, "publish", actor, { expectedVersion: pendingFirst.version });
       await pool.query(
         `INSERT INTO commerce_products(id,name,description,price_minor,currency,unit,stock,category_id,subcategory_id,farmer_id,product_data,moderation_status)
-         VALUES ($1,'Phase 5 reference','Reference protection',100,'GBP','kg',1,$2,$3,'catalog_seed',$4::jsonb,'draft')`,
-        [productId, root.id, first.id, JSON.stringify({ id: productId, name: "Phase 5 reference", categoryId: root.id, subcategoryId: first.id })],
+         VALUES ($1,'Phase 5 reference','Reference protection',100,'GBP','kg',1,$2,$3,$4,$5::jsonb,'draft')`,
+        [productId, root.id, first.id, sellerId, JSON.stringify({ id: productId, name: "Phase 5 reference", categoryId: root.id, subcategoryId: first.id, farmerId: sellerId })],
       );
       await expect(service.transitionCategory(first.id, "archive", actor, { expectedVersion: publishedFirst.version, reason: "Attempt referenced archive" })).rejects.toMatchObject({ status: 422, code: "CATEGORY_REFERENCED" });
       await pool.query("DELETE FROM commerce_products WHERE id=$1", [productId]);
@@ -130,6 +132,7 @@ test.describe("organisation admin portal Phase 5", () => {
       await pool.query("DELETE FROM admin_audit_events WHERE target_type='category' AND target_id=ANY($1::varchar[])", [createdIds]).catch(() => undefined);
       for (const id of [...createdIds].reverse()) await pool.query("DELETE FROM catalog_categories WHERE id=$1", [id]).catch(() => undefined);
       await pool.query("DELETE FROM users WHERE id=$1", [actorId]).catch(() => undefined);
+      await pool.query("DELETE FROM users WHERE id=$1", [sellerId]).catch(() => undefined);
     }
   });
 

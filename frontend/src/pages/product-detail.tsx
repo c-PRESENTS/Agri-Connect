@@ -519,7 +519,7 @@ export default function ProductDetailPage() {
             {/* PRODUCT HIGHLIGHTS — Amazon-style icon grid (the F.7 signature feature) */}
             <div className="grid grid-cols-3 gap-3 py-4 px-1 border-y border-border/60" data-testid="grid-product-highlights">
               {[
-                { icon: Globe, label: t("product_detail.specs_certifications"), value: (product.farmerLocation || "UK").split(",")[0] || "UK" },
+                { icon: Globe, label: t("product_detail.specs_certifications"), value: product.farmerLocation?.split(",")[0] || "Not provided" },
                 { icon: product.isOrganic ? Sprout : Wheat, label: t("product_detail.specs_category"), value: product.isOrganic ? "Organic" : "Conventional" },
                 { icon: Tag, label: t("product_detail.specs_brand"), value: (product.farmerName || "Farm").split(" ")[0] },
                 { icon: Package, label: t("product_detail.specs_sku"), value: product.unit },

@@ -58,8 +58,8 @@ export async function listAdminUsers(query: AdminUserDirectoryQuery): Promise<Ad
   if (query.accountType) where.push(`u.role=${add(query.accountType)}`);
   if (query.status) where.push(`u.account_status=${add(query.status)}`);
   if (query.verification) {
-    if (query.verification === "not_verified") where.push("svc.status IS NULL AND u.is_verified=false");
-    else if (query.verification === "verified") where.push("(svc.status='verified' OR (svc.status IS NULL AND u.is_verified=true))");
+    if (query.verification === "not_verified") where.push("svc.status IS NULL");
+    else if (query.verification === "verified") where.push("svc.status='verified'");
     else where.push(`svc.status=${add(query.verification)}`);
   }
   if (query.country) where.push(`COALESCE(svc.country,sbp.country)=${add(query.country)}`);
@@ -75,7 +75,7 @@ export async function listAdminUsers(query: AdminUserDirectoryQuery): Promise<Ad
     `SELECT u.id,
             COALESCE(NULLIF(u.name,''),NULLIF(concat_ws(' ',u.first_name,u.last_name),''),u.email,u.phone,'Unnamed user') AS display_name,
             u.email,u.phone,u.role AS account_type,u.seller_enabled,u.account_status,
-            CASE WHEN svc.status IS NOT NULL THEN svc.status WHEN u.is_verified THEN 'verified' ELSE 'not_verified' END AS verification_status,
+            COALESCE(svc.status,'not_verified') AS verification_status,
             COALESCE(svc.country,sbp.country) AS country,COALESCE(region.name,u.location) AS region,
             u.created_at,u.updated_at,last_login.last_login_at,count(*) OVER()::int AS total_count
        FROM users u
@@ -122,12 +122,12 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
             COALESCE(NULLIF(u.name,''),NULLIF(concat_ws(' ',u.first_name,u.last_name),''),u.email,u.phone,'Unnamed user') AS display_name,
             u.email,u.phone,u.role AS account_type,u.seller_enabled,u.account_status,u.account_status_reason,
             u.avatar,u.profile_image_url,u.rating,u.review_count,u.profile_complete,u.location,u.created_at,u.updated_at,
-            CASE WHEN svc.status IS NOT NULL THEN svc.status WHEN u.is_verified THEN 'verified' ELSE 'not_verified' END AS verification_status,
+            COALESCE(svc.status,'not_verified') AS verification_status,
             COALESCE(svc.country,sbp.country) AS country,COALESCE(region.name,u.location) AS region,last_login.last_login_at,
             svc.id AS verification_case_id,svc.status AS seller_verification_status,svc.updated_at AS verification_updated_at,
             sbp.legal_name,sbp.trading_name,sbp.entity_type,sbp.primary_activities,
-            (u.account_status='active' AND ((u.auth_method='catalog_seed' AND u.is_verified=true) OR
-              (svc.status='verified' AND (svc.expires_at IS NULL OR svc.expires_at>now())))) AS publicly_verified,
+            (u.account_status='active' AND
+              svc.status='verified' AND (svc.expires_at IS NULL OR svc.expires_at>now())) AS publicly_verified,
             (u.account_status='active' AND EXISTS (SELECT 1 FROM seller_region_assignments active_sra
               WHERE active_sra.seller_id=u.id AND active_sra.status='active' AND active_sra.can_publish=true
                 AND (active_sra.expires_at IS NULL OR active_sra.expires_at>now()))) AS publicly_discoverable
@@ -325,103 +325,7 @@ export async function getAdminVerificationDetail(caseId: string): Promise<AdminV
   };
 }
 
-export async function ensureSellerVerificationSeedData() {
-  try {
-    const casesCount = await pool.query("SELECT count(*)::int AS count FROM seller_verification_cases");
-    if (Number(casesCount.rows[0]?.count) < 4) {
-      const seedCases = [
-        {
-          id: "00000000-0000-4000-8000-000000000001",
-          sellerId: "user-highland-estates",
-          sellerName: "Highland Moorland Estates",
-          sellerEmail: "contact@highlandmoorland.co.uk",
-          legalName: "Highland Moorland Agricultural Ltd",
-          status: "pending_review",
-          country: "GB",
-          entityType: "limited_company",
-        },
-        {
-          id: "00000000-0000-4000-8000-000000000002",
-          sellerId: "user-cotswold-dairy",
-          sellerName: "Cotswold Valley Dairy Co-op",
-          sellerEmail: "ops@cotswoldvalleydairy.co.uk",
-          legalName: "Cotswold Dairy Farming Cooperative",
-          status: "pending_review",
-          country: "GB",
-          entityType: "cooperative",
-        },
-        {
-          id: "00000000-0000-4000-8000-000000000003",
-          sellerId: "user-somerset-orchards",
-          sellerName: "Somerset Heritage Orchards",
-          sellerEmail: "info@somersetciderfarms.co.uk",
-          legalName: "Somerset Orchards & Cider Trust",
-          status: "needs_information",
-          country: "GB",
-          entityType: "partnership",
-        },
-        {
-          id: "00000000-0000-4000-8000-000000000004",
-          sellerId: "user-yorkshire-grains",
-          sellerName: "Yorkshire Arable & Grain Producers",
-          sellerEmail: "trade@yorkshiregrains.org.uk",
-          legalName: "Yorkshire Grain Growers Collective",
-          status: "verified",
-          country: "GB",
-          entityType: "sole_proprietor",
-        },
-        {
-          id: "00000000-0000-4000-8000-000000000005",
-          sellerId: "user-kent-berries",
-          sellerName: "Kent Berry & Soft Fruits",
-          sellerEmail: "harvest@kentsoftfruits.com",
-          legalName: "Kent Fresh Berries PLC",
-          status: "verified",
-          country: "GB",
-          entityType: "limited_company",
-        },
-        {
-          id: "00000000-0000-4000-8000-000000000006",
-          sellerId: "user-devon-pasture",
-          sellerName: "Devon Pasture & Livestock",
-          sellerEmail: "compliance@devonpasture.co.uk",
-          legalName: "Devon Livestock Holdings",
-          status: "suspended",
-          country: "GB",
-          entityType: "limited_company",
-        },
-      ];
-
-      for (const sc of seedCases) {
-        await pool.query(
-          `INSERT INTO users (id, name, email, role, account_status, is_verified, created_at, updated_at)
-           VALUES ($1, $2, $3, 'farmer', 'active', $4, now() - interval '60 days', now())
-           ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, email=EXCLUDED.email`,
-          [sc.sellerId, sc.sellerName, sc.sellerEmail, sc.status === "verified"]
-        );
-
-        await pool.query(
-          `INSERT INTO seller_business_profiles (seller_id, legal_name, trading_name, entity_type, registered_address, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, jsonb_build_object('country', $5, 'city', 'London', 'line1', 'Farm House Road'), now() - interval '60 days', now())
-           ON CONFLICT (seller_id) DO UPDATE SET legal_name=EXCLUDED.legal_name, trading_name=EXCLUDED.trading_name`,
-          [sc.sellerId, sc.legalName, sc.sellerName, sc.entityType, sc.country]
-        );
-
-        await pool.query(
-          `INSERT INTO seller_verification_cases (id, seller_id, status, country, entity_type, requirements_version, submitted_at, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, 'v1', now() - interval '14 days', now() - interval '14 days', now())
-           ON CONFLICT (id) DO NOTHING`,
-          [sc.id, sc.sellerId, sc.status, sc.country, sc.entityType]
-        );
-      }
-    }
-  } catch (err) {
-    console.error("Failed to seed seller verification cases:", err);
-  }
-}
-
 export async function listAdminVerifications(query: AdminVerificationQueueQuery): Promise<AdminVerificationQueueResponse> {
-  await ensureSellerVerificationSeedData();
   const values: unknown[] = [];
   const where: string[] = [];
   const add = (value: unknown) => { values.push(value); return `$${values.length}`; };

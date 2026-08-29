@@ -460,27 +460,7 @@ export const governmentLandPrograms: GovernmentLandProgram[] = [
   },
 ];
 
-export const sampleLeases: LeaseAgreement[] = [
-  {
-    id: "lease-001",
-    landId: "land-001",
-    lesseeId: "farmer-1",
-    lesseeName: "Rajesh Kumar",
-    startDate: "2025-01-01",
-    endDate: "2025-12-31",
-    monthlyRent: 800,
-    depositPaid: 2400,
-    status: "active",
-    payments: [
-      { id: "pay-001", month: "January 2025", amount: 800, status: "paid", paidDate: "2025-01-05" },
-      { id: "pay-002", month: "February 2025", amount: 800, status: "paid", paidDate: "2025-02-03" },
-      { id: "pay-003", month: "March 2025", amount: 800, status: "pending" },
-    ],
-    activityLog: [
-      { id: "act-001", date: "2025-03-10", description: "Soil testing completed", type: "inspection" },
-      { id: "act-002", date: "2025-02-25", description: "Tomato planting started", type: "activity" },
-      { id: "act-003", date: "2025-02-10", description: "Drip irrigation installed", type: "activity" },
-      { id: "act-004", date: "2025-01-05", description: "First rent payment received", type: "payment" },
-    ],
-  },
-];
+// Lease records are account data and must come from the backend. Keep this
+// empty until the land-leasing API is connected rather than showing a fake
+// farmer as the signed-in user's active lease.
+export const sampleLeases: LeaseAgreement[] = [];

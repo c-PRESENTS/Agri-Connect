@@ -608,7 +608,7 @@ function FarmerProfile() {
                     <div className="flex items-center justify-between gap-1.5 text-xs pt-1.5 border-t border-slate-100 dark:border-border/40">
                       <span className="inline-flex items-center gap-1 text-muted-foreground text-[11px] truncate">
                         <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
-                        <span className="truncate">{product.farmerLocation || "Mumbai, India"}</span>
+                        <span className="truncate">{product.farmerLocation || "Location not provided"}</span>
                       </span>
                       <Badge
                         className={`text-[10px] font-bold px-1.5 py-0 shrink-0 ${

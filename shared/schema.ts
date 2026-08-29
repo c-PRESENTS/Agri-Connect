@@ -121,6 +121,7 @@ export interface ShareCareListing {
   id: string;
   donorId?: string;
   donor: string;
+  donorIsVerified: boolean;
   sourceType: z.infer<typeof shareCareSourceTypeSchema>;
   name: string;
   category: string;
@@ -140,6 +141,32 @@ export interface ShareCareListing {
   createdAt: string;
   postedAgo: string;
   dietaryTags: string[];
+}
+
+export interface ShareCareDonorSummary {
+  donorId: string;
+  donorName: string;
+  donorIsVerified: boolean;
+  listingsShared: number;
+  activeListings: number;
+  quantityOffered: number;
+}
+
+export interface ShareCareSummary {
+  community: {
+    totalListings: number;
+    activeListings: number;
+    totalDonors: number;
+    quantityOffered: number;
+    reservations: number;
+  };
+  viewer: {
+    listingsShared: number;
+    activeListings: number;
+    quantityOffered: number;
+    reservations: number;
+  } | null;
+  leaderboard: ShareCareDonorSummary[];
 }
 
 export const createShareCareListingSchema = z.object({

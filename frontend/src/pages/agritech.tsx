@@ -267,57 +267,57 @@ export default function AgriTechPage() {
 
       {/* Hero Banner */}
       <div className="bg-gradient-to-br from-green-900 via-emerald-800 to-teal-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:py-14">
+        <div className="w-full px-3 py-4 sm:px-5 sm:py-5 lg:px-6">
           <Button
             variant="ghost"
             onClick={() => setLocation("/")}
-            className="text-green-200 hover:text-white hover:bg-green-800/50 mb-4 sm:mb-6 -ml-2"
+            className="h-8 px-2 text-xs sm:text-sm text-green-200 hover:text-white hover:bg-green-800/50 mb-2.5 -ml-2"
             data-testid="button-back-home"
           >
             <ArrowLeft className="h-4 w-4 mr-2" /> {t("agritech.back_to_marketplace")}
           </Button>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-4 items-center">
             <div>
-              <Badge className="bg-green-500/30 text-green-100 border-green-500/50 mb-3 sm:mb-4">
+              <Badge className="bg-green-500/30 text-green-100 border-green-500/50 mb-2 text-[11px]">
                 <Cpu className="h-3 w-3 mr-1" /> {t("agritech.precision_catalog_badge")}
               </Badge>
-              <div className="mb-3 flex flex-wrap items-center gap-3 sm:mb-4">
-                <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+              <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
                   {t("agritech.hero_title")}
                 </h1>
-                <ComingSoonBadge />
+                <ComingSoonBadge className="!px-4 !py-2 !text-base sm:!text-lg" />
               </div>
-              <p className="text-green-100 text-sm sm:text-lg mb-4 sm:mb-6 leading-relaxed">
+              <p className="text-green-100 text-sm sm:text-base mb-3 leading-relaxed max-w-4xl">
                 {t("agritech.hero_description")}
               </p>
-              <div className="flex flex-wrap gap-3">
-                <div className="flex items-center gap-2 bg-green-800/50 rounded-lg px-3 py-2 text-sm">
+              <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-1.5 bg-green-800/50 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm">
                   <TrendingUp className="h-4 w-4 text-green-300" />
                   <span>{t("agritech.avg_yield_increase")}</span>
                 </div>
-                <div className="flex items-center gap-2 bg-green-800/50 rounded-lg px-3 py-2 text-sm">
+                <div className="flex items-center gap-1.5 bg-green-800/50 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm">
                   <Shield className="h-4 w-4 text-green-300" />
                   <span>{t("agritech.roi_seasons")}</span>
                 </div>
-                <div className="flex items-center gap-2 bg-green-800/50 rounded-lg px-3 py-2 text-sm">
+                <div className="flex items-center gap-1.5 bg-green-800/50 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm">
                   <Leaf className="h-4 w-4 text-green-300" />
                   <span>{t("agritech.fewer_inputs")}</span>
                 </div>
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 w-full lg:w-auto">
               {[
                 { value: "200+", label: t("agritech.stat_products"), icon: Cpu },
                 { value: "4,500+", label: t("agritech.stat_uk_farms"), icon: Sprout },
                 { value: format(2_800_000, { includeCode: true }), label: t("agritech.stat_farmer_savings"), icon: TrendingUp },
                 { value: "94%", label: t("agritech.stat_ai_accuracy"), icon: Bot },
               ].map(({ value, label, icon: Icon }) => (
-                <div key={label} className="bg-green-800/40 rounded-xl p-4 text-center border border-green-600/30">
-                  <Icon className="h-6 w-6 text-green-300 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-white">{value}</div>
-                  <div className="text-green-200 text-sm">{label}</div>
+                <div key={label} className="bg-green-800/40 rounded-lg px-3 py-2.5 text-center border border-green-600/30 min-w-[112px]">
+                  <Icon className="h-4 w-4 text-green-300 mx-auto mb-1" />
+                  <div className="text-lg sm:text-xl font-bold text-white leading-none">{value}</div>
+                  <div className="text-green-200 text-[11px] sm:text-xs mt-1">{label}</div>
                 </div>
               ))}
             </div>
@@ -325,34 +325,35 @@ export default function AgriTechPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-10">
+      <div className="w-full px-3 py-3 sm:px-5 sm:py-4 lg:px-6">
         <Tabs defaultValue="catalog">
-          <div className="overflow-x-auto -mx-4 px-4 mb-6 sm:mb-8 no-scrollbar">
-          <TabsList className="h-auto flex-wrap gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm" data-testid="tabs-agritech">
-            <TabsTrigger value="catalog" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_catalog")}</TabsTrigger>
-            <TabsTrigger value="technology" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_technologies")}</TabsTrigger>
-            <TabsTrigger value="casestudies" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_case_studies")}</TabsTrigger>
-            <TabsTrigger value="roi" className="px-5 py-3 text-sm sm:text-base font-black uppercase tracking-wide rounded-xl text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_roi_calculator")}</TabsTrigger>
+          <div className="overflow-x-auto mb-4 no-scrollbar">
+          <TabsList className="h-auto flex-wrap gap-1.5 border border-emerald-300 bg-emerald-50/90 p-1.5 rounded-xl shadow-sm" data-testid="tabs-agritech">
+            <TabsTrigger value="catalog" className="px-3 py-2 text-[11px] sm:text-xs font-black uppercase tracking-wide rounded-lg text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_catalog")}</TabsTrigger>
+            <TabsTrigger value="technology" className="px-3 py-2 text-[11px] sm:text-xs font-black uppercase tracking-wide rounded-lg text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_technologies")}</TabsTrigger>
+            <TabsTrigger value="casestudies" className="px-3 py-2 text-[11px] sm:text-xs font-black uppercase tracking-wide rounded-lg text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_case_studies")}</TabsTrigger>
+            <TabsTrigger value="roi" className="px-3 py-2 text-[11px] sm:text-xs font-black uppercase tracking-wide rounded-lg text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-amber-500/60 shadow-xs">{t("agritech.tab_roi_calculator")}</TabsTrigger>
           </TabsList>
           </div>
 
           {/* CATALOG TAB */}
-          <TabsContent value="catalog">
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <TabsContent value="catalog" className="mt-0">
+            <div className="flex flex-col xl:flex-row gap-2.5 mb-3">
               <Input
                 placeholder={t("agritech.search_placeholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-xs"
+                className="h-9 xl:max-w-sm text-sm"
                 data-testid="input-agritech-search"
               />
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {categoryFilters.map((cat) => (
                   <Button
                     key={cat}
                     size="sm"
                     variant={activeCategory === cat ? "default" : "outline"}
                     onClick={() => setActiveCategory(cat)}
+                    className="h-9 px-3 text-xs sm:text-sm font-bold rounded-lg"
                     data-testid={`filter-cat-${cat}`}
                   >
                     {t(categoryLabels[cat] || cat)}
@@ -361,36 +362,36 @@ export default function AgriTechPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5 items-stretch">
               {filteredProducts.map((product) => (
                 <Card
                   key={product.id}
-                  className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-border/60"
+                  className="h-full flex flex-col hover:shadow-md transition-shadow duration-200 cursor-pointer group border-border/60 rounded-xl"
                   onClick={() => setSelectedProduct(product)}
                   data-testid={`card-agritech-${product.id}`}
                 >
-                  <CardHeader className="pb-3">
+                  <CardHeader className="p-3.5 pb-2.5">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         {product.badge && (
-                          <Badge className="mb-2 text-xs" variant="secondary">
+                          <Badge className="mb-1.5 text-[10px]" variant="secondary">
                             <Award className="h-3 w-3 mr-1" /> {product.badge}
                           </Badge>
                         )}
-                        <CardTitle className="text-base leading-snug group-hover:text-green-600 transition-colors">
+                        <CardTitle className="text-sm sm:text-base leading-tight line-clamp-2 group-hover:text-green-600 transition-colors">
                           {product.name}
                         </CardTitle>
                       </div>
                       <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-2 shrink-0">
-                        <Cpu className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <Cpu className="h-4 w-4 text-green-600 dark:text-green-400" />
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-xs w-fit">{product.subcategory}</Badge>
+                    <Badge variant="outline" className="text-[10px] w-fit">{product.subcategory}</Badge>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{product.description}</p>
+                  <CardContent className="p-3.5 pt-0 flex flex-1 flex-col">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-2.5 leading-snug line-clamp-2">{product.description}</p>
 
-                    <div className="space-y-2 mb-4">
+                    <div className="space-y-1.5 mb-2.5">
                       {product.accuracy && (
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground flex items-center gap-1">
@@ -409,18 +410,18 @@ export default function AgriTechPage() {
                       )}
                     </div>
 
-                    <div className="flex flex-wrap gap-1 mb-4">
+                    <div className="flex flex-wrap gap-1 mb-2.5">
                       {product.features.slice(0, 3).map((f) => (
-                        <span key={f} className="text-xs bg-muted px-2 py-0.5 rounded-full">{f}</span>
+                        <span key={f} className="text-[10px] sm:text-xs bg-muted px-2 py-0.5 rounded-full">{f}</span>
                       ))}
                       {product.features.length > 3 && (
                         <span className="text-xs text-muted-foreground">+{product.features.length - 3} more</span>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2 mt-auto">
                       <div>
-                        <div className="text-lg font-bold text-green-700 dark:text-green-400">
+                        <div className="text-base sm:text-lg font-bold text-green-700 dark:text-green-400 leading-tight">
                           {format(product.price, { includeCode: true })}
                         </div>
                         <div className="text-xs text-muted-foreground">per {product.unit}</div>
@@ -432,7 +433,7 @@ export default function AgriTechPage() {
                       </div>
                     </div>
 
-                    <Button className="w-full mt-3" size="sm" data-testid={`button-enquire-${product.id}`}>
+                    <Button className="w-full h-9 mt-2.5 text-xs sm:text-sm font-bold" size="sm" data-testid={`button-enquire-${product.id}`}>
                       Enquire Now <ChevronRight className="h-3 w-3 ml-1" />
                     </Button>
                   </CardContent>
@@ -450,23 +451,23 @@ export default function AgriTechPage() {
           </TabsContent>
 
           {/* TECHNOLOGIES TAB */}
-          <TabsContent value="technology">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-2">{t("agritech.stack_title")}</h2>
-              <p className="text-muted-foreground">{t("agritech.stack_subtitle")}</p>
+          <TabsContent value="technology" className="mt-0">
+            <div className="mb-3">
+              <h2 className="text-xl sm:text-2xl font-bold mb-1">{t("agritech.stack_title")}</h2>
+              <p className="text-sm text-muted-foreground">{t("agritech.stack_subtitle")}</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
               {technologies.map((tech) => {
                 const Icon = tech.icon;
                 return (
-                  <Card key={tech.titleKey} className="border-border/60">
-                    <CardContent className="pt-6">
-                      <div className={`${tech.bg} rounded-xl p-3 w-fit mb-4`}>
-                        <Icon className={`h-6 w-6 ${tech.color}`} />
+                  <Card key={tech.titleKey} className="border-border/60 rounded-xl shadow-sm">
+                    <CardContent className="p-4">
+                      <div className={`${tech.bg} rounded-lg p-2.5 w-fit mb-2.5`}>
+                        <Icon className={`h-5 w-5 ${tech.color}`} />
                       </div>
-                      <h3 className="font-semibold text-base mb-2">{t(`agritech.${tech.titleKey}`)}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">{t(`agritech.${tech.descKey}`)}</p>
-                      <Badge variant="secondary" className="text-xs">{t(`agritech.${tech.statsKey}`)}</Badge>
+                      <h3 className="font-semibold text-sm sm:text-base mb-1.5">{t(`agritech.${tech.titleKey}`)}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-2.5 leading-snug">{t(`agritech.${tech.descKey}`)}</p>
+                      <Badge variant="secondary" className="text-[10px] sm:text-xs">{t(`agritech.${tech.statsKey}`)}</Badge>
                     </CardContent>
                   </Card>
                 );
@@ -474,13 +475,13 @@ export default function AgriTechPage() {
             </div>
 
             {/* Technology Stack Diagram */}
-            <Card className="mt-8 border-border/60">
-              <CardHeader>
-                <CardTitle>{t("agritech.stack_title")}</CardTitle>
-                <CardDescription>{t("agritech.stack_subtitle")}</CardDescription>
+            <Card className="mt-3 border-border/60 rounded-xl shadow-sm">
+              <CardHeader className="p-4 pb-2.5">
+                <CardTitle className="text-base">{t("agritech.stack_title")}</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">{t("agritech.stack_subtitle")}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className="px-4 pb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2">
                   {[
                     { layerKey: "stack_layer_collection", toolsKey: "stack_layer_collection_techs", color: "bg-blue-100 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800", icon: Wifi },
                     { layerKey: "stack_layer_transmission", toolsKey: "stack_layer_transmission_techs", color: "bg-purple-100 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800", icon: Radio },
@@ -490,8 +491,8 @@ export default function AgriTechPage() {
                   ].map((item, index) => {
                     const Icon = item.icon;
                     return (
-                      <div key={item.layerKey} className={`flex items-center gap-4 p-3 rounded-lg border ${item.color}`}>
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div key={item.layerKey} className={`flex items-center p-2.5 rounded-lg border ${item.color}`}>
+                        <div className="flex items-start gap-2 min-w-0 flex-1">
                           <div className="font-semibold text-sm w-6 h-6 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center text-xs border shadow-sm shrink-0">
                             {index + 1}
                           </div>
@@ -510,24 +511,24 @@ export default function AgriTechPage() {
           </TabsContent>
 
           {/* CASE STUDIES TAB */}
-          <TabsContent value="casestudies">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-2">{t("agritech.case_title")}</h2>
-              <p className="text-muted-foreground">{t("agritech.case_subtitle")}</p>
+          <TabsContent value="casestudies" className="mt-0">
+            <div className="mb-3">
+              <h2 className="text-xl sm:text-2xl font-bold mb-1">{t("agritech.case_title")}</h2>
+              <p className="text-sm text-muted-foreground">{t("agritech.case_subtitle")}</p>
             </div>
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {caseStudies.map((cs, i) => (
-                <Card key={i} className="border-border/60">
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      <div className="lg:col-span-2">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge variant="secondary">{t(`agritech.${cs.locationKey}`)}</Badge>
-                          <Badge variant="outline">{t(`agritech.${cs.areaKey}`)}</Badge>
+                <Card key={i} className="border-border/60 rounded-xl shadow-sm">
+                  <CardContent className="p-4 h-full flex flex-col">
+                    <div className="flex flex-col gap-3 h-full">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                          <Badge variant="secondary" className="text-[10px] sm:text-xs">{t(`agritech.${cs.locationKey}`)}</Badge>
+                          <Badge variant="outline" className="text-[10px] sm:text-xs">{t(`agritech.${cs.areaKey}`)}</Badge>
                         </div>
-                        <h3 className="font-bold text-lg mb-1">{t(`agritech.${cs.nameKey}`)}</h3>
-                        <p className="text-sm text-muted-foreground mb-3">{t(`agritech.${cs.techKey}`)}</p>
-                        <blockquote className="border-l-4 border-green-500 pl-4 text-sm italic text-muted-foreground mb-4">
+                        <h3 className="font-bold text-base mb-1">{t(`agritech.${cs.nameKey}`)}</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-2.5 leading-snug">{t(`agritech.${cs.techKey}`)}</p>
+                        <blockquote className="border-l-2 border-green-500 pl-3 text-xs sm:text-sm italic text-muted-foreground mb-3">
                           "{t(`agritech.${cs.quoteKey}`)}"
                           <cite className="block not-italic font-medium text-foreground mt-1">— {t(`agritech.${cs.authorKey}`)}</cite>
                         </blockquote>
@@ -537,10 +538,12 @@ export default function AgriTechPage() {
                           </Badge>
                         </div>
                       </div>
-                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 flex flex-col items-center justify-center text-center border border-green-100 dark:border-green-900">
-                        <div className="text-3xl font-bold text-green-700 dark:text-green-400">{t(`agritech.${cs.roiKey}`)}</div>
-                        <div className="text-sm text-muted-foreground mt-1">{t("agritech.roi_results_title")}</div>
-                        <TrendingUp className="h-8 w-8 text-green-500 mt-3 opacity-60" />
+                      <div className="mt-auto bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-lg px-3 py-2.5 flex items-center justify-between gap-3 border border-green-100 dark:border-green-900">
+                        <div>
+                          <div className="text-xl font-bold text-green-700 dark:text-green-400">{t(`agritech.${cs.roiKey}`)}</div>
+                          <div className="text-xs text-muted-foreground">{t("agritech.roi_results_title")}</div>
+                        </div>
+                        <TrendingUp className="h-5 w-5 text-green-500 opacity-60" />
                       </div>
                     </div>
                   </CardContent>
@@ -550,19 +553,19 @@ export default function AgriTechPage() {
           </TabsContent>
 
           {/* ROI CALCULATOR TAB */}
-          <TabsContent value="roi">
-            <div className="max-w-2xl mx-auto">
-              <Card className="border-border/60">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-green-600" />
+          <TabsContent value="roi" className="mt-0">
+            <div className="max-w-6xl mx-auto">
+              <Card className="border-border/60 rounded-xl shadow-sm">
+                <CardHeader className="p-4 pb-2.5">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <BarChart3 className="h-4 w-4 text-green-600" />
                     {t("agritech.roi_title")}
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">
                     {t("agritech.roi_subtitle")}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-4 pt-0">
                   <ROICalculator />
                 </CardContent>
               </Card>
@@ -578,15 +581,15 @@ export default function AgriTechPage() {
           onClick={() => setSelectedProduct(null)}
         >
           <Card
-            className="max-w-lg w-full max-h-[85vh] overflow-y-auto"
+            className="max-w-2xl w-full max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
             data-testid="dialog-product-detail"
           >
-            <CardHeader>
+            <CardHeader className="p-4 pb-3">
               <div className="flex items-start justify-between">
                 <div>
                   {selectedProduct.badge && (
-                    <Badge className="mb-2">{selectedProduct.badge}</Badge>
+                    <Badge className="mb-1.5">{selectedProduct.badge}</Badge>
                   )}
                   <CardTitle>{selectedProduct.name}</CardTitle>
                   <CardDescription className="mt-1">{selectedProduct.subcategory}</CardDescription>
@@ -594,30 +597,30 @@ export default function AgriTechPage() {
                 <Button variant="ghost" size="sm" onClick={() => setSelectedProduct(null)}>✕</Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 pt-0 space-y-3">
               <p className="text-sm text-muted-foreground">{selectedProduct.description}</p>
 
               <div className="grid grid-cols-2 gap-3">
                 {selectedProduct.accuracy && (
-                  <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="bg-muted/50 rounded-lg p-2.5">
                     <div className="text-xs text-muted-foreground">Accuracy</div>
                     <div className="font-semibold">{selectedProduct.accuracy}</div>
                   </div>
                 )}
                 {selectedProduct.connectivity && (
-                  <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="bg-muted/50 rounded-lg p-2.5">
                     <div className="text-xs text-muted-foreground">Connectivity</div>
                     <div className="font-semibold">{selectedProduct.connectivity}</div>
                   </div>
                 )}
-                <div className="bg-muted/50 rounded-lg p-3">
+                <div className="bg-muted/50 rounded-lg p-2.5">
                   <div className="text-xs text-muted-foreground">Rating</div>
                   <div className="font-semibold flex items-center gap-1">
                     <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                     {selectedProduct.rating} ({selectedProduct.reviewCount} reviews)
                   </div>
                 </div>
-                <div className="bg-muted/50 rounded-lg p-3">
+                <div className="bg-muted/50 rounded-lg p-2.5">
                   <div className="text-xs text-muted-foreground">Price</div>
                   <div className="font-semibold text-green-600">{format(selectedProduct.price, { includeCode: true })}</div>
                 </div>
@@ -675,19 +678,21 @@ function ROICalculator() {
   const fiveYearReturn = totalAnnualBenefit * 5 - bundle.cost;
 
   return (
-    <div className="space-y-5">
-      <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <div className="space-y-1.5">
         <label className="text-sm font-medium">{t("agritech.roi_farm_size_label")}</label>
         <Input
           type="number"
           value={farmSize}
           onChange={(e) => setFarmSize(e.target.value)}
+          className="h-9"
           data-testid="input-farm-size"
         />
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium">{t("agritech.roi_crop_type_label")}</label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {Object.keys(cropPrices).map((crop) => {
             const cropKey = `roi_crop_${crop}`;
             const isSelected = cropType === crop;
@@ -706,7 +711,7 @@ function ROICalculator() {
                 variant="outline"
                 onClick={() => setCropType(crop)}
                 data-testid={`crop-${crop}`}
-                className={`transition-all rounded-xl font-black ${
+                className={`h-8 px-2.5 text-xs transition-all rounded-lg font-black ${
                   isSelected
                     ? "bg-amber-400 text-amber-950 hover:bg-amber-500 border-2 border-amber-500 shadow-sm"
                     : "bg-emerald-50/90 text-emerald-900 border-2 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
@@ -720,7 +725,7 @@ function ROICalculator() {
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium">{t("agritech.roi_investment_label")}</label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {Object.entries(bundles).map(([key, b]) => {
             const isSelected = techBundle === key;
             return (
@@ -730,7 +735,7 @@ function ROICalculator() {
                 variant="outline"
                 onClick={() => setTechBundle(key)}
                 data-testid={`bundle-${key}`}
-                className={`transition-all rounded-xl font-black ${
+                className={`h-8 px-2.5 text-xs transition-all rounded-lg font-black ${
                   isSelected
                     ? "bg-amber-400 text-amber-950 hover:bg-amber-500 border-2 border-amber-500 shadow-sm"
                     : "bg-emerald-50/90 text-emerald-900 border-2 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
@@ -742,8 +747,9 @@ function ROICalculator() {
           })}
         </div>
       </div>
+      </div>
 
-      <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-5 space-y-3 border border-green-100 dark:border-green-900">
+      <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 space-y-2.5 border border-green-100 dark:border-green-900">
         <h4 className="font-bold text-base">{t("agritech.roi_results_title")}</h4>
         
         <div className="space-y-2">
@@ -761,12 +767,12 @@ function ROICalculator() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 pt-1">
-          <div className="bg-white dark:bg-gray-900/50 rounded-lg p-3 text-center">
+        <div className="grid grid-cols-2 gap-2.5 pt-1">
+          <div className="bg-white dark:bg-gray-900/50 rounded-lg p-2.5 text-center">
             <div className="text-xl font-bold">{paybackYears} yrs</div>
             <div className="text-xs text-muted-foreground">{t("agritech.roi_payback_period")}</div>
           </div>
-          <div className="bg-white dark:bg-gray-900/50 rounded-lg p-3 text-center">
+          <div className="bg-white dark:bg-gray-900/50 rounded-lg p-2.5 text-center">
             <div className="text-xl font-bold text-green-600">{format(fiveYearReturn, { includeCode: true })}</div>
             <div className="text-xs text-muted-foreground">{t("agritech.roi_net_profit")}</div>
           </div>
@@ -776,7 +782,7 @@ function ROICalculator() {
         <p className="text-xs text-muted-foreground">{t("agritech.roi_disclaimer")}</p>
       </div>
 
-      <Button className="w-full" data-testid="button-get-quote">
+      <Button className="w-full h-9" data-testid="button-get-quote">
         {t("agritech.roi_button")}
       </Button>
     </div>

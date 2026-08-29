@@ -53,7 +53,7 @@ const NAV_SECTIONS: NavSection[] = [
       { id: "home", label: "Home", path: "/", icon: Home, public: true },
       { id: "cat-daily", label: "Daily Needs", path: "/?category=daily-needs", category: "daily-needs", icon: Store, public: true },
       { id: "cat-super", label: "Complete Supermarket", path: "/?category=supermarket", category: "supermarket", icon: ShoppingCart, badge: "NEW", public: true },
-      { id: "cat-dietary", label: "Dietary Needs", path: "/?category=dietary", category: "dietary", icon: Salad, public: true },
+      { id: "cat-dietary", label: "Dietary Needs", path: "/?category=dietary", category: "dietary", icon: Salad, badge: "SOON", public: true },
       { id: "cat-livestock", label: "Livestock & Poultry", path: "/?category=livestock", category: "livestock", icon: Beef, public: true },
       { id: "cat-inputs", label: "Agri Inputs & Equipment", path: "/?category=inputs-tools", category: "inputs-tools", icon: Package, public: true },
       { id: "cat-fresh", label: "Bulk & Wholesale", path: "/?category=fresh-produce", category: "fresh-produce", icon: Boxes, public: true },

@@ -1,5 +1,5 @@
 import { pool } from "../config/db";
-import type { ShareCareListing } from "@shared/schema";
+import type { ShareCareListing, ShareCareSummary } from "@shared/schema";
 
 export interface CreateShareCareRecord {
   donorId: string;
@@ -34,6 +34,24 @@ export interface UpdateShareCareRecord {
 export class ShareCareUnavailableError extends Error {}
 export class ShareCareOwnListingError extends Error {}
 
+const shareCareSelect = `
+  scl.*,
+  COALESCE(
+    NULLIF(trim(donor.name), ''),
+    NULLIF(trim(concat_ws(' ', donor.first_name, donor.last_name)), ''),
+    donor.email
+  ) AS resolved_donor_name,
+  (
+    COALESCE(donor.is_verified, false)
+    OR EXISTS (
+      SELECT 1
+      FROM seller_verification_cases svc
+      WHERE svc.seller_id=donor.id
+        AND svc.status='verified'
+        AND (svc.expires_at IS NULL OR svc.expires_at>now())
+    )
+  ) AS donor_is_verified`;
+
 function relativePast(value: Date): string {
   const minutes = Math.max(0, Math.floor((Date.now() - value.getTime()) / 60_000));
   if (minutes < 1) return "just now";
@@ -60,7 +78,8 @@ function hydrateShareCareListing(row: Record<string, unknown>): ShareCareListing
   return {
     id: String(row.id),
     donorId: row.donor_id ? String(row.donor_id) : undefined,
-    donor: String(row.donor_name),
+    donor: String(row.resolved_donor_name ?? row.donor_name),
+    donorIsVerified: row.donor_is_verified === true,
     sourceType: row.source_type as ShareCareListing["sourceType"],
     name: String(row.name),
     category: String(row.category),
@@ -98,18 +117,21 @@ export class ShareCareRepository {
     await this.expireStale();
     const params: unknown[] = [];
     const clauses: string[] = [];
-    if (options.freeOnly) clauses.push("is_free=true");
+    clauses.push("donor.account_status='active'");
+    if (options.freeOnly) clauses.push("scl.is_free=true");
     if (options.status) {
       params.push(options.status);
-      clauses.push(`status=$${params.length}`);
+      clauses.push(`scl.status=$${params.length}`);
     }
     const safeLimit = Math.min(Math.max(options.limit ?? 100, 1), 100);
     params.push(safeLimit);
     const result = await pool.query(
-      `SELECT * FROM share_care_listings
+      `SELECT ${shareCareSelect}
+       FROM share_care_listings scl
+       JOIN users donor ON donor.id=scl.donor_id
        ${clauses.length ? `WHERE ${clauses.join(" AND ")}` : ""}
-       ORDER BY CASE urgency WHEN 'urgent' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
-                expires_at ASC, created_at DESC
+       ORDER BY CASE scl.urgency WHEN 'urgent' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
+                scl.expires_at ASC, scl.created_at DESC
        LIMIT $${params.length}`,
       params,
     );
@@ -119,9 +141,109 @@ export class ShareCareRepository {
   async countAvailableFree(): Promise<number> {
     await this.expireStale();
     const result = await pool.query(
-      "SELECT count(*)::integer AS count FROM share_care_listings WHERE status='available' AND is_free=true AND expires_at > now()",
+      `SELECT count(*)::integer AS count
+       FROM share_care_listings scl
+       JOIN users donor ON donor.id=scl.donor_id
+       WHERE donor.account_status='active'
+         AND scl.status='available'
+         AND scl.is_free=true
+         AND scl.expires_at > now()`,
     );
     return Number(result.rows[0]?.count ?? 0);
+  }
+
+  private async getById(id: string): Promise<ShareCareListing | undefined> {
+    const result = await pool.query(
+      `SELECT ${shareCareSelect}
+       FROM share_care_listings scl
+       JOIN users donor ON donor.id=scl.donor_id
+       WHERE scl.id=$1 AND donor.account_status='active'`,
+      [id],
+    );
+    return result.rows[0] ? hydrateShareCareListing(result.rows[0]) : undefined;
+  }
+
+  async summary(viewerId?: string): Promise<ShareCareSummary> {
+    await this.expireStale();
+    const [communityResult, leaderboardResult, viewerResult] = await Promise.all([
+      pool.query(
+        `SELECT count(*)::int AS total_listings,
+                count(*) FILTER (WHERE scl.status='available' AND scl.expires_at>now())::int AS active_listings,
+                count(DISTINCT scl.donor_id)::int AS total_donors,
+                COALESCE(sum(scl.quantity) FILTER (WHERE scl.status<>'cancelled'),0)::int AS quantity_offered,
+                (SELECT count(*)::int FROM share_care_reservations WHERE status IN ('active','collected')) AS reservations
+         FROM share_care_listings scl
+         JOIN users donor ON donor.id=scl.donor_id
+         WHERE donor.account_status='active'`,
+      ),
+      pool.query(
+        `SELECT donor.id AS donor_id,
+                COALESCE(
+                  NULLIF(trim(donor.name), ''),
+                  NULLIF(trim(concat_ws(' ', donor.first_name, donor.last_name)), ''),
+                  donor.email
+                ) AS donor_name,
+                (
+                  COALESCE(donor.is_verified, false)
+                  OR EXISTS (
+                    SELECT 1 FROM seller_verification_cases svc
+                    WHERE svc.seller_id=donor.id
+                      AND svc.status='verified'
+                      AND (svc.expires_at IS NULL OR svc.expires_at>now())
+                  )
+                ) AS donor_is_verified,
+                count(*)::int AS listings_shared,
+                count(*) FILTER (WHERE scl.status='available' AND scl.expires_at>now())::int AS active_listings,
+                COALESCE(sum(scl.quantity) FILTER (WHERE scl.status<>'cancelled'),0)::int AS quantity_offered
+         FROM share_care_listings scl
+         JOIN users donor ON donor.id=scl.donor_id
+         WHERE donor.account_status='active'
+         GROUP BY donor.id
+         ORDER BY listings_shared DESC, quantity_offered DESC, donor_name
+         LIMIT 5`,
+      ),
+      viewerId
+        ? pool.query(
+            `SELECT count(*)::int AS listings_shared,
+                    count(*) FILTER (WHERE scl.status='available' AND scl.expires_at>now())::int AS active_listings,
+                    COALESCE(sum(scl.quantity) FILTER (WHERE scl.status<>'cancelled'),0)::int AS quantity_offered,
+                    (SELECT count(*)::int
+                       FROM share_care_reservations
+                      WHERE reserver_id=$1 AND status IN ('active','collected')) AS reservations
+             FROM share_care_listings scl
+             WHERE scl.donor_id=$1`,
+            [viewerId],
+          )
+        : Promise.resolve({ rows: [] }),
+    ]);
+
+    const community = communityResult.rows[0] ?? {};
+    const viewer = viewerResult.rows[0];
+    return {
+      community: {
+        totalListings: Number(community.total_listings ?? 0),
+        activeListings: Number(community.active_listings ?? 0),
+        totalDonors: Number(community.total_donors ?? 0),
+        quantityOffered: Number(community.quantity_offered ?? 0),
+        reservations: Number(community.reservations ?? 0),
+      },
+      viewer: viewer
+        ? {
+            listingsShared: Number(viewer.listings_shared ?? 0),
+            activeListings: Number(viewer.active_listings ?? 0),
+            quantityOffered: Number(viewer.quantity_offered ?? 0),
+            reservations: Number(viewer.reservations ?? 0),
+          }
+        : null,
+      leaderboard: leaderboardResult.rows.map((row: Record<string, unknown>) => ({
+        donorId: String(row.donor_id),
+        donorName: String(row.donor_name),
+        donorIsVerified: row.donor_is_verified === true,
+        listingsShared: Number(row.listings_shared ?? 0),
+        activeListings: Number(row.active_listings ?? 0),
+        quantityOffered: Number(row.quantity_offered ?? 0),
+      })),
+    };
   }
 
   async create(input: CreateShareCareRecord): Promise<ShareCareListing> {
@@ -151,7 +273,9 @@ export class ShareCareRepository {
         JSON.stringify({ dietaryTags: input.dietaryTags }),
       ],
     );
-    return hydrateShareCareListing(result.rows[0]);
+    const created = await this.getById(String(result.rows[0].id));
+    if (!created) throw new Error("Created Share & Care listing could not be loaded");
+    return created;
   }
 
   async updateOwned(id: string, donorId: string, input: UpdateShareCareRecord): Promise<ShareCareListing | undefined> {
@@ -178,7 +302,8 @@ export class ShareCareRepository {
         JSON.stringify({ ...currentData, dietaryTags: input.dietaryTags ?? currentData.dietaryTags ?? [] }),
       ],
     );
-    return result.rows[0] ? hydrateShareCareListing(result.rows[0]) : undefined;
+    if (!result.rows[0]) return undefined;
+    return this.getById(id);
   }
 
   async reserve(id: string, reserverId: string): Promise<ShareCareListing> {
@@ -202,7 +327,9 @@ export class ShareCareRepository {
         [id],
       );
       await client.query("COMMIT");
-      return hydrateShareCareListing(updated.rows[0]);
+      const hydrated = await this.getById(String(updated.rows[0].id));
+      if (!hydrated) throw new Error("Reserved Share & Care listing could not be loaded");
+      return hydrated;
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;

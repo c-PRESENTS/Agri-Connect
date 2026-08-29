@@ -425,8 +425,7 @@ export function LeafletFarmerMap({
   }, [locateError]);
 
   const farmerMarkers: FarmerMarker[] = products.reduce((acc, product) => {
-    if (!product.farmerId || product.farmerId.startsWith("farmer-") || product.farmerId.startsWith("catalog-")) return acc;
-    if (!product.farmerName || product.farmerName === "Verified Seller" || product.farmerName === "Green Fields Farm") return acc;
+    if (!product.farmerId || !product.farmerName || product.farmerIsVerified !== true) return acc;
     if (!hasValidPublicCoordinates(product.farmerLatitude, product.farmerLongitude)) return acc;
     const existing = acc.find(m => m.id === product.farmerId);
     if (existing) {
@@ -461,11 +460,8 @@ export function LeafletFarmerMap({
         .filter(
           (p) =>
             p.farmerId &&
-            !p.farmerId.startsWith("farmer-") &&
-            !p.farmerId.startsWith("catalog-") &&
             p.farmerName &&
-            p.farmerName !== "Verified Seller" &&
-            p.farmerName !== "Green Fields Farm",
+            p.farmerIsVerified === true,
         )
         .map((product) => product.farmerId),
     ).size - farmerMarkers.length,

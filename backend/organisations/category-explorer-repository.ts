@@ -49,14 +49,11 @@ function distanceKm(latitudeA: unknown, longitudeA: unknown, latitudeB: unknown,
 const visibleSellerSql = `
   u.account_status='active'
   AND p.moderation_status='approved'
-  AND (
-    (u.auth_method='catalog_seed' AND u.is_verified=true)
-    OR EXISTS (
-      SELECT 1 FROM seller_verification_cases verified_case
-      WHERE verified_case.seller_id=u.id
-        AND verified_case.status='verified'
-        AND (verified_case.expires_at IS NULL OR verified_case.expires_at>now())
-    )
+  AND EXISTS (
+    SELECT 1 FROM seller_verification_cases verified_case
+    WHERE verified_case.seller_id=u.id
+      AND verified_case.status='verified'
+      AND (verified_case.expires_at IS NULL OR verified_case.expires_at>now())
   )`;
 
 async function resolveRegion(region: string | undefined) {
@@ -377,11 +374,11 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
          JOIN commerce_products product ON product.farmer_id=u.id AND product.moderation_status='approved'
          LEFT JOIN seller_region_assignments assignment ON assignment.seller_id=u.id AND assignment.status='active'
         WHERE u.account_status='active' AND (u.role='farmer' OR u.seller_enabled=true)
-          AND ((u.auth_method='catalog_seed' AND u.is_verified=true) OR EXISTS (
+          AND EXISTS (
             SELECT 1 FROM seller_verification_cases verification
             WHERE verification.seller_id=u.id AND verification.status='verified'
               AND (verification.expires_at IS NULL OR verification.expires_at>now())
-          )) ${regionClause}
+          ) ${regionClause}
         GROUP BY u.id ORDER BY total_stock DESC,product_count DESC,u.rating DESC LIMIT 5`,
       regionParameter,
     ),
@@ -405,11 +402,11 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
               COALESCE(u.avatar,u.profile_image_url) AS avatar,COALESCE(u.rating,0) AS rating,
               u.latitude,u.longitude,
               count(DISTINCT p.id) FILTER (WHERE p.moderation_status='approved')::int AS product_count,
-              (u.is_verified=true OR EXISTS (
+              EXISTS (
                 SELECT 1 FROM seller_verification_cases verified_case
                 WHERE verified_case.seller_id=u.id AND verified_case.status='verified'
                   AND (verified_case.expires_at IS NULL OR verified_case.expires_at>now())
-              )) AS seller_verified,
+              ) AS seller_verified,
               active_session.expires_at AS session_expires_at
          FROM users u
          JOIN LATERAL (
@@ -420,7 +417,7 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
          LEFT JOIN commerce_products p ON p.farmer_id=u.id
          LEFT JOIN seller_region_assignments assignment ON assignment.seller_id=u.id AND assignment.status='active'
         WHERE u.account_status='active'
-          AND u.auth_method<>'catalog_seed'
+          AND u.auth_method IS DISTINCT FROM 'catalog_seed'
           AND (u.role='farmer' OR u.seller_enabled=true)
           ${regionId ? "AND (p.region_id=$1 OR assignment.region_id=$1)" : ""}
         GROUP BY u.id,active_session.expires_at

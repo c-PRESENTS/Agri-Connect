@@ -21,6 +21,8 @@
     "env:verify:ps51": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-codex-env.ps1",
     "e2e:env": "playwright test tests/e2e/environment-readiness.spec.ts",
     "db:push": "drizzle-kit push",
+    "audit:canonical-seller": "node --env-file=.env scripts/audit-canonical-catalog-owner.cjs",
+    "verify:canonical-seller": "tsx --env-file=.env scripts/verify-canonical-farmer-flow.ts",
     "sms:test": "node --env-file=.env scripts/notifications/send-sms.js"
   },
   "dependencies": {

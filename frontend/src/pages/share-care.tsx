@@ -47,7 +47,7 @@ import { useEffect as useEffectMap } from "react";
 import { useCurrency } from "@/contexts/currency-context";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { ShareCareListing } from "@shared/schema";
+import type { ShareCareListing, ShareCareSummary } from "@shared/schema";
 
 function InvalidateSizeOnMount() {
   const map = useMap();
@@ -145,7 +145,7 @@ export default function ShareCarePage() {
   const { currency, format } = useCurrency();
   const { t } = useTranslation();
   const [, navigate] = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("marketplace");
   const [shareForm, setShareForm] = useState(EMPTY_SHARE_FORM);
   const [shareMessage, setShareMessage] = useState<string | null>(null);
@@ -153,6 +153,9 @@ export default function ShareCarePage() {
   const listingRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const { data: shareItems = [], isLoading: loadingShare } = useQuery<ShareCareListing[]>({
     queryKey: ["/api/share-care?status=available"],
+  });
+  const { data: shareSummary } = useQuery<ShareCareSummary>({
+    queryKey: ["/api/share-care/summary"],
   });
   const createListing = useMutation({
     mutationFn: async () => {
@@ -209,17 +212,28 @@ export default function ShareCarePage() {
     if (!selectedItemId || shareItems.length === 0) return;
     window.setTimeout(() => listingRefs.current[selectedItemId]?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
   }, [selectedItemId, shareItems]);
-  const ukCenter: [number, number] = useMemo(() => {
-    if (shareItems.length === 0) return [52.5, -1.0];
+  const mapCenter: [number, number] = useMemo(() => {
+    if (shareItems.length === 0) return [20.5937, 78.9629];
     const lat = shareItems.reduce((s, i) => s + i.latitude, 0) / shareItems.length;
     const lng = shareItems.reduce((s, i) => s + i.longitude, 0) / shareItems.length;
     return [lat, lng];
   }, [shareItems]);
+  const mapZoom = useMemo(() => {
+    if (shareItems.length === 0) return 5;
+    const latitudes = shareItems.map((item) => item.latitude);
+    const longitudes = shareItems.map((item) => item.longitude);
+    const latitudeSpread = Math.max(...latitudes) - Math.min(...latitudes);
+    const longitudeSpread = Math.max(...longitudes) - Math.min(...longitudes);
+    return Math.max(latitudeSpread, longitudeSpread) < 0.15 ? 12 : 6;
+  }, [shareItems]);
+  const viewerRank = user?.id
+    ? (shareSummary?.leaderboard.findIndex((entry) => entry.donorId === user.id) ?? -1) + 1
+    : 0;
 
   return (
     <div className="min-h-screen bg-background">
       <TopNavigation />
-      <SplitMapLayout mapProps={{ title: "Donors & sellers near you", subtitle: "Live rescue listings from across the UK" }}>
+      <SplitMapLayout mapProps={{ title: "Donors & sellers near you", subtitle: "Live database-backed rescue listings" }}>
       <main className="container mx-auto px-4 py-8">
         <header className="mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -270,11 +284,11 @@ export default function ShareCarePage() {
                   <CardContent className="p-0">
                     <div className="aspect-[21/9] relative bg-muted">
                       <MapContainer
-                        center={ukCenter}
-                        zoom={6}
+                        center={mapCenter}
+                        zoom={mapZoom}
                         className="h-full w-full z-0"
                         zoomControl={false}
-                        key={`map-${shareItems.length}`}
+                        key={`map-${shareItems.map((item) => `${item.id}:${item.latitude}:${item.longitude}`).join("|")}`}
                       >
                         <TileLayer
                           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -386,12 +400,14 @@ export default function ShareCarePage() {
                             <Badge variant="outline" className="text-[10px] uppercase tracking-wider capitalize">
                               {listing.category}
                             </Badge>
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] uppercase tracking-wider border-green-200 bg-green-50 text-green-700 dark:bg-green-950/30"
-                            >
-                              Verified donor
-                            </Badge>
+                            {listing.donorIsVerified && (
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] uppercase tracking-wider border-green-200 bg-green-50 text-green-700 dark:bg-green-950/30"
+                              >
+                                Verified donor
+                              </Badge>
+                            )}
                           </div>
                         </CardContent>
                         <div className="p-4 pt-0 flex gap-2">
@@ -430,25 +446,42 @@ export default function ShareCarePage() {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Your Impact Tracker</CardTitle>
+                    <CardTitle className="text-lg">{isAuthenticated ? "Your Share & Care Activity" : "Community Activity"}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
-                      <p className="text-sm font-medium mb-1 italic">"You've rescued 12 meals this month!"</p>
+                      <p className="text-sm font-medium mb-1">
+                        {isAuthenticated
+                          ? "Calculated from your live listings and reservations."
+                          : "Calculated from live Share & Care records."}
+                      </p>
                       <div className="grid grid-cols-2 gap-4 mt-3">
                         <div>
-                          <p className="text-xs text-muted-foreground">Saved</p>
-                          <p className="text-lg font-bold text-primary">{format(42, { includeCode: true })}</p>
+                          <p className="text-xs text-muted-foreground">Listings shared</p>
+                          <p className="text-lg font-bold text-primary">
+                            {shareSummary?.viewer?.listingsShared ?? shareSummary?.community.totalListings ?? 0}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Prevented Waste</p>
-                          <p className="text-lg font-bold text-primary">8kg</p>
+                          <p className="text-xs text-muted-foreground">Active listings</p>
+                          <p className="text-lg font-bold text-primary">
+                            {shareSummary?.viewer?.activeListings ?? shareSummary?.community.activeListings ?? 0}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Units offered</p>
+                          <p className="text-lg font-bold text-primary">
+                            {shareSummary?.viewer?.quantityOffered ?? shareSummary?.community.quantityOffered ?? 0}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Reservations</p>
+                          <p className="text-lg font-bold text-primary">
+                            {shareSummary?.viewer?.reservations ?? shareSummary?.community.reservations ?? 0}
+                          </p>
                         </div>
                       </div>
                     </div>
-                    <Button variant="outline" className="w-full" size="sm">
-                      View Full Report
-                    </Button>
                   </CardContent>
                 </Card>
 
@@ -458,24 +491,27 @@ export default function ShareCarePage() {
                     <CardDescription>Top waste warriors this month</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {[
-                      { name: "Taj Palace", score: "450 shared", icon: "🥇" },
-                      { name: "Sunshine Bakery", score: "320 shared", icon: "🥈" },
-                      { name: "Priya Sharma", score: "85 shared", icon: "🥉" }
-                    ].map((user, i) => (
-                      <div key={user.name} className="flex items-center gap-3">
-                        <span className="text-lg">{user.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{user.name}</p>
-                          <p className="text-xs text-muted-foreground">{user.score}</p>
+                    {(shareSummary?.leaderboard ?? []).length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No database-backed donor activity yet.</p>
+                    ) : (
+                      (shareSummary?.leaderboard ?? []).map((entry, index) => (
+                        <div key={entry.donorId} className="flex items-center gap-3">
+                          <span className="text-lg">{["🥇", "🥈", "🥉"][index] ?? "🌱"}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{entry.donorName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {entry.listingsShared} listings • {entry.quantityOffered} units
+                            </p>
+                          </div>
+                          {entry.donorIsVerified && <Badge variant="outline" className="text-[10px]">Verified</Badge>}
                         </div>
-                        <Badge variant="outline" className="text-[10px]">Level {5-i}</Badge>
+                      ))
+                    )}
+                    {viewerRank > 0 && (
+                      <div className="pt-2 border-t text-center">
+                        <p className="text-xs text-muted-foreground">Your current rank: #{viewerRank}</p>
                       </div>
-                    ))}
-                    <div className="pt-2 border-t text-center">
-                      <p className="text-xs text-muted-foreground">Your Rank: #247</p>
-                      <Button variant="ghost" className="text-xs h-auto p-0 mt-1 hover:bg-transparent">View Full Leaderboard</Button>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -581,171 +617,132 @@ export default function ShareCarePage() {
                 <CardHeader>
                   <div className="flex items-center gap-2 text-primary">
                     <Users className="w-6 h-6" />
-                    <CardTitle>Registered Charity: Food Bank UK</CardTitle>
+                    <CardTitle>Charity collaboration portal</CardTitle>
                   </div>
-                  <CardDescription>Registration #80G-123456 • Verified Partner</CardDescription>
+                  <CardDescription>No verified charity organisation is connected yet.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="p-5 bg-background rounded-xl shadow-sm border space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-bold">Daily Meal Program</h3>
-                      <Badge variant="outline" className="bg-primary/10">Active Campaign</Badge>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Target: 500 meals/day</span>
-                        <span className="font-bold text-primary">64%</span>
-                      </div>
-                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary" style={{ width: '64%' }} />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <div className="text-xs p-2 bg-muted/50 rounded">
-                        <p className="text-muted-foreground">Needed Now</p>
-                        <p className="font-bold">180 Portions Cooked Food</p>
-                      </div>
-                      <div className="text-xs p-2 bg-muted/50 rounded">
-                        <p className="text-muted-foreground">Supply Chain</p>
-                        <p className="font-bold">30kg Fresh Vegetables</p>
-                      </div>
-                    </div>
+                  <div className="p-5 bg-background rounded-xl shadow-sm border space-y-2">
+                    <h3 className="font-bold">Organisation onboarding is coming soon</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Verified charities will be able to claim live donations after organisation verification is connected.
+                    </p>
                   </div>
 
                   <div className="space-y-3">
                     <h4 className="text-sm font-bold flex items-center gap-2">
                       <Gift className="w-4 h-4 text-primary" />
-                      Recent Matches for You
+                      Live database listings
                     </h4>
-                    {[1, 2].map(i => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-background rounded-lg border text-sm">
+                    {shareItems.slice(0, 3).map((listing) => (
+                      <div key={listing.id} className="flex items-center justify-between p-3 bg-background rounded-lg border text-sm">
                         <div className="flex gap-3 items-center">
                           <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                            <Utensils className="w-5 h-5" />
+                            <span aria-hidden="true">{listing.emoji}</span>
                           </div>
                           <div>
-                            <p className="font-medium">15 Portions Biryani</p>
-                            <p className="text-xs text-muted-foreground">Taj Palace • 1.2km</p>
+                            <p className="font-medium">{listing.name}</p>
+                            <p className="text-xs text-muted-foreground">{listing.donor} • {listing.location}</p>
                           </div>
                         </div>
-                        <Button size="sm" variant="ghost">Claim</Button>
+                        <Badge variant="outline">{listing.qty} {listing.unit}</Badge>
                       </div>
                     ))}
+                    {shareItems.length === 0 && (
+                      <p className="text-sm text-muted-foreground">No live donor listings are available.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>NGO Impact Dashboard</CardTitle>
-                  <CardDescription>This Month's Contributions</CardDescription>
+                  <CardTitle>Community data</CardTitle>
+                  <CardDescription>Live Share & Care records</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 border rounded-xl space-y-1">
                       <Users className="w-5 h-5 text-blue-500" />
-                      <p className="text-2xl font-bold">4,150</p>
-                      <p className="text-xs text-muted-foreground">People Served</p>
+                      <p className="text-2xl font-bold">{shareSummary?.community.totalDonors ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Database donors</p>
                     </div>
                     <div className="p-4 border rounded-xl space-y-1">
                       <Utensils className="w-5 h-5 text-green-500" />
-                      <p className="text-2xl font-bold">12,450</p>
-                      <p className="text-xs text-muted-foreground">Meals Distributed</p>
+                      <p className="text-2xl font-bold">{shareSummary?.community.activeListings ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Available listings</p>
                     </div>
                     <div className="p-4 border rounded-xl space-y-1">
                       <Leaf className="w-5 h-5 text-emerald-500" />
-                      <p className="text-2xl font-bold">3,200kg</p>
-                      <p className="text-xs text-muted-foreground">Food Rescued</p>
+                      <p className="text-2xl font-bold">{shareSummary?.community.quantityOffered ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Units offered</p>
                     </div>
                     <div className="p-4 border rounded-xl space-y-1">
                       <Globe className="w-5 h-5 text-cyan-500" />
-                      <p className="text-2xl font-bold">9.6t</p>
-                      <p className="text-xs text-muted-foreground">CO2 Saved</p>
+                      <p className="text-2xl font-bold">{shareSummary?.community.reservations ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Reservations</p>
                     </div>
                   </div>
-                  <Button className="w-full">
-                    <BarChart3 className="w-4 h-4 mr-2" />
-                    Generate Monthly Report
-                  </Button>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
           <TabsContent value="impact">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { 
-                  id: "sdg-2", 
-                  title: "SDG 2: Zero Hunger", 
-                  metric: "1.2M", 
-                  label: "Meals Rescued", 
-                  details: "450k individuals fed this year",
-                  progress: 85,
-                  color: "bg-orange-500" 
+                {
+                  id: "active-listings",
+                  title: "Available now",
+                  metric: shareSummary?.community.activeListings ?? 0,
+                  label: "Active rescue listings",
+                  details: "Live listings that have not expired",
+                  accent: "border-l-orange-500",
                 },
-                { 
-                  id: "sdg-12", 
-                  title: "SDG 12: Responsible Consumption", 
-                  metric: "3,200t", 
-                  label: "Waste Prevented", 
-                  details: "89% surplus redirection success rate",
-                  progress: 92,
-                  color: "bg-yellow-600" 
+                {
+                  id: "database-donors",
+                  title: "Community donors",
+                  metric: shareSummary?.community.totalDonors ?? 0,
+                  label: "Database-backed accounts",
+                  details: "Active accounts with Share & Care records",
+                  accent: "border-l-blue-500",
                 },
-                { 
-                  id: "sdg-13", 
-                  title: "SDG 13: Climate Action", 
-                  metric: "9,600t", 
-                  label: "CO2 Avoided", 
-                  details: "Equivalent to 480,000 trees planted",
-                  progress: 78,
-                  color: "bg-emerald-600" 
+                {
+                  id: "quantity-offered",
+                  title: "Food offered",
+                  metric: shareSummary?.community.quantityOffered ?? 0,
+                  label: "Listing units shared",
+                  details: "Total quantity from non-cancelled records",
+                  accent: "border-l-emerald-500",
                 },
-                { 
-                  id: "sdg-1", 
-                  title: "SDG 1: No Poverty", 
-                  metric: format(2_400, { includeCode: true }),
-                  label: "Avg. Family Savings/Year", 
-                  details: "125,000 low-income families supported",
-                  progress: 65,
-                  color: "bg-red-600" 
+                {
+                  id: "reservations",
+                  title: "Community response",
+                  metric: shareSummary?.community.reservations ?? 0,
+                  label: "Active or collected reservations",
+                  details: "Reservations recorded by the backend",
+                  accent: "border-l-violet-500",
                 },
-                { 
-                  id: "sdg-17", 
-                  title: "SDG 17: Partnerships", 
-                  metric: "4,200", 
-                  label: "Partner Restaurants", 
-                  details: "180 NGOs and 12,000 volunteers",
-                  progress: 95,
-                  color: "bg-blue-800" 
-                }
               ].map(item => (
-                <Card key={item.id} className="overflow-hidden border-l-4" style={{ borderLeftColor: item.color }}>
+                <Card key={item.id} className={`overflow-hidden border-l-4 ${item.accent}`}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-bold uppercase tracking-wider">{item.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3">
                     <div className="space-y-1">
                       <p className="text-3xl font-bold tracking-tight">{item.metric}</p>
                       <p className="text-xs text-muted-foreground font-medium">{item.label}</p>
                     </div>
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-[10px] font-bold">
-                        <span>PROGRESS</span>
-                        <span>{item.progress}%</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-muted rounded-full">
-                        <div className={`h-full ${item.color.replace('bg-', 'bg-')} opacity-80`} style={{ width: `${item.progress}%` }} />
-                      </div>
-                    </div>
-                    <p className="text-xs bg-muted/30 p-2 rounded italic text-center">
-                      "{item.details}"
+                    <p className="text-xs bg-muted/30 p-2 rounded text-center">
+                      {item.details}
                     </p>
                   </CardContent>
                 </Card>
               ))}
             </div>
+            <p className="mt-4 text-xs text-muted-foreground">
+              These figures come directly from Share & Care listings and reservations. Environmental and SDG conversions will be added only after a production measurement methodology is approved.
+            </p>
           </TabsContent>
 
           <TabsContent value="safety">

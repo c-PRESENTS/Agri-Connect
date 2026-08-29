@@ -1,9 +1,29 @@
 import { pool } from "../config/db";
 import type { CartItem, Order, Product } from "@shared/schema";
 import { productCompatibilityPublicationStatus, productPublicVisibilitySql } from "../catalog/product-visibility";
+import { configuredCatalogOwnerEmail } from "../catalog/catalog-owner";
 
 const toMinor = (value: number): string => Math.round(value * 100).toString();
 const fromMinor = (value: string | number): number => Number(value) / 100;
+
+type CatalogOwnerRow = {
+  id: string;
+  email: string;
+  name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  avatar: string | null;
+  profile_image_url: string | null;
+  location: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  rating: number | null;
+  is_online: boolean | null;
+  account_status: string;
+  seller_enabled: boolean;
+  role: string;
+  publicly_verified: boolean;
+};
 
 function hydrateProduct(row: Record<string, any>): Product {
   const stored = row.product_data as Product;
@@ -20,13 +40,12 @@ function hydrateProduct(row: Record<string, any>): Product {
     categoryId: row.category_id,
     subcategoryId: row.subcategory_id,
     farmerId: row.farmer_id,
-    farmerName: row.seller_name ?? stored.farmerName,
-    farmerAvatar: row.seller_avatar ?? stored.farmerAvatar,
-    farmerLocation: row.seller_location ?? stored.farmerLocation,
+    farmerName: row.seller_name ?? "",
+    farmerAvatar: row.seller_avatar ?? "",
+    farmerLocation: row.seller_location ?? "",
     farmerLatitude: row.seller_latitude == null ? 0 : Number(row.seller_latitude),
     farmerLongitude: row.seller_longitude == null ? 0 : Number(row.seller_longitude),
-    farmerRating:
-      row.seller_rating == null ? stored.farmerRating : Number(row.seller_rating),
+    farmerRating: row.seller_rating == null ? 0 : Number(row.seller_rating),
     farmerIsOnline: row.seller_is_online === true,
     farmerIsVerified: row.seller_is_verified === true,
     regionId: row.region_id ?? stored.regionId,
@@ -54,11 +73,11 @@ const SELLER_LOCATION_SELECT = `
   u.longitude AS seller_longitude,
   u.rating AS seller_rating,
   u.is_online AS seller_is_online,
-  (u.account_status='active' AND ((u.auth_method='catalog_seed' AND u.is_verified=true) OR EXISTS (
+  (u.account_status='active' AND EXISTS (
     SELECT 1 FROM seller_verification_cases verified_case
     WHERE verified_case.seller_id=u.id AND verified_case.status='verified'
       AND (verified_case.expires_at IS NULL OR verified_case.expires_at>now())
-  ))) AS seller_is_verified`;
+  )) AS seller_is_verified`;
 
 function hydrateOrder(row: Record<string, any>): Order {
   const order = row.order_data as Order;
@@ -85,74 +104,67 @@ export class CommerceRepository {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
-      const catalogFarmers = new Map<
-        string,
-        Pick<
-          Product,
-          | "farmerId"
-          | "farmerName"
-          | "farmerAvatar"
-          | "farmerLocation"
-          | "farmerLatitude"
-          | "farmerLongitude"
-          | "farmerRating"
-        >
-      >();
-      const farmerRegionIds = new Map<string, string>();
-      for (const product of products) {
-        if (!product.farmerId || product.farmerId.startsWith("farmer-") || product.farmerId.startsWith("catalog-")) continue;
-        if (!product.farmerName?.trim()) continue;
-        if (!catalogFarmers.has(product.farmerId)) {
-          catalogFarmers.set(product.farmerId, {
-            farmerId: product.farmerId,
-            farmerName: product.farmerName,
-            farmerAvatar: product.farmerAvatar,
-            farmerLocation: product.farmerLocation,
-            farmerLatitude: product.farmerLatitude,
-            farmerLongitude: product.farmerLongitude,
-            farmerRating: product.farmerRating,
-          });
-        }
+      const ownerResult = (await client.query(
+        `SELECT u.id,u.email,u.name,u.first_name,u.last_name,u.avatar,u.profile_image_url,
+                u.location,u.latitude,u.longitude,u.rating,u.is_online,u.account_status,
+                u.seller_enabled,u.role,
+                EXISTS (
+                  SELECT 1 FROM seller_verification_cases svc
+                  WHERE svc.seller_id=u.id AND svc.status='verified'
+                    AND (svc.expires_at IS NULL OR svc.expires_at>now())
+                ) AS publicly_verified
+           FROM users u
+          WHERE lower(u.email)=lower($1)
+          LIMIT 1`,
+        [configuredCatalogOwnerEmail()],
+      )) as { rows: CatalogOwnerRow[] };
+      const owner = ownerResult.rows[0];
+      if (!owner) {
+        throw new Error(`Canonical catalogue owner account was not found: ${configuredCatalogOwnerEmail()}`);
       }
-      for (const farmer of Array.from(catalogFarmers.values())) {
-        const [firstName, ...lastNameParts] = farmer.farmerName.trim().split(/\s+/);
-        await client.query(
-          `INSERT INTO users
-             (id, auth_method, first_name, last_name, role, name, avatar, location,
-              latitude, longitude, rating, is_verified, profile_complete)
-           VALUES ($1,'catalog_seed',$2,$3,'farmer',$4,$5,$6,$7,$8,$9,true,true)
-           ON CONFLICT (id) DO NOTHING`,
-          [
-            farmer.farmerId,
-            firstName || farmer.farmerName,
-            lastNameParts.join(" ") || null,
-            farmer.farmerName,
-            farmer.farmerAvatar,
-            farmer.farmerLocation,
-            farmer.farmerLatitude,
-            farmer.farmerLongitude,
-            farmer.farmerRating,
-          ],
-        );
-        const region = await client.query(
-          `SELECT id,name FROM market_regions WHERE active=true AND lower(name)=lower($1) LIMIT 1`,
-          [farmer.farmerLocation],
-        );
-        if (region.rows[0]) {
-          farmerRegionIds.set(farmer.farmerId, region.rows[0].id);
-          await client.query(
-            `INSERT INTO seller_region_assignments
-               (seller_id,organisation_id,region_id,status,can_publish,can_fulfil,approved_at,effective_at,reason)
-             VALUES ($1,'agriconnect-platform',$2,'active',true,true,now(),now(),'Approved catalogue seller')
-             ON CONFLICT (seller_id,region_id) DO UPDATE SET
-               status='active',can_publish=true,can_fulfil=true,updated_at=now()`,
-            [farmer.farmerId, region.rows[0].id],
-          );
-        }
+      if (owner.account_status !== "active" || (!owner.seller_enabled && owner.role !== "farmer")) {
+        throw new Error(`Canonical catalogue owner is not an active seller: ${configuredCatalogOwnerEmail()}`);
       }
+      if (!owner.publicly_verified) {
+        throw new Error(`Canonical catalogue owner is not verified: ${configuredCatalogOwnerEmail()}`);
+      }
+
+      const ownerName =
+        owner.name?.trim() ||
+        [owner.first_name, owner.last_name].filter(Boolean).join(" ").trim() ||
+        owner.email;
+      const ownerAvatar = owner.avatar || owner.profile_image_url || "";
+      const ownerLocation = owner.location?.trim() || "";
+      const ownerLatitude = owner.latitude == null ? 0 : Number(owner.latitude);
+      const ownerLongitude = owner.longitude == null ? 0 : Number(owner.longitude);
+      const ownerRating = owner.rating == null ? 0 : Number(owner.rating);
+      const regionResult = (await client.query(
+        `SELECT sra.region_id
+           FROM seller_region_assignments sra
+           JOIN market_regions mr ON mr.id=sra.region_id AND mr.active=true
+          WHERE sra.seller_id=$1 AND sra.status='active' AND sra.can_publish=true
+            AND (sra.effective_at IS NULL OR sra.effective_at<=now())
+            AND (sra.expires_at IS NULL OR sra.expires_at>now())
+          ORDER BY (mr.code='IN-MH-MUM') DESC,sra.updated_at DESC
+          LIMIT 1`,
+        [owner.id],
+      )) as { rows: Array<{ region_id: string }> };
+      const ownerRegionId = regionResult.rows[0]?.region_id ?? null;
+
       for (const product of products) {
-        const regionId = farmerRegionIds.get(product.farmerId) ?? null;
-        const persistedProduct = regionId ? { ...product, regionId } : product;
+        const persistedProduct: Product = {
+          ...product,
+          farmerId: owner.id,
+          farmerName: ownerName,
+          farmerAvatar: ownerAvatar,
+          farmerLocation: ownerLocation,
+          farmerLatitude: ownerLatitude,
+          farmerLongitude: ownerLongitude,
+          farmerRating: ownerRating,
+          farmerIsOnline: owner.is_online === true,
+          farmerIsVerified: true,
+          regionId: ownerRegionId ?? undefined,
+        };
         await client.query(
           `INSERT INTO commerce_products
              (id, name, description, price_minor, currency, unit, stock, category_id,
@@ -160,10 +172,20 @@ export class CommerceRepository {
               reviewed_at, is_featured, is_fresh_pick, created_at, updated_at)
            VALUES ($1,$2,$3,$4,'GBP',$5,$6,$7,$8,$9,$10::jsonb,$11,'approved',$12,$13,$14,$12,$12)
            ON CONFLICT (id) DO UPDATE SET
-             region_id=COALESCE(commerce_products.region_id,EXCLUDED.region_id),
-             product_data=CASE WHEN commerce_products.region_id IS NULL AND EXCLUDED.region_id IS NOT NULL
-               THEN jsonb_set(commerce_products.product_data,'{regionId}',to_jsonb(EXCLUDED.region_id::text),true)
-               ELSE commerce_products.product_data END,
+             farmer_id=EXCLUDED.farmer_id,
+             region_id=EXCLUDED.region_id,
+             product_data=commerce_products.product_data || jsonb_build_object(
+               'farmerId',$9::text,
+               'farmerName',$15::text,
+               'farmerAvatar',$16::text,
+               'farmerLocation',$17::text,
+               'farmerLatitude',$18::double precision,
+               'farmerLongitude',$19::double precision,
+               'farmerRating',$20::double precision,
+               'farmerIsOnline',$21::boolean,
+               'farmerIsVerified',true,
+               'regionId',$11::text
+             ),
              updated_at=now()`,
           [
             product.id,
@@ -174,12 +196,19 @@ export class CommerceRepository {
             product.stock,
             product.categoryId,
             product.subcategoryId,
-            product.farmerId,
+            owner.id,
             JSON.stringify(persistedProduct),
-            regionId,
+            ownerRegionId,
             product.createdAt,
             product.isFeatured === true,
             product.isFreshPick === true,
+            ownerName,
+            ownerAvatar,
+            ownerLocation,
+            ownerLatitude,
+            ownerLongitude,
+            ownerRating,
+            owner.is_online === true,
           ],
         );
       }
@@ -219,7 +248,7 @@ export class CommerceRepository {
       `SELECT p.*, ${SELLER_LOCATION_SELECT}
          FROM commerce_products p
          JOIN users u ON u.id=p.farmer_id
-        WHERE u.auth_method<>'catalog_seed'
+        WHERE u.auth_method IS DISTINCT FROM 'catalog_seed'
           AND (u.role='farmer' OR u.seller_enabled=true)
           AND ${productPublicVisibilitySql("p", "u")}
         ORDER BY p.created_at DESC,p.id`,

@@ -310,18 +310,18 @@ export default function MySitesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 dark:bg-background pb-16">
+    <div className="min-h-screen bg-slate-50/60 pb-6 dark:bg-background">
       {/* ─── HERO HEADER ─── */}
-      <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-900 text-white py-7 px-4 sm:px-8 border-b border-emerald-950/40 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
+      <div className="border-b border-emerald-950/40 bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-900 px-3 py-3 text-white shadow-sm sm:px-4 lg:px-5">
+        <div className="flex w-full flex-col justify-between gap-2.5 md:flex-row md:items-center">
+          <div className="min-w-0">
             {/* Top Row: Back to Home + Portal Badge */}
-            <div className="flex items-center gap-2.5 mb-2 flex-wrap">
+            <div className="mb-1 flex flex-wrap items-center gap-1.5">
               <Link href="/">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="bg-emerald-950/60 hover:bg-emerald-900 text-emerald-100 hover:text-white border-emerald-500/50 rounded-xl text-xs font-bold gap-1.5 h-8 shadow-xs"
+                  className="h-7 gap-1 rounded-lg border-emerald-500/50 bg-emerald-950/60 px-2.5 text-[11px] font-bold text-emerald-100 shadow-xs hover:bg-emerald-900 hover:text-white"
                   data-testid="button-back-to-home"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
@@ -329,25 +329,25 @@ export default function MySitesPage() {
                 </Button>
               </Link>
 
-              <Badge className="bg-emerald-500/30 text-emerald-200 border-emerald-400/40 font-bold px-2.5 py-1 text-[11px]">
+              <Badge className="border-emerald-400/40 bg-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-200">
                 <Globe className="h-3 w-3 mr-1.5" /> Quick-Access Web Portal
               </Badge>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+            <h1 className="text-lg font-black tracking-tight sm:text-xl">
               My Sites & Digital Ecosystem
             </h1>
-            <p className="text-xs sm:text-sm text-emerald-100/80 mt-1 max-w-2xl font-medium">
+            <p className="mt-0.5 max-w-4xl text-[11px] font-medium leading-snug text-emerald-100/80 sm:text-xs">
               Manage your personal shortcuts, official government portals, agricultural price indices, and weather feeds in one unified workspace.
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-nowrap">
             <Link href="/">
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-emerald-950/40 border-emerald-600/60 text-emerald-100 hover:bg-emerald-900 hover:text-white rounded-xl text-xs font-bold gap-1.5 h-9"
+                className="h-7 rounded-lg border-emerald-600/60 bg-emerald-950/40 px-2.5 text-[11px] font-bold text-emerald-100 hover:bg-emerald-900 hover:text-white"
               >
                 <Home className="h-3.5 w-3.5" />
                 <span>Home</span>
@@ -358,43 +358,43 @@ export default function MySitesPage() {
               onClick={handleRestoreDefaults}
               variant="outline"
               size="sm"
-              className="bg-emerald-950/40 border-emerald-600/60 text-emerald-100 hover:bg-emerald-900 hover:text-white rounded-xl text-xs font-bold gap-1.5 h-9"
+              className="h-7 rounded-lg border-emerald-600/60 bg-emerald-950/40 px-2.5 text-[11px] font-bold text-emerald-100 hover:bg-emerald-900 hover:text-white"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>Reset Defaults</span>
             </Button>
             <Button
               onClick={openAddDialog}
-              className="bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-black rounded-xl text-xs gap-1.5 shadow-md h-9"
+              className="h-7 rounded-lg bg-emerald-500 px-2.5 text-[11px] font-black text-emerald-950 shadow-sm hover:bg-emerald-400"
             >
               <Plus className="h-4 w-4" />
-              <span>+ Add New Site</span>
+              <span>Add New Site</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* ─── MAIN CONTENT ─── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 space-y-6">
+      <div className="w-full space-y-3 px-3 pt-3 sm:px-4 lg:px-5">
         {/* Search & Category Filter Bar */}
-        <div className="bg-white dark:bg-card p-4 rounded-2xl border border-slate-200/80 dark:border-border/60 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="relative w-full sm:w-80">
+        <div className="flex flex-col items-center justify-between gap-2 rounded-lg border border-slate-200/80 bg-white p-2 shadow-2xs dark:border-border/60 dark:bg-card lg:flex-row">
+          <div className="relative w-full lg:max-w-lg lg:flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search sites by name, domain, description..."
-              className="pl-9 h-9 rounded-xl text-xs border-slate-200 dark:border-border/60 bg-slate-50 dark:bg-muted/40 font-medium"
+              className="h-8 rounded-md border-slate-200 bg-slate-50 pl-9 text-xs font-medium dark:border-border/60 dark:bg-muted/40"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto no-scrollbar pb-1 sm:pb-0">
+          <div className="no-scrollbar flex w-full items-center gap-1.5 overflow-x-auto lg:w-auto">
             {["all", "Government", "Agriculture", "Weather", "News & Media", "E-Commerce", "Custom"].map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-bold transition-colors ${
                   selectedCategory === cat
                     ? "bg-emerald-800 text-white shadow-2xs font-black"
                     : "bg-slate-100 dark:bg-muted text-slate-600 dark:text-slate-300 hover:bg-slate-200"
@@ -407,7 +407,7 @@ export default function MySitesPage() {
         </div>
 
         {/* Sites Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {filteredSites.map((site) => {
             let domain = "";
             try {
@@ -419,13 +419,13 @@ export default function MySitesPage() {
             return (
               <div
                 key={site.id}
-                className="bg-white dark:bg-card border border-slate-200/80 dark:border-border/60 rounded-2xl p-4 shadow-2xs hover:shadow-md hover:border-emerald-500/50 transition-all duration-200 flex flex-col justify-between group"
+                className="group flex min-h-[154px] flex-col justify-between rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-2xs transition-[border-color,box-shadow] duration-200 hover:border-emerald-500/50 hover:shadow-md dark:border-border/60 dark:bg-card"
               >
                 <div>
                   {/* Top Bar: Icon + Category Badge + Options */}
-                  <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="mb-1.5 flex items-start justify-between gap-1.5">
                     <div
-                      className={`h-11 w-11 rounded-2xl ${site.color} text-white flex items-center justify-center font-black text-base shadow-xs group-hover:scale-105 transition-transform`}
+                      className={`h-8 w-8 shrink-0 rounded-lg ${site.color} flex items-center justify-center text-xs font-black text-white shadow-xs transition-transform group-hover:scale-105`}
                     >
                       {site.name.charAt(0).toUpperCase()}
                     </div>
@@ -433,7 +433,7 @@ export default function MySitesPage() {
                     <div className="flex items-center gap-1">
                       <Badge
                         variant="secondary"
-                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 bg-slate-100 dark:bg-muted text-slate-600 dark:text-slate-300"
+                        className="flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-600 dark:bg-muted dark:text-slate-300"
                       >
                         {getCategoryIcon(site.category)}
                         <span>{site.category}</span>
@@ -441,7 +441,7 @@ export default function MySitesPage() {
                       <button
                         type="button"
                         onClick={() => openEditDialog(site)}
-                        className="h-7 w-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-muted flex items-center justify-center transition-colors"
+                        className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-muted dark:hover:text-slate-200"
                         title="Edit site"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
@@ -449,7 +449,7 @@ export default function MySitesPage() {
                       <button
                         type="button"
                         onClick={() => handleDeleteSite(site.id, site.name)}
-                        className="h-7 w-7 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center justify-center transition-colors"
+                        className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
                         title="Delete site"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -458,7 +458,7 @@ export default function MySitesPage() {
                   </div>
 
                   {/* Title & Domain */}
-                  <h3 className="font-black text-sm text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+                  <h3 className="line-clamp-1 text-xs font-black text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-slate-100 dark:group-hover:text-emerald-400">
                     {site.name}
                   </h3>
                   <p className="text-[11px] text-slate-400 font-semibold truncate mt-0.5">
@@ -467,21 +467,22 @@ export default function MySitesPage() {
 
                   {/* Description */}
                   {site.description && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mt-2 leading-relaxed">
+                    <p className="mt-1 line-clamp-2 text-[10px] font-medium leading-snug text-slate-500 dark:text-slate-400">
                       {site.description}
                     </p>
                   )}
                 </div>
 
                 {/* Bottom Launch Button */}
-                <div className="pt-4 mt-3 border-t border-slate-100 dark:border-border/40 flex items-center justify-between gap-2">
-                  <span className="text-[10px] text-slate-400 font-semibold">
-                    {site.pinned ? "★ Pinned shortcut" : "Shortcut"}
+                <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-2 dark:border-border/40">
+                  <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-400">
+                    {site.pinned && <Bookmark className="h-3 w-3 fill-current" aria-hidden="true" />}
+                    {site.pinned ? "Pinned shortcut" : "Shortcut"}
                   </span>
                   <Button
                     onClick={() => handleOpenSite(site)}
                     size="sm"
-                    className="h-8 px-3 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs gap-1.5 shadow-2xs transition-colors"
+                    className="h-6 rounded-md bg-emerald-800 px-2 text-[10px] font-bold text-white shadow-2xs transition-colors hover:bg-emerald-900"
                   >
                     <span>Launch</span>
                     <ExternalLink className="h-3 w-3" />
