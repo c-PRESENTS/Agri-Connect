@@ -229,9 +229,14 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
   };
 
   const handleHomeClick = () => {
+    setSelectedLabel("All Departments");
+    window.dispatchEvent(new Event("agri-subcategory-close"));
     if (onHome) {
       onHome();
     } else {
+      if (window.location.pathname !== "/" || window.location.search) {
+        window.history.pushState({}, "", "/");
+      }
       setLocation("/");
     }
   };
@@ -257,31 +262,33 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
       <div className="flex h-16 items-center justify-between gap-1.5 sm:gap-2.5 px-2 sm:px-4 max-w-[1920px] mx-auto">
         
         {/* ── 1. FAR LEFT CORNER: SIDEBAR TOGGLE & BRAND ── */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={toggleSidebar}
-            className="h-9 w-9 rounded-xl border border-slate-200/90 dark:border-border/70 bg-slate-50/80 dark:bg-muted/60 hover:bg-slate-100 dark:hover:bg-muted transition-colors shrink-0 text-slate-700 dark:text-slate-300 shadow-2xs"
+            className="h-10 w-10 rounded-xl border-2 border-emerald-600/40 dark:border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/70 hover:border-emerald-600 text-emerald-800 dark:text-emerald-200 transition-all shrink-0 shadow-sm hover:shadow-md active:scale-95 cursor-pointer"
             data-testid="button-toggle-sidebar"
-            title="Toggle Navigation Menu"
+            title="Toggle Navigation Sidebar (Ctrl+B)"
+            aria-label="Toggle Navigation Sidebar"
           >
-            <Menu className="h-4.5 w-4.5" />
+            <Menu className="h-5 w-5 stroke-[2.6]" />
           </Button>
 
           <div
             onClick={handleHomeClick}
-            className="flex items-center gap-2 cursor-pointer select-none group"
+            className="flex items-center gap-2.5 cursor-pointer select-none group"
+            title="Return to AgriConnect Homepage"
             data-testid="link-brand-home"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 shadow-xs shadow-emerald-700/20 text-white shrink-0 group-hover:bg-emerald-700 transition-colors">
-              <Leaf className="h-5 w-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 shadow-xs shadow-emerald-700/20 text-white shrink-0 group-hover:bg-emerald-700 transition-colors">
+              <Leaf className="h-5.5 w-5.5" />
             </div>
             <div className="hidden sm:flex flex-col leading-none">
-              <span className="font-black text-base sm:text-lg tracking-tight text-slate-900 dark:text-slate-100">
+              <span className="font-black text-lg sm:text-xl tracking-tight text-slate-900 dark:text-slate-100">
                 AgriConnect
               </span>
-              <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 mt-0.5">
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
                 Eat Smart. Live Healthy.
               </span>
             </div>
@@ -293,45 +300,45 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="hidden lg:inline-flex items-center gap-1.5 h-10 px-3 rounded-xl border border-slate-200 dark:border-border/80 bg-slate-50/80 dark:bg-muted/40 hover:bg-slate-100 text-xs font-bold text-slate-800 dark:text-slate-200 shrink-0 shadow-2xs"
+              className="hidden lg:inline-flex items-center gap-2 h-10.5 px-3.5 rounded-xl border border-slate-200 dark:border-border/80 bg-slate-50/90 dark:bg-muted/40 hover:bg-slate-100 text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100 shrink-0 shadow-2xs cursor-pointer"
               data-testid="button-category-selector"
             >
-              <span className="max-w-[130px] truncate">{selectedLabel}</span>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+              <span className="max-w-[140px] truncate">{selectedLabel}</span>
+              <ChevronDown className="h-4 w-4 text-slate-500 shrink-0 stroke-[2.5]" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64 rounded-xl border border-slate-200 dark:border-border/80 p-1.5 shadow-xl bg-white dark:bg-card">
-            <DropdownMenuLabel className="px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-slate-400">
+            <DropdownMenuLabel className="px-2.5 py-1 text-xs font-black uppercase tracking-wider text-slate-400">
               Navigation Pages
             </DropdownMenuLabel>
             {TOP_NAV_PAGES.map((page) => (
               <DropdownMenuItem
                 key={page.id}
                 onClick={() => handlePageSelect(page)}
-                className={`flex items-center gap-2.5 text-xs font-black py-2 rounded-lg cursor-pointer transition-colors ${
+                className={`flex items-center gap-2.5 text-xs sm:text-sm font-black py-2 rounded-lg cursor-pointer transition-colors ${
                   selectedLabel === page.label
                     ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
                     : "text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-800"
                 }`}
               >
-                <page.icon className="h-4 w-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
+                <page.icon className="h-4.5 w-4.5 text-emerald-700 dark:text-emerald-400 shrink-0" />
                 <span>{page.label}</span>
               </DropdownMenuItem>
             ))}
 
             <DropdownMenuSeparator className="my-1.5 bg-slate-100 dark:bg-border/60" />
             
-            <DropdownMenuLabel className="px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-slate-400">
+            <DropdownMenuLabel className="px-2.5 py-1 text-xs font-black uppercase tracking-wider text-slate-400">
               Marketplace Categories
             </DropdownMenuLabel>
             {CATEGORY_OPTIONS.map((cat) => (
               <DropdownMenuItem
                 key={cat.id}
                 onClick={() => handleCategorySelect(cat)}
-                className={`text-xs font-bold py-2 rounded-lg cursor-pointer ${
+                className={`text-xs sm:text-sm py-2 rounded-lg cursor-pointer ${
                   selectedLabel === cat.label
                     ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-black"
-                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-muted"
+                    : "text-slate-800 dark:text-slate-200 font-bold hover:bg-slate-100 dark:hover:bg-muted"
                 }`}
               >
                 {cat.label}
@@ -352,17 +359,17 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
         {/* ── 4. LOCATION SELECTOR ("Deliver to...") ── */}
         <div
           onClick={refreshLiveLocation}
-          className="hidden 2xl:flex items-center gap-1.5 px-2 py-1.5 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-border/60 hover:bg-slate-50 dark:hover:bg-muted/40 cursor-pointer transition-all select-none shrink-0"
+          className="hidden 2xl:flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-border/60 hover:bg-slate-50 dark:hover:bg-muted/40 cursor-pointer transition-all select-none shrink-0"
           title="Change delivery location"
         >
-          <div className="h-7 w-7 rounded-full bg-slate-100 dark:bg-muted flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
-            <MapPin className="h-4 w-4 text-slate-500" />
+          <div className="h-8 w-8 rounded-full bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-700 dark:text-emerald-300 shrink-0 border border-emerald-200/60 dark:border-emerald-800/40">
+            <MapPin className="h-4.5 w-4.5" />
           </div>
           <div className="flex flex-col text-left leading-none">
-            <span className="text-[10px] font-semibold text-slate-400">Deliver to</span>
-            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 mt-0.5 flex items-center gap-0.5 max-w-[130px] truncate">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Deliver to</span>
+            <span className="text-xs sm:text-sm font-black text-emerald-900 dark:text-emerald-300 mt-0.5 flex items-center gap-0.5 max-w-[140px] truncate">
               {displayLocation}
-              <ChevronDown className="h-3 w-3 text-slate-400 shrink-0" />
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0 stroke-[2.5]" />
             </span>
           </div>
         </div>
@@ -374,18 +381,18 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("toggle-ai-chat"))}
-            className="h-9 w-9 rounded-xl bg-blue-50 hover:bg-blue-100/80 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 border border-blue-200/70 dark:border-blue-800/50 flex items-center justify-center text-blue-600 dark:text-blue-400 transition-all shadow-2xs group"
+            className="h-10 w-10 rounded-xl bg-blue-50 hover:bg-blue-100/80 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 border border-blue-200/70 dark:border-blue-800/50 flex items-center justify-center text-blue-600 dark:text-blue-400 transition-all shadow-2xs group cursor-pointer"
             title="AI Farming & Marketplace Assistant"
             data-testid="button-ai-assistant"
           >
-            <Sparkles className="h-4 w-4 group-hover:scale-110 transition-transform text-blue-600 dark:text-blue-400 fill-blue-600/20" />
+            <Sparkles className="h-4.5 w-4.5 group-hover:scale-110 transition-transform text-blue-600 dark:text-blue-400 fill-blue-600/20" />
           </button>
 
           {/* ② Microphone Voice Search */}
           <button
             type="button"
             onClick={handleVoiceSearch}
-            className={`h-9 w-9 rounded-xl border flex items-center justify-center transition-all ${
+            className={`h-10 w-10 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
               isListening
                 ? "bg-red-500 text-white border-red-600 animate-pulse ring-2 ring-red-400"
                 : "border-transparent hover:border-slate-200 dark:hover:border-border/60 hover:bg-slate-100 dark:hover:bg-muted text-slate-700 dark:text-slate-300"
@@ -393,7 +400,7 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
             title={isListening ? "Listening... speak now" : "Voice search"}
             data-testid="button-voice-search"
           >
-            <Mic className="h-4 w-4" />
+            <Mic className="h-4.5 w-4.5" />
           </button>
 
           {/* ③ Language Selector Pill (🌐 EN) */}
@@ -401,31 +408,31 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="h-9 px-2 sm:px-2.5 rounded-xl border border-slate-200/90 dark:border-border/70 bg-slate-50/80 dark:bg-card hover:bg-slate-100 dark:hover:bg-muted transition-all flex items-center gap-1 text-slate-800 dark:text-slate-200 shadow-2xs"
+                className="h-10 px-2.5 sm:px-3 rounded-xl border border-slate-200/90 dark:border-border/70 bg-slate-50/80 dark:bg-card hover:bg-slate-100 dark:hover:bg-muted transition-all flex items-center gap-1.5 text-slate-900 dark:text-slate-100 shadow-2xs cursor-pointer"
                 title="Change Language"
                 data-testid="button-top-language"
               >
-                <Globe className="h-4 w-4 text-slate-600 dark:text-slate-400 shrink-0" />
-                <span className="text-xs font-black uppercase tracking-wider">{baseLang.toUpperCase()}</span>
+                <Globe className="h-4.5 w-4.5 text-slate-600 dark:text-slate-400 shrink-0" />
+                <span className="text-xs sm:text-sm font-black uppercase tracking-wider">{baseLang.toUpperCase()}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 rounded-2xl p-1.5 shadow-xl bg-white dark:bg-card border-2">
-              <DropdownMenuLabel className="px-2.5 py-1 text-[11px] font-black uppercase text-slate-400">
+              <DropdownMenuLabel className="px-2.5 py-1 text-xs font-black uppercase text-slate-400">
                 Select Language
               </DropdownMenuLabel>
               {LANGUAGES.map((lang) => (
                 <DropdownMenuItem
                   key={lang.code}
                   onClick={() => changeLanguage(lang.code)}
-                  className="flex items-center gap-2 cursor-pointer py-2 rounded-xl text-xs font-bold"
+                  className="flex items-center gap-2 cursor-pointer py-2 rounded-xl text-xs sm:text-sm font-bold"
                   data-testid={`lang-${lang.code}`}
                 >
                   <span className="text-base">{lang.flag}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-slate-900 dark:text-slate-100">{lang.native}</div>
-                    <div className="text-[10px] text-slate-400">{lang.label}</div>
+                    <div className="font-black text-slate-900 dark:text-slate-100">{lang.native}</div>
+                    <div className="text-[11px] font-semibold text-slate-400">{lang.label}</div>
                   </div>
-                  {baseLang === lang.code && <Check className="h-3.5 w-3.5 text-emerald-600" />}
+                  {baseLang === lang.code && <Check className="h-4 w-4 text-emerald-600 stroke-[3]" />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -435,11 +442,11 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
           <button
             type="button"
             onClick={() => setTheme(isDark ? "light" : "dark")}
-            className="h-9 w-9 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-border/60 hover:bg-slate-100 dark:hover:bg-muted flex items-center justify-center text-slate-700 dark:text-slate-300 transition-all"
+            className="h-10 w-10 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-border/60 hover:bg-slate-100 dark:hover:bg-muted flex items-center justify-center text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
             title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             data-testid="button-theme-toggle"
           >
-            {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            {isDark ? <Moon className="h-4.5 w-4.5" /> : <Sun className="h-4.5 w-4.5" />}
           </button>
 
           {/* ⑤ Country & Currency Selector Pill (GB · £ ▾) */}
@@ -447,29 +454,29 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="h-9 px-2 sm:px-2.5 rounded-xl border border-slate-200/90 dark:border-border/70 bg-slate-50/80 dark:bg-card hover:bg-slate-100 dark:hover:bg-muted transition-all flex items-center gap-1 text-slate-900 dark:text-slate-100 font-black text-xs shadow-2xs"
+                className="h-10 px-2.5 sm:px-3 rounded-xl border border-slate-200/90 dark:border-border/70 bg-slate-50/80 dark:bg-card hover:bg-slate-100 dark:hover:bg-muted transition-all flex items-center gap-1.5 text-slate-900 dark:text-slate-100 font-black text-xs sm:text-sm shadow-2xs cursor-pointer"
                 title="Select Country & Currency"
                 data-testid="button-country-currency"
               >
                 <span>{currentRegion.code} · {currentRegion.currencySymbol || currentRegion.currency}</span>
-                <ChevronDown className="h-3 w-3 text-slate-400" />
+                <ChevronDown className="h-3.5 w-3.5 text-slate-400 stroke-[2.5]" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto rounded-2xl p-1.5 shadow-xl bg-white dark:bg-card border-2">
-              <DropdownMenuLabel className="px-2.5 py-1 text-[11px] font-black uppercase text-slate-400">
+              <DropdownMenuLabel className="px-2.5 py-1 text-xs font-black uppercase text-slate-400">
                 Country & Currency
               </DropdownMenuLabel>
               {regions.map((reg) => (
                 <DropdownMenuItem
                   key={reg.code}
                   onClick={() => setRegion(reg)}
-                  className={`flex items-center justify-between cursor-pointer py-2 rounded-xl text-xs ${
+                  className={`flex items-center justify-between cursor-pointer py-2 rounded-xl text-xs sm:text-sm ${
                     currentRegion.code === reg.code ? "bg-emerald-50 text-emerald-900 font-black" : "font-bold text-slate-700 dark:text-slate-300"
                   }`}
                   data-testid={`region-${reg.code}`}
                 >
                   <div className="flex items-center gap-2 truncate">
-                    <span className="font-mono text-slate-400 font-bold">{reg.code}</span>
+                    <span className="font-mono text-slate-500 font-bold">{reg.code}</span>
                     <span className="truncate">{reg.name}</span>
                   </div>
                   <span className="font-black text-emerald-700 dark:text-emerald-400 shrink-0 ml-2">
@@ -483,19 +490,19 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
         </div>
 
         {/* ── 6. RIGHT CONTROLS & USER PROFILE ── */}
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           
           {/* Notification Bell with Badge 5 */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setLocation("/orders")}
-            className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-muted"
+            className="relative h-10 w-10 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-muted cursor-pointer"
             title="Notifications"
             data-testid="button-notifications"
           >
-            <Bell className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black h-4.5 min-w-[18px] px-1 rounded-full flex items-center justify-center shadow-xs ring-2 ring-white dark:ring-card leading-none">
+            <Bell className="h-5 w-5" />
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[11px] font-black h-4.5 min-w-[18px] px-1 rounded-full flex items-center justify-center shadow-xs ring-2 ring-white dark:ring-card leading-none">
               5
             </span>
           </Button>
@@ -505,11 +512,11 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
             variant="ghost"
             size="icon"
             onClick={() => setLocation("/support")}
-            className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-muted hidden sm:inline-flex"
+            className="h-10 w-10 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-muted hidden sm:inline-flex cursor-pointer"
             title="Messages & Support"
             data-testid="button-messages"
           >
-            <MessageSquare className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+            <MessageSquare className="h-5 w-5" />
           </Button>
 
           {/* Switch to Seller / Buyer Account Button */}
@@ -518,24 +525,24 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
             size="sm"
             onClick={handleToggleAccountMode}
             disabled={switchAccountMode.isPending}
-            className="hidden xl:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-300 dark:border-border/80 font-bold text-xs hover:bg-slate-100 dark:hover:bg-muted text-slate-800 dark:text-slate-200 shadow-2xs transition-all"
+            className="hidden xl:inline-flex items-center gap-2 h-10 px-3.5 rounded-xl border border-slate-300 dark:border-border/80 font-black text-xs sm:text-sm hover:bg-slate-100 dark:hover:bg-muted text-slate-900 dark:text-slate-100 shadow-2xs transition-all cursor-pointer"
             data-testid="button-switch-account-mode"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${switchAccountMode.isPending ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${switchAccountMode.isPending ? "animate-spin" : ""}`} />
             <span>{isSellerMode ? "Switch to Buyer Account" : "Switch to Seller Account"}</span>
           </Button>
 
           {/* Cart with count badge */}
           <button
             type="button"
-            className="relative flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors shrink-0 group focus:outline-none"
+            className="relative flex items-center justify-center h-10.5 w-10.5 sm:h-11 sm:w-11 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors shrink-0 group focus:outline-none cursor-pointer"
             onClick={() => setLocation("/cart")}
             aria-label={`Shopping cart with ${cartCount} items`}
             title={`Shopping cart (${cartCount} items)`}
             data-testid="button-cart-nav"
           >
             <div className="relative flex items-center justify-center">
-              <TrolleyIcon className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-700 dark:text-emerald-500 group-hover:scale-105 transition-transform" />
+              <TrolleyIcon className="h-7.5 w-7.5 sm:h-8 sm:w-8 text-emerald-700 dark:text-emerald-500 group-hover:scale-105 transition-transform" />
               <span
                 className="absolute -top-1 -right-2 bg-red-500 text-white text-[11px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-xs leading-none ring-1.5 ring-white dark:ring-card"
                 data-testid="badge-cart-count"
@@ -550,19 +557,19 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex h-10 items-center gap-1.5 sm:gap-2 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-border/60 px-1.5 sm:px-2 transition-all hover:bg-slate-50 dark:hover:bg-muted/60"
+                className="flex h-10.5 items-center gap-2 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-border/60 px-2 transition-all hover:bg-slate-50 dark:hover:bg-muted/60 cursor-pointer"
                 data-testid="button-user-menu"
                 aria-label="Open profile menu"
               >
-                <div className="h-8 w-8 rounded-full bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center shadow-2xs shrink-0">
+                <div className="h-8.5 w-8.5 rounded-full bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center shadow-2xs shrink-0">
                   {user?.name ? user.name.charAt(0).toUpperCase() : "K"}
                 </div>
                 <div className="hidden md:flex flex-col text-left leading-tight">
-                  <span className="text-xs font-black uppercase tracking-wide text-slate-900 dark:text-slate-100 max-w-[110px] truncate">
-                    {user?.name || (user ? [user.firstName, user.lastName].filter(Boolean).join(" ") : "KALAISELVAN")}
+                  <span className="text-xs sm:text-sm font-black uppercase tracking-wide text-slate-900 dark:text-slate-100 max-w-[120px] truncate">
+                    {user?.name || (user ? [user.firstName, user.lastName].filter(Boolean).join(" ") : "HARSH GAVAND")}
                   </span>
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-0.5">
-                    {isSellerMode ? "Seller" : "Buyer"} <ChevronDown className="h-2.5 w-2.5" />
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-0.5">
+                    {isSellerMode ? "Seller" : "Buyer"} <ChevronDown className="h-3 w-3 stroke-[2.5]" />
                   </span>
                 </div>
               </Button>

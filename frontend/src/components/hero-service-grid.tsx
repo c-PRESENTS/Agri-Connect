@@ -204,8 +204,10 @@ export const HeroServiceGrid = memo(function HeroServiceGrid() {
                   }
                 }}
                 data-testid={`nav-${item.id}`}
-                className={`relative w-full h-[52px] sm:h-[55px] flex flex-col items-center justify-center gap-0.5 rounded-[11px] border transition-all duration-150 py-1 px-1.5 bg-[#0a2321] hover:bg-[#103330] border-emerald-700/50 hover:border-emerald-400/90 shadow-md cursor-pointer group-hover:-translate-y-0.5 ${
-                  editMode ? "cursor-default" : "active:scale-95"
+                className={`relative w-full h-[52px] sm:h-[55px] flex flex-col items-center justify-center gap-0.5 rounded-[11px] border transition-all duration-150 py-1 px-1.5 shadow-md cursor-pointer group-hover:-translate-y-0.5 ${
+                  editMode
+                    ? "bg-[#0c2e2a] border-2 border-amber-400 text-white shadow-amber-400/20"
+                    : "bg-[#0a2321] hover:bg-[#103330] border-emerald-700/50 hover:border-emerald-400/90 text-white active:scale-95"
                 }`}
               >
                 {/* Top-right badge (e.g. Moisture Reading, Moisture 29.6%, Trend, or Signal Bars) */}
@@ -281,66 +283,76 @@ export const HeroServiceGrid = memo(function HeroServiceGrid() {
                 )}
 
                 {/* Text Label */}
-                <span className="text-[10px] sm:text-[10.5px] font-black text-white text-center leading-tight w-full truncate drop-shadow px-0.5">
+                <span className="text-[10.5px] sm:text-xs font-black text-white text-center leading-tight w-full truncate drop-shadow px-0.5">
                   {t(item.label, { defaultValue: item.fallbackLabel })}
                 </span>
               </button>
 
-              {/* Edit Mode Overlays */}
+              {/* Edit Mode Controls - High contrast & crystal clear */}
               {editMode && (
-                <div className="absolute inset-0 flex flex-col rounded-xl overflow-hidden z-20 bg-black/60 backdrop-blur-xs">
-                  <div className="flex items-center justify-between px-1 pt-1 gap-0.5">
+                <div className="absolute inset-0 rounded-[11px] pointer-events-none z-20">
+                  <div className="absolute top-0.5 left-0.5 flex items-center gap-0.5 pointer-events-auto">
                     <button
+                      type="button"
                       onClick={() => moveLeft(item.id)}
                       disabled={idx === 0}
-                      className="w-4 h-4 rounded flex items-center justify-center bg-black/70 text-white/70 hover:text-white disabled:opacity-20 transition-all cursor-pointer"
+                      className="w-4.5 h-4.5 rounded bg-black/90 border border-white/80 text-white flex items-center justify-center hover:bg-emerald-600 disabled:opacity-20 shadow-md transition-all cursor-pointer"
+                      title="Move Left"
                     >
-                      <ChevronLeft className="h-2.5 w-2.5" />
+                      <ChevronLeft className="h-3 w-3 stroke-[3]" />
+                    </button>
+                  </div>
+
+                  <div className="absolute top-0.5 right-0.5 flex items-center gap-0.5 pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={() => startEmojiEdit(item.id)}
+                      className="w-4.5 h-4.5 rounded bg-amber-400 border border-black/60 text-black flex items-center justify-center hover:bg-amber-300 shadow-md transition-all cursor-pointer"
+                      title="Customize Icon"
+                    >
+                      <Pencil className="h-2.5 w-2.5 stroke-[2.5]" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => remove(item.id)}
-                      className="w-4 h-4 rounded flex items-center justify-center bg-red-500/90 text-white hover:bg-red-500 transition-all cursor-pointer"
+                      className="w-4.5 h-4.5 rounded bg-red-600 border border-white/90 text-white flex items-center justify-center hover:bg-red-500 shadow-md transition-all cursor-pointer"
+                      title="Hide Shortcut"
                     >
-                      <X className="h-2.5 w-2.5" />
+                      <X className="h-3 w-3 stroke-[3]" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => moveRight(item.id)}
                       disabled={idx === visibleItems.length - 1}
-                      className="w-4 h-4 rounded flex items-center justify-center bg-black/70 text-white/70 hover:text-white disabled:opacity-20 transition-all cursor-pointer"
+                      className="w-4.5 h-4.5 rounded bg-black/90 border border-white/80 text-white flex items-center justify-center hover:bg-emerald-600 disabled:opacity-20 shadow-md transition-all cursor-pointer"
+                      title="Move Right"
                     >
-                      <ChevronRight className="h-2.5 w-2.5" />
+                      <ChevronRight className="h-3 w-3 stroke-[3]" />
                     </button>
                   </div>
-                  <div className="flex-1 flex items-end justify-center pb-1">
-                    {isEditingThis ? (
-                      <div className="flex items-center gap-0.5 px-0.5 w-full">
-                        <input
-                          autoFocus
-                          value={emojiInput}
-                          onChange={e => setEmojiInput(e.target.value)}
-                          onKeyDown={e => {
-                            if (e.key === "Enter") commitEmoji(item.id);
-                            if (e.key === "Escape") setEditingEmoji(null);
-                          }}
-                          placeholder="emoji"
-                          className="w-full text-[8px] text-center bg-black/80 border border-white/40 rounded px-1 py-0.5 text-white outline-none placeholder:text-white/40"
-                        />
-                        <button
-                          onClick={() => commitEmoji(item.id)}
-                          className="w-4 h-4 rounded bg-primary flex items-center justify-center shrink-0 cursor-pointer"
-                        >
-                          <Check className="h-2.5 w-2.5 text-white" />
-                        </button>
-                      </div>
-                    ) : (
+
+                  {isEditingThis && (
+                    <div className="absolute inset-x-1 bottom-1 flex items-center gap-0.5 z-30 pointer-events-auto">
+                      <input
+                        autoFocus
+                        value={emojiInput}
+                        onChange={e => setEmojiInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") commitEmoji(item.id);
+                          if (e.key === "Escape") setEditingEmoji(null);
+                        }}
+                        placeholder="emoji"
+                        className="w-full text-[9px] text-center bg-black border border-amber-400 rounded px-1 py-0.5 text-white font-bold outline-none placeholder:text-white/60"
+                      />
                       <button
-                        onClick={() => startEmojiEdit(item.id)}
-                        className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-black/60 text-white/70 hover:text-white transition-all text-[8px] font-bold cursor-pointer"
+                        type="button"
+                        onClick={() => commitEmoji(item.id)}
+                        className="w-4.5 h-4.5 rounded bg-emerald-500 text-black flex items-center justify-center shrink-0 cursor-pointer"
                       >
-                        <Pencil className="h-2 w-2" /> icon
+                        <Check className="h-3 w-3 stroke-[3]" />
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

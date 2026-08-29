@@ -476,7 +476,7 @@ export function registerOrganisationControlCentreRoutes(app: Express) {
         organisationName: z.string().trim().min(2).max(200),
         officialEmail: z.string().trim().email().max(320),
         region: z.string().trim().max(180).optional(),
-        memberCount: z.coerce.number().optional(),
+        memberCount: z.coerce.number().int().min(0).max(10_000_000).optional(),
         primaryCrop: z.string().trim().max(200).optional(),
         contactPerson: z.string().trim().max(180).optional(),
       });

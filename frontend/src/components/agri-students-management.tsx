@@ -208,7 +208,7 @@ export function AgriStudentsManagement({
   const [newDepartment, setNewDepartment] = useState("Agricultural Sciences");
 
   // Query students
-  const { data: studentsData, isLoading, refetch, isFetching } = useQuery<{ records: StudentRecord[] }>({
+  const { data: studentsData, isLoading, isError, refetch, isFetching } = useQuery<{ records: StudentRecord[] }>({
     queryKey: ["/api/admin/resources/students"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/admin/resources/students");
@@ -426,6 +426,7 @@ export function AgriStudentsManagement({
             variant="outline"
             size="sm"
             onClick={handleExportCsv}
+            disabled={filteredStudents.length === 0}
             className="h-9 gap-1.5 border-slate-300 bg-white font-medium text-slate-700 shadow-sm hover:bg-slate-50"
           >
             <Download className="h-3.5 w-3.5" />
@@ -652,12 +653,29 @@ export function AgriStudentsManagement({
                     </td>
                   </tr>
                 ))
+              ) : isError ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-500">
+                    <AlertCircle className="mx-auto mb-2 h-8 w-8 text-rose-400" />
+                    <p className="text-sm font-semibold text-slate-700">Unable to load student records</p>
+                    <p className="mt-1 text-xs">The registry was not changed. Retry the database request.</p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>
+                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
+                    </Button>
+                  </td>
+                </tr>
               ) : paginatedStudents.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
                     <GraduationCap className="mx-auto mb-2 h-8 w-8 text-slate-300" />
-                    <p className="text-sm font-semibold">No student records found</p>
-                    <p className="text-xs">Try adjusting your search criteria or register a new student.</p>
+                    <p className="text-sm font-semibold">
+                      {students.length === 0 ? "No students registered" : "No student records found"}
+                    </p>
+                    <p className="text-xs">
+                      {students.length === 0
+                        ? "Real student records will appear here after registration."
+                        : "Try adjusting your search criteria."}
+                    </p>
                   </td>
                 </tr>
               ) : (

@@ -115,9 +115,9 @@ type AnalyticsData = {
     buyerName?: string;
     createdAt?: string;
   }>;
-  fulfillmentRate?: number;
-  organicRatio?: number;
-  estimatedLocalMilesSaved?: number;
+  fulfillmentRate?: number | null;
+  organicRatio?: number | null;
+  estimatedLocalMilesSaved?: number | null;
   currency?: string;
   reportingWindowDays?: number;
   generatedAt?: string;
@@ -214,33 +214,17 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
         formattedDay: item.day.length >= 10 ? item.day.slice(5) : item.day,
         orders: item.orders,
         revenue: item.revenue,
-        produceVolume: Math.round(item.orders * 24.5),
       }));
     }
-    return [{ day: "Today", formattedDay: "Today", orders: 4, revenue: 320, produceVolume: 98 }];
+    return [];
   }, [data?.trends]);
 
   const categories = useMemo(() => {
     if (data?.categoryYields && data.categoryYields.length > 0) {
       return data.categoryYields;
     }
-    if (overview?.topCategories && overview.topCategories.length > 0) {
-      return overview.topCategories.map((c) => ({
-        category: c.category,
-        products: c.products,
-        totalStock: c.products * 85,
-        growers: Math.max(1, Math.round(c.products / 2.5)),
-        revenue: c.value,
-      }));
-    }
-    return [
-      { category: "commercial_crops", products: 480, totalStock: 12400, growers: 34, revenue: 18500 },
-      { category: "bio_fertilizers", products: 340, totalStock: 8900, growers: 28, revenue: 12400 },
-      { category: "fresh_produce", products: 512, totalStock: 15600, growers: 45, revenue: 16800 },
-      { category: "bio_energy", products: 190, totalStock: 5400, growers: 18, revenue: 7600 },
-      { category: "agritech_tools", products: 120, totalStock: 2200, growers: 12, revenue: 4900 },
-    ];
-  }, [data?.categoryYields, overview?.topCategories]);
+    return [];
+  }, [data?.categoryYields]);
 
   const filteredCategories = useMemo(() => {
     if (sectorFilter === "all") return categories;
@@ -251,49 +235,19 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
     if (overview?.orderStatuses && overview.orderStatuses.length > 0) {
       return overview.orderStatuses;
     }
-    return [
-      { status: "delivered", count: 18 },
-      { status: "shipped", count: 6 },
-      { status: "processing", count: 4 },
-      { status: "confirmed", count: 3 },
-    ];
+    return [];
   }, [overview?.orderStatuses]);
 
   const regionsList = useMemo(() => {
-    if (overview?.regions && overview.regions.length > 0) {
-      return overview.regions;
-    }
-    return [
-      { region: "East Midlands Hub", farmers: 42 },
-      { region: "West Country Orchards", farmers: 35 },
-      { region: "Scottish Lowlands", farmers: 28 },
-      { region: "Kent & South East", farmers: 22 },
-      { region: "Yorkshire Valleys", farmers: 15 },
-    ];
+    return overview?.regions ?? [];
   }, [overview?.regions]);
 
   const topFarmersList = useMemo(() => {
-    if (overview?.topFarmers && overview.topFarmers.length > 0) {
-      return overview.topFarmers;
-    }
-    return [
-      { id: "farmer-1", name: "Green Valley Organic Farm", avatar: undefined, rating: 4.9, products: 48, revenue: 12850 },
-      { id: "farmer-2", name: "Highland Agro Co-operative", avatar: undefined, rating: 4.8, products: 36, revenue: 9400 },
-      { id: "farmer-3", name: "Meadowbrook Bio-Fertilizers", avatar: undefined, rating: 5.0, products: 24, revenue: 7850 },
-      { id: "farmer-4", name: "Orchard Hill Estates", avatar: undefined, rating: 4.7, products: 31, revenue: 6420 },
-    ];
+    return overview?.topFarmers ?? [];
   }, [overview?.topFarmers]);
 
   const localDemandList = useMemo(() => {
-    if (data?.localDemandAlerts && data.localDemandAlerts.length > 0) {
-      return data.localDemandAlerts;
-    }
-    return [
-      { id: "dem-1", productName: "Organic Wheat Grade-A", quantity: 500, unit: "kg", urgency: "high", location: "East Midlands Hub", buyerName: "Artisan Bakers Co.", createdAt: new Date().toISOString() },
-      { id: "dem-2", productName: "Cold-Pressed Neem Extract", quantity: 120, unit: "Litre", urgency: "high", location: "Kent Agri Cluster", buyerName: "Sunrise Bio Farms", createdAt: new Date().toISOString() },
-      { id: "dem-3", productName: "Agricultural Straw Pellets", quantity: 2500, unit: "kg", urgency: "medium", location: "Yorkshire Freight Hub", buyerName: "GreenEnergy Co-op", createdAt: new Date().toISOString() },
-      { id: "dem-4", productName: "Heirloom Heritage Apples", quantity: 350, unit: "kg", urgency: "low", location: "West Country Market", buyerName: "FarmDirect London", createdAt: new Date().toISOString() },
-    ];
+    return data?.localDemandAlerts ?? [];
   }, [data?.localDemandAlerts]);
 
   const exportCSV = () => {
@@ -363,15 +317,14 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
     );
   }
 
-  const gmvValue = summary?.gmv ?? (summary?.revenue ? summary.revenue * 1.08 : 48250);
-  const totalFarmers = summary?.farmers ?? 142;
-  const verifiedFarmers = summary?.verifiedFarmers ?? Math.round(totalFarmers * 0.88);
-  const totalOrders = summary?.orders ?? 31;
-  const totalProducts = summary?.products ?? 1642;
-  const totalRegions = summary?.regions ?? 8;
-  const fulfillmentRate = data?.fulfillmentRate ?? 98.4;
-  const organicRatio = data?.organicRatio ?? 42.6;
-  const carbonSaved = data?.estimatedLocalMilesSaved ?? 14250;
+  const gmvValue = summary?.gmv ?? summary?.revenue ?? 0;
+  const totalFarmers = summary?.farmers ?? 0;
+  const verifiedFarmers = summary?.verifiedFarmers ?? 0;
+  const totalOrders = summary?.orders ?? 0;
+  const totalProducts = summary?.products ?? 0;
+  const totalRegions = summary?.regions ?? 0;
+  const fulfillmentRate = data?.fulfillmentRate;
+  const organicRatio = data?.organicRatio;
 
   const statusColors = ["#059669", "#84cc16", "#f59e0b", "#0284c7", "#8b5cf6", "#64748b"];
 
@@ -450,15 +403,15 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
           </div>
           <div className="flex items-center gap-2 text-white/80">
             <Truck className="h-4 w-4 text-emerald-300" />
-            <span>Fulfillment SLA: <b className="text-white">{fulfillmentRate}%</b></span>
+            <span>Fulfillment rate: <b className="text-white">{fulfillmentRate == null ? "No data" : `${fulfillmentRate}%`}</b></span>
           </div>
           <div className="flex items-center gap-2 text-white/80">
             <Leaf className="h-4 w-4 text-lime-300" />
-            <span>Eco & Organic Share: <b className="text-white">{organicRatio}%</b></span>
+            <span>Organic catalogue: <b className="text-white">{organicRatio == null ? "No data" : `${organicRatio}%`}</b></span>
           </div>
           <div className="flex items-center gap-2 text-white/80">
-            <Award className="h-4 w-4 text-amber-300" />
-            <span>Local Miles Saved: <b className="text-white">{compact(carbonSaved)} mi</b></span>
+            <Activity className="h-4 w-4 text-amber-300" />
+            <span>Active sessions: <b className="text-white">{summary?.activeSessions ?? 0}</b></span>
           </div>
         </div>
       </div>
@@ -468,8 +421,8 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
         <AgrarianKpiCard
           label="Gross Agricultural Trade"
           value={money(gmvValue)}
-          context="+18.4% vs last cycle"
-          sub="Farm-gate recorded GMV"
+          context={`${summary?.orders ?? 0} recorded orders`}
+          sub="Database-recorded GMV"
           icon={DollarSign}
           tone="emerald"
         />
@@ -477,40 +430,40 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
           label="Registered Producers"
           value={compact(totalFarmers)}
           context={`${compact(verifiedFarmers)} verified`}
-          sub="Across 8 co-operatives"
+          sub="Registered farmer accounts"
           icon={Sprout}
           tone="lime"
         />
         <AgrarianKpiCard
           label="Harvest Orders Velocity"
           value={compact(totalOrders)}
-          context={`${summary?.newOrders ?? 12} new this period`}
-          sub="Avg dispatch 1.2 days"
+          context={`${summary?.newOrders ?? 0} new this period`}
+          sub="Persisted order records"
           icon={Tractor}
           tone="amber"
         />
         <AgrarianKpiCard
           label="Catalogue Produce"
           value={compact(totalProducts)}
-          context={`${organicRatio}% eco-certified`}
-          sub="Across 16 crop sectors"
+          context={organicRatio == null ? "No organic metadata" : `${organicRatio}% organic`}
+          sub="Approved catalogue products"
           icon={Leaf}
           tone="teal"
         />
         <AgrarianKpiCard
           label="Agricultural Hubs"
           value={`${totalRegions} Hubs`}
-          context="100% active lanes"
-          sub="Regional freight active"
+          context={`${regionsList.length} recorded regions`}
+          sub="Configured market regions"
           icon={MapPin}
           tone="sky"
         />
         <AgrarianKpiCard
-          label="Sustainable Impact"
-          value={`${compact(carbonSaved)} kg`}
-          context="CO₂ & food miles cut"
-          sub="Short-chain farm delivery"
-          icon={Trees}
+          label="Active Platform Users"
+          value={compact(summary?.activeUsers ?? 0)}
+          context={`${summary?.activeSessions ?? 0} active sessions`}
+          sub="Authenticated activity"
+          icon={Users}
           tone="mint"
         />
       </div>
@@ -688,12 +641,11 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                   </ResponsiveContainer>
                 </div>
 
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-emerald-50/70 px-4 py-2.5 text-xs text-emerald-900">
-                  <span className="font-bold">
-                    🌾 Direct Producer Payout Share: <strong className="font-black text-emerald-950">92.5%</strong> (Industry top quartile)
-                  </span>
-                  <span className="text-[11px] font-semibold text-emerald-700">Platform fee capped at 7.5%</span>
-                </div>
+                {chartData.length === 0 && (
+                  <div className="mt-3 rounded-xl bg-slate-50 px-4 py-3 text-center text-xs text-slate-500">
+                    No order or revenue trend records are available for this window.
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -754,30 +706,14 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
               <Card className="rounded-2xl border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-md">
                 <CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-2">
                   <div>
-                    <CardTitle className="text-sm font-black text-slate-900">Fresh Picks Comparator</CardTitle>
-                    <p className="mt-0.5 text-[10px] text-slate-400">Local farm matching priority weights</p>
+                    <CardTitle className="text-sm font-black text-slate-900">Marketplace Ranking Configuration</CardTitle>
+                    <p className="mt-0.5 text-[10px] text-slate-400">Persisted ranking rules</p>
                   </div>
                   <Sparkles className="h-4 w-4 text-amber-500" />
                 </CardHeader>
-                <CardContent className="space-y-2.5 p-4 pt-1">
-                  {[
-                    { label: "Harvest Freshness & Window", value: 40, color: "#059669" },
-                    { label: "Local Farm Proximity", value: 30, color: "#84cc16" },
-                    { label: "Grower Quality & Reviews", value: 20, color: "#f59e0b" },
-                    { label: "Stock Availability Recency", value: 10, color: "#0284c7" },
-                  ].map((item) => (
-                    <div key={item.label}>
-                      <div className="mb-1 flex justify-between text-[10px] font-bold">
-                        <span className="text-slate-600">{item.label}</span>
-                        <span className="text-slate-900">{item.value}%</span>
-                      </div>
-                      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-                        <div className="h-full rounded-full" style={{ width: `${item.value * 2.5}%`, background: item.color }} />
-                      </div>
-                    </div>
-                  ))}
-                  <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-2 text-[10px] font-medium leading-4 text-emerald-900">
-                    🌱 Local farm produce within 30 miles automatically receives algorithmic priority to minimize food waste.
+                <CardContent className="p-4 pt-1">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
+                    No marketplace ranking configuration is recorded for this analytics endpoint.
                   </div>
                 </CardContent>
               </Card>
@@ -816,13 +752,21 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(SECTOR_INFO).map(([key, info]) => {
+            {filteredCategories.map((match) => {
+              const key = match.category;
+              const info = Object.entries(SECTOR_INFO).find(([sectorKey]) => key.toLowerCase().includes(sectorKey))?.[1] ?? {
+                label: key.replaceAll("_", " "),
+                icon: Package,
+                color: "text-emerald-700",
+                bg: "bg-emerald-50/80",
+                border: "border-emerald-200",
+                exampleCrops: "Recorded catalogue category",
+              };
               const Icon = info.icon;
-              const match = categories.find((c) => c.category.toLowerCase().includes(key));
-              const productCount = match ? match.products : Math.floor(Math.random() * 200 + 50);
-              const stockUnits = match ? match.totalStock : productCount * 45;
-              const growersCount = match ? match.growers : Math.max(2, Math.round(productCount / 5));
-              const revenueVal = match ? match.revenue : productCount * 32;
+              const productCount = match.products;
+              const stockUnits = match.totalStock;
+              const growersCount = match.growers;
+              const revenueVal = match.revenue;
 
               return (
                 <Card
@@ -859,17 +803,16 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                       </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[10px] font-bold">
-                        <span className="text-slate-500">In-Stock Readiness</span>
-                        <span className="text-emerald-700">Optimal (94%)</span>
-                      </div>
-                      <Progress value={94} className="h-1.5 bg-slate-100" />
-                    </div>
+                    <p className="text-[10px] text-slate-500">All values above are aggregated from current database records.</p>
                   </CardContent>
                 </Card>
               );
             })}
+            {filteredCategories.length === 0 && (
+              <Card className="col-span-full rounded-2xl border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+                No category analytics are available for the selected filter.
+              </Card>
+            )}
           </div>
 
           <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-white shadow-sm">
@@ -938,8 +881,8 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Avg Cold-Chain Dispatch</p>
-                  <p className="text-xl font-black text-slate-900">28.4 Hours</p>
-                  <span className="text-[10px] font-bold text-emerald-600">From harvest to courier handoff</span>
+                  <p className="text-xl font-black text-slate-900">No data</p>
+                  <span className="text-[10px] text-slate-500">Dispatch telemetry is not recorded</span>
                 </div>
               </div>
             </Card>
@@ -950,8 +893,8 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cold-Chain Integrity</p>
-                  <p className="text-xl font-black text-slate-900">99.7%</p>
-                  <span className="text-[10px] font-bold text-emerald-600">Zero temperature excursion incidents</span>
+                  <p className="text-xl font-black text-slate-900">No data</p>
+                  <span className="text-[10px] text-slate-500">Temperature events are not recorded</span>
                 </div>
               </div>
             </Card>
@@ -962,8 +905,8 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Farm Proximity Radius</p>
-                  <p className="text-xl font-black text-slate-900">24.2 Miles</p>
-                  <span className="text-[10px] font-bold text-emerald-600">Short-chain localized trade</span>
+                  <p className="text-xl font-black text-slate-900">No data</p>
+                  <span className="text-[10px] text-slate-500">Route distance is not recorded</span>
                 </div>
               </div>
             </Card>
@@ -1008,15 +951,18 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                               <span className="text-[10px] font-bold text-slate-600">{share}%</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3.5 font-semibold text-emerald-700">98.8% On-Time</td>
+                          <td className="px-4 py-3.5 text-slate-400">—</td>
                           <td className="px-4 py-3.5 text-right">
                             <Badge className="bg-emerald-100 text-[10px] font-black text-emerald-800">
-                              High Throughput
+                              Recorded
                             </Badge>
                           </td>
                         </tr>
                       );
                     })}
+                    {regionsList.length === 0 && (
+                      <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">No regional records are available.</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1074,6 +1020,9 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                     </div>
                   </div>
                 ))}
+                {topFarmersList.length === 0 && (
+                  <p className="py-8 text-center text-xs text-slate-500">No verified producer performance records are available.</p>
+                )}
               </CardContent>
             </Card>
 
@@ -1084,10 +1033,7 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
               </CardHeader>
               <CardContent className="space-y-3 p-4 pt-1">
                 {[
-                  { label: "Government Land & Identity Verification", count: verifiedFarmers, total: totalFarmers, status: "High Compliance" },
-                  { label: "Organic & Soil Health Certifications", count: Math.round(totalFarmers * 0.42), total: totalFarmers, status: "Audit Active" },
-                  { label: "Cold-Chain Handling Compliance", count: Math.round(totalFarmers * 0.94), total: totalFarmers, status: "Verified" },
-                  { label: "Bank & Direct-Payout Settlement Audit", count: Math.round(totalFarmers * 0.98), total: totalFarmers, status: "Active" },
+                  { label: "Account Verification", count: verifiedFarmers, total: totalFarmers, status: "Database status" },
                 ].map((audit) => {
                   const pct = Math.round((audit.count / Math.max(1, audit.total)) * 100);
                   return (
@@ -1104,6 +1050,7 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                     </div>
                   );
                 })}
+                {totalFarmers === 0 && <p className="py-4 text-center text-xs text-slate-500">No farmer accounts are recorded.</p>}
               </CardContent>
             </Card>
           </div>
@@ -1143,7 +1090,7 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                         </span>
                       </div>
                       <p className="mt-0.5 text-[10px] text-slate-400">
-                        {demand.quantity} {demand.unit} · {demand.location} · Requested by {demand.buyerName || "Verified Buyer"}
+                        {demand.quantity} {demand.unit} · {demand.location} · Requested by {demand.buyerName || "—"}
                       </p>
                     </div>
                     <Button
@@ -1156,6 +1103,9 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                     </Button>
                   </div>
                 ))}
+                {localDemandList.length === 0 && (
+                  <p className="py-8 text-center text-xs text-slate-500">No active local demand records are available.</p>
+                )}
               </CardContent>
             </Card>
 
@@ -1164,36 +1114,9 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                 <CardTitle className="text-sm font-black text-slate-900">Seasonal Harvest Almanac</CardTitle>
                 <p className="text-[10px] text-slate-400">Crop cycle phases & harvest calendar guidance</p>
               </CardHeader>
-              <CardContent className="space-y-3 p-4 pt-1">
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
-                  <div className="flex items-center gap-2">
-                    <Sun className="h-4 w-4 text-amber-600" />
-                    <strong className="text-xs font-black text-emerald-950">Late Summer / Autumn Harvest Window</strong>
-                  </div>
-                  <p className="mt-1 text-[10px] leading-4 text-emerald-800">
-                    Peak harvest for heritage apples, root vegetables, early grain pulses, and post-harvest straw biomass collection.
-                  </p>
-                </div>
-
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2">
-                    <span className="flex items-center gap-1.5 font-bold text-slate-700">
-                      <Sprout className="h-3.5 w-3.5 text-lime-600" /> Sowing Window
-                    </span>
-                    <span className="text-[10px] font-semibold text-slate-500">Winter Wheat, Cover Crops</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2">
-                    <span className="flex items-center gap-1.5 font-bold text-slate-700">
-                      <Wheat className="h-3.5 w-3.5 text-amber-600" /> Peak Harvesting
-                    </span>
-                    <span className="text-[10px] font-semibold text-slate-500">Orchard Fruits, Pulses, Biomass</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2">
-                    <span className="flex items-center gap-1.5 font-bold text-slate-700">
-                      <CloudRain className="h-3.5 w-3.5 text-blue-600" /> Climate Telemetry
-                    </span>
-                    <span className="text-[10px] font-semibold text-slate-500">Soil Moisture Optimal (68%)</span>
-                  </div>
+              <CardContent className="p-4 pt-1">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500">
+                  No seasonal crop-cycle or climate telemetry is stored in the current backend.
                 </div>
               </CardContent>
             </Card>
@@ -1207,7 +1130,7 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
         <TelemetryBadge icon={DollarSign} label="Financial Scope" value="GBP Recorded Settlements" tone="blue" />
         <TelemetryBadge icon={ShieldCheck} label="Access Boundary" value="Super Admin Platform Auth" tone="purple" />
         <TelemetryBadge icon={Users} label="Active Sessions" value={`${summary?.activeSessions || 0} active administrators`} tone="orange" />
-        <TelemetryBadge icon={Droplets} label="Sync Heartbeat" value="Real-time · 15s cache TTL" tone="lime" />
+        <TelemetryBadge icon={Droplets} label="Generated At" value={data?.generatedAt ? new Date(data.generatedAt).toLocaleString() : "No data"} tone="lime" />
       </div>
     </div>
   );

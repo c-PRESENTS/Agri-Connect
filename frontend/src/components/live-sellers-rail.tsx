@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
@@ -26,6 +26,7 @@ import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import type { Product, DemandAlert } from "@shared/schema";
 import { useLiveLocation } from "@/contexts/live-location-context";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 
 interface SellerEntry {
@@ -40,6 +41,7 @@ interface SellerEntry {
   longitude: number;
   distanceKm: number;
   topProducts: Product[];
+  isVerified?: boolean;
 }
 
 function calculateHaversineKm(
@@ -48,7 +50,7 @@ function calculateHaversineKm(
   lat2: number,
   lon2: number
 ): number {
-  const R = 6371;
+  const R = 6371; // Earth radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -77,6 +79,8 @@ export function LiveSellersRail({
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { location: liveLoc } = useLiveLocation();
+  const { user, isAuthenticated } = useAuth();
+  const isSeller = isAuthenticated && (user?.role === "farmer" || user?.role === "seller");
 
   const [activeTab, setActiveTab] = useState<"map" | "list">("map");
   const [showSellers, setShowSellers] = useState(true);
@@ -99,7 +103,7 @@ export function LiveSellersRail({
 
   // 3. Filter and localize sellers dynamically with distance calculations
   const sellers: SellerEntry[] = useMemo(() => {
-    return rawSellers
+    const list = rawSellers
       .filter((s) => s.id && !s.id.startsWith("farmer-") && !s.id.startsWith("catalog-") && s.name && s.name !== "Verified Seller")
       .map((s) => {
         let dist = s.distanceKm || 0;
@@ -110,9 +114,33 @@ export function LiveSellersRail({
           ...s,
           distanceKm: dist,
         };
-      })
-      .sort((a, b) => b.productCount - a.productCount);
-  }, [rawSellers, liveLoc]);
+      });
+
+    if (isSeller && user && !list.some((s) => s.id === user.id)) {
+      const userLat = user.latitude || liveLoc?.latitude || 0;
+      const userLng = user.longitude || liveLoc?.longitude || 0;
+      let dist = 0;
+      if (liveLoc?.latitude && liveLoc?.longitude && userLat && userLng) {
+        dist = calculateHaversineKm(liveLoc.latitude, liveLoc.longitude, userLat, userLng);
+      }
+      list.unshift({
+        id: user.id,
+        name: user.name || "My Verified Farm Store",
+        avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || "Seller")}`,
+        rating: 5.0,
+        location: user.location || cityName,
+        latitude: userLat,
+        longitude: userLng,
+        isOnline: true,
+        isVerified: true,
+        productCount: 0,
+        distanceKm: dist,
+        topProducts: [],
+      });
+    }
+
+    return list.sort((a, b) => b.productCount - a.productCount);
+  }, [rawSellers, liveLoc, isSeller, user, cityName]);
 
   // 4. Resolve local demand opportunity from database
   const topOpportunity = useMemo(() => {
@@ -144,10 +172,16 @@ export function LiveSellersRail({
     return [19.0760, 72.8777]; // Mumbai coordinates
   }, [liveLoc, sellers]);
 
+  useEffect(() => {
+    if (isFullScreen) {
+      window.dispatchEvent(new Event("agri-subcategory-close"));
+    }
+  }, [isFullScreen]);
+
   // ─── FULL PAGE VIEW ───
   if (isFullScreen) {
     return (
-      <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-background overflow-y-auto flex flex-col p-4 sm:p-6 select-none animate-in fade-in duration-200">
+      <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-background overflow-y-auto flex flex-col p-4 sm:p-6 select-none animate-in fade-in duration-200">
         {/* Full-Page Top Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-card p-4 rounded-2xl border border-slate-200 dark:border-border/80 shadow-sm mb-4 shrink-0">
           <div className="flex items-center gap-3">
@@ -251,17 +285,31 @@ export function LiveSellersRail({
               <div className="h-12 w-12 mx-auto rounded-full bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center text-emerald-600">
                 <Users className="h-6 w-6 opacity-80" />
               </div>
-              <h4 className="text-sm font-black text-slate-800 dark:text-slate-200">No active sellers registered in this region yet</h4>
+              <h4 className="text-sm font-black text-slate-800 dark:text-slate-200">
+                {isSeller ? "No other active sellers registered in this region yet" : "No active sellers registered in this region yet"}
+              </h4>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Verified farmers and producers will be displayed here as soon as they register and list products.
+                {isSeller
+                  ? "Verified farmers and producers will be displayed here. You can manage your listings and profile from your Seller Hub."
+                  : "Verified farmers and producers will be displayed here as soon as they register and list products."}
               </p>
-              <Link
-                href="/auth?role=farmer"
-                className="inline-flex items-center gap-1.5 mt-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-2xs"
-              >
-                <span>Register as Seller</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Link>
+              {isSeller ? (
+                <Link
+                  href="/seller"
+                  className="inline-flex items-center gap-1.5 mt-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-2xs"
+                >
+                  <span>Go to Seller Hub</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              ) : (
+                <Link
+                  href="/auth?role=farmer&returnTo=/seller"
+                  className="inline-flex items-center gap-1.5 mt-2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-2xs"
+                >
+                  <span>Register as Seller</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -413,14 +461,24 @@ export function LiveSellersRail({
           <div style={{ height: mapHeight }} className="overflow-y-auto p-3 space-y-2">
             {sellers.length === 0 ? (
               <div className="p-4 text-center text-xs font-semibold text-muted-foreground space-y-1.5">
-                <p>No active sellers in this area yet.</p>
-                <Link
-                  href="/auth?role=farmer"
-                  className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:underline font-bold"
-                >
-                  <span>Become a Seller</span>
-                  <ChevronRight className="h-3 w-3" />
-                </Link>
+                <p>{isSeller ? "No other active sellers in this area yet." : "No active sellers in this area yet."}</p>
+                {isSeller ? (
+                  <Link
+                    href="/seller"
+                    className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:underline font-bold"
+                  >
+                    <span>Go to Seller Hub</span>
+                    <ChevronRight className="h-3 w-3" />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth?role=farmer&returnTo=/seller"
+                    className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:underline font-bold"
+                  >
+                    <span>Become a Seller</span>
+                    <ChevronRight className="h-3 w-3" />
+                  </Link>
+                )}
               </div>
             ) : (
               sellers.map((s) => (
@@ -480,14 +538,28 @@ export function LiveSellersRail({
                   <Users className="h-5 w-5 opacity-80" />
                 </div>
                 <p className="font-bold text-slate-800 dark:text-slate-200">No live sellers in {cityName} yet</p>
-                <p className="text-[11px] text-slate-500">Verified farmers and producers will appear here once registered.</p>
-                <Link
-                  href="/auth?role=farmer"
-                  className="inline-flex items-center gap-1.5 mt-1 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors shadow-2xs"
-                >
-                  <span>Register as Seller</span>
-                  <ChevronRight className="h-3 w-3" />
-                </Link>
+                <p className="text-[11px] text-slate-500">
+                  {isSeller
+                    ? "You are active as a verified seller. Manage your listings and incoming demand from your Seller Hub."
+                    : "Verified farmers and producers will appear here once registered."}
+                </p>
+                {isSeller ? (
+                  <Link
+                    href="/seller"
+                    className="inline-flex items-center gap-1.5 mt-1 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors shadow-2xs"
+                  >
+                    <span>Go to Seller Hub</span>
+                    <ChevronRight className="h-3 w-3" />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth?role=farmer&returnTo=/seller"
+                    className="inline-flex items-center gap-1.5 mt-1 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors shadow-2xs"
+                  >
+                    <span>Register as Seller</span>
+                    <ChevronRight className="h-3 w-3" />
+                  </Link>
+                )}
               </div>
             ) : (
               sellers.map((s) => (
@@ -516,26 +588,26 @@ export function LiveSellersRail({
                   {/* Real Seller Name & DB Location */}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${s.isOnline ? "bg-emerald-500" : "bg-slate-400"}`} />
-                      <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${s.isOnline ? "bg-emerald-500" : "bg-slate-400"}`} />
+                      <h4 className="font-black text-xs sm:text-sm md:text-base text-slate-900 dark:text-slate-100 truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                         {s.name}
                       </h4>
                     </div>
-                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate pl-3">
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate pl-3.5">
                       • {s.location}
                     </p>
                   </div>
 
                   {/* Rating, Distance & Product Count */}
                   <div className="text-right shrink-0">
-                    <div className="flex items-center justify-end gap-1 text-xs font-black">
-                      <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                      <span className="text-slate-800 dark:text-slate-200">{s.rating.toFixed(1)}</span>
-                      <span className="text-slate-400 text-[10px] ml-1 font-semibold">
+                    <div className="flex items-center justify-end gap-1.5 text-xs font-black">
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      <span className="text-slate-900 dark:text-slate-100">{s.rating.toFixed(1)}</span>
+                      <span className="text-slate-400 text-xs ml-1 font-bold">
                         {s.distanceKm} km
                       </span>
                     </div>
-                    <p className="text-[11px] font-black text-emerald-800 dark:text-emerald-400 mt-0.5">
+                    <p className="text-xs font-black text-emerald-800 dark:text-emerald-400 mt-0.5">
                       {s.productCount} Product{s.productCount !== 1 ? "s" : ""}
                     </p>
                   </div>
@@ -547,31 +619,31 @@ export function LiveSellersRail({
       </Card>
 
       {/* ─── CARD 3: REAL DATABASE OPPORTUNITY CARD ─── */}
-      <Card className="rounded-2xl border border-slate-200/80 dark:border-border/60 bg-gradient-to-br from-emerald-50 via-white to-slate-50 dark:from-emerald-950/20 dark:via-card dark:to-card p-3.5 shadow-xs">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full">
+      <Card className="rounded-2xl border border-slate-200/80 dark:border-border/60 bg-gradient-to-br from-emerald-50 via-white to-slate-50 dark:from-emerald-950/20 dark:via-card dark:to-card p-4 shadow-xs">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[11px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2.5 py-1 rounded-full">
             Active Demand Opportunity
           </span>
-          <span className="text-[10px] font-bold text-slate-400">
+          <span className="text-xs font-black text-slate-500 dark:text-slate-400">
             {topOpportunity?.buyerType || "Commercial Buyer"}
           </span>
         </div>
 
-        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-snug">
+        <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 leading-relaxed">
           Looking for:{" "}
-          <span className="font-black text-slate-900 dark:text-slate-100">
+          <span className="font-black text-slate-950 dark:text-slate-50">
             {topOpportunity?.productName || "Organic Fresh Produce"} ({topOpportunity?.quantity || "500 kg"})
           </span>{" "}
           in {cityName}
         </p>
 
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="text-[11px] font-extrabold text-emerald-800 dark:text-emerald-400">
+        <div className="mt-3.5 flex items-center justify-between gap-2">
+          <span className="text-xs sm:text-sm font-black text-emerald-800 dark:text-emerald-400">
             {topOpportunity?.priceRange || "Competitive Price"}
           </span>
           <Link
             href={`/dashboard/photo-sell?crop=${encodeURIComponent(topOpportunity?.productName || "Produce")}`}
-            className="bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-black px-3 py-1.5 rounded-xl shadow-2xs transition-colors"
+            className="bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-2xs transition-colors"
           >
             Accept Opportunity
           </Link>

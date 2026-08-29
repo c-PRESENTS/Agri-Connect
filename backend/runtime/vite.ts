@@ -8,14 +8,30 @@ import { randomUUID } from "crypto";
 
 const viteLogger = createLogger();
 
+function getHmrOptions(server: Server) {
+  const host = process.env.VITE_HMR_HOST?.trim()
+    || process.env.REPLIT_DEV_DOMAIN?.trim();
+  const configuredProtocol = process.env.VITE_HMR_PROTOCOL?.trim().toLowerCase();
+  const protocol = configuredProtocol === "ws" || configuredProtocol === "wss"
+    ? configuredProtocol
+    : host ? "wss" as const : undefined;
+  const configuredPort = Number(process.env.VITE_HMR_CLIENT_PORT);
+  const clientPort = Number.isInteger(configuredPort) && configuredPort > 0
+    ? configuredPort
+    : host ? 443 : undefined;
+
+  return {
+    server,
+    ...(host ? { host } : {}),
+    ...(protocol ? { protocol } : {}),
+    ...(clientPort ? { clientPort } : {}),
+  };
+}
+
 export async function setupVite(server: Server, app: Express) {
   const serverOptions = {
     middlewareMode: true,
-    hmr: {
-      server,
-      protocol: "wss",
-      clientPort: 443,
-    },
+    hmr: getHmrOptions(server),
     allowedHosts: true as const,
   };
 

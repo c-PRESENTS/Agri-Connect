@@ -74,8 +74,8 @@ export const TrustIndicators = memo(function TrustIndicators() {
                 >
                   <badge.icon className="h-6 w-6 sm:h-7 sm:w-7 text-amber-600 dark:text-amber-400 drop-shadow-xs" />
                 </div>
-                <h3 className="font-black text-xs sm:text-sm md:text-base mb-1 uppercase tracking-wider text-foreground">{t(badge.title, { defaultValue: badge.titleFallback })}</h3>
-                <p className="text-[11px] sm:text-xs md:text-sm font-bold text-foreground/80 leading-relaxed">{t(badge.description, { defaultValue: badge.descriptionFallback })}</p>
+                <h3 className="font-black text-sm sm:text-base md:text-lg mb-1.5 uppercase tracking-wider text-foreground">{t(badge.title, { defaultValue: badge.titleFallback })}</h3>
+                <p className="text-xs sm:text-sm md:text-base font-bold text-foreground/85 leading-relaxed">{t(badge.description, { defaultValue: badge.descriptionFallback })}</p>
               </div>
             ))}
           </div>
@@ -147,25 +147,25 @@ export const TrustIndicators = memo(function TrustIndicators() {
       </section>
 
       <footer
-        className="py-8 sm:py-12 md:py-14 px-3 sm:px-6 lg:px-8 bg-card border-t-2 border-border/60"
+        className="py-10 sm:py-14 md:py-16 px-4 sm:px-6 lg:px-8 bg-card border-t-2 border-border/60"
         style={{ contentVisibility: "auto", containIntrinsicSize: "480px" }}
       >
         <div className="w-full max-w-[1700px] mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 sm:gap-8 mb-8 sm:mb-12">
-            <div className="sm:col-span-2">
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-primary to-green-600 flex items-center justify-center shadow-md">
-                  <Leaf className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 sm:gap-10 mb-10 sm:mb-14">
+            <div className="sm:col-span-2 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-primary to-green-600 flex items-center justify-center shadow-md">
+                  <Leaf className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                 </div>
-                <span className="font-black text-xl sm:text-2xl tracking-tight text-foreground">AgriConnect</span>
+                <span className="font-black text-2xl sm:text-3xl tracking-tight text-foreground">AgriConnect</span>
               </div>
-              <p className="text-foreground/80 text-xs sm:text-sm font-bold mb-4 leading-relaxed max-w-sm">
+              <p className="text-foreground/85 text-sm sm:text-base font-semibold leading-relaxed max-w-md">
                 Connecting farmers directly with customers for fresher produce and fairer prices.
               </p>
-              <div className="flex gap-2.5">
+              <div className="flex gap-3 pt-1">
                 {[SiFacebook, SiX, SiInstagram, FaLinkedinIn].map((Icon, i) => (
-                  <Button key={i} variant="outline" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl border-2 border-border/80 hover:border-primary hover:bg-primary/10 shadow-2xs transition-transform hover:scale-105">
-                    <Icon className="h-4 w-4 text-foreground" />
+                  <Button key={i} variant="outline" size="icon" className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl border-2 border-border/80 hover:border-primary hover:bg-primary/10 shadow-2xs transition-transform hover:scale-105">
+                    <Icon className="h-5 w-5 text-foreground" />
                   </Button>
                 ))}
               </div>
@@ -200,14 +200,16 @@ export const TrustIndicators = memo(function TrustIndicators() {
                 ],
               },
             ].map((section) => (
-              <div key={section.title}>
-                <h4 className="font-black text-xs sm:text-sm uppercase tracking-wider text-foreground mb-3 sm:mb-4 pb-1 border-b-2 border-primary/20 inline-block">{section.title}</h4>
-                <ul className="space-y-2">
+              <div key={section.title} className="space-y-3">
+                <h4 className="font-black text-sm sm:text-base md:text-lg uppercase tracking-wider text-foreground pb-1.5 border-b-2 border-primary/40 inline-block">
+                  {section.title}
+                </h4>
+                <ul className="space-y-2.5 sm:space-y-3">
                   {section.links.map((link) => (
                     <li key={link.href}>
                       <Link
                         href={link.href}
-                        className="text-xs sm:text-sm font-bold text-foreground/80 hover:text-primary transition-colors py-0.5 inline-block"
+                        className="text-sm sm:text-base font-bold text-foreground/80 hover:text-primary transition-colors py-0.5 inline-block"
                       >
                         {link.label}
                       </Link>
@@ -218,11 +220,11 @@ export const TrustIndicators = memo(function TrustIndicators() {
             ))}
           </div>
           
-          <div className="pt-6 sm:pt-8 border-t-2 border-border/40 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-xs sm:text-sm font-black text-foreground">
+          <div className="pt-8 sm:pt-10 border-t-2 border-border/40 flex flex-col md:flex-row items-center justify-between gap-5">
+            <p className="text-sm sm:text-base font-black text-foreground">
               (c) {new Date().getFullYear()} AgriConnect. All rights reserved.
             </p>
-            <div className="flex flex-wrap justify-center gap-3.5 sm:gap-5 text-xs sm:text-sm font-bold text-foreground/80">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-sm sm:text-base font-bold text-foreground/80">
               <Link href="/about" className="hover:text-primary transition-colors" data-testid="link-footer-about">{t("trust.footer_about")}</Link>
               <Link href="/support" className="hover:text-primary transition-colors" data-testid="link-footer-support">{t("trust.footer_support")}</Link>
               <Link href="/farmers-help" className="hover:text-primary transition-colors" data-testid="link-footer-knowledge">{t("trust.footer_knowledge")}</Link>

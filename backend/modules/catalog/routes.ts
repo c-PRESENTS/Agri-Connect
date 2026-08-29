@@ -161,6 +161,53 @@ export function registerCatalogRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/sellers/:id", async (req, res) => {
+    try {
+      const sellerId = req.params.id;
+      const user = await authStorage.getUser(sellerId);
+      const allPublicProducts = await storage.getProducts();
+      const publicProducts = allPublicProducts.filter((p) => p.farmerId === sellerId);
+
+      if (user) {
+        return res.json({
+          id: user.id,
+          name: user.name || "Verified Seller",
+          avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || "Seller")}`,
+          rating: (user as any).rating || 5.0,
+          location: user.location || "Mumbai, India",
+          latitude: user.latitude || 19.076,
+          longitude: user.longitude || 72.8777,
+          isOnline: true,
+          isVerified: true,
+          role: user.role,
+          products: publicProducts,
+          productCount: publicProducts.length,
+        });
+      }
+
+      const matchingProduct = allPublicProducts.find((p) => p.farmerId === sellerId);
+      if (matchingProduct) {
+        return res.json({
+          id: matchingProduct.farmerId,
+          name: matchingProduct.farmerName,
+          avatar: matchingProduct.farmerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(matchingProduct.farmerName || "Seller")}`,
+          rating: matchingProduct.farmerRating || matchingProduct.rating || 4.8,
+          location: matchingProduct.farmerLocation || "",
+          latitude: matchingProduct.farmerLatitude || 0,
+          longitude: matchingProduct.farmerLongitude || 0,
+          isOnline: matchingProduct.farmerIsOnline !== false,
+          isVerified: matchingProduct.farmerIsVerified !== false,
+          products: publicProducts,
+          productCount: publicProducts.length,
+        });
+      }
+
+      return res.status(404).json({ error: "Seller not found" });
+    } catch {
+      res.status(500).json({ error: "Failed to fetch seller profile" });
+    }
+  });
+
   app.get("/api/products/:id", async (req, res) => {
     try {
       const publicProduct = await storage.getProduct(req.params.id);

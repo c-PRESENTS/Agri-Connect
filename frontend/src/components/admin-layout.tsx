@@ -26,11 +26,29 @@ import {
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { useAdminAccess } from "@/hooks/use-admin-access";
 import { useAuth } from "@/hooks/use-auth";
 import { adminRouteLabel, visibleAdminNavigation } from "@/lib/admin-navigation";
 import { AgriBrandLogo } from "./agri-brand-logo";
+
+function AdminSidebarHeader() {
+  const { toggleSidebar } = useSidebar();
+  return (
+    <SidebarHeader className="border-b p-4">
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        className="flex items-center gap-3 text-left hover:opacity-90 transition-opacity cursor-pointer w-full"
+        title="Toggle sidebar"
+        aria-label="Toggle sidebar"
+      >
+        <AgriBrandLogo size="md" theme="light" showTagline={true} />
+      </button>
+    </SidebarHeader>
+  );
+}
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -43,11 +61,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="offcanvas" data-testid="admin-sidebar">
-        <SidebarHeader className="border-b p-4">
-          <Link href="/admin/overview" className="flex items-center gap-3">
-            <AgriBrandLogo size="md" theme="light" showTagline={true} />
-          </Link>
-        </SidebarHeader>
+        <AdminSidebarHeader />
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>Administration</SidebarGroupLabel>

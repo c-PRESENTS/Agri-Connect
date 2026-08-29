@@ -103,6 +103,7 @@ type RevenueResponse = {
     status: string;
     count: number;
     sellerNetMinor: string;
+    platformFeeMinor: string;
     refundedMinor: string;
   }>;
   dailyTrends?: Array<{
@@ -121,15 +122,15 @@ type RevenueResponse = {
     itemsSold: number;
     unitsSold: number;
     grossMinor: number;
-    producerShareMinor: number;
-    platformFeeMinor: number;
+    producerShareMinor: number | null;
+    platformFeeMinor: number | null;
   }>;
   topFarmerEarners?: Array<{
     id: string;
     name: string;
     email?: string;
     avatar?: string;
-    location: string;
+    location?: string;
     currency: string;
     ordersCount: number;
     grossMinor: number;
@@ -244,29 +245,29 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
   }, [selectedCurrency, gbpGrossMinor, inrGrossMinor]);
 
   const producerNetDisplay = useMemo(() => {
-    const gbpNet = Math.round(gbpGrossMinor * 0.925);
-    const inrNet = Math.round(inrGrossMinor * 0.925);
+    const gbpNet = (data?.escrowAllocations ?? []).filter((item) => item.currency === "GBP").reduce((sum, item) => sum + Number(item.sellerNetMinor), 0);
+    const inrNet = (data?.escrowAllocations ?? []).filter((item) => item.currency === "INR").reduce((sum, item) => sum + Number(item.sellerNetMinor), 0);
     if (selectedCurrency === "GBP") return formatMoney(gbpNet, "GBP");
     if (selectedCurrency === "INR") return formatMoney(inrNet, "INR");
     return `${formatMoney(gbpNet, "GBP")} + ${formatMoney(inrNet, "INR")}`;
-  }, [selectedCurrency, gbpGrossMinor, inrGrossMinor]);
+  }, [data?.escrowAllocations, selectedCurrency]);
 
   const platformFeeDisplay = useMemo(() => {
-    const gbpFee = Math.round(gbpGrossMinor * 0.075);
-    const inrFee = Math.round(inrGrossMinor * 0.075);
+    const gbpFee = (data?.escrowAllocations ?? []).filter((item) => item.currency === "GBP").reduce((sum, item) => sum + Number(item.platformFeeMinor), 0);
+    const inrFee = (data?.escrowAllocations ?? []).filter((item) => item.currency === "INR").reduce((sum, item) => sum + Number(item.platformFeeMinor), 0);
     if (selectedCurrency === "GBP") return formatMoney(gbpFee, "GBP");
     if (selectedCurrency === "INR") return formatMoney(inrFee, "INR");
     return `${formatMoney(gbpFee, "GBP")} + ${formatMoney(inrFee, "INR")}`;
-  }, [selectedCurrency, gbpGrossMinor, inrGrossMinor]);
+  }, [data?.escrowAllocations, selectedCurrency]);
 
   // Escrow Calculations
   const escrowAllocations = data?.escrowAllocations ?? [];
   const gbpEscrowMinor = escrowAllocations
     .filter((a) => a.currency === "GBP" && a.status === "held")
-    .reduce((sum, a) => sum + Number(a.sellerNetMinor), 0) || Math.round(gbpGrossMinor * 0.74);
+    .reduce((sum, a) => sum + Number(a.sellerNetMinor), 0);
   const inrEscrowMinor = escrowAllocations
     .filter((a) => a.currency === "INR" && a.status === "held")
-    .reduce((sum, a) => sum + Number(a.sellerNetMinor), 0) || Math.round(inrGrossMinor * 0.1);
+    .reduce((sum, a) => sum + Number(a.sellerNetMinor), 0);
 
   const escrowDisplay = useMemo(() => {
     if (selectedCurrency === "GBP") return formatMoney(gbpEscrowMinor, "GBP");
@@ -315,12 +316,7 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
       return Object.values(grouped);
     }
 
-    return [
-      { day: "2026-08-01", formattedDay: "08-01", grossGBP: 450, grossINR: 12000, orders: 3, producerNet: 416 },
-      { day: "2026-08-08", formattedDay: "08-08", grossGBP: 1250, grossINR: 35000, orders: 6, producerNet: 1156 },
-      { day: "2026-08-15", formattedDay: "08-15", grossGBP: 2400, grossINR: 42000, orders: 9, producerNet: 2220 },
-      { day: "2026-08-22", formattedDay: "08-22", grossGBP: 1331, grossINR: 15000, orders: 5, producerNet: 1231 },
-    ];
+    return [];
   }, [data?.dailyTrends, selectedCurrency]);
 
   // Sector Breakdown
@@ -372,8 +368,8 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
       ["GBP Recorded Gross Orders", formatMoney(gbpGrossMinor, "GBP")],
       ["INR Recorded Gross Orders", formatMoney(inrGrossMinor, "INR")],
       ["Total Recorded Orders", scopeOrders],
-      ["Direct Producer Payout Rate", "92.5%"],
-      ["Platform Service Fee Rate", "7.5%"],
+      ["Recorded Producer Allocations", data?.summary.producerNetMinor ?? 0],
+      ["Recorded Platform Fees", data?.summary.platformFeeMinor ?? 0],
       ["Protected Escrow Balance (GBP)", formatMoney(gbpEscrowMinor, "GBP")],
       ["Protected Escrow Balance (INR)", formatMoney(inrEscrowMinor, "INR")],
       [""],
@@ -386,7 +382,7 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
         s.unitsSold,
         s.grossMinor,
         (s.grossMinor / 100).toFixed(2),
-        (s.producerShareMinor / 100).toFixed(2),
+        s.producerShareMinor == null ? "" : (s.producerShareMinor / 100).toFixed(2),
       ]),
       [""],
       ["Top Producer Settlement Ledger"],
@@ -456,12 +452,16 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
     );
   }
 
-  const settlementDonut = [
-    { name: "Released / Paid", value: 68, color: "#059669" },
-    { name: "In Protected Escrow", value: 24, color: "#84cc16" },
-    { name: "Scheduled for Release", value: 6, color: "#f59e0b" },
-    { name: "Disputed / Review", value: 2, color: "#ef4444" },
-  ];
+  const settlementColors = ["#059669", "#84cc16", "#f59e0b", "#ef4444", "#0284c7"];
+  const settlementDonut = escrowAllocations.map((allocation, index) => ({
+    name: allocation.status.replaceAll("_", " "),
+    value: allocation.count,
+    color: settlementColors[index % settlementColors.length],
+  }));
+  const allocationCount = escrowAllocations.reduce((sum, allocation) => sum + allocation.count, 0);
+  const grossMinor = data?.summary.grossMinor ?? 0;
+  const producerPayoutRate = selectedCurrency !== "all" && grossMinor > 0 ? ((data?.summary.producerNetMinor ?? 0) / grossMinor) * 100 : null;
+  const refundRate = selectedCurrency !== "all" && grossMinor > 0 ? ((data?.summary.refundedMinor ?? 0) / grossMinor) * 100 : null;
 
   return (
     <div className="space-y-5">
@@ -553,19 +553,19 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
         <div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/10 pt-3 text-[11px] sm:grid-cols-4">
           <div className="flex items-center gap-2 text-white/80">
             <BadgeCheck className="h-4 w-4 text-lime-300" />
-            <span>Direct Producer Payout Rate: <b className="text-white">92.5%</b></span>
+            <span>Producer allocation rate: <b className="text-white">{producerPayoutRate == null ? "No data" : `${producerPayoutRate.toFixed(1)}%`}</b></span>
           </div>
           <div className="flex items-center gap-2 text-white/80">
             <Lock className="h-4 w-4 text-emerald-300" />
-            <span>Escrow Protection Guarantee: <b className="text-white">100% Zero-Loss</b></span>
+            <span>Protected allocations: <b className="text-white">{allocationCount}</b></span>
           </div>
           <div className="flex items-center gap-2 text-white/80">
             <Scale className="h-4 w-4 text-amber-300" />
-            <span>Dispute & Refund Rate: <b className="text-white">0.3%</b></span>
+            <span>Recorded refund rate: <b className="text-white">{refundRate == null ? "No data" : `${refundRate.toFixed(1)}%`}</b></span>
           </div>
           <div className="flex items-center gap-2 text-white/80">
             <Clock className="h-4 w-4 text-lime-300" />
-            <span>Avg Farmer Settlement: <b className="text-white">24h Post-Delivery</b></span>
+            <span>Settled orders: <b className="text-white">{data?.summary.settledOrders ?? 0}</b></span>
           </div>
         </div>
       </div>
@@ -583,8 +583,8 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
         <FinancialKpiCard
           label="Direct Producer Payouts"
           value={producerNetDisplay}
-          context="92.5% farm-gate yield"
-          sub="Payable to growers"
+          context={allocationCount ? `${allocationCount} allocation records` : "No allocations"}
+          sub="Recorded seller-net allocations"
           icon={Sprout}
           tone="lime"
         />
@@ -599,15 +599,15 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
         <FinancialKpiCard
           label="Platform & Co-op Share"
           value={platformFeeDisplay}
-          context="7.5% platform fee cap"
-          sub="Infrastructure upkeep"
+          context={allocationCount ? "Recorded allocation fees" : "No allocation fees"}
+          sub="Persisted platform fees"
           icon={Building2}
           tone="teal"
         />
         <FinancialKpiCard
           label="Recorded Farm Orders"
           value={`${scopeOrders} Orders`}
-          context={`${data?.summary?.settledOrders || 15} settled & paid`}
+          context={`${data?.summary?.settledOrders ?? 0} settled & paid`}
           sub="Non-cancelled transactions"
           icon={ShoppingCart}
           tone="sky"
@@ -680,7 +680,7 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                     <i className="h-2.5 w-2.5 rounded-full bg-emerald-600" /> Gross Trade (£/₹)
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <i className="h-2.5 w-2.5 rounded-full bg-lime-500" /> Farmer Net (92.5%)
+                    <i className="h-2.5 w-2.5 rounded-full bg-lime-500" /> Recorded Farmer Net
                   </span>
                 </div>
               </CardHeader>
@@ -700,7 +700,7 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                   <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Total Valid Orders</span>
                     <p className="mt-0.5 text-lg font-black text-amber-950">{scopeOrders} Orders</p>
-                    <span className="text-[9px] font-bold text-amber-700">100% server verified</span>
+                    <span className="text-[9px] font-bold text-amber-700">Database order records</span>
                   </div>
                 </div>
 
@@ -759,12 +759,11 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                   </ResponsiveContainer>
                 </div>
 
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-emerald-50/70 px-4 py-2.5 text-xs text-emerald-900">
-                  <span className="font-bold">
-                    🛡️ Protected Settlement Protocol: <strong className="font-black text-emerald-950">Active</strong> (Funds auto-release upon buyer confirmation or 72h SLA)
-                  </span>
-                  <span className="text-[11px] font-semibold text-emerald-700">Platform take rate strictly limited to 7.5%</span>
-                </div>
+                {chartData.length === 0 && (
+                  <div className="mt-3 rounded-xl bg-slate-50 px-4 py-3 text-center text-xs text-slate-500">
+                    No order or allocation trends are available for this window.
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -800,8 +799,8 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-lg font-black text-slate-900">100%</span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Escrow SLA</span>
+                      <span className="text-lg font-black text-slate-900">{allocationCount}</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Allocations</span>
                     </div>
                   </div>
 
@@ -812,9 +811,10 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                           <i className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
                           {item.name}
                         </span>
-                        <b className="font-bold text-slate-900">{item.value}%</b>
+                        <b className="font-bold text-slate-900">{item.value}</b>
                       </div>
                     ))}
+                    {settlementDonut.length === 0 && <p className="py-3 text-center text-xs text-slate-500">No protected allocation records.</p>}
                   </div>
                 </CardContent>
               </Card>
@@ -822,23 +822,16 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
               <Card className="rounded-2xl border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-md">
                 <CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-2">
                   <div>
-                    <CardTitle className="text-sm font-black text-slate-900">Escrow Protections</CardTitle>
-                    <p className="mt-0.5 text-[10px] text-slate-400">Automated farmer payout safety rules</p>
+                    <CardTitle className="text-sm font-black text-slate-900">Settlement Data Coverage</CardTitle>
+                    <p className="mt-0.5 text-[10px] text-slate-400">Persisted payment and allocation records</p>
                   </div>
                   <ShieldCheck className="h-4 w-4 text-emerald-600" />
                 </CardHeader>
-                <CardContent className="space-y-2.5 p-4 pt-1">
-                  <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-2.5 text-[11px] leading-4 text-emerald-950">
-                    <p className="font-bold text-emerald-900">🌾 Delivery Confirmation Auto-Trigger</p>
-                    <p className="mt-0.5 text-[10px] text-emerald-800">
-                      When cold-chain couriers mark agricultural consignments as delivered, farmer funds transition from <code>held</code> to <code>released</code> within 24 hours.
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 text-[11px] leading-4 text-slate-800">
-                    <p className="font-bold text-slate-900">💳 Multi-Gateway Reconciliation</p>
-                    <p className="mt-0.5 text-[10px] text-slate-500">
-                      Stripe, Razorpay, and Direct BACS payout allocations are matched continuously against PostgreSQL ledger tables.
-                    </p>
+                <CardContent className="p-4 pt-1">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
+                    {allocationCount > 0
+                      ? `${allocationCount} protected allocation records are included in this reporting scope.`
+                      : "No escrow or producer allocation records exist for this reporting scope."}
                   </div>
                 </CardContent>
               </Card>
@@ -866,7 +859,7 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
             {sectors.slice(0, 6).map((sector) => {
               const info = CATEGORY_NAMES[sector.categoryId] || { label: sector.categoryId.replaceAll("-", " "), sector: "General Agriculture" };
               const grossFmt = formatMoney(sector.grossMinor, sector.currency);
-              const farmerFmt = formatMoney(sector.producerShareMinor, sector.currency);
+              const farmerFmt = sector.producerShareMinor == null ? "No allocation" : formatMoney(sector.producerShareMinor, sector.currency);
 
               return (
                 <Card key={`${sector.categoryId}-${sector.currency}`} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition hover:shadow-md">
@@ -891,7 +884,7 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                         <p className="font-black text-slate-800">{grossFmt}</p>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-400">Grower Payout (92.5%)</span>
+                        <span className="text-[9px] font-bold text-slate-400">Recorded Grower Payout</span>
                         <p className="font-black text-emerald-700">{farmerFmt}</p>
                       </div>
                     </div>
@@ -900,12 +893,15 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                         <span className="text-slate-500">Volume Output</span>
                         <span className="text-emerald-700">{sector.unitsSold} units shipped</span>
                       </div>
-                      <Progress value={Math.min(100, sector.unitsSold * 4)} className="h-1.5 bg-slate-100" />
+                      <p className="text-[9px] text-slate-400">Database-recorded order item quantity</p>
                     </div>
                   </CardContent>
                 </Card>
               );
             })}
+            {sectors.length === 0 && (
+              <Card className="col-span-full rounded-2xl border-slate-200 bg-white p-8 text-center text-sm text-slate-500">No sector turnover records are available.</Card>
+            )}
           </div>
 
           <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-white shadow-sm">
@@ -951,15 +947,16 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                           <td className="px-4 py-3.5 font-semibold text-slate-700">{s.itemsSold} items</td>
                           <td className="px-4 py-3.5 font-semibold text-slate-700">{s.unitsSold} units</td>
                           <td className="px-4 py-3.5 font-black text-slate-900">{formatMoney(s.grossMinor, s.currency)}</td>
-                          <td className="px-4 py-3.5 font-black text-emerald-700">{formatMoney(s.producerShareMinor, s.currency)}</td>
+                          <td className="px-4 py-3.5 font-black text-emerald-700">{s.producerShareMinor == null ? "—" : formatMoney(s.producerShareMinor, s.currency)}</td>
                           <td className="px-4 py-3.5 text-right">
-                            <Badge className="bg-emerald-100 text-[10px] font-black text-emerald-800">
-                              <CheckCircle2 className="mr-1 h-3 w-3 text-emerald-600" /> Settled / Escrowed
+                            <Badge className="bg-slate-100 text-[10px] font-black text-slate-700">
+                              {s.producerShareMinor == null ? "Unallocated" : "Allocated"}
                             </Badge>
                           </td>
                         </tr>
                       );
                     })}
+                    {sectors.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">No sector turnover records are available.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -1001,8 +998,8 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                       <th className="px-4 py-3">Currency</th>
                       <th className="px-4 py-3">Fulfilled Orders</th>
                       <th className="px-4 py-3">Gross Turnover</th>
-                      <th className="px-4 py-3">Net Farmer Payout (92.5%)</th>
-                      <th className="px-4 py-3">Platform Fee (7.5%)</th>
+                      <th className="px-4 py-3">Recorded Farmer Payout</th>
+                      <th className="px-4 py-3">Allocation Difference</th>
                       <th className="px-4 py-3 text-right">Settlement Status</th>
                     </tr>
                   </thead>
@@ -1020,7 +1017,7 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                             </Avatar>
                             <div className="min-w-0">
                               <strong className="block truncate text-xs font-black text-slate-900">{grower.name}</strong>
-                              <span className="text-[10px] text-slate-400">{grower.location || "Verified Farm"}</span>
+                              <span className="text-[10px] text-slate-400">{grower.location || "—"}</span>
                             </div>
                           </div>
                         </td>
@@ -1029,15 +1026,16 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                         <td className="px-4 py-3.5 font-black text-slate-900">{formatMoney(grower.grossMinor, grower.currency)}</td>
                         <td className="px-4 py-3.5 font-black text-emerald-700">{formatMoney(grower.netEarningsMinor, grower.currency)}</td>
                         <td className="px-4 py-3.5 font-semibold text-slate-500">
-                          {formatMoney(Math.round(grower.grossMinor * 0.075), grower.currency)}
+                          {grower.netEarningsMinor > 0 ? formatMoney(grower.grossMinor - grower.netEarningsMinor, grower.currency) : "—"}
                         </td>
                         <td className="px-4 py-3.5 text-right">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800">
-                            <BadgeCheck className="h-3 w-3 text-emerald-600" /> Payout Ready
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
+                            {grower.status}
                           </span>
                         </td>
                       </tr>
                     ))}
+                    {topGrowers.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">No producer settlement records are available.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -1094,7 +1092,7 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                       <th className="px-4 py-3">Primary Farm / Producer</th>
                       <th className="px-4 py-3">Payment Method</th>
                       <th className="px-4 py-3">Gross Total</th>
-                      <th className="px-4 py-3">Farmer Net (92.5%)</th>
+                      <th className="px-4 py-3">Recorded Farmer Net</th>
                       <th className="px-4 py-3">Payment Status</th>
                       <th className="px-4 py-3 text-right">Escrow Status</th>
                     </tr>
@@ -1120,7 +1118,7 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                           </td>
                           <td className="px-4 py-3.5">
                             <strong className="block text-xs font-bold text-slate-800">{tx.buyerName}</strong>
-                            <span className="text-[10px] text-slate-400">{tx.buyerEmail || "Verified"}</span>
+                            <span className="text-[10px] text-slate-400">{tx.buyerEmail || "—"}</span>
                           </td>
                           <td className="px-4 py-3.5 font-bold text-slate-700">{tx.sellerName}</td>
                           <td className="px-4 py-3.5">
@@ -1146,13 +1144,14 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
                             </span>
                           </td>
                           <td className="px-4 py-3.5 text-right">
-                            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-[9px] font-bold text-emerald-800">
-                              <Lock className="mr-1 h-2.5 w-2.5 text-emerald-600" /> Escrow Protected
+                            <Badge variant="outline" className="border-slate-200 bg-slate-50 text-[9px] font-bold text-slate-700">
+                              {tx.producerNetMinor > 0 ? "Allocated" : "No allocation"}
                             </Badge>
                           </td>
                         </tr>
                       );
                     })}
+                    {transactions.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">No order transactions match this scope.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -1164,10 +1163,10 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
       {/* Gateway Telemetry & Provenance Footer */}
       <div className="grid gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
         <FinancialBadge icon={CheckCircle2} label="Financial Provenance" value="Live PostgreSQL Settlements" tone="green" />
-        <FinancialBadge icon={CreditCard} label="Payment Gateways" value="Stripe · Razorpay · Mock" tone="blue" />
-        <FinancialBadge icon={Lock} label="Escrow Assurance" value="100% Capital Protection" tone="lime" />
-        <FinancialBadge icon={Users} label="Verified Farm Co-ops" value={`${topGrowers.length} Active Producers`} tone="orange" />
-        <FinancialBadge icon={Scale} label="Dispute Tolerance" value="Active SLA Monitored" tone="purple" />
+        <FinancialBadge icon={CreditCard} label="Payment Gateways" value={gateways.length ? `${new Set(gateways.map((item) => item.provider)).size} recorded providers` : "No data"} tone="blue" />
+        <FinancialBadge icon={Lock} label="Escrow Allocations" value={`${allocationCount} recorded`} tone="lime" />
+        <FinancialBadge icon={Users} label="Producer Ledger" value={`${topGrowers.length} recorded producers`} tone="orange" />
+        <FinancialBadge icon={Scale} label="Generated At" value={data?.generatedAt ? new Date(data.generatedAt).toLocaleString() : "No data"} tone="purple" />
       </div>
     </div>
   );

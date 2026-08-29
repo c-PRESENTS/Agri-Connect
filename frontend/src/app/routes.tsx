@@ -68,6 +68,10 @@ export function AppRoutes() {
       <Route path="/categories" component={CategoriesPage} />
       <Route path="/marketplace" component={SmartMapPage} />
       <Route path="/login" component={LoginPage} />
+      <Route path="/auth" component={LoginPage} />
+      <Route path="/register" component={LoginPage} />
+      <Route path="/auth/register" component={LoginPage} />
+      <Route path="/seller/register" component={LoginPage} />
       <Route path="/accept-invitation" component={AcceptInvitationPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/verify-email" component={VerifyEmailPage} />

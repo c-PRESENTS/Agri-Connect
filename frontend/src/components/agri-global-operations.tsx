@@ -99,8 +99,8 @@ export type GlobalRegionMarker = {
   name: string;
   code: string;
   type?: string;
-  organisationId: string;
-  organisationName: string;
+  organisationId?: string | null;
+  organisationName?: string | null;
   country: string;
   latitude?: number;
   longitude?: number;
@@ -140,7 +140,7 @@ function formatCurrency(val: number = 0, currency = "GBP"): string {
 }
 
 function timeAgo(dateString?: string | null): string {
-  if (!dateString) return "Recently";
+  if (!dateString) return "—";
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -201,21 +201,15 @@ export function AgriGlobalOperations({
 
   // Operational Override Form
   const [organisationId, setOrganisationId] = useState("");
-  const [sourceCurrency, setSourceCurrency] = useState("GBP");
-  const [targetCurrency, setTargetCurrency] = useState("EUR");
-  const [exchangeRate, setExchangeRate] = useState("1.18");
-  const [shippingFee, setShippingFee] = useState("2500");
+  const [sourceCurrency, setSourceCurrency] = useState("");
+  const [targetCurrency, setTargetCurrency] = useState("");
+  const [exchangeRate, setExchangeRate] = useState("");
+  const [shippingFee, setShippingFee] = useState("");
   const [auditReason, setAuditReason] = useState("");
-
-  // Circuit breaker toggles
-  const [tradingActive, setTradingActive] = useState(true);
-  const [crossBorderVat, setCrossBorderVat] = useState(true);
-  const [aiAssistantActive, setAiAssistantActive] = useState(true);
-  const [escrowAutoSettlement, setEscrowAutoSettlement] = useState(true);
 
   // Query global map data
   const endpoint = `/api/admin/global-operations/map?country=${country}&regionId=${selectedRegionId}`;
-  const { data: mapData, isLoading, refetch, isFetching } = useQuery<GlobalMapData>({
+  const { data: mapData, isLoading, isError, refetch, isFetching } = useQuery<GlobalMapData>({
     queryKey: [endpoint],
     queryFn: async () => {
       const res = await apiRequest("GET", endpoint);
@@ -239,7 +233,7 @@ export function AgriGlobalOperations({
   const operationalSettings = useMemo(() => mapData?.operationalSettings ?? [], [mapData]);
 
   // Set default organisation if not selected
-  const activeOrganisation = organisationId || organisations[0]?.id || "org-main";
+  const activeOrganisation = organisationId || organisations[0]?.id || "";
 
   // Mutations
   const saveSettingMutation = useMutation({
@@ -266,6 +260,35 @@ export function AgriGlobalOperations({
   });
 
   const canManage = permissions.includes("settings.manage") || permissions.includes("dashboard.view");
+
+  const circuitBreakers = [
+    { key: "trading_engine_enabled", label: "Marketplace Trading", description: "Live order matching engine" },
+    { key: "vat_engine_active", label: "Cross-Border VAT Engine", description: "Reverse-charge automation" },
+    { key: "ai_matchmaker_active", label: "AI Autonomous Matchmaker", description: "Intelligent harvest dispatch" },
+    { key: "escrow_auto_settlement", label: "Escrow Auto-Settlement", description: "Automated settlement processing" },
+  ];
+
+  if (isLoading) {
+    return (
+      <Card className="border border-emerald-950/10 bg-white shadow-sm">
+        <CardContent className="flex min-h-64 items-center justify-center gap-2 text-sm text-slate-500">
+          <RefreshCw className="h-4 w-4 animate-spin" /> Loading operational data…
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="border border-rose-200 bg-white shadow-sm">
+        <CardContent className="flex min-h-64 flex-col items-center justify-center gap-3 text-center">
+          <AlertCircle className="h-6 w-6 text-rose-600" />
+          <p className="text-sm font-semibold text-slate-800">Operational data could not be loaded.</p>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12">
@@ -303,7 +326,7 @@ export function AgriGlobalOperations({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard
           title="Global Volume"
-          value={formatCurrency(mapData?.totals.revenue ?? 5431)}
+          value={formatCurrency(mapData?.totals.revenue ?? 0, mapData?.currency)}
           subtitle="All trade lanes"
           icon={DollarSign}
           iconBg="bg-emerald-50"
@@ -311,7 +334,7 @@ export function AgriGlobalOperations({
         />
         <StatCard
           title="Total Orders"
-          value={(mapData?.totals.orders ?? 31).toLocaleString()}
+          value={(mapData?.totals.orders ?? 0).toLocaleString()}
           subtitle="Executed trade contracts"
           icon={PackageCheck}
           iconBg="bg-slate-100"
@@ -327,7 +350,7 @@ export function AgriGlobalOperations({
         />
         <StatCard
           title="Regional Sellers"
-          value={(mapData?.totals.sellers ?? 14).toLocaleString()}
+          value={(mapData?.totals.sellers ?? 0).toLocaleString()}
           subtitle="Verified farm enterprises"
           icon={Users}
           iconBg="bg-amber-50"
@@ -335,7 +358,7 @@ export function AgriGlobalOperations({
         />
         <StatCard
           title="Listed Products"
-          value={(mapData?.totals.products ?? 52).toLocaleString()}
+          value={(mapData?.totals.products ?? 0).toLocaleString()}
           subtitle="Active commodities"
           icon={Store}
           iconBg="bg-teal-50"
@@ -343,7 +366,7 @@ export function AgriGlobalOperations({
         />
         <StatCard
           title="Active Overrides"
-          value={(operationalSettings.length || 3).toLocaleString()}
+          value={operationalSettings.length.toLocaleString()}
           subtitle="Audited rule overrides"
           icon={SlidersHorizontal}
           iconBg="bg-purple-50"
@@ -370,9 +393,9 @@ export function AgriGlobalOperations({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ALL">All Countries</SelectItem>
-                    {(mapData?.countries ?? ["GB"]).map((c) => (
+                    {(mapData?.countries ?? []).map((c) => (
                       <SelectItem key={c} value={c}>
-                        {c === "GB" ? "United Kingdom (GB)" : c}
+                        {c}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -407,7 +430,7 @@ export function AgriGlobalOperations({
             <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Live Telemetry Active
+                Database telemetry loaded
               </span>
             </div>
           </div>
@@ -427,7 +450,7 @@ export function AgriGlobalOperations({
                   Regional Operations Telemetry & Geo-Distribution
                 </CardTitle>
                 <p className="text-[11px] text-slate-500">
-                  Live geo-referenced market hubs and freight trade corridors across the UK. Click any coordinate marker or hub card to inspect.
+                  Geo-referenced market hubs and freight trade corridors recorded in the platform database.
                 </p>
               </div>
             </div>
@@ -443,9 +466,6 @@ export function AgriGlobalOperations({
           <div className="relative h-72 w-full overflow-hidden rounded-2xl border border-emerald-200 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-100/70 via-teal-50/50 to-emerald-950/5 shadow-inner">
             {/* Grid overlay */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#053f360a_1px,transparent_1px),linear-gradient(to_bottom,#053f360a_1px,transparent_1px)] bg-[size:24px_24px]" />
-
-            {/* Simulated UK geographic outline contour */}
-            <div className="absolute inset-8 rounded-full border border-dashed border-emerald-300/40 pointer-events-none" />
 
             {/* Region Markers */}
             {regions.map((marker) => {
@@ -491,10 +511,13 @@ export function AgriGlobalOperations({
               );
             })}
 
-            {/* Bottom info chip */}
-            <div className="absolute bottom-3 left-3 rounded-lg bg-white/90 backdrop-blur-sm px-3 py-1.5 text-[11px] font-bold text-slate-700 shadow-sm border border-slate-200">
-              <span className="text-emerald-800">🌾 Geographic Telemetry:</span> UK Agrarian Corridors
-            </div>
+            {regions.length === 0 && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center text-slate-500">
+                <MapPin className="h-7 w-7 text-emerald-700" />
+                <p className="text-sm font-bold text-slate-700">No regional market hubs configured</p>
+                <p className="max-w-md text-xs">The map will populate when real regions with coordinates are added to the database.</p>
+              </div>
+            )}
 
             {selectedHub && (
               <div className="absolute top-3 right-3 rounded-lg bg-[#053f36] text-white p-3 text-xs shadow-lg max-w-xs border border-lime-400/30">
@@ -542,7 +565,7 @@ export function AgriGlobalOperations({
                       <p className="text-[10px] font-mono text-slate-400">{hub.code} · {hub.country}</p>
                     </div>
                     <Badge variant="outline" className="text-[9px] font-bold border-emerald-200 bg-white text-emerald-800">
-                      {hub.type?.replaceAll("_", " ") || "Market Zone"}
+                      {hub.type?.replaceAll("_", " ") || "—"}
                     </Badge>
                   </div>
 
@@ -559,6 +582,9 @@ export function AgriGlobalOperations({
                 </div>
               );
             })}
+            {regions.length === 0 && (
+              <p className="col-span-full py-3 text-center text-xs text-slate-500">No regional hub records are available.</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -633,7 +659,7 @@ export function AgriGlobalOperations({
                     value={exchangeRate}
                     onChange={(e) => setExchangeRate(e.target.value)}
                     inputMode="decimal"
-                    placeholder="1.18"
+                    placeholder="Enter rate"
                     className="h-9 font-mono font-bold text-xs"
                   />
                 </div>
@@ -648,12 +674,12 @@ export function AgriGlobalOperations({
               </div>
 
               <div className="space-y-1">
-                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Flat Shipping Fee (Minor Units, e.g. 2500 for £25.00)</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Flat Shipping Fee (Minor Units)</Label>
                 <Input
                   value={shippingFee}
                   onChange={(e) => setShippingFee(e.target.value)}
                   inputMode="numeric"
-                  placeholder="2500"
+                  placeholder="Enter fee"
                   className="h-9 font-mono font-bold text-xs"
                 />
               </div>
@@ -665,7 +691,7 @@ export function AgriGlobalOperations({
               <Input
                 value={auditReason}
                 onChange={(e) => setAuditReason(e.target.value)}
-                placeholder="e.g. Q3 cross-border wholesale FX corridor alignment approved by treasury..."
+                placeholder="Explain why this administrative override is required"
                 className="h-10 text-xs"
               />
             </div>
@@ -743,41 +769,33 @@ export function AgriGlobalOperations({
           </CardHeader>
 
           <CardContent className="p-4 space-y-4 text-xs">
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <div>
-                <p className="font-bold text-slate-900">Marketplace Trading</p>
-                <p className="text-[10px] text-slate-500">Live order matching engine</p>
-              </div>
-              <Switch checked={tradingActive} onCheckedChange={setTradingActive} />
-            </div>
+            {circuitBreakers.map((breaker) => {
+              const setting = operationalSettings.find((item) => item.settingKey === breaker.key);
+              const enabled = setting?.value?.enabled === true;
+              return (
+                <div key={breaker.key} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <div>
+                    <p className="font-bold text-slate-900">{breaker.label}</p>
+                    <p className="text-[10px] text-slate-500">{breaker.description}</p>
+                  </div>
+                  <Switch
+                    checked={enabled}
+                    disabled={!canManage || !activeOrganisation || !auditReason || saveSettingMutation.isPending}
+                    onCheckedChange={(checked) =>
+                      saveSettingMutation.mutate({
+                        organisationId: activeOrganisation,
+                        settingKey: breaker.key,
+                        value: { ...(setting?.value ?? {}), enabled: checked },
+                        reason: auditReason,
+                      })
+                    }
+                  />
+                </div>
+              );
+            })}
 
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <div>
-                <p className="font-bold text-slate-900">Cross-Border VAT Engine</p>
-                <p className="text-[10px] text-slate-500">Reverse-charge automation</p>
-              </div>
-              <Switch checked={crossBorderVat} onCheckedChange={setCrossBorderVat} />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <div>
-                <p className="font-bold text-slate-900">AI Autonomous Matchmaker</p>
-                <p className="text-[10px] text-slate-500">Intelligent harvest dispatch</p>
-              </div>
-              <Switch checked={aiAssistantActive} onCheckedChange={setAiAssistantActive} />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <div>
-                <p className="font-bold text-slate-900">Escrow 48h Inspection</p>
-                <p className="text-[10px] text-slate-500">Buyer quality lock window</p>
-              </div>
-              <Switch checked={escrowAutoSettlement} onCheckedChange={setEscrowAutoSettlement} />
-            </div>
-
-            <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-[11px] text-emerald-900 flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
-              <span>All 8 regional trading nodes operating with 99.98% uptime telemetry.</span>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-600">
+              Enter an audit justification before changing a circuit breaker. Unconfigured controls remain off.
             </div>
           </CardContent>
         </Card>

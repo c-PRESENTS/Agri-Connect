@@ -42,6 +42,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SafeProductImage } from "@/components/safe-product-image";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { resolveProductImageForProduct } from "@/lib/product-images";
 import { cn } from "@/lib/utils";
 
 type CategoryExplorerProduct = {
@@ -71,6 +73,7 @@ type CategoryExplorerProduct = {
   badge?: string;
   badgeType?: "fresh" | "organic" | "premium";
   imageUrl: string | null;
+  images: string[];
   sellerName: string;
   sellerVerified: boolean;
   sellerAvatar: string | null;
@@ -107,6 +110,8 @@ type LiveSeller = {
   productCount: number;
   avatar: string | null;
   isOnline: boolean;
+  verified: boolean;
+  sessionExpiresAt: string | null;
 };
 
 type RegionalOpportunity = {
@@ -350,6 +355,20 @@ export function AgriCategoriesManagement({
     if (!selectedRegion && data?.selectedRegion?.id) setSelectedRegion(data.selectedRegion.id);
   }, [data?.selectedRegion?.id, selectedRegion]);
 
+  useEffect(() => {
+    const nextSearch = initialSearch.trim();
+    setDraftSearch(initialSearch);
+    const timer = window.setTimeout(() => {
+      setSearchQuery(nextSearch);
+      if (nextSearch) {
+        setSelectedCategory("");
+        setSelectedSubCategory("");
+        setSelectedVariety("");
+      }
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [initialSearch]);
+
   const addToCart = useMutation({
     mutationFn: async ({ product, quantity }: { product: CategoryExplorerProduct; quantity: number }) => {
       const response = await apiRequest("POST", "/api/cart", { productId: product.id, quantity });
@@ -449,13 +468,19 @@ export function AgriCategoriesManagement({
             className="flex min-w-0 flex-1 flex-wrap items-center gap-2"
             onSubmit={(event) => {
               event.preventDefault();
-              setSearchQuery(draftSearch.trim());
+              const nextSearch = draftSearch.trim();
+              setSelectedCategory("");
+              setSelectedSubCategory("");
               setSelectedVariety("");
+              if (nextSearch === searchQuery) void refetch();
+              else setSearchQuery(nextSearch);
             }}
           >
             <div className="relative min-w-[220px] flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
+                aria-label="Search catalogue products and sellers"
+                data-testid="category-explorer-search"
                 value={draftSearch}
                 onChange={(event) => setDraftSearch(event.target.value)}
                 placeholder="Search real catalogue products and sellers"
@@ -487,7 +512,7 @@ export function AgriCategoriesManagement({
                 ))}
               </SelectContent>
             </Select>
-            <Button type="submit" size="sm" className="h-10 bg-[#078c52] px-4 font-bold hover:bg-[#067544]">
+            <Button type="submit" size="sm" data-testid="category-explorer-search-submit" className="h-10 bg-[#078c52] px-4 font-bold hover:bg-[#067544]">
               {isFetching ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : null}
               Search
             </Button>
@@ -684,11 +709,23 @@ export function AgriCategoriesManagement({
                   </Card>
                 )) : products.length ? products.map((product) => {
                   const quantity = cartQuantities[product.id] ?? product.minOrderKg;
+                  const image = resolveProductImageForProduct({
+                    id: product.id,
+                    name: product.title,
+                    categoryId: product.category,
+                    subcategoryId: product.subCategory,
+                    images: product.images,
+                  });
                   return (
                     <div key={product.id} className="group flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs hover:border-emerald-300 hover:shadow-md">
                       <div>
                         <div className="relative mb-2 flex h-36 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
-                          {product.imageUrl ? <img src={product.imageUrl} alt={product.title} className="h-full w-full object-cover transition group-hover:scale-105" /> : <Package className="h-9 w-9 text-slate-300" />}
+                          <SafeProductImage
+                            src={image.src}
+                            fallbackSrc={image.fallbackSrc}
+                            alt={product.title}
+                            className="h-full w-full object-cover transition group-hover:scale-105"
+                          />
                           {product.badge && <span className="absolute left-2 top-2 rounded bg-emerald-700 px-1.5 py-0.5 text-[9px] font-black uppercase text-white">{product.badge}</span>}
                           <button
                             type="button"
@@ -791,14 +828,17 @@ export function AgriCategoriesManagement({
                     </div>
                     <div className="min-w-0">
                       <p className="truncate font-bold">{seller.name}</p>
-                      <p className="text-[10px] text-slate-400">★ {seller.rating.toFixed(1)} · {seller.productCount} products{seller.distanceKm === null ? "" : " · " + seller.distanceKm + " km"}</p>
+                      <p className="flex items-center gap-1 text-[10px] text-slate-400">
+                        {seller.verified && <BadgeCheck className="h-3 w-3 text-emerald-600" />}
+                        Active session · {seller.productCount} approved products{seller.distanceKm === null ? "" : " · " + seller.distanceKm + " km"}
+                      </p>
                     </div>
                   </div>
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-[#078c52]" onClick={() => setLocation("/sellers/" + encodeURIComponent(seller.id))}>
                     <ShoppingCart className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-              )) : <EntityEmpty message="No verified sellers are currently marked online." />}
+              )) : <EntityEmpty message="No real seller accounts currently have an active database session." />}
             </EntityCard>
 
             {opportunity ? (

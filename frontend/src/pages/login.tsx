@@ -30,6 +30,7 @@ import { SiApple } from "react-icons/si";
 
 type AuthStep = "phone" | "otp" | "mfa" | "profile";
 
+
 const trustSignals = [
   { icon: Sprout, labelKey: "login.feature_marketplace", fallback: "Live Marketplace" },
   { icon: Truck, labelKey: "login.feature_logistics", fallback: "Smart Logistics" },
@@ -50,28 +51,51 @@ export default function LoginPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const {
-    isAuthenticated, isLoading, sendOtp, verifyOtp, verifyMfa, googleLogin, updateProfile, completeProfile,
+    user, isAuthenticated, isLoading, sendOtp, verifyOtp, verifyMfa, googleLogin, updateProfile, completeProfile, switchAccountMode,
   } = useAuth();
+
+  const queryParams = new URLSearchParams(search);
+  const targetRole = queryParams.get("role");
+  const returnParam = queryParams.get("returnTo");
+  const returnPath = getSafeReturnPath(returnParam || (targetRole === "farmer" || targetRole === "seller" ? "/seller" : "/"));
 
   const [step, setStep] = useState<AuthStep>("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [mfaCode, setMfaCode] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<"farmer" | "buyer">("farmer");
+  const [role, setRole] = useState<"farmer" | "buyer">(() => (targetRole === "farmer" || targetRole === "seller" ? "farmer" : "farmer"));
   const [phoneError, setPhoneError] = useState("");
   const [otpError, setOtpError] = useState("");
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);
   const googleButtonRenderedRef = useRef(false);
   const [googleClientId, setGoogleClientId] = useState(() => import.meta.env.VITE_GOOGLE_CLIENT_ID || "");
   const [googleStatusMessage, setGoogleStatusMessage] = useState("");
-  const returnPath = getSafeReturnPath(new URLSearchParams(search).get("returnTo"));
+
+  useEffect(() => {
+    if (targetRole === "farmer" || targetRole === "seller") {
+      setRole("farmer");
+    } else if (targetRole === "buyer") {
+      setRole("buyer");
+    }
+  }, [targetRole]);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && step !== "profile") {
-      setLocation(returnPath);
+      if ((targetRole === "farmer" || targetRole === "seller") && user?.role !== "farmer") {
+        switchAccountMode.mutate("seller", {
+          onSuccess: () => {
+            setLocation(returnParam || "/seller");
+          },
+          onError: () => {
+            setLocation(returnPath);
+          }
+        });
+      } else {
+        setLocation(returnPath);
+      }
     }
-  }, [isAuthenticated, isLoading, returnPath, setLocation, step]);
+  }, [isAuthenticated, isLoading, returnPath, returnParam, setLocation, step, targetRole, user?.role]);
 
   useEffect(() => {
     fetch("/api/config")
@@ -126,9 +150,6 @@ export default function LoginPage() {
       if (!google?.accounts?.id || !container) return false;
 
       try {
-        // Google Identity Services keeps one page-global callback. Reinitialize
-        // on each fresh login-page mount so a prior student-login visit cannot
-        // leave its callback active for the marketplace button.
         if (!googleButtonRenderedRef.current || initializedGoogleClientId !== googleClientId) {
           google.accounts.id.initialize({
             client_id: googleClientId,
@@ -213,7 +234,8 @@ export default function LoginPage() {
     try {
       await updateProfile.mutateAsync({ name: name.trim(), role });
       await completeProfile.mutateAsync();
-      setLocation(returnPath);
+      const dest = returnParam || (role === "farmer" ? "/seller" : returnPath);
+      setLocation(dest);
     } catch {
       // error handled by react query
     }
