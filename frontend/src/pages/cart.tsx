@@ -21,7 +21,7 @@ export default function CartPage() {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const { isAuthenticated } = useAuth();
-  const { items, total: subtotal, isLoading, isError, refetch, updateItem, removeItem } = useCart();
+  const { items, total: subtotal, isLoading, isError, refetch, updateItem, removeItem, clearCart } = useCart();
 
   // Fulfilment is selected per farmer during checkout. Catalog prices are
   // tax-inclusive for the volunteer MVP, so the cart does not invent fees.
@@ -117,11 +117,24 @@ export default function CartPage() {
 
         <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_390px]">
         <Card className="overflow-hidden rounded-2xl border border-border/80 shadow-sm">
-          <CardHeader className="border-b border-border/60 bg-muted/20 px-4 py-3">
+          <CardHeader className="border-b border-border/60 bg-muted/20 px-4 py-3 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="flex items-center gap-2 text-base font-black text-foreground sm:text-lg">
               <ShoppingBag className="h-5 w-5 text-primary" />
               {t("cart.order_items", "Order Items")}
             </CardTitle>
+            {items.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => clearCart.mutate()}
+                disabled={clearCart.isPending}
+                className="h-8 px-2.5 text-xs font-bold text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5 transition-colors cursor-pointer rounded-lg border border-destructive/20 hover:border-destructive/40"
+                data-testid="button-clear-cart"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>{t("cart.clear_all", "Remove All")}</span>
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="p-2.5 sm:p-3">
             <ScrollArea className="max-h-[calc(100vh-15rem)] min-h-[22rem]">
@@ -282,20 +295,22 @@ export default function CartPage() {
               </div>
             </div>
 
-            <div className="hidden space-y-2.5 pt-1 md:block">
+            <div className="hidden space-y-3 pt-2 md:block">
               <Button
-                className="h-12 w-full gap-2 bg-amber-400 px-3 text-sm font-black uppercase tracking-wide text-black shadow-md transition-transform hover:scale-[1.01] hover:bg-amber-500 sm:text-[15px]"
+                className="h-12 w-full gap-2 bg-amber-400 hover:bg-amber-500 text-black border border-amber-500/50 px-4 text-sm sm:text-[15px] font-black uppercase tracking-wider rounded-xl shadow-md transition-transform hover:scale-[1.01] cursor-pointer"
                 onClick={handleCheckout}
                 data-testid="button-checkout"
               >
-                {isAuthenticated
-                  ? `${t("cart.checkout", "Proceed to Checkout")} • ${format(total, { includeCode: true })}`
-                  : t("cart.login_to_checkout", "Sign in to checkout")}
-                <ArrowRight className="h-5 w-5 shrink-0 stroke-[3]" />
+                <span>
+                  {isAuthenticated
+                    ? t("cart.checkout", "Proceed to Checkout")
+                    : t("cart.login_to_checkout", "Sign in to checkout")}
+                </span>
+                <ArrowRight className="h-4.5 w-4.5 shrink-0 stroke-[2.8]" />
               </Button>
               <Button
                 variant="outline"
-                className="h-11 w-full border text-sm font-black uppercase tracking-wide hover:bg-muted"
+                className="h-11 w-full border border-border/80 text-sm font-black uppercase tracking-wider rounded-xl hover:bg-muted cursor-pointer"
                 onClick={() => setLocation("/")}
                 data-testid="button-continue-shopping"
               >

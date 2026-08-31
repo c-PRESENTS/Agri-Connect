@@ -150,41 +150,41 @@ export const HeroServiceGrid = memo(function HeroServiceGrid() {
   const hiddenItems = visibleAll.filter(s => hidden.has(s.id));
 
   return (
-    <div className="w-full bg-[#081f1d]/90 backdrop-blur-md border border-emerald-700/50 rounded-2xl p-2.5 sm:p-3 shadow-2xl relative z-10">
+    <div className="w-full bg-[#081f1d]/90 backdrop-blur-md border border-emerald-700/50 rounded-2xl p-3.5 sm:p-5 shadow-2xl relative z-10">
       {/* Top Header */}
-      <div className="flex items-center justify-between mb-1.5 px-1">
-        <span className="text-xs sm:text-sm font-black uppercase tracking-[0.14em] text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+      <div className="flex items-center justify-between mb-3 px-1">
+        <span className="text-sm sm:text-base font-black uppercase tracking-[0.14em] text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">
           {t("home.quick_access", { defaultValue: "QUICK ACCESS" })}
         </span>
         <div className="flex items-center gap-2">
           {editMode && (
             <button
               onClick={reset}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-white/70 hover:text-white hover:bg-white/10 border border-white/20 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white/70 hover:text-white hover:bg-white/10 border border-white/20 transition-all cursor-pointer"
             >
-              <RotateCcw className="h-3 w-3" /> {t("nav.reset")}
+              <RotateCcw className="h-3.5 w-3.5" /> {t("nav.reset")}
             </button>
           )}
           <button
             onClick={() => { setEditMode(v => !v); setEditingEmoji(null); }}
             data-testid="hero-services-edit"
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black border transition-all shadow-xs cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black border transition-all shadow-xs cursor-pointer ${
               editMode
                 ? "bg-amber-400 text-black border-amber-400 shadow-amber-400/30"
                 : "bg-[#0c2927] text-emerald-300 border-emerald-600/60 hover:bg-[#123835] hover:border-emerald-400"
             }`}
           >
             {editMode ? (
-              <><Check className="h-3.5 w-3.5" /> {t("nav.done")}</>
+              <><Check className="h-4 w-4" /> {t("nav.done")}</>
             ) : (
-              <><Pencil className="h-3.5 w-3.5" /> Edit</>
+              <><Pencil className="h-4 w-4" /> Edit</>
             )}
           </button>
         </div>
       </div>
 
-      {/* 10-Column Grid matching reference screenshot */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-1.5">
+      {/* 10-Column Grid with Extra Large Hero Buttons */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-2 sm:gap-3">
         {visibleItems.map((item, idx) => {
           const Icon = item.icon;
           const customEmoji = emojis[item.id];
@@ -204,43 +204,43 @@ export const HeroServiceGrid = memo(function HeroServiceGrid() {
                   }
                 }}
                 data-testid={`nav-${item.id}`}
-                className={`relative w-full h-[52px] sm:h-[55px] flex flex-col items-center justify-center gap-0.5 rounded-[11px] border transition-all duration-150 py-1 px-1.5 shadow-md cursor-pointer group-hover:-translate-y-0.5 ${
+                className={`relative w-full h-[82px] sm:h-[88px] lg:h-[92px] flex flex-col items-center justify-center gap-1.5 rounded-2xl border transition-all duration-150 p-2 sm:p-2.5 shadow-lg cursor-pointer group-hover:-translate-y-1 group-hover:shadow-emerald-500/20 ${
                   editMode
                     ? "bg-[#0c2e2a] border-2 border-amber-400 text-white shadow-amber-400/20"
-                    : "bg-[#0a2321] hover:bg-[#103330] border-emerald-700/50 hover:border-emerald-400/90 text-white active:scale-95"
+                    : "bg-[#0a2321] hover:bg-[#103330] border-emerald-700/60 hover:border-emerald-400 text-white active:scale-95 ring-1 ring-emerald-500/20"
                 }`}
               >
                 {/* Top-right badge (e.g. Moisture Reading, Moisture 29.6%, Trend, or Signal Bars) */}
                 {item.badgeType === "moisture-reading" && (
-                  <span className="absolute top-1 right-1 text-[7.5px] font-black text-cyan-300 bg-[#061e1c] px-1 py-0.2 rounded border border-cyan-500/50 leading-none">
-                    Moisture Reading
+                  <span className="absolute top-1.5 right-1.5 text-[8.5px] font-black text-cyan-300 bg-[#061e1c] px-1.5 py-0.5 rounded border border-cyan-500/50 leading-none shadow-xs">
+                    Moisture
                   </span>
                 )}
 
                 {item.badgeType === "moisture-pct" && (
-                  <span className="absolute top-1 right-1 text-[7.5px] font-black text-emerald-300 bg-[#061e1c] px-1 py-0.2 rounded border border-emerald-500/50 leading-none">
-                    Moisture 29.6%
+                  <span className="absolute top-1.5 right-1.5 text-[8.5px] font-black text-emerald-300 bg-[#061e1c] px-1.5 py-0.5 rounded border border-emerald-500/50 leading-none shadow-xs">
+                    29.6%
                   </span>
                 )}
 
                 {item.badgeType === "trend" && (
-                  <span className="absolute top-1 right-1.5 text-[7.5px] font-black text-amber-300 uppercase tracking-wider leading-none">
+                  <span className="absolute top-1.5 right-2 text-[8.5px] font-black text-amber-300 uppercase tracking-wider leading-none shadow-xs">
                     Trend
                   </span>
                 )}
 
                 {item.badgeType === "signal" && (
-                  <div className="absolute top-1 right-1.5 flex items-end gap-0.5 h-2">
-                    <div className="w-0.5 h-1 bg-emerald-400 rounded-full" />
+                  <div className="absolute top-1.5 right-2 flex items-end gap-0.5 h-3">
                     <div className="w-0.5 h-1.5 bg-emerald-400 rounded-full" />
                     <div className="w-0.5 h-2 bg-emerald-400 rounded-full" />
+                    <div className="w-0.5 h-3 bg-emerald-400 rounded-full" />
                   </div>
                 )}
 
                 {/* Top-right sparkline wave (for Logistics & Trend) */}
                 {item.hasSparkline && (
                   <svg
-                    className="absolute top-2.5 right-1.5 w-6 h-3 text-emerald-400"
+                    className="absolute top-2.5 right-2 w-7 h-3.5 text-emerald-400"
                     viewBox="0 0 24 10"
                     fill="none"
                   >
@@ -255,7 +255,7 @@ export const HeroServiceGrid = memo(function HeroServiceGrid() {
 
                 {item.hasAmberSparkline && (
                   <svg
-                    className="absolute top-2.5 right-1.5 w-6 h-3 text-amber-400"
+                    className="absolute top-2.5 right-2 w-7 h-3.5 text-amber-400"
                     viewBox="0 0 24 10"
                     fill="none"
                   >
@@ -268,22 +268,22 @@ export const HeroServiceGrid = memo(function HeroServiceGrid() {
                   </svg>
                 )}
 
-                {/* Icon or App Logo */}
+                {/* Large Icon or App Logo */}
                 {customEmoji ? (
-                  <span className="text-lg sm:text-xl leading-none drop-shadow shrink-0">{customEmoji}</span>
+                  <span className="text-2xl sm:text-3xl leading-none drop-shadow-md shrink-0">{customEmoji}</span>
                 ) : logoSrc ? (
                   <img
                     src={logoSrc}
                     alt=""
-                    className="h-4.5 w-4.5 sm:h-5 sm:w-5 object-contain rounded-md drop-shadow shrink-0"
+                    className="h-8 w-8 sm:h-9 sm:w-9 object-contain rounded-lg drop-shadow-md shrink-0 transition-transform group-hover:scale-110"
                     loading="lazy"
                   />
                 ) : (
-                  <Icon className={`h-4.5 w-4.5 sm:h-5 sm:w-5 drop-shadow shrink-0 ${item.color}`} />
+                  <Icon className={`h-8 w-8 sm:h-9 sm:w-9 drop-shadow-md shrink-0 transition-transform group-hover:scale-110 ${item.color}`} />
                 )}
 
                 {/* Text Label */}
-                <span className="text-[10.5px] sm:text-xs font-black text-white text-center leading-tight w-full truncate drop-shadow px-0.5">
+                <span className="text-xs sm:text-[13px] font-black text-white text-center leading-tight w-full truncate drop-shadow px-0.5 tracking-tight">
                   {t(item.label, { defaultValue: item.fallbackLabel })}
                 </span>
               </button>

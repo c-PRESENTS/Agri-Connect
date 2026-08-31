@@ -253,36 +253,36 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
       <form
         onSubmit={handleSubmit}
         role="search"
-        className="flex h-11 w-full items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-2xs transition-[border-color,box-shadow] focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 dark:border-border/80 dark:bg-card"
+        className="flex h-10 w-full items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-2xs transition-[border-color,box-shadow] focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 dark:border-border/80 dark:bg-card"
       >
         <Input
           ref={inputRef}
           type="search"
-          placeholder={t("search.placeholder", "Search produce, farmers, categories...")}
+          placeholder={t("search.placeholder", "Search produce, farmers...")}
           value={inputVal}
           onChange={handleChange}
           onFocus={() => setOpen(true)}
-          className="h-full min-w-0 w-auto flex-1 appearance-none rounded-lg border-0 bg-transparent px-3 py-0 text-xs font-bold shadow-none outline-none ring-0 placeholder:text-slate-400/90 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+          className="h-full min-w-0 w-auto flex-1 appearance-none rounded-lg border-0 bg-transparent px-2.5 py-0 text-xs font-bold shadow-none outline-none ring-0 placeholder:text-slate-400/90 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xs [&::-webkit-search-cancel-button]:hidden"
           data-testid="input-search"
         />
         {inputVal && (
           <button
             type="button"
             onClick={handleClear}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40 dark:hover:bg-muted"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40 dark:hover:bg-muted"
             aria-label="Clear search"
             data-testid="button-search-clear"
           >
-            <X className="h-4.5 w-4.5" />
+            <X className="h-4 w-4" />
           </button>
         )}
         <button
           type="submit"
-          className="flex h-9 min-w-[84px] shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-emerald-800 px-3.5 text-xs font-black leading-none text-white shadow-2xs transition-[background-color,box-shadow] hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/50 focus-visible:ring-offset-1 active:bg-emerald-950 sm:text-sm"
+          className="flex h-8 min-w-[32px] sm:min-w-[70px] shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-emerald-800 px-2.5 sm:px-3 text-xs font-black leading-none text-white shadow-2xs transition-[background-color,box-shadow] hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/50 focus-visible:ring-offset-1 active:bg-emerald-950"
           data-testid="button-search-submit"
         >
-          <Search className="h-4 w-4 stroke-[2.5]" />
-          <span>Search</span>
+          <Search className="h-3.5 w-3.5 stroke-[2.5]" />
+          <span className="hidden sm:inline">Search</span>
         </button>
       </form>
 

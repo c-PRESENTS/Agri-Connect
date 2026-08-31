@@ -53,28 +53,59 @@ export function CompactMarketPanel({ defaultOpen = false }: CompactMarketPanelPr
       ? `/?category=daily-needs&subcategory=${activeCat.id}`
       : `/?category=${activeCat.id}`;
 
-  const panelW = open ? "w-[230px]" : "w-8";
+  const panelW = open ? "w-[245px]" : "w-10";
 
   return (
     <div
       className={`relative flex h-full min-h-0 flex-shrink-0 flex-col overflow-hidden border-l border-border/60 bg-background/95 backdrop-blur-sm transition-all duration-200 ${panelW}`}
-      style={{ minWidth: open ? 230 : 32 }}
+      style={{ minWidth: open ? 245 : 40 }}
     >
-      {/* Toggle button */}
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="absolute -left-3.5 top-1/2 -translate-y-1/2 z-10 w-7 h-11 rounded-full border border-border/80 bg-background shadow-md flex items-center justify-center hover:bg-muted transition-colors"
-        title={open ? t("market.hide_quick_shop") : t("market.quick_shop")}
-      >
-        {open ? <ChevronRight className="h-4 w-4 text-foreground" /> : <ChevronLeft className="h-4 w-4 text-foreground" />}
-      </button>
+      {/* Integrated Header with clean toggle */}
+      <div className="px-2.5 py-2.5 bg-muted/40 border-b border-border/60 flex items-center justify-between flex-shrink-0">
+        {open ? (
+          <>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <ShoppingCart className="h-4 w-4 text-primary shrink-0" />
+              <p className="text-xs sm:text-sm font-black text-foreground uppercase tracking-wide truncate">{t("market.quick_shop")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="h-7 w-7 rounded-lg border border-border/70 bg-background hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
+              title={t("market.hide_quick_shop")}
+              data-testid="button-collapse-quick-shop"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="w-full h-8 rounded-lg border border-border/70 bg-background hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-muted flex items-center justify-center transition-colors cursor-pointer"
+            title={t("market.quick_shop")}
+            data-testid="button-expand-quick-shop"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {!open && (
+        <div 
+          onClick={() => setOpen(true)} 
+          className="flex-1 flex flex-col items-center justify-center py-4 cursor-pointer hover:bg-muted/30 transition-colors select-none"
+          title={t("market.quick_shop")}
+        >
+          <ShoppingCart className="h-4 w-4 text-muted-foreground mb-3" />
+          <span className="[writing-mode:vertical-rl] rotate-180 text-[11px] font-black text-muted-foreground uppercase tracking-widest">
+            {t("market.quick_shop")}
+          </span>
+        </div>
+      )}
 
       {open && (
         <>
-          {/* Header */}
-          <div className="px-3 py-2.5 bg-muted/40 border-b border-border/60 flex-shrink-0">
-            <p className="text-xs sm:text-sm font-black text-foreground uppercase tracking-wide">{t("market.quick_shop")}</p>
-          </div>
 
           {/* Category pills */}
           <div className="flex flex-wrap gap-1.5 p-2.5 border-b border-border/60 flex-shrink-0 bg-background/50">

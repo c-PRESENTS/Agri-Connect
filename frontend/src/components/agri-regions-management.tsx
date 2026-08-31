@@ -275,8 +275,8 @@ export function AgriRegionsManagement({
   const stats = useMemo(() => {
     const total = regions.length;
     const active = regions.filter((r) => r.active || r.status === "active").length;
-    const regionalHubs = regions.filter((r) => r.type === "regional_hub" || r.type === "logistics_hub").length;
-    const marketZones = regions.filter((r) => r.type === "market_zone").length;
+    const regionalHubs = regions.filter((r) => r.type === "regional_hub" || r.type === "logistics_hub" || r.type === "state").length;
+    const marketZones = regions.filter((r) => r.type === "market_zone" || r.type === "city" || r.type === "country" || r.type === "district").length;
     const totalSellers = regions.reduce((sum, r) => sum + (r.activeSellers || 0), 0);
     const totalOrganisations = regions.reduce((sum, r) => sum + (r.organisationCount || 0), 0);
 
