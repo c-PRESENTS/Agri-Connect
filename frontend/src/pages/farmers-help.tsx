@@ -688,52 +688,52 @@ export default function FarmersHelp() {
           
           <main className="flex-1 overflow-hidden">
             <ScrollArea className="h-full">
-              <div className="container max-w-7xl mx-auto px-4 py-6">
-                <div className="relative mb-8 overflow-hidden rounded-3xl border-2 border-primary/20 bg-gradient-to-br from-primary/10 via-emerald-500/5 to-transparent shadow-md">
+              <div className="w-full px-3 py-3 sm:px-4 lg:px-5">
+                <div className="relative mb-3 overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-emerald-500/5 to-transparent shadow-sm">
                   <div className="absolute inset-0 opacity-[0.04] bg-[radial-gradient(circle_at_30%_20%,#16a34a_0,transparent_50%),radial-gradient(circle_at_80%_80%,#0ea5e9_0,transparent_50%)]" />
-                  <div className="relative flex flex-wrap items-center gap-5 px-6 py-8 sm:px-8">
+                  <div className="relative flex flex-wrap items-center gap-2.5 px-3.5 py-3 sm:px-4">
                     <SidebarTrigger data-testid="button-sidebar-toggle" />
-                    <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl" onClick={handleBack} data-testid="button-back">
-                      <ArrowLeft className="h-6 w-6" />
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg" onClick={handleBack} data-testid="button-back">
+                      <ArrowLeft className="h-4 w-4" />
                     </Button>
-                    <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 ring-2 ring-primary/30 shrink-0">
-                      <Sprout className="h-8 w-8 text-primary" />
+                    <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 ring-1 ring-primary/30 sm:flex">
+                      <Sprout className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-[240px]">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className="gap-1.5 border-2 border-emerald-300 bg-emerald-100 text-xs font-black uppercase tracking-wider text-emerald-900 hover:bg-emerald-100 px-3 py-1">
-                          <Globe className="h-3.5 w-3.5" /> Global
+                      <div className="mb-1 flex items-center gap-1.5">
+                        <Badge className="gap-1 border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-900 hover:bg-emerald-100">
+                          <Globe className="h-3 w-3" /> Global
                         </Badge>
-                        <Badge variant="outline" className="gap-1.5 border-2 border-emerald-300 bg-white/80 text-xs font-black uppercase tracking-wider text-emerald-800 px-3 py-1">
-                          <Sparkles className="h-3.5 w-3.5" /> AI-personalized
+                        <Badge variant="outline" className="gap-1 border border-emerald-300 bg-white/80 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-800">
+                          <Sparkles className="h-3 w-3" /> AI-personalized
                         </Badge>
                       </div>
-                      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground" data-testid="text-knowledge-hub-title">
+                      <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl" data-testid="text-knowledge-hub-title">
                         {t("farmers_help.title", "Knowledge Hub")}
                       </h1>
-                      <p className="text-base sm:text-lg font-bold text-foreground/80 mt-2 max-w-2xl leading-relaxed">
+                      <p className="mt-0.5 max-w-5xl text-sm font-bold leading-snug text-foreground/80">
                         {t("farmers_help.subtitle", "Practical agricultural guidance for growers worldwide — agronomy, horticulture, livestock, post-harvest, climate-smart practices and market intelligence.")}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         onClick={() => setLocation("/farmers-help/student")}
                         size="lg"
                         variant="outline"
-                        className="h-12 px-5 gap-2 border-2 border-emerald-600 bg-emerald-50 text-sm sm:text-base font-black text-emerald-900 shadow-sm hover:bg-emerald-100 rounded-xl"
+                        className="h-10 gap-1.5 rounded-lg border border-emerald-600 bg-emerald-50 px-4 text-sm font-black text-emerald-900 shadow-sm hover:bg-emerald-100"
                         data-testid="button-student-help-point"
                       >
-                        <GraduationCap className="h-5 w-5" />
+                        <GraduationCap className="h-4 w-4" />
                         Student Help Point
                       </Button>
                       {!locationData && (
                         <Button
                           onClick={detectLocation}
                           size="lg"
-                          className="h-12 px-5 gap-2 bg-emerald-700 text-sm sm:text-base font-black text-white shadow-md hover:bg-emerald-800 rounded-xl"
+                          className="h-10 gap-1.5 rounded-lg bg-emerald-700 px-4 text-sm font-black text-white shadow-sm hover:bg-emerald-800"
                           data-testid="button-personalize"
                         >
-                          <MapPin className="h-5 w-5" />
+                          <MapPin className="h-4 w-4" />
                           Personalize for my region
                         </Button>
                       )}
@@ -742,9 +742,9 @@ export default function FarmersHelp() {
                 </div>
 
                 {locationData && (
-                  <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
-                    <CardContent className="py-4">
-                      <div className="flex flex-wrap items-center gap-4">
+                  <Card className="mb-4 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+                    <CardContent className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
                           <MapPin className="h-5 w-5 text-primary" />
                           <span className="font-medium">{locationData.district}, {locationData.state}</span>
@@ -762,9 +762,9 @@ export default function FarmersHelp() {
 
                 {/* AI personalised insights — only when user opted in */}
                 {locationData && (
-                  <Card className="mb-8 border-primary/20 bg-gradient-to-br from-primary/5 via-emerald-500/5 to-transparent">
-                    <CardContent className="py-5">
-                      <div className="flex flex-wrap items-center gap-4">
+                  <Card className="mb-5 border-primary/20 bg-gradient-to-br from-primary/5 via-emerald-500/5 to-transparent">
+                    <CardContent className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
                           <MapPin className="h-5 w-5 text-primary" />
                           <span className="font-medium">{locationData.district}, {locationData.state}</span>
@@ -788,9 +788,9 @@ export default function FarmersHelp() {
                         </Button>
                       </div>
                       {recommendations.length > 0 && (
-                        <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                           {recommendations.slice(0, 3).map((rec, i) => (
-                            <div key={i} className="rounded-lg border border-border/60 bg-card/50 p-3">
+                            <div key={i} className="rounded-lg border border-border/60 bg-card/50 p-2.5">
                               <div className="flex items-center justify-between mb-1.5">
                                 <span className="text-sm font-semibold">{rec.category}</span>
                                 <Badge variant={rec.demandLevel === "High" || rec.demandLevel === "Very High" ? "default" : "secondary"} className="text-[10px]">
@@ -808,11 +808,11 @@ export default function FarmersHelp() {
 
                 {/* Drill-down: selected topic detail */}
                 {selectedTopic && (
-                  <Card className="mb-8" data-testid="card-topic-detail">
-                    <CardHeader>
+                  <Card className="mb-5" data-testid="card-topic-detail">
+                    <CardHeader className="p-4 pb-3">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <CardTitle className="font-serif text-2xl">{selectedTopic.title}</CardTitle>
+                          <CardTitle className="font-serif text-xl">{selectedTopic.title}</CardTitle>
                           <CardDescription className="mt-1">{selectedTopic.description}</CardDescription>
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => setSelectedTopic(null)} data-testid="button-close-topic">
@@ -820,12 +820,12 @@ export default function FarmersHelp() {
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-[15px] leading-relaxed text-foreground/90 max-w-3xl">
+                    <CardContent className="p-4 pt-0">
+                      <p className="max-w-4xl text-sm leading-relaxed text-foreground/90">
                         {selectedTopic.content}
                       </p>
-                      <div className="mt-6 grid md:grid-cols-2 gap-3">
-                        <div className="rounded-lg border bg-muted/30 p-4">
+                      <div className="mt-4 grid gap-2 md:grid-cols-2">
+                        <div className="rounded-lg border bg-muted/30 p-3">
                           <h4 className="font-medium flex items-center gap-2 mb-1 text-sm">
                             <Play className="h-4 w-4 text-primary" /> Video tutorial
                           </h4>
@@ -843,7 +843,7 @@ export default function FarmersHelp() {
                             Watch now
                           </Button>
                         </div>
-                        <div className="rounded-lg border bg-muted/30 p-4">
+                        <div className="rounded-lg border bg-muted/30 p-3">
                           <h4 className="font-medium flex items-center gap-2 mb-1 text-sm">
                             <Phone className="h-4 w-4 text-primary" /> Talk to an expert
                           </h4>
@@ -870,15 +870,15 @@ export default function FarmersHelp() {
 
                 {/* Drill-down: selected category topic list */}
                 {selectedCategory && !selectedTopic && (
-                  <Card className="mb-8" data-testid="card-category-topics">
-                    <CardHeader>
+                  <Card className="mb-5" data-testid="card-category-topics">
+                    <CardHeader className="p-4 pb-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className={`w-11 h-11 rounded-lg ${selectedCategory.color} flex items-center justify-center shrink-0`}>
+                          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${selectedCategory.color}`}>
                             <selectedCategory.icon className="h-5 w-5 text-white" />
                           </div>
                           <div>
-                            <CardTitle className="font-serif text-2xl">{selectedCategory.name}</CardTitle>
+                            <CardTitle className="font-serif text-xl">{selectedCategory.name}</CardTitle>
                             <CardDescription>{selectedCategory.description}</CardDescription>
                           </div>
                         </div>
@@ -887,12 +887,12 @@ export default function FarmersHelp() {
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="grid sm:grid-cols-2 gap-3">
+                    <CardContent className="grid gap-2 p-4 pt-0 sm:grid-cols-2">
                       {selectedCategory.topics.map((topic, i) => (
                         <button
                           key={i}
                           onClick={() => setSelectedTopic(topic)}
-                          className="text-left rounded-lg border border-border/60 bg-card hover:bg-accent/40 hover:border-primary/40 transition-colors p-4 group"
+                          className="group rounded-lg border border-border/60 bg-card p-3 text-left transition-colors hover:border-primary/40 hover:bg-accent/40"
                           data-testid={`button-topic-${i}`}
                         >
                           <h4 className="font-medium text-sm group-hover:text-primary flex items-center justify-between gap-2">
@@ -907,30 +907,30 @@ export default function FarmersHelp() {
                 )}
 
                 {/* SECTION 1 — Subject areas (academic portal style) */}
-                <section className="mb-14">
-                  <div className="flex flex-wrap items-end justify-between gap-2 mb-6 border-b-2 border-border pb-3">
-                    <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Subject Areas</h2>
-                    <span className="text-xs sm:text-sm uppercase tracking-[0.18em] font-black text-muted-foreground">10 disciplines · curated by agronomists</span>
+                <section className="mb-5">
+                  <div className="mb-2 flex flex-wrap items-end justify-between gap-2 border-b border-border pb-1.5">
+                    <h2 className="text-lg font-black tracking-tight text-foreground sm:text-xl">Subject Areas</h2>
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground sm:text-xs">10 disciplines · curated by agronomists</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
+                  <div className="grid grid-cols-1 gap-2 min-[480px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
                     {guidanceCategories.map((category) => (
                       <button
                         key={category.id}
                         onClick={() => { setSelectedCategory(category); setSelectedTopic(null); }}
-                        className="group text-left rounded-2xl border-2 border-border/70 bg-card overflow-hidden hover:shadow-xl hover:border-primary/60 transition-all"
+                        className="group overflow-hidden rounded-xl border border-border/70 bg-card text-left transition-all hover:border-primary/60 hover:shadow-md"
                         data-testid={`card-subject-${category.id}`}
                       >
-                        <div className={`relative h-32 sm:h-36 ${category.color} flex items-center justify-center overflow-hidden`}>
+                        <div className={`relative flex h-16 items-center justify-center overflow-hidden sm:h-20 ${category.color}`}>
                           <div className="absolute inset-0 opacity-35 bg-[radial-gradient(circle_at_30%_30%,white,transparent_60%)]" />
-                          <category.icon className="h-14 w-14 text-white/95 drop-shadow-md group-hover:scale-110 transition-transform" />
+                          <category.icon className="h-7 w-7 text-white/95 drop-shadow-sm transition-transform group-hover:scale-110" />
                         </div>
-                        <div className="p-4 border-t-2 border-border/40">
-                          <h3 className="text-base sm:text-lg font-black leading-tight text-foreground">{category.name}</h3>
-                          <p className="text-xs sm:text-sm font-bold text-muted-foreground mt-1.5 line-clamp-3 leading-relaxed">
+                        <div className="border-t border-border/40 p-2.5">
+                          <h3 className="text-sm font-black leading-tight text-foreground">{category.name}</h3>
+                          <p className="mt-1 line-clamp-2 text-[11px] font-bold leading-snug text-muted-foreground sm:text-xs">
                             {category.description}
                           </p>
-                          <span className="mt-3 inline-flex items-center gap-1 text-xs sm:text-sm font-black text-emerald-800 uppercase tracking-wider transition-all group-hover:gap-1.5 group-hover:text-emerald-950">
-                            read more <ChevronRight className="h-4 w-4" />
+                          <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-800 transition-all group-hover:gap-1.5 group-hover:text-emerald-950">
+                            read more <ChevronRight className="h-3.5 w-3.5" />
                           </span>
                         </div>
                       </button>
@@ -939,12 +939,12 @@ export default function FarmersHelp() {
                 </section>
 
                 {/* SECTION 2 — Core technologies & programmes */}
-                <section className="mb-14">
-                  <div className="flex flex-wrap items-end justify-between gap-2 mb-6 border-b-2 border-border pb-3">
-                    <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Core Technologies & Programmes</h2>
-                    <span className="text-xs sm:text-sm uppercase tracking-[0.18em] font-black text-muted-foreground">peer-reviewed practice notes</span>
+                <section className="mb-5">
+                  <div className="mb-2 flex flex-wrap items-end justify-between gap-2 border-b border-border pb-1.5">
+                    <h2 className="text-lg font-black tracking-tight text-foreground sm:text-xl">Core Technologies & Programmes</h2>
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground sm:text-xs">peer-reviewed practice notes</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-8">
+                  <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
                     <DirectoryColumn
                       onSelect={(label, section) => setOpenArticle(getArticle(label, section))}
                       title="Technologies"
@@ -1011,12 +1011,12 @@ export default function FarmersHelp() {
                 </section>
 
                 {/* SECTION 3 — Information & resources */}
-                <section className="mb-12">
-                  <div className="flex flex-wrap items-end justify-between gap-2 mb-6 border-b-2 border-border pb-3">
-                    <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Information & Resources</h2>
-                    <span className="text-xs sm:text-sm uppercase tracking-[0.18em] font-black text-muted-foreground">handbooks, markets & daily updates</span>
+                <section className="mb-5">
+                  <div className="mb-2 flex flex-wrap items-end justify-between gap-2 border-b border-border pb-1.5">
+                    <h2 className="text-lg font-black tracking-tight text-foreground sm:text-xl">Information & Resources</h2>
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground sm:text-xs">handbooks, markets & daily updates</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-8">
+                  <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
                     <DirectoryColumn
                       onSelect={(label, section) => setOpenArticle(getArticle(label, section))}
                       title="Agri Information"
@@ -1083,8 +1083,8 @@ export default function FarmersHelp() {
                   </div>
                 </section>
 
-                <footer className="mt-12 pt-8 pb-4 border-t-2 border-border/60 text-center">
-                  <p className="text-base sm:text-lg font-black text-foreground/90 max-w-4xl mx-auto leading-relaxed">
+                <footer className="mt-4 border-t border-border/60 pb-1 pt-3 text-center">
+                  <p className="mx-auto max-w-6xl text-sm font-black leading-snug text-foreground/90">
                     AgriConnect Knowledge Hub — curated reference material for growers, researchers and extension officers worldwide. Content reviewed by agricultural scientists and agronomists.
                   </p>
                 </footer>
@@ -1192,10 +1192,10 @@ function DirectoryColumn({
 }) {
   return (
     <div data-testid={`directory-col-${title.toLowerCase().replace(/[^a-z]+/g, "-")}`}>
-      <h3 className="mb-4 border-b-2 border-emerald-400 pb-2 font-serif text-base sm:text-lg font-black uppercase tracking-[0.14em] text-emerald-950">
+      <h3 className="mb-2 border-b border-emerald-400 pb-1 font-serif text-sm font-black uppercase tracking-[0.12em] text-emerald-950">
         {title}
       </h3>
-      <ul className="space-y-2">
+      <ul className="space-y-0.5">
         {links.map((link, i) => {
           const label = typeof link === "string" ? link : link.label;
           const isNew = typeof link === "string" ? false : !!link.isNew;
@@ -1205,11 +1205,11 @@ function DirectoryColumn({
                 type="button"
                 onClick={() => onSelect(label, title)}
                 data-testid={`link-article-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-                className="inline-flex items-baseline gap-2 text-left text-sm sm:text-base font-bold leading-normal text-foreground/90 underline-offset-4 hover:text-emerald-800 hover:underline"
+                className="inline-flex items-baseline gap-1.5 text-left text-xs font-bold leading-tight text-foreground/90 underline-offset-4 hover:text-emerald-800 hover:underline sm:text-[13px]"
               >
                 <span>{label}</span>
                 {isNew && (
-                  <span className="text-xs font-black text-white bg-rose-500 px-2 py-0.5 rounded uppercase tracking-wider">
+                  <span className="rounded bg-rose-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
                     new
                   </span>
                 )}

@@ -11,6 +11,7 @@ import { buildHomeProductRecommendations } from "../../catalog/home-recommendati
 import { regionalMarketplaceRepository } from "../../repositories/regional-marketplace-repository";
 import { haversineKm } from "../../shipping/quote-engine";
 import { ProductModerationError, submitSellerProduct } from "../../organisations/admin-product-service";
+import { sellerCapabilities } from "../../seller-verification/capabilities";
 
 function getUserId(req: Request): string | undefined {
   return req.session?.userId;
@@ -132,7 +133,7 @@ export function registerCatalogRoutes(app: Express): void {
       const products = await storage.getVerifiedDatabaseSellerProducts();
       const sellersMap = new Map<string, any>();
       for (const p of products) {
-        if (!p.farmerId || p.farmerId.startsWith("farmer-") || p.farmerId.startsWith("catalog-")) continue;
+        if (!p.farmerId) continue;
         if (!p.farmerName?.trim()) continue;
         const existing = sellersMap.get(p.farmerId);
         if (existing) {
@@ -142,15 +143,15 @@ export function registerCatalogRoutes(app: Express): void {
           sellersMap.set(p.farmerId, {
             id: p.farmerId,
             name: p.farmerName.trim(),
-            avatar: p.farmerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(p.farmerName)}`,
-            rating: Number.isFinite(p.farmerRating) && p.farmerRating > 0 ? p.farmerRating : (Number.isFinite(p.rating) ? p.rating : 4.5),
+            avatar: p.farmerAvatar || null,
+            rating: Number.isFinite(p.farmerRating) ? p.farmerRating : 0,
             location: p.farmerLocation || "",
-            latitude: typeof p.farmerLatitude === "number" ? p.farmerLatitude : 0,
-            longitude: typeof p.farmerLongitude === "number" ? p.farmerLongitude : 0,
-            isOnline: p.farmerIsOnline !== false,
-            isVerified: p.farmerIsVerified !== false,
+            latitude: typeof p.farmerLatitude === "number" ? p.farmerLatitude : null,
+            longitude: typeof p.farmerLongitude === "number" ? p.farmerLongitude : null,
+            isOnline: p.farmerIsOnline === true,
+            isVerified: p.farmerIsVerified === true,
             productCount: 1,
-            distanceKm: typeof p.distance === "number" ? p.distance : 0,
+            distanceKm: typeof p.distance === "number" ? p.distance : null,
             topProducts: [p],
           });
         }
@@ -165,44 +166,30 @@ export function registerCatalogRoutes(app: Express): void {
     try {
       const sellerId = req.params.id;
       const user = await authStorage.getUser(sellerId);
-      const allPublicProducts = await storage.getProducts();
-      const publicProducts = allPublicProducts.filter((p) => p.farmerId === sellerId);
-
-      if (user) {
-        return res.json({
-          id: user.id,
-          name: user.name || "Verified Seller",
-          avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || "Seller")}`,
-          rating: (user as any).rating || 5.0,
-          location: user.location || "Mumbai, India",
-          latitude: user.latitude || 19.076,
-          longitude: user.longitude || 72.8777,
-          isOnline: true,
-          isVerified: true,
-          role: user.role,
-          products: publicProducts,
-          productCount: publicProducts.length,
-        });
+      if (!user || (user.role !== "farmer" && !user.sellerEnabled)) {
+        return res.status(404).json({ error: "Seller not found" });
+      }
+      if (!(await sellerCapabilities(sellerId)).canPublishListings) {
+        return res.status(404).json({ error: "Verified seller not found" });
       }
 
-      const matchingProduct = allPublicProducts.find((p) => p.farmerId === sellerId);
-      if (matchingProduct) {
-        return res.json({
-          id: matchingProduct.farmerId,
-          name: matchingProduct.farmerName,
-          avatar: matchingProduct.farmerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(matchingProduct.farmerName || "Seller")}`,
-          rating: matchingProduct.farmerRating || matchingProduct.rating || 4.8,
-          location: matchingProduct.farmerLocation || "",
-          latitude: matchingProduct.farmerLatitude || 0,
-          longitude: matchingProduct.farmerLongitude || 0,
-          isOnline: matchingProduct.farmerIsOnline !== false,
-          isVerified: matchingProduct.farmerIsVerified !== false,
-          products: publicProducts,
-          productCount: publicProducts.length,
-        });
-      }
-
-      return res.status(404).json({ error: "Seller not found" });
+      const publicProducts = (await storage.getVerifiedDatabaseSellerProducts())
+        .filter((product) => product.farmerId === sellerId);
+      return res.json({
+        id: user.id,
+        name: user.name || [user.firstName, user.lastName].filter(Boolean).join(" ") || null,
+        avatar: user.avatar || user.profileImageUrl || null,
+        rating: Number.isFinite(user.rating) ? Number(user.rating) : 0,
+        reviewCount: Number.isFinite(user.reviewCount) ? Number(user.reviewCount) : 0,
+        location: user.location || null,
+        latitude: Number.isFinite(user.latitude) ? user.latitude : null,
+        longitude: Number.isFinite(user.longitude) ? user.longitude : null,
+        isOnline: user.isOnline === true,
+        isVerified: true,
+        role: user.role,
+        products: publicProducts,
+        productCount: publicProducts.length,
+      });
     } catch {
       res.status(500).json({ error: "Failed to fetch seller profile" });
     }

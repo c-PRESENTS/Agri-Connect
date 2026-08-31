@@ -1405,6 +1405,8 @@ export class MemStorage implements IStorage {
         stock: Math.floor(10 + Math.random() * 200),
         categoryId: item.category,
         subcategoryId: item.subcategory,
+        // PersistentCommerceStorage resolves the canonical catalogue owner
+        // from the database before any seed product is written.
         farmerId: "",
         farmerName: "",
         farmerAvatar: "",
@@ -1533,23 +1535,25 @@ export class MemStorage implements IStorage {
   async createProduct(insertProduct: InsertProduct, farmerId: string): Promise<Product> {
     const id = randomUUID();
     const farmer = await authStorage.getUser(farmerId);
+    if (!farmer) throw new Error("Seller account not found");
     const farmerDisplayName =
-      farmer?.name ||
-      [farmer?.firstName, farmer?.lastName].filter(Boolean).join(" ").trim() ||
-      farmer?.email ||
-      "Unknown Farmer";
+      farmer.name ||
+      [farmer.firstName, farmer.lastName].filter(Boolean).join(" ").trim() ||
+      farmer.email ||
+      "Unnamed seller";
 
     const product: Product = {
       id,
       ...insertProduct,
       farmerId,
       farmerName: farmerDisplayName,
-      farmerAvatar: farmer?.avatar || farmer?.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${farmerId}`,
-      farmerRating: farmer?.rating ?? 4.5,
-      farmerLocation: farmer?.location || "Location not specified",
-      farmerLatitude: farmer?.latitude ?? 52.3555,
-      farmerLongitude: farmer?.longitude ?? -1.1743,
-      distance: Math.round(Math.random() * 15 * 10) / 10,
+      farmerAvatar: farmer.avatar || farmer.profileImageUrl || "",
+      farmerRating: farmer.rating ?? 0,
+      farmerIsOnline: farmer.isOnline === true,
+      farmerIsVerified: farmer.isVerified === true,
+      farmerLocation: farmer.location || "",
+      farmerLatitude: farmer.latitude ?? 0,
+      farmerLongitude: farmer.longitude ?? 0,
       isOrganic: insertProduct.isOrganic || false,
       isFeatured: false,
       rating: 0,
@@ -2111,7 +2115,10 @@ export class MemStorage implements IStorage {
 
   // Farmer stats
   async getFarmerStats(farmerId: string): Promise<FarmerStats> {
-    const products = await this.getProductsByFarmer(farmerId);
+    const [products, farmer] = await Promise.all([
+      this.getProductsByFarmer(farmerId),
+      authStorage.getUser(farmerId),
+    ]);
     const orders = Array.from(this.orders.values()).filter(
       (o) => o.items.some((item) => item.farmerId === farmerId)
     );
@@ -2133,13 +2140,11 @@ export class MemStorage implements IStorage {
       }, 0);
 
     return {
-      totalEarnings: totalEarnings || 67500,
-      todayOrders: todayOrders.length || 8,
-      pendingOrders: pendingOrders.length || 3,
-      totalProducts: products.length || 12,
-      averageRating: products.length > 0 
-        ? products.reduce((acc, p) => acc + p.rating, 0) / products.length 
-        : 4.7,
+      totalEarnings,
+      todayOrders: todayOrders.length,
+      pendingOrders: pendingOrders.length,
+      totalProducts: products.length,
+      averageRating: farmer?.rating ?? 0,
     };
   }
 
@@ -2564,6 +2569,7 @@ class PersistentCommerceStorage extends MemStorage {
   override async createProduct(insertProduct: InsertProduct, farmerId: string): Promise<Product> {
     await this.ensureCatalog();
     const farmer = await authStorage.getUser(farmerId);
+    if (!farmer) throw new Error("Seller account not found");
     const { regionalMarketplaceRepository } = await import("./repositories/regional-marketplace-repository");
     const regionalAssignment = await regionalMarketplaceRepository.getActiveSellerAssignment(farmerId, insertProduct.regionId);
     const now = new Date().toISOString();
@@ -2572,19 +2578,20 @@ class PersistentCommerceStorage extends MemStorage {
       ...insertProduct,
       farmerId,
       farmerName:
-        farmer?.name ||
-        [farmer?.firstName, farmer?.lastName].filter(Boolean).join(" ").trim() ||
-        farmer?.email ||
-        "Unknown Farmer",
+        farmer.name ||
+        [farmer.firstName, farmer.lastName].filter(Boolean).join(" ").trim() ||
+        farmer.email ||
+        "Unnamed seller",
       farmerAvatar:
-        farmer?.avatar ||
-        farmer?.profileImageUrl ||
-        `https://api.dicebear.com/7.x/avataaars/svg?seed=${farmerId}`,
-      farmerRating: farmer?.rating ?? 4.5,
-      farmerLocation: farmer?.location || "Location not specified",
-      farmerLatitude: farmer?.latitude ?? 52.3555,
-      farmerLongitude: farmer?.longitude ?? -1.1743,
-      distance: Math.round(Math.random() * 150) / 10,
+        farmer.avatar ||
+        farmer.profileImageUrl ||
+        "",
+      farmerRating: farmer.rating ?? 0,
+      farmerIsOnline: farmer.isOnline === true,
+      farmerIsVerified: farmer.isVerified === true,
+      farmerLocation: farmer.location || "",
+      farmerLatitude: farmer.latitude ?? 0,
+      farmerLongitude: farmer.longitude ?? 0,
       isOrganic: insertProduct.isOrganic ?? false,
       isFeatured: false,
       rating: 0,
@@ -2896,9 +2903,10 @@ class PersistentCommerceStorage extends MemStorage {
   }
 
   override async getFarmerStats(farmerId: string): Promise<FarmerStats> {
-    const [products, orders] = await Promise.all([
+    const [products, orders, farmer] = await Promise.all([
       this.getProductsByFarmer(farmerId),
       this.getSellerOrders(farmerId),
+      authStorage.getUser(farmerId),
     ]);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -2913,17 +2921,14 @@ class PersistentCommerceStorage extends MemStorage {
         0,
       );
     return {
-      totalEarnings: totalEarnings || 67500,
-      todayOrders: orders.filter((order) => new Date(order.createdAt) >= today).length || 8,
+      totalEarnings,
+      todayOrders: orders.filter((order) => new Date(order.createdAt) >= today).length,
       pendingOrders:
         orders.filter((order) =>
           ["order_placed", "payment_confirmed", "processing"].includes(order.status),
-        ).length || 3,
-      totalProducts: products.length || 12,
-      averageRating:
-        products.length > 0
-          ? products.reduce((sum, product) => sum + product.rating, 0) / products.length
-          : 4.7,
+        ).length,
+      totalProducts: products.length,
+      averageRating: farmer?.rating ?? 0,
     };
   }
 

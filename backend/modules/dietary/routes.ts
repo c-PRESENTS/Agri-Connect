@@ -2,6 +2,8 @@ import type { Express, Request, Response } from "express";
 import { storage } from "../../storage";
 import { sellerVerificationRepository } from "../../repositories/seller-verification-repository";
 import { audit } from "../../audit";
+import { authStorage } from "../../auth/storage";
+import { configuredCatalogOwnerEmail } from "../../catalog/catalog-owner";
 
 export interface DietaryProductItem {
   id: string;
@@ -14,7 +16,7 @@ export interface DietaryProductItem {
   availableForCart?: boolean;
 }
 
-async function addDietaryProductsToCart(userId: string, productIds: string[]) {
+async function addDietaryProductsToCart(userId: string, productIds: string[], sellerId: string) {
   const addedProductIds: string[] = [];
   const unavailableItems: { productId: string; reason: string }[] = [];
 
@@ -22,6 +24,10 @@ async function addDietaryProductsToCart(userId: string, productIds: string[]) {
     const product = await storage.getProduct(productId);
     if (!product) {
       unavailableItems.push({ productId, reason: "Product not found" });
+      continue;
+    }
+    if (product.farmerId !== sellerId) {
+      unavailableItems.push({ productId, reason: "Product does not belong to this dietary-plan seller" });
       continue;
     }
     if ((product.publicationStatus ?? "published") !== "published" || product.stock < 1) {
@@ -118,9 +124,6 @@ export interface DietaryPlanData {
 // Master plans configuration mapped to database products & nutritional breakdown
 const SUBCATEGORY_PLAN_TEMPLATES: Record<string, {
   title: string;
-  sellerName: string;
-  sellerBio: string;
-  tags: string[];
   totalCalories: number;
   meals: {
     id: string;
@@ -139,9 +142,6 @@ const SUBCATEGORY_PLAN_TEMPLATES: Record<string, {
 }> = {
   keto: {
     title: "Rorz's Keto Day Plan",
-    sellerName: "Aura Organic Foods",
-    sellerBio: "Aura Organic Foods provides customised keto meal plans with 100% organic, farm-fresh ingredients sourced directly from trusted local farmers.",
-    tags: ["Keto Expert", "📍 Essex, UK", "🛍 Farm Fresh Ingredients"],
     totalCalories: 2394,
     meals: [
       {
@@ -244,9 +244,6 @@ const SUBCATEGORY_PLAN_TEMPLATES: Record<string, {
   },
   "high-protein": {
     title: "Pro-Athlete High-Protein Power Plan",
-    sellerName: "BioFit Farm Nutrition",
-    sellerBio: "BioFit Farm Nutrition delivers pasture-raised lean proteins and micro-filtered cold-pressed farm supplements designed for peak athletic recovery.",
-    tags: ["High Protein", "📍 Yorkshire, UK", "💪 Certified Bio-Grade"],
     totalCalories: 2750,
     meals: [
       {
@@ -360,10 +357,19 @@ export function registerDietaryRoutes(
     const template = SUBCATEGORY_PLAN_TEMPLATES[subcat] || SUBCATEGORY_PLAN_TEMPLATES.keto;
 
     try {
-      // 1. Fetch real products from storage/database
+      // Resolve the canonical MVP seller by email; never infer ownership from a
+      // hardcoded UUID or from a product snapshot.
+      const seller = await authStorage.getUserByEmail(configuredCatalogOwnerEmail());
+      if (!seller || seller.accountStatus !== "active" || (seller.role !== "farmer" && !seller.sellerEnabled)) {
+        return res.status(503).json({ error: "The configured dietary-plan seller is unavailable" });
+      }
+      const sellerId = seller.id;
+
+      // 1. Fetch real products owned by the configured seller from storage/database.
       const allDbProducts = await storage.getProducts({ categoryId: "dietary", inStock: true });
       const cartEligibleProducts = allDbProducts.filter(
         (product) =>
+          product.farmerId === sellerId &&
           (product.publicationStatus ?? "published") === "published" &&
           (product.currency ?? "GBP") === "GBP",
       );
@@ -374,30 +380,25 @@ export function registerDietaryRoutes(
         ? subcategoryProducts
         : cartEligibleProducts;
 
-      // 2. Determine seller verification from database
-      // Try looking up real seller case in seller verification repository
-      let isVerified = false;
+      // 2. Determine seller verification and seller-facing statistics from database.
+      const verificationCase = await sellerVerificationRepository.getCase(sellerId);
+      const verificationExpired = Boolean(
+        verificationCase?.expiresAt && verificationCase.expiresAt <= new Date(),
+      );
+      const isVerified = verificationCase?.status === "verified" && !verificationExpired;
       let verificationStatus: "verified" | "unverified" | "pending" = "unverified";
       let verificationLabel = "Unverified Seller";
-      let sellerId = "seller-aura-organic-1";
-
-      try {
-        // Query the seller verification repository
-        const verificationCase = await sellerVerificationRepository.getCase(sellerId);
-        if (verificationCase && verificationCase.status === "approved") {
-          isVerified = true;
-          verificationStatus = "verified";
-          verificationLabel = "Verified Seller";
-        } else if (verificationCase && verificationCase.status === "in_review") {
-          verificationStatus = "pending";
-          verificationLabel = "Verification Pending";
-        }
-      } catch {
-        // Fallback: unverified
-        isVerified = false;
-        verificationStatus = "unverified";
-        verificationLabel = "Unverified Seller";
+      if (isVerified) {
+        verificationStatus = "verified";
+        verificationLabel = "Verified Seller";
+      } else if (["in_progress", "pending_review", "needs_information"].includes(verificationCase?.status ?? "")) {
+        verificationStatus = "pending";
+        verificationLabel = "Verification Pending";
       }
+      const sellerOrders = await storage.getSellerOrders(sellerId);
+      const ordersDelivered = sellerOrders.filter((order) =>
+        ["delivered", "completed"].includes(String(order.status).toLowerCase()),
+      ).length;
 
       // 3. Map real database products & calculate prices dynamically
       let totalProductsCost = 0;
@@ -461,19 +462,23 @@ export function registerDietaryRoutes(
         totalCalories: template.totalCalories,
         seller: {
           id: sellerId,
-          name: template.sellerName,
-          logo: "/category-logos/daily-needs.svg",
+          name: seller.name || [seller.firstName, seller.lastName].filter(Boolean).join(" ") || "Unnamed seller",
+          logo: seller.avatar || seller.profileImageUrl || "/category-logos/daily-needs.svg",
           verified: isVerified,
           verificationStatus: verificationStatus,
           verificationLabel: verificationLabel,
-          rating: 4.8,
-          reviewCount: 38,
+          rating: Number.isFinite(seller.rating) ? Number(seller.rating) : 0,
+          reviewCount: Number.isFinite(seller.reviewCount) ? Number(seller.reviewCount) : 0,
           activeDietPlans: Object.keys(SUBCATEGORY_PLAN_TEMPLATES).length,
-          ordersDelivered: 142,
-          tags: template.tags,
-          bio: template.sellerBio,
-          farmerPhoto: "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=500&auto=format&fit=crop&q=80",
-          storeUrl: "/sellers",
+          ordersDelivered,
+          tags: [
+            subcat === "high-protein" ? "High Protein" : "Keto Nutrition",
+            seller.location ? `📍 ${seller.location}` : "Location not provided",
+            "Farm Fresh Ingredients",
+          ],
+          bio: `Products in this dietary plan are supplied by ${seller.name || "the verified marketplace seller"}.`,
+          farmerPhoto: seller.avatar || seller.profileImageUrl || fallbackProductPool[0]?.images?.[0] || "",
+          storeUrl: `/sellers/${encodeURIComponent(sellerId)}`,
         },
         meals: dynamicMeals,
         nutritionDashboard: template.nutritionDashboard,
@@ -508,6 +513,10 @@ export function registerDietaryRoutes(
       deps.touchGuestSession(req);
       await deps.mergeGuestCartIfNeeded(req);
       const userIdOrSession = deps.getUserIdOrSession(req);
+      const seller = await authStorage.getUserByEmail(configuredCatalogOwnerEmail());
+      if (!seller || seller.accountStatus !== "active") {
+        return res.status(503).json({ error: "The configured dietary-plan seller is unavailable" });
+      }
       const productIds = Array.isArray(products)
         ? products.map((item: any) => typeof item?.id === "string" ? item.id : "").filter(Boolean)
         : [];
@@ -515,7 +524,7 @@ export function registerDietaryRoutes(
         return res.status(400).json({ error: "This bundle has no available products" });
       }
 
-      const result = await addDietaryProductsToCart(userIdOrSession, productIds);
+      const result = await addDietaryProductsToCart(userIdOrSession, productIds, seller.id);
       if (result.addedProductIds.length === 0) {
         return res.status(409).json({
           error: "The products in this bundle are currently unavailable",
@@ -543,6 +552,10 @@ export function registerDietaryRoutes(
       deps.touchGuestSession(req);
       await deps.mergeGuestCartIfNeeded(req);
       const userIdOrSession = deps.getUserIdOrSession(req);
+      const seller = await authStorage.getUserByEmail(configuredCatalogOwnerEmail());
+      if (!seller || seller.accountStatus !== "active") {
+        return res.status(503).json({ error: "The configured dietary-plan seller is unavailable" });
+      }
       const requestedIds = Array.isArray(req.body?.productIds)
         ? req.body.productIds.filter((id: unknown): id is string => typeof id === "string" && id.length > 0)
         : [];
@@ -554,13 +567,15 @@ export function registerDietaryRoutes(
           subcategoryId: subcat,
           inStock: true,
         });
-        const fallbackProducts = subcategoryProducts.length > 0
-          ? subcategoryProducts
-          : await storage.getProducts({ categoryId: "dietary", inStock: true });
+        const ownedSubcategoryProducts = subcategoryProducts.filter((product) => product.farmerId === seller.id);
+        const fallbackProducts = ownedSubcategoryProducts.length > 0
+          ? ownedSubcategoryProducts
+          : (await storage.getProducts({ categoryId: "dietary", inStock: true }))
+              .filter((product) => product.farmerId === seller.id);
         productIds = fallbackProducts.map((product) => product.id);
       }
 
-      const result = await addDietaryProductsToCart(userIdOrSession, productIds);
+      const result = await addDietaryProductsToCart(userIdOrSession, productIds, seller.id);
       if (result.addedProductIds.length === 0) {
         return res.status(409).json({
           error: "No products from this plan are currently available",

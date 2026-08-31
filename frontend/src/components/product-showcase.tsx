@@ -15,7 +15,6 @@ import type { Product } from "@shared/schema";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { FavoriteProductButton } from "./favorite-product-button";
 import { useCurrency } from "@/contexts/currency-context";
-import { useLiveLocation } from "@/contexts/live-location-context";
 import { getSubSubcategories, type SubSubItem } from "@/lib/sub-subcategories";
 
 interface ProductShowcaseProps {
@@ -72,7 +71,6 @@ const SUBCATEGORY_ICONS: Record<string, string> = {
 interface CardProps {
   product: Product;
   idx: number;
-  cityName: string;
   isAdded: boolean;
   onAdd: (e: React.MouseEvent, product: Product) => void;
   onClick?: (product: Product) => void;
@@ -81,7 +79,6 @@ interface CardProps {
 const ShowcaseProductCard = memo(function ShowcaseProductCard({
   product,
   idx,
-  cityName,
   isAdded,
   onAdd,
   onClick,
@@ -104,20 +101,18 @@ const ShowcaseProductCard = memo(function ShowcaseProductCard({
   }, [format, originalPrice, product.currency]);
 
   const hasRealSeller = Boolean(
+    product.farmerId &&
     product.farmerName?.trim() &&
-    !product.farmerId?.startsWith("farmer-") &&
-    !product.farmerId?.startsWith("catalog-") &&
-    product.farmerName !== "Verified Seller" &&
-    product.farmerName !== "Green Fields Farm"
+    product.farmerIsVerified === true
   );
   const sellerTitle = hasRealSeller ? product.farmerName!.trim() : "";
-  const sellerLoc = product.farmerLocation || cityName;
+  const sellerLoc = product.farmerLocation || "Location not provided";
   const sellerDist = typeof product.distance === "number" ? product.distance : 0;
   const rating =
     typeof product.farmerRating === "number" && product.farmerRating > 0
       ? product.farmerRating
       : product.rating || 4.6;
-  const reviewCount = product.reviewCount || 70 + ((idx * 17) % 60);
+  const reviewCount = Number.isFinite(product.reviewCount) ? product.reviewCount : 0;
 
   return (
     <div
@@ -252,7 +247,6 @@ export function ProductShowcase({
   const { t } = useTranslation();
   const { data: publishedCategories = [] } = useCatalogCategories("buyer");
   const { format } = useCurrency();
-  const { location: liveLoc } = useLiveLocation();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
@@ -260,8 +254,6 @@ export function ProductShowcase({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [onlyOrganic, setOnlyOrganic] = useState(false);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
-
-  const cityName = liveLoc?.label || "Coimbatore, TN";
 
   useEffect(() => {
     setSelectedSubcategory(initialSubcategory || null);
@@ -352,11 +344,8 @@ export function ProductShowcase({
         .filter(
           (p) =>
             p.farmerId &&
-            !p.farmerId.startsWith("farmer-") &&
-            !p.farmerId.startsWith("catalog-") &&
             p.farmerName?.trim() &&
-            p.farmerName !== "Verified Seller" &&
-            p.farmerName !== "Green Fields Farm",
+            p.farmerIsVerified === true,
         )
         .map((p) => p.farmerId),
     );
@@ -655,7 +644,6 @@ export function ProductShowcase({
                   key={product.id}
                   product={product}
                   idx={idx}
-                  cityName={cityName}
                   isAdded={addedIds.has(product.id)}
                   onAdd={handleAdd}
                   onClick={onProductClick}
@@ -688,10 +676,10 @@ export function ProductShowcase({
             </div>
 
             <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
-              {freshPicks.map((item, idx) => {
+              {freshPicks.map((item) => {
                 const img = resolveProductImageForProduct(item);
-                const dist = (idx * 0.4 + 1.2).toFixed(1);
-                const rating = (4.5 + (idx % 4) * 0.1).toFixed(1);
+                const distance = Number(item.distance);
+                const rating = Number(item.rating);
 
                 return (
                   <div
@@ -719,10 +707,10 @@ export function ProductShowcase({
                         </span>
                       </p>
                       <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold mt-0.5">
-                        <span>{dist} km</span>
+                        <span>{Number.isFinite(distance) ? `${distance.toFixed(1)} km` : "Distance unavailable"}</span>
                         <span className="flex items-center gap-0.5 text-amber-500 font-bold">
                           <Star className="h-2.5 w-2.5 fill-amber-400" />
-                          {rating}
+                          {Number.isFinite(rating) ? rating.toFixed(1) : "0.0"}
                         </span>
                       </div>
                     </div>

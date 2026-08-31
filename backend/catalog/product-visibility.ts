@@ -7,15 +7,12 @@ export function sellerPublicEligibilitySql(sellerAlias = "u"): string {
   const seller = safeAlias(sellerAlias);
   return `
     ${seller}.account_status='active'
-    AND (
-      (${seller}.auth_method='catalog_seed' AND ${seller}.is_verified=true)
-      OR EXISTS (
-        SELECT 1
-        FROM seller_verification_cases public_verification
-        WHERE public_verification.seller_id=${seller}.id
-          AND public_verification.status='verified'
-          AND (public_verification.expires_at IS NULL OR public_verification.expires_at>now())
-      )
+    AND EXISTS (
+      SELECT 1
+      FROM seller_verification_cases public_verification
+      WHERE public_verification.seller_id=${seller}.id
+        AND public_verification.status='verified'
+        AND (public_verification.expires_at IS NULL OR public_verification.expires_at>now())
     )`;
 }
 

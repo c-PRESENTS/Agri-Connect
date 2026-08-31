@@ -554,11 +554,11 @@ export function AgriAnalyticsDashboard({ onNavigate }: { onNavigate: (section: A
                     <span className="text-[9px] font-bold text-lime-700">Highest daily harvest draw</span>
                   </div>
                   <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Metric Tonnes Moved</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Catalog Stock Units</span>
                     <p className="mt-0.5 text-lg font-black text-amber-950">
-                      {compact(chartData.reduce((s, d) => s + d.produceVolume, 0))} units
+                      {compact((data?.categoryYields ?? []).reduce((sum, category) => sum + category.totalStock, 0))} units
                     </p>
-                    <span className="text-[9px] font-bold text-amber-700">Estimated produce payload</span>
+                    <span className="text-[9px] font-bold text-amber-700">Current database inventory</span>
                   </div>
                 </div>
 

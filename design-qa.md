@@ -1,59 +1,60 @@
-**Design QA status**
+# Seller Storefront Compact Layout Design QA
 
-- Source visual truth: `C:\Users\harsh\AppData\Local\Temp\codex-clipboard-799f45a8-ff3c-4e75-9463-7884cc21c98c.png`
-- Implementation route: `http://localhost:5000/admin/control-centre`
-- Implementation evidence: `C:\Users\harsh\AppData\Local\Temp\agriconnect-admin-shell-no-overlap.png`
-- Combined comparison evidence: `C:\Users\harsh\AppData\Local\Temp\agriconnect-admin-overlap-comparison.png`
-- Source pixels: 387 x 1022
-- Implementation viewport: 1120 x 862 CSS pixels at device scale factor 1.25
-- State: the source is an authenticated Organisation Centre with overlapping global and organisation navigation; the available in-app browser is unauthenticated and redirected to the Organisation Portal sign-in page.
-
-**Findings**
-
-- [P0] The two navigation systems occupied the same viewport edge.
-  Location: shared `AppShell` surrounding `/admin/*` routes.
-  Evidence: the source shows the global AgriConnect icon rail covering the left portion of the Organisation sidebar and clipping its labels.
-  Impact: primary administration navigation is obscured and difficult to operate.
-  Fix applied: `/admin` and every `/admin/*` route now bypass the marketplace shell's global rail, market panel, and mobile navigation. Admin pages retain their own existing navigation and authentication shell.
-
-- [P0] Authenticated dashboard comparison remains unavailable.
-  Location: `/admin/control-centre`.
-  Evidence: the corrected shell capture shows a clean, unobstructed Organisation Portal sign-in page with no global rail, but the browser session cannot display the authenticated dashboard.
-  Impact: the exact post-fix Organisation sidebar and dashboard content cannot be compared in the same authenticated state as the source.
-  Fix: refresh the route in an authenticated Super Admin session and capture the dashboard.
-
-**Required fidelity surfaces**
-
-- Fonts and typography: the available admin sign-in state is unobstructed; authenticated dashboard typography remains blocked by the state mismatch.
-- Spacing and layout rhythm: the duplicate left rail is removed from the admin shell; authenticated dashboard spacing remains blocked.
-- Colors and visual tokens: the admin-owned background and card colors render without interference; dashboard comparison remains blocked.
-- Image quality and asset fidelity: no new image assets were introduced or changed.
-- Copy and content: no copy was changed; authenticated dashboard comparison remains blocked.
+- Source visual truth: `C:\Users\harsh\AppData\Local\Temp\codex-clipboard-321430ea-b3af-4091-86e3-ae74824de470.png`
+- Implementation route: `http://localhost:5000/sellers/{sellerId}`
+- Implementation screenshot: unavailable because the existing local application is not listening on port 5000.
+- Target viewport: 1441 x 967 pixel wide desktop capture.
+- Source dimensions: 1441 x 967 pixels.
+- Implementation dimensions: unavailable.
+- CSS viewport and density normalization: unavailable because no browser-rendered implementation could be captured.
+- State: light theme, owner storefront, verified seller, 1,636 public products, zero reviews, owner actions visible, Available Produce selected, and Mumbai store map visible.
 
 **Full-view comparison evidence**
 
-The source and post-fix capture were placed together in the combined comparison evidence. It confirms that the shared marketplace rail is no longer rendered on an `/admin/*` route. The captures do not represent the same authentication state, so no broader dashboard-fidelity claim is made.
+- The source image was opened at original resolution. It shows a narrow centered storefront rail surrounded by large unused horizontal gutters, a tall profile hero, three product columns, and a 360px map rail.
+- A post-change browser capture could not be obtained, so no valid same-viewport full-view comparison is available.
 
 **Focused region comparison evidence**
 
-The left viewport edge was checked in the implementation capture: the global icon rail is absent and the admin-owned surface begins at the viewport edge. An authenticated Organisation sidebar capture is still required for final confirmation.
+- Source regions inspected: breadcrumb and Seller Hub action, seller avatar and identity, verification and owner badges, favorite and listing controls, product tabs, product-card grid, Store Location header, map, and nearby-products panel.
+- A focused post-change comparison was not possible because the local application is unavailable.
 
-**Primary interactions and console**
+**Findings**
 
-- Direct navigation to `/admin/control-centre` correctly preserves the protected-route redirect to `/admin/sign-in` when unauthenticated.
-- The redirected admin page renders without the global rail or market panel.
-- Browser console errors checked: none.
+- [P1] Post-change rendered evidence is unavailable.
+  - Location: `/sellers/{sellerId}`, owner storefront state.
+  - Evidence: no process is listening on port 5000.
+  - Impact: exact wide-screen balance, four- and five-column product-card wrapping, map height, sticky sidebar behavior, responsive stacking, and interaction states cannot be visually accepted.
+  - Fix: restart the existing local development server, capture the same seller at 1441 x 967, and compare it with the source image.
+
+**Required fidelity surfaces**
+
+- Fonts and typography: existing font family, weights, sizes, truncation, price hierarchy, badges, and small metadata remain unchanged; only layout chrome has been tightened. Rendered fidelity remains unverified.
+- Spacing and layout rhythm: centered `max-w-7xl` ceilings were removed from the breadcrumb, hero, and main workspace; outer gutters, hero padding, action heights, tab height, section gaps, card gaps, empty state, and map panel were reduced.
+- Colors and visual tokens: existing emerald, amber, slate, card, border, background, verification, owner, gradient, and dark-mode tokens are preserved.
+- Image quality and asset fidelity: all real seller avatars, product images, fallback image resolution, map tiles, and map markers remain supplied by their existing components and data sources; no image was replaced or approximated.
+- Copy and content: seller data, counts, prices, locations, listings, tabs, favorite state, add-listing behavior, product navigation, cart behavior, owner controls, and map content remain unchanged.
 
 **Comparison history**
 
-1. Source capture: P0 overlap between the global app rail and fixed Organisation sidebar.
-2. Fix: classified all `/admin` routes as admin-owned shell routes in `frontend/src/app/shell.tsx`.
-3. Post-fix capture: no global rail or horizontal overlap on the reachable admin sign-in state; authenticated dashboard verification remains blocked.
+- Initial source review found large unused side gutters, a tall breadcrumb and hero stack, only three product columns, generous grid gaps, non-compact product cards, and an oversized location map relative to the product workspace.
+- Implemented fixes: expanded the layout to the available viewport; tightened breadcrumb, hero, avatar, actions, tabs, empty state, and section rhythm; enabled the existing compact ProductCard treatment; increased the grid to four columns at `xl` and five at `2xl`; narrowed and shortened the map rail; and made the location panel sticky on desktop.
+- Post-fix visual evidence: blocked because the local application is not listening on port 5000.
 
 **Implementation checklist**
 
-- Refresh the authenticated Organisation Centre.
-- Confirm the Organisation sidebar is the only left navigation surface.
-- Recheck sidebar collapse/expand and dashboard width at the same state.
+- [x] Use the full seller-storefront workspace instead of a centered maximum-width rail.
+- [x] Compact the breadcrumb, seller hero, avatar, and action controls.
+- [x] Increase product density with responsive four- and five-column layouts.
+- [x] Reuse the existing compact ProductCard variant without changing product behavior.
+- [x] Reduce and pin the desktop Store Location panel while preserving map and empty-coordinate states.
+- [x] Preserve seller API data, owner permissions, favorites, listing navigation, cart actions, tabs, and test IDs.
+- [x] Validate the updated TSX source transform.
+- [ ] Capture and compare the owner storefront at the source viewport.
+- [ ] Exercise Favorite, Add Listing, product navigation, Add to Cart, Store & Farm Details, map behavior, responsive layouts, and browser console errors.
+
+**Follow-up polish**
+
+- Reassess product-card title wrapping and the 20rem map rail at the exact browser zoom used for the source capture.
 
 final result: blocked

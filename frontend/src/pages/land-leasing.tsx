@@ -36,7 +36,7 @@ import { Landmark, FileText, Users, Award, ExternalLink, Calendar, CreditCard, A
 import { useCurrency } from "@/contexts/currency-context";
 
 const landTabClass =
-  "gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-base font-black text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-amber-500/60 uppercase tracking-wide";
+  "gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm font-black text-emerald-800 transition-colors hover:bg-emerald-100 hover:text-emerald-950 data-[state=active]:bg-amber-400 data-[state=active]:text-amber-950 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-amber-500/60 uppercase tracking-wide";
 
 const landTypeIcons: Record<string, typeof Wheat> = {
   agricultural: Wheat,
@@ -122,62 +122,62 @@ export default function LandLeasingPage() {
     return (
       <Card 
         key={land.id} 
-        className="hover-elevate cursor-pointer border-2 border-border/80 rounded-2xl shadow-md hover:shadow-xl transition-all"
+        className="hover-elevate cursor-pointer border border-border/80 rounded-xl shadow-sm hover:shadow-md transition-all"
         onClick={() => setSelectedLand(land)}
         data-testid={`card-land-${land.id}`}
       >
-        <CardContent className="p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-xl ${landTypeColors[land.type]}`}>
-                <TypeIcon className="w-6 h-6" />
+        <CardContent className="p-3.5 sm:p-4">
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className={`p-2 rounded-lg ${landTypeColors[land.type]}`}>
+                <TypeIcon className="w-4 h-4" />
               </div>
-              <div>
-                <h3 className="font-black text-base sm:text-lg text-foreground line-clamp-1">{land.title}</h3>
-                <div className="flex items-center gap-1.5 text-sm font-bold text-muted-foreground mt-0.5">
-                  <MapPin className="w-4 h-4" />
-                  <span>{land.location}</span>
+              <div className="min-w-0">
+                <h3 className="font-black text-sm text-foreground truncate">{land.title}</h3>
+                <div className="flex items-center gap-1 text-xs font-bold text-muted-foreground mt-0.5">
+                  <MapPin className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{land.location}</span>
                 </div>
               </div>
             </div>
             {land.isVerified && (
-              <Badge variant="secondary" className="text-sm font-black px-3 py-1 rounded-lg">
-                <Check className="w-4 h-4 mr-1.5" />
+              <Badge variant="secondary" className="shrink-0 text-xs font-black px-2 py-0.5 rounded-md">
+                <Check className="w-3 h-3 mr-1" />
                 Verified
               </Badge>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-4 text-sm font-bold">
-            <div className="flex items-center gap-2">
-              <TreePine className="w-4 h-4 text-muted-foreground" />
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2 mb-3 text-xs font-bold">
+            <div className="flex items-center gap-1.5">
+              <TreePine className="w-3.5 h-3.5 text-muted-foreground" />
               <span>{land.area} {land.areaUnit}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground">Soil:</span>
-              <span className="font-black">{land.soilType}</span>
+              <span className="font-black truncate">{land.soilType}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Droplets className="w-4 h-4 text-blue-500" />
+            <div className="flex items-center gap-1.5">
+              <Droplets className="w-3.5 h-3.5 text-blue-500" />
               <span>{land.waterSources.length > 0 ? "Water Available" : "No Water"}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-yellow-500" />
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-yellow-500" />
               <span>{land.infrastructure.includes("Electricity") ? "Power" : "No Power"}</span>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-border/40">
-            <div>
-              <span className="text-xl sm:text-2xl font-black text-primary">
+          <div className="flex flex-wrap items-end justify-between gap-2 pt-2 border-t border-border/40">
+            <div className="flex flex-wrap items-baseline">
+              <span className="text-lg font-black text-primary">
                 {format(land.rentPerMonth, { includeCode: true })}
               </span>
-              <span className="text-sm font-bold text-muted-foreground ml-1">/month/acre</span>
+              <span className="text-xs font-bold text-muted-foreground ml-1">/month/acre</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-              <span className="text-base font-black">{land.rating}</span>
-              <span className="text-sm font-bold text-muted-foreground">({land.reviewCount})</span>
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-sm font-black">{land.rating}</span>
+              <span className="text-xs font-bold text-muted-foreground">({land.reviewCount})</span>
             </div>
           </div>
         </CardContent>
@@ -340,33 +340,33 @@ export default function LandLeasingPage() {
     <div className="min-h-screen bg-background">
       <TopNavigation />
       <SplitMapLayout mapProps={{ title: "Sellers near these plots", subtitle: "Live farmer activity in the area" }}>
-      <div className="p-5 sm:p-8 max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+      <div className="w-full p-3 sm:p-4 lg:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight">{t("land_leasing.title", "Land Leasing Marketplace")}</h1>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight">{t("land_leasing.title", "Land Leasing Marketplace")}</h1>
               <ComingSoonBadge />
             </div>
-            <p className="text-base sm:text-lg font-bold text-foreground/80 mt-2">{t("land_leasing.subtitle", "Find and lease agricultural land across the UK")}</p>
+            <p className="text-sm sm:text-base font-bold text-foreground/80 mt-1">{t("land_leasing.subtitle", "Find and lease agricultural land across the UK")}</p>
           </div>
-          <Button disabled title="Land posting is not available yet" className="h-12 px-6 text-sm sm:text-base font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-lg rounded-xl" data-testid="button-post-land">
+          <Button disabled title="Land posting is not available yet" className="h-9 self-start px-4 text-xs sm:text-sm font-black uppercase tracking-wider bg-amber-400 hover:bg-amber-500 text-black shadow-sm rounded-lg" data-testid="button-post-land">
             {t("land_leasing.post_land", "Post Your Land")}
           </Button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4 mb-8">
+        <div className="flex flex-col md:flex-row gap-2.5 mb-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t("land_leasing.search_placeholder", "Search by location or title...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 text-base font-bold rounded-xl border-2"
+              className="pl-10 h-10 text-sm font-bold rounded-lg border"
               data-testid="input-search-land"
             />
           </div>
           <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger className="w-full lg:w-56 h-12 text-base font-black rounded-xl border-2" data-testid="select-land-type">
+            <SelectTrigger className="w-full md:w-48 h-10 text-sm font-black rounded-lg border" data-testid="select-land-type">
               <SelectValue placeholder="Land Type" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-2">
@@ -381,18 +381,18 @@ export default function LandLeasingPage() {
           <Button 
             variant="outline" 
             onClick={() => setShowFilters(!showFilters)}
-            className="h-12 px-6 text-base font-black rounded-xl border-2"
+            className="h-10 px-4 text-sm font-black rounded-lg border"
             data-testid="button-toggle-filters"
           >
-            <Filter className="w-5 h-5 mr-2" />
+            <Filter className="w-4 h-4 mr-1.5" />
             {t("land_leasing.filters", "Filters")}
           </Button>
         </div>
 
         {showFilters && (
-          <Card className="mb-8 border-2 rounded-2xl shadow-md">
-            <CardContent className="p-5 sm:p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="mb-4 border rounded-xl shadow-sm">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <div>
                   <label className="text-sm sm:text-base font-black mb-2 block text-foreground uppercase tracking-wider">
                     Price Range ({currency}/month)
@@ -478,41 +478,41 @@ export default function LandLeasingPage() {
           </Card>
         )}
 
-        <Tabs defaultValue="lease" className="space-y-6 mb-8">
-          <TabsList className="h-auto flex-wrap gap-2 border-2 border-emerald-300 bg-emerald-50/90 p-2 rounded-2xl shadow-sm">
+        <Tabs defaultValue="lease" className="space-y-4 mb-4">
+          <TabsList className="h-auto flex-wrap gap-1 border border-emerald-300 bg-emerald-50/90 p-1.5 rounded-xl shadow-sm">
             <TabsTrigger value="lease" className={landTabClass} data-testid="tab-lease">
-              <MapPin className="h-5 w-5" />
+              <MapPin className="h-4 w-4" />
               Lease
             </TabsTrigger>
             <TabsTrigger value="sale" className={landTabClass} data-testid="tab-sale">
-              <CreditCard className="h-5 w-5" />
+              <CreditCard className="h-4 w-4" />
               For Sale
             </TabsTrigger>
             <TabsTrigger value="investment" className={landTabClass} data-testid="tab-investment">
-              <Activity className="h-5 w-5" />
+              <Activity className="h-4 w-4" />
               Investment
             </TabsTrigger>
             <TabsTrigger value="community" className={landTabClass} data-testid="tab-community">
-              <Users className="h-5 w-5" />
+              <Users className="h-4 w-4" />
               Community
             </TabsTrigger>
             <TabsTrigger value="government" className={landTabClass} data-testid="tab-government">
-              <Landmark className="h-5 w-5" />
+              <Landmark className="h-4 w-4" />
               Gov. Programs
             </TabsTrigger>
             <TabsTrigger value="my-leases" className={landTabClass} data-testid="tab-my-leases">
-              <Calendar className="h-5 w-5" />
+              <Calendar className="h-4 w-4" />
               My Leases
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="lease">
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-base font-bold text-foreground/80">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-bold text-foreground/80">
                 {filteredListings.length} land listings available to lease
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
               {filteredListings.map(renderLandCard)}
             </div>
             {filteredListings.length === 0 && (

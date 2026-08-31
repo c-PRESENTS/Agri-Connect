@@ -35,7 +35,6 @@ import { useLocation, useSearch } from "wouter";
 
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { distanceKm, isWithinRadius } from "@/lib/nearby-distance";
-import { isSellerOnline } from "@/lib/seller-presence";
 import { getPublicLocationLabel, hasValidPublicCoordinates } from "@/lib/public-map-location";
 import type { Product, LocalNeed } from "@shared/schema";
 import { FavoriteProductButton } from "@/components/favorite-product-button";
@@ -448,7 +447,7 @@ export default function SmartMapPage() {
         avatar: product.farmerAvatar || "",
         latitude: product.farmerLatitude,
         longitude: product.farmerLongitude,
-        isOnline: isSellerOnline(product.farmerId),
+        isOnline: product.farmerIsOnline === true,
         productCount: 1,
         rating: Number.isFinite(product.farmerRating) ? product.farmerRating : 0,
         products: [product.name],

@@ -17,8 +17,7 @@ export async function sellerCapabilities(sellerId: string): Promise<SellerVerifi
   const verificationCase = await sellerVerificationRepository.getCase(sellerId);
   const seller = await authStorage.getUser(sellerId);
   if (!seller || seller.accountStatus !== "active") return restricted;
-  const verifiedCatalogSeed = seller?.authMethod === "catalog_seed" && seller.isVerified === true;
-  if (!verifiedCatalogSeed && (verificationCase?.status !== "verified" || (verificationCase.expiresAt && verificationCase.expiresAt <= new Date()))) {
+  if (verificationCase?.status !== "verified" || (verificationCase.expiresAt && verificationCase.expiresAt <= new Date())) {
     return restricted;
   }
   const accounts = await paymentOperationsRepository.listSellerPaymentAccounts(sellerId);

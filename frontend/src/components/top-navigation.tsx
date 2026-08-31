@@ -582,10 +582,6 @@ export function TopNavigation({ cartItemCount, searchValue, onSearch, onHome }: 
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-1.5 bg-border/80" />
-              <DropdownMenuItem onClick={handleToggleAccountMode} className="font-bold py-2.5 rounded-xl text-emerald-700 dark:text-emerald-400 cursor-pointer">
-                <RefreshCw className="mr-2.5 h-4.5 w-4.5" />
-                {isSellerMode ? "Switch to Buyer Account" : "Switch to Seller Account"}
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLocation("/my-profile")} data-testid="menu-item-my-profile" className="font-bold py-2.5 rounded-xl">
                 <User className="mr-2.5 h-4.5 w-4.5 text-primary" />
                 My Profile

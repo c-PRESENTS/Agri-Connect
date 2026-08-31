@@ -250,7 +250,11 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <form onSubmit={handleSubmit} className="relative flex items-center w-full">
+      <form
+        onSubmit={handleSubmit}
+        role="search"
+        className="flex h-11 w-full items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-2xs transition-[border-color,box-shadow] focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 dark:border-border/80 dark:bg-card"
+      >
         <Input
           ref={inputRef}
           type="search"
@@ -258,14 +262,15 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
           value={inputVal}
           onChange={handleChange}
           onFocus={() => setOpen(true)}
-          className="pl-4.5 pr-26 h-11 text-xs sm:text-sm font-bold bg-white dark:bg-card border border-slate-200 dark:border-border/80 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 transition-all rounded-xl w-full placeholder:text-slate-400/90"
+          className="h-full min-w-0 w-auto flex-1 appearance-none rounded-lg border-0 bg-transparent px-3 py-0 text-xs font-bold shadow-none outline-none ring-0 placeholder:text-slate-400/90 focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-sm [&::-webkit-search-cancel-button]:hidden"
           data-testid="input-search"
         />
         {inputVal && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-24 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1.5"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40 dark:hover:bg-muted"
+            aria-label="Clear search"
             data-testid="button-search-clear"
           >
             <X className="h-4.5 w-4.5" />
@@ -273,7 +278,7 @@ export function SearchAutocomplete({ value, onChange, onSearch }: SearchAutocomp
         )}
         <button
           type="submit"
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-emerald-800 hover:bg-emerald-900 text-white text-xs sm:text-sm font-black px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+          className="flex h-9 min-w-[84px] shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-emerald-800 px-3.5 text-xs font-black leading-none text-white shadow-2xs transition-[background-color,box-shadow] hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/50 focus-visible:ring-offset-1 active:bg-emerald-950 sm:text-sm"
           data-testid="button-search-submit"
         >
           <Search className="h-4 w-4 stroke-[2.5]" />

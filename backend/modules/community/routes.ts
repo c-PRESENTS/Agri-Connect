@@ -114,6 +114,16 @@ export function registerLocalNeedsRoutes(app: Express): void {
 }
 
 export function registerShareCareRoutes(app: Express): void {
+  app.get("/api/share-care/summary", async (req, res) => {
+    try {
+      res.set("Cache-Control", "private, no-store");
+      res.json(await shareCareRepository.summary(req.session.userId));
+    } catch (error) {
+      console.error("Failed to load Share & Care summary:", error);
+      res.status(500).json({ error: "Failed to fetch Share & Care summary" });
+    }
+  });
+
   app.get("/api/share-care", async (req, res) => {
     try {
       const parsedStatus = typeof req.query.status === "string"

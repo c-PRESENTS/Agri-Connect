@@ -25,18 +25,18 @@ export default function FavoritesPage() {
   return (
     <div>
       <TopNavigation />
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+      <main className="w-full px-3 py-3 sm:px-5 sm:py-4 lg:px-6">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <Heart className="h-6 w-6 fill-red-500 text-red-500" />
-              <h1 className="text-2xl font-bold" data-testid="heading-favorites">Favorites</h1>
+              <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+              <h1 className="text-xl font-bold sm:text-2xl" data-testid="heading-favorites">Favorites</h1>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
               Saved products and sellers for your signed-in account on this device.
             </p>
           </div>
-          <Button variant="outline" onClick={() => setLocation("/")} data-testid="button-browse-products">
+          <Button variant="outline" size="sm" onClick={() => setLocation("/")} data-testid="button-browse-products">
             Browse products
           </Button>
         </div>
@@ -59,26 +59,26 @@ export default function FavoritesPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-5">
             {sellerIds.length > 0 && (
               <section aria-labelledby="favorite-sellers-heading">
-                <div className="mb-3 flex items-center gap-2">
-                  <Store className="h-5 w-5 text-primary" />
-                  <h2 id="favorite-sellers-heading" className="text-lg font-semibold">Favorite sellers</h2>
+                <div className="mb-2 flex items-center gap-2">
+                  <Store className="h-4 w-4 text-primary" />
+                  <h2 id="favorite-sellers-heading" className="text-base font-semibold">Favorite sellers</h2>
                 </div>
                 {favoriteSellers.length > 0 ? (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2.5">
                     {favoriteSellers.map((seller) => (
                       <Card key={seller.farmerId} data-testid={`favorite-seller-${seller.farmerId}`}>
-                        <CardContent className="flex items-center gap-3 p-4">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                            <Store className="h-5 w-5" />
+                        <CardContent className="flex items-center gap-2.5 p-3">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <Store className="h-4 w-4" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <Link href={`/sellers/${seller.farmerId}`} className="font-semibold hover:text-primary hover:underline">
                               {seller.farmerName}
                             </Link>
-                            <p className="truncate text-sm text-muted-foreground">{seller.farmerLocation || "Location not specified"}</p>
+                            <p className="truncate text-xs text-muted-foreground">{seller.farmerLocation || "Location not specified"}</p>
                           </div>
                           <Button
                             variant="ghost"
@@ -103,16 +103,17 @@ export default function FavoritesPage() {
 
             {productIds.length > 0 && (
               <section aria-labelledby="favorite-products-heading">
-                <div className="mb-3 flex items-center gap-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  <h2 id="favorite-products-heading" className="text-lg font-semibold">Favorite products</h2>
+                <div className="mb-2 flex items-center gap-2">
+                  <Package className="h-4 w-4 text-primary" />
+                  <h2 id="favorite-products-heading" className="text-base font-semibold">Favorite products</h2>
                 </div>
                 {favoriteProducts.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:gap-3">
                     {favoriteProducts.map((product) => (
                       <ProductCard
                         key={product.id}
                         product={product}
+                        compact
                         onClick={(selectedProduct) => setLocation(`/products/${selectedProduct.id}`)}
                       />
                     ))}

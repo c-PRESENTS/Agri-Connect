@@ -112,143 +112,6 @@ export interface DietaryPlanData {
   };
 }
 
-const STATIC_PLAN: DietaryPlanData = {
-  id: "rorz-keto-day-plan",
-  subcategory: "keto",
-  title: "Rorz's Keto Day Plan",
-  totalCalories: 2394,
-  seller: {
-    id: "seller-aura-organic-1",
-    name: "Aura Organic Foods",
-    logo: "/category-logos/daily-needs.svg",
-    verified: false,
-    verificationStatus: "unverified",
-    verificationLabel: "Unverified Seller",
-    rating: 4.8,
-    reviewCount: 38,
-    activeDietPlans: 12,
-    ordersDelivered: 142,
-    tags: ["Keto Expert", "📍 Essex, UK", "🛍 Farm Fresh Ingredients"],
-    bio: "Aura Organic Foods provides customised keto meal plans with 100% organic, farm-fresh ingredients sourced directly from trusted local farmers.",
-    farmerPhoto: "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=500&auto=format&fit=crop&q=80",
-    storeUrl: "/sellers",
-  },
-  meals: [
-    {
-      id: "meal-1-breakfast",
-      time: "7:30 AM",
-      mealType: "BREAKFAST",
-      title: "Chicken & Avocado Bowl",
-      calories: 540,
-      image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=80",
-      iconType: "sun",
-      nutrition: { protein: 46, fat: 36, carbs: 8, fibre: 7, netCarbs: 4 },
-      products: [
-        { id: "p-chk-1", name: "Chicken Breast", qty: 250, unit: "g", price: 4.50, formattedPrice: "£4.50" },
-        { id: "p-avo-1", name: "Hass Avocado", qty: 2, unit: "pcs", price: 2.80, formattedPrice: "£2.80" },
-        { id: "p-oil-1", name: "Olive Oil (Extra Virgin)", qty: 20, unit: "ml", price: 0.50, formattedPrice: "£0.50" },
-        { id: "p-lem-1", name: "Lemon", qty: 1, unit: "pcs", price: 0.30, formattedPrice: "£0.30" },
-      ],
-      bundlePrice: 8.10,
-      bundlePriceFormatted: "£8.10",
-    },
-    {
-      id: "meal-2-morning-snack",
-      time: "10:30 AM",
-      mealType: "MORNING SNACK",
-      title: "Protein Shake & Kiwi",
-      calories: 220,
-      image: "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=400&auto=format&fit=crop&q=80",
-      iconType: "snack",
-      nutrition: { protein: 25, fat: 6, carbs: 6, fibre: 3, netCarbs: 3 },
-      products: [
-        { id: "p-pro-1", name: "Whey Protein (Unflavoured)", qty: 1, unit: "scoop", price: 1.20, formattedPrice: "£1.20" },
-        { id: "p-kiwi-1", name: "Kiwi", qty: 1, unit: "pcs", price: 0.40, formattedPrice: "£0.40" },
-        { id: "p-mlk-1", name: "Almond Milk (Unsweetened)", qty: 200, unit: "ml", price: 0.40, formattedPrice: "£0.40" },
-      ],
-      bundlePrice: 2.00,
-      bundlePriceFormatted: "£2.00",
-    },
-    {
-      id: "meal-3-lunch",
-      time: "1:00 PM",
-      mealType: "LUNCH",
-      title: "Steak & Eggs",
-      calories: 580,
-      image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&auto=format&fit=crop&q=80",
-      iconType: "lunch",
-      nutrition: { protein: 40, fat: 42, carbs: 5, fibre: 2, netCarbs: 3 },
-      products: [
-        { id: "p-stk-1", name: "Lean Rump Steak", qty: 400, unit: "g", price: 7.90, formattedPrice: "£7.90" },
-        { id: "p-egg-1", name: "Farm Fresh Eggs", qty: 4, unit: "pcs", price: 1.20, formattedPrice: "£1.20" },
-        { id: "p-but-1", name: "Butter (Grass Fed)", qty: 10, unit: "g", price: 0.30, formattedPrice: "£0.30" },
-        { id: "p-grn-1", name: "Mixed Leaf Greens", qty: 50, unit: "g", price: 0.60, formattedPrice: "£0.60" },
-      ],
-      bundlePrice: 10.00,
-      bundlePriceFormatted: "£10.00",
-    },
-    {
-      id: "meal-4-evening-snack",
-      time: "4:30 PM",
-      mealType: "EVENING SNACK",
-      title: "Matcha Green Tea",
-      calories: 120,
-      image: "https://images.unsplash.com/photo-1536256263959-770b48d82b0a?w=400&auto=format&fit=crop&q=80",
-      iconType: "tea",
-      nutrition: { protein: 4, fat: 2, carbs: 2, fibre: 1, netCarbs: 1 },
-      products: [
-        { id: "p-tea-1", name: "Matcha Green Tea Powder", qty: 1, unit: "tsp", price: 0.80, formattedPrice: "£0.80" },
-        { id: "p-alm-1", name: "Almonds", qty: 10, unit: "pcs", price: 0.60, formattedPrice: "£0.60" },
-      ],
-      bundlePrice: 1.40,
-      bundlePriceFormatted: "£1.40",
-    },
-    {
-      id: "meal-5-dinner",
-      time: "7:30 PM",
-      mealType: "DINNER",
-      title: "Salmon & Asparagus",
-      calories: 934,
-      image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&auto=format&fit=crop&q=80",
-      iconType: "moon",
-      nutrition: { protein: 71, fat: 86, carbs: 13, fibre: 7, netCarbs: 6 },
-      products: [
-        { id: "p-sal-1", name: "Atlantic Salmon Fillet", qty: 200, unit: "g", price: 5.80, formattedPrice: "£5.80" },
-        { id: "p-asp-1", name: "Asparagus", qty: 150, unit: "g", price: 1.60, formattedPrice: "£1.60" },
-        { id: "p-oil-2", name: "Olive Oil (Extra Virgin)", qty: 15, unit: "ml", price: 0.40, formattedPrice: "£0.40" },
-      ],
-      bundlePrice: 7.80,
-      bundlePriceFormatted: "£7.80",
-    },
-  ],
-  nutritionDashboard: {
-    calories: { current: 2394, target: 2500, percentage: 96 },
-    protein: { current: 186, target: 180, percentage: 103 },
-    totalCarbs: { current: 34, target: 50, percentage: 68 },
-    netCarbs: { current: 17, target: 30, percentage: 57 },
-    totalFat: { current: 172, target: 170, percentage: 101 },
-    fibre: { current: 26, target: 25, percentage: 104 },
-    waterIntake: { current: 3.0, target: 3.0, percentage: 100, unit: "L" },
-  },
-  macronutrientBreakdown: {
-    protein: { grams: 186, percentage: 31 },
-    fat: { grams: 172, percentage: 65 },
-    carbs: { grams: 34, percentage: 6 },
-  },
-  additionalNutrients: {
-    fibre: "26g",
-    sugar: "6g",
-    sodium: "1,240mg",
-    cholesterol: "586mg",
-  },
-  pricing: {
-    totalProductsCost: 37.50,
-    dietPlanServiceFee: 5.00,
-    deliveryCharges: 0,
-    totalAmount: 42.50,
-  },
-};
-
 export function DietaryComingSoon({
   products = [],
   subcategoryId,
@@ -296,7 +159,7 @@ export function DietaryComingSoon({
   }, [currentSection, availableSections]);
 
   // Fetch real database-backed plan from backend API
-  const { data: plan = STATIC_PLAN, isLoading } = useQuery<DietaryPlanData>({
+  const { data: plan, isLoading, isError } = useQuery<DietaryPlanData>({
     queryKey: [`/api/dietary/plans?subcategory=${effectiveSubcategory}`],
     staleTime: 30_000,
   });
@@ -335,6 +198,7 @@ export function DietaryComingSoon({
   // Mutation to buy complete day plan from database
   const buyCompletePlanMutation = useMutation({
     mutationFn: async () => {
+      if (!plan) throw new Error("The dietary plan is not available");
       const res = await apiRequest("POST", "/api/dietary/buy-complete-plan", {
         subcategory: effectiveSubcategory,
         productIds: Array.from(new Set(
@@ -351,7 +215,7 @@ export function DietaryComingSoon({
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       toast({
         title: "Complete Day Plan Added to Cart!",
-        description: `${result.addedCount} available product${result.addedCount === 1 ? "" : "s"} from ${plan.title} added. Opening your cart…`,
+        description: `${result.addedCount} available product${result.addedCount === 1 ? "" : "s"} from ${plan?.title ?? "the dietary plan"} added. Opening your cart…`,
       });
       setLocation("/cart");
     },
@@ -365,6 +229,7 @@ export function DietaryComingSoon({
   });
 
   const handleShare = () => {
+    if (!plan) return;
     if (navigator.share) {
       navigator
         .share({
@@ -380,6 +245,7 @@ export function DietaryComingSoon({
   };
 
   const handleDownload = () => {
+    if (!plan) return;
     toast({
       title: "Downloading Diet Plan PDF...",
       description: `${plan.title} with full nutritional guide & recipe instructions.`,
@@ -403,22 +269,29 @@ export function DietaryComingSoon({
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="h-full grid place-items-center bg-[#f8fafc] dark:bg-background text-sm font-semibold text-muted-foreground">
+        Loading the database-backed dietary plan…
+      </div>
+    );
+  }
+
+  if (isError || !plan) {
+    return (
+      <div className="h-full grid place-items-center bg-[#f8fafc] dark:bg-background px-6 text-center">
+        <div>
+          <h2 className="font-black text-lg">Dietary plan unavailable</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            A real verified seller and eligible database products are required to display this plan.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full overflow-y-auto bg-[#f8fafc] dark:bg-background text-slate-900 dark:text-slate-100 pb-20">
-      {/* ─── 0. TOP BANNER ─── */}
-      <div className="bg-[#1e4d2b] text-white px-4 py-2.5 flex items-center justify-between border-b border-emerald-900 shadow-xs">
-        <h2 className="font-bold text-sm sm:text-base tracking-wide flex items-center gap-2">
-          <span>14. Dietary Page - Coming Soon</span>
-        </h2>
-        <span className="bg-[#163a20] text-emerald-200 text-xs font-black px-3 py-1 rounded-sm border border-emerald-700/50 uppercase tracking-widest">
-          TO DO
-        </span>
-      </div>
-
-      <div className="px-4 py-2 bg-slate-100 dark:bg-muted/40 border-b border-slate-200/80 text-xs font-semibold text-slate-600 dark:text-slate-400">
-        Mark the Dietary page as &ldquo;Coming Soon&rdquo;. A diet chart should be displayed on the right-hand side of the page.
-      </div>
-
       {/* ─── MAIN CONTAINER ─── */}
       <div className="max-w-[1550px] mx-auto p-4 sm:p-6 space-y-6">
         {/* ─── 0.5. DIETARY SUB-SECTIONS PILL BAR ─── */}
@@ -590,7 +463,9 @@ export function DietaryComingSoon({
             <div className="flex flex-row lg:flex-col gap-2.5 w-full sm:w-auto">
               <Button
                 variant="outline"
+                onClick={() => setLocation(plan.seller.storeUrl || `/sellers/${encodeURIComponent(plan.seller.id)}`)}
                 className="flex-1 sm:flex-none border-slate-300 dark:border-border font-bold text-xs rounded-xl h-9 px-5 shadow-2xs hover:bg-slate-50"
+                data-testid="button-view-dietary-seller-store"
               >
                 View Store
               </Button>

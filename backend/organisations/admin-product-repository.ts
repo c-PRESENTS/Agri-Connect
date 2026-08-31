@@ -53,8 +53,7 @@ const SELECT_PRODUCT = `
   COALESCE(u.avatar,u.profile_image_url) AS seller_avatar,
   u.location AS seller_location,
   u.account_status AS seller_account_status,
-  CASE WHEN u.auth_method='catalog_seed' AND u.is_verified=true THEN 'verified'
-       ELSE COALESCE(verification.status,'not_started') END AS seller_verification_status,
+  COALESCE(verification.status,'not_started') AS seller_verification_status,
   (${sellerPublicEligibilitySql("u")}) AS seller_is_eligible,
   region.name AS region_name`;
 

@@ -10,13 +10,13 @@ import { useTranslation } from "react-i18next";
 import { resolveProductImageForProduct } from "@/lib/product-images";
 import { FavoriteProductButton } from "./favorite-product-button";
 import { useCurrency } from "@/contexts/currency-context";
-import { useLiveLocation } from "@/contexts/live-location-context";
 
 interface ProductCardProps {
   product: Product;
   onAddToCart?: (product: Product) => void;
   onWishlist?: (product: Product) => void;
   onClick?: (product: Product) => void;
+  compact?: boolean;
 }
 
 export function ProductCard({
@@ -24,26 +24,24 @@ export function ProductCard({
   onAddToCart,
   onWishlist,
   onClick,
+  compact = false,
 }: ProductCardProps) {
   const [addedToCart, setAddedToCart] = useState(false);
   const { t } = useTranslation();
   const { format } = useCurrency();
-  const { location: liveLoc } = useLiveLocation();
-
-  const cityName = liveLoc?.label || "Coimbatore, TN";
   const productName = product.name?.trim() || "Unnamed Product";
   const hasRealSeller = Boolean(
+    product.farmerId &&
     product.farmerName?.trim() &&
-    !product.farmerId?.startsWith("farmer-") &&
-    !product.farmerId?.startsWith("catalog-") &&
-    product.farmerName !== "Verified Seller" &&
-    product.farmerName !== "Green Fields Farm"
+    product.farmerIsVerified === true
   );
   const sellerName = hasRealSeller ? product.farmerName!.trim() : "";
-  const sellerLoc = product.farmerLocation || cityName;
+  const sellerLoc = product.farmerLocation || "Location not provided";
   const sellerDist = typeof product.distance === "number" ? product.distance : 0;
-  const rating = Number.isFinite(product.farmerRating) && product.farmerRating > 0 ? product.farmerRating : (Number.isFinite(product.rating) ? product.rating : 4.6);
-  const reviewCount = product.reviewCount || 96;
+  const rating = Number.isFinite(product.farmerRating) && product.farmerRating > 0
+    ? product.farmerRating
+    : (Number.isFinite(product.rating) ? product.rating : 0);
+  const reviewCount = Number.isFinite(product.reviewCount) ? product.reviewCount : 0;
 
   // Strikethrough calculation
   const discountPct = product.isOrganic ? 17 : (product.isFeatured ? 13 : 10);
@@ -70,12 +68,12 @@ export function ProductCard({
       className="h-full"
     >
       <div
-        className="group rounded-2xl border border-slate-200/90 dark:border-border/80 bg-white dark:bg-card overflow-hidden shadow-2xs hover:shadow-md hover:border-emerald-500/50 transition-all duration-200 flex flex-col justify-between h-full cursor-pointer"
+        className={`group flex h-full cursor-pointer flex-col justify-between overflow-hidden border border-slate-200/90 bg-white shadow-2xs transition-all duration-200 hover:border-emerald-500/50 hover:shadow-md dark:border-border/80 dark:bg-card ${compact ? "rounded-xl" : "rounded-2xl"}`}
         onClick={() => onClick?.(product)}
         data-testid={`card-product-${product.id}`}
       >
         {/* ─── IMAGE AREA WITH BADGE & HEART ─── */}
-        <div className="relative aspect-[16/10] bg-slate-100 dark:bg-muted overflow-hidden">
+        <div className={`relative overflow-hidden bg-slate-100 dark:bg-muted ${compact ? "aspect-[16/9]" : "aspect-[16/10]"}`}>
           <img
             src={imageResolution.src}
             alt={`${productName} image`}
@@ -111,33 +109,33 @@ export function ProductCard({
         </div>
 
         {/* ─── CARD DETAILS ─── */}
-        <div className="p-4 sm:p-4.5 flex flex-col flex-1 justify-between gap-3">
+        <div className={`flex flex-1 flex-col justify-between ${compact ? "gap-2 p-3" : "gap-3 p-4 sm:p-4.5"}`}>
           <div>
             {/* Product Title & Unit */}
-            <h3 className="font-black text-sm sm:text-base md:text-lg text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+            <h3 className={`line-clamp-1 font-black text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-slate-100 dark:group-hover:text-emerald-400 ${compact ? "text-sm" : "text-sm sm:text-base md:text-lg"}`}>
               {productName}
             </h3>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-0.5">
+            <p className={`mt-0.5 font-bold text-slate-500 dark:text-slate-400 ${compact ? "text-[10px]" : "text-xs sm:text-sm"}`}>
               {product.unit || "500g"}
             </p>
 
             {/* Price Row */}
-            <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-lg sm:text-xl font-black text-emerald-800 dark:text-emerald-400">
+            <div className={`flex items-baseline ${compact ? "mt-1.5 gap-1.5" : "mt-2 gap-2"}`}>
+              <span className={`font-black text-emerald-800 dark:text-emerald-400 ${compact ? "text-base" : "text-lg sm:text-xl"}`}>
                 {format(product.price, { sourceCurrency: product.currency || "GBP" })}
               </span>
               {originalPrice && (
-                <span className="text-xs sm:text-sm text-slate-400 line-through font-semibold">
+                <span className={`font-semibold text-slate-400 line-through ${compact ? "text-[10px]" : "text-xs sm:text-sm"}`}>
                   {format(originalPrice, { sourceCurrency: product.currency || "GBP" })}
                 </span>
               )}
-              <span className="text-[11px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md">
+              <span className={`rounded-md bg-emerald-100 py-0.5 font-black text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 ${compact ? "px-1.5 text-[9px]" : "px-2 text-[11px]"}`}>
                 {discountPct}% OFF
               </span>
             </div>
 
             {/* Seller / Source Info */}
-            <div className="mt-2.5 text-xs sm:text-sm">
+            <div className={compact ? "mt-2 text-xs" : "mt-2.5 text-xs sm:text-sm"}>
               <p className="font-black text-slate-800 dark:text-slate-100 truncate">
                 {hasRealSeller ? sellerName : "Direct Marketplace"}
               </p>
@@ -150,7 +148,7 @@ export function ProductCard({
             </div>
 
             {/* Rating & Verified Badge */}
-            <div className="flex items-center justify-between gap-2 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-border/40 text-xs font-bold">
+            <div className={`flex items-center justify-between gap-2 border-t border-slate-100 font-bold dark:border-border/40 ${compact ? "mt-2 pt-2 text-[10px]" : "mt-2.5 pt-2.5 text-xs"}`}>
               <div className="flex items-center gap-1.5">
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                 <span className="font-black text-slate-900 dark:text-slate-100">{rating.toFixed(1)}</span>
@@ -167,7 +165,7 @@ export function ProductCard({
           {/* Full-width Add to Cart Button */}
           <Button
             onClick={handleAddToCart}
-            className="w-full mt-2 h-10 bg-emerald-800 hover:bg-emerald-900 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl shadow-2xs gap-2 transition-colors cursor-pointer"
+            className={`w-full cursor-pointer gap-2 bg-emerald-800 font-black uppercase tracking-wider text-white shadow-2xs transition-colors hover:bg-emerald-900 dark:bg-emerald-700 dark:hover:bg-emerald-600 ${compact ? "mt-1 h-9 rounded-lg text-[11px]" : "mt-2 h-10 rounded-xl text-xs sm:text-sm"}`}
             data-testid={`button-add-to-cart-${product.id}`}
           >
             {addedToCart ? (
