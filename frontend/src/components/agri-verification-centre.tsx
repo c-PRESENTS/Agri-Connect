@@ -214,9 +214,9 @@ export function AgriVerificationCentre({
     pagination: { total: number; page: number; pageSize: number; pageCount: number };
     filters: { statuses: string[]; countries: string[]; entityTypes: string[] };
   }>({
-    queryKey: ["/api/admin/verifications", { page: 1, pageSize: 200 }],
+    queryKey: ["/api/admin/verifications", { page: 1, pageSize: 200, status: "all" }],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/verifications?page=1&pageSize=200");
+      const res = await apiRequest("GET", "/api/admin/verifications?page=1&pageSize=200&status=all");
       return res.json();
     },
   });

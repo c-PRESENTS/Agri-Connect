@@ -24,7 +24,7 @@ interface Bookmark {
   iconType?: "gov" | "tnau" | "bbc" | "weather" | "brave" | "agri";
 }
 
-const LS_KEY = "agri-user-bookmarks-v3";
+const LS_KEY = "agri-user-bookmarks-v4";
 const LOCAL_BOOKMARK_FALLBACK_ICON = "/favicon-32x32.png";
 const LOCAL_BOOKMARK_ICONS: Record<string, string> = {
   "agrimarket.gov.in": LOCAL_BOOKMARK_FALLBACK_ICON,
@@ -39,22 +39,12 @@ const AGRICONNECT_RENDER_HOST_PATTERN =
   /^agri-connect(?:-group)?-[a-z0-9]+\.onrender\.com$/;
 
 const DEFAULT_BOOKMARKS: Bookmark[] = [
-  { id: "gov-uk",    name: "Gov.UK",    url: "https://www.gov.uk",            color: "bg-[#0ea5e9]", iconType: "gov"     },
-  { id: "gds",       name: "GDS",       url: "https://www.gov.uk/design-principles", color: "bg-[#64748b]", iconType: "gov" },
-  { id: "fao",       name: "FAO",       url: "https://www.fao.org",           color: "bg-[#0284c7]", iconType: "agri"    },
-  { id: "bbc-food",  name: "BBC Food",  url: "https://www.bbc.co.uk/food",    color: "bg-[#16a34a]", iconType: "bbc"     },
-  { id: "brave",     name: "Brave",     url: "https://search.brave.com",      color: "bg-[#ea580c]", iconType: "brave"   },
-  { id: "agri-site", name: "Agri Mkt",  url: "https://agrimarket.gov.in",     color: "bg-[#eab308]", iconType: "agri"    },
-  { id: "gov-uk-2",  name: "Gov.UK",    url: "https://www.gov.uk",            color: "bg-[#0ea5e9]", iconType: "gov"     },
-  { id: "gds-2",     name: "GDS",       url: "https://www.gov.uk",            color: "bg-[#475569]", iconType: "gov"     },
-  { id: "tnau",      name: "TNAU",      url: "https://agritech.tnau.ac.in",   color: "bg-[#059669]", iconType: "tnau"    },
+  { id: "gov-uk",    name: "GOV.UK",    url: "https://www.gov.uk",            color: "bg-[#0ea5e9]", iconType: "gov"     },
+  { id: "tnau",      name: "TNAU",      url: "https://agritech.tnau.ac.in",   color: "bg-[#00a86b]", iconType: "tnau"    },
+  { id: "bbc-food",  name: "BBC Food",  url: "https://www.bbc.co.uk/food",    color: "bg-[#e11d48]", iconType: "bbc"     },
   { id: "weather",   name: "Weather",   url: "https://wttr.in/?format=html",  color: "bg-[#2563eb]", iconType: "weather" },
-  { id: "bbc-food-2",name: "BBC Food",  url: "https://www.bbc.co.uk/food",    color: "bg-[#db2777]", iconType: "bbc"     },
-  { id: "logistics", name: "Logistics", url: "/logistics",                    color: "bg-[#4f46e5]", iconType: "agri"    },
-  { id: "brave-2",   name: "Brave",     url: "https://search.brave.com",      color: "bg-[#d97706]", iconType: "brave"   },
-  { id: "bbc-food-3",name: "BBC Food",  url: "https://www.bbc.co.uk/food",    color: "bg-[#e11d48]", iconType: "bbc"     },
-  { id: "weather-2", name: "Weather",   url: "https://wttr.in/?format=html",  color: "bg-[#3b82f6]", iconType: "weather" },
-  { id: "agri-mkt-2",name: "Agri Mkt",  url: "https://agrimarket.gov.in",     color: "bg-[#ca8a04]", iconType: "agri"    },
+  { id: "brave",     name: "Brave",     url: "https://search.brave.com",      color: "bg-[#ea580c]", iconType: "brave"   },
+  { id: "agri-site", name: "Agri Mkt",  url: "https://agrimarket.gov.in",     color: "bg-[#f59e0b]", iconType: "agri"    },
 ];
 
 const INLINE_PREVIEW_HOSTS = new Set([
@@ -243,15 +233,15 @@ export const UserBookmarks = memo(function UserBookmarks() {
     if (b.iconType === "gov") {
       return (
         <div className="flex flex-col items-center justify-center text-white">
-          <Crown className="w-5 h-5 drop-shadow-xs" />
+          <Crown className="w-6 h-6 text-white drop-shadow-xs stroke-[2.2]" />
         </div>
       );
     }
     if (b.iconType === "tnau") {
       return (
-        <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center p-0.5 shadow-2xs">
+        <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center p-0.5 shadow-xs">
           <div className="w-full h-full rounded-full border border-emerald-600 flex items-center justify-center bg-emerald-50">
-            <span className="text-[7px] font-black text-emerald-800 leading-none">TN</span>
+            <span className="text-[7.5px] font-black text-emerald-800 leading-none">TNAU</span>
           </div>
         </div>
       );
@@ -259,30 +249,30 @@ export const UserBookmarks = memo(function UserBookmarks() {
     if (b.iconType === "bbc") {
       return (
         <div className="flex items-center gap-0.5 text-white">
-          <div className="w-1.5 h-1.5 bg-white rounded-2xs" />
-          <div className="w-1.5 h-1.5 bg-white rounded-2xs" />
-          <div className="w-1.5 h-1.5 bg-white rounded-2xs" />
+          <div className="w-2 h-2 bg-white rounded-2xs" />
+          <div className="w-2 h-2 bg-white rounded-2xs" />
+          <div className="w-2 h-2 bg-white rounded-2xs" />
         </div>
       );
     }
     if (b.iconType === "weather") {
       return (
-        <div className="flex flex-col items-center justify-center text-yellow-300">
-          <CloudRain className="w-5 h-5 text-white" />
+        <div className="flex flex-col items-center justify-center text-white">
+          <CloudRain className="w-6 h-6 text-white drop-shadow-xs" />
         </div>
       );
     }
     if (b.iconType === "brave") {
       return (
-        <div className="w-6 h-6 rounded-md bg-emerald-950 flex items-center justify-center p-1">
-          <Leaf className="w-4 h-4 text-emerald-400" />
+        <div className="w-7 h-7 rounded-lg bg-emerald-950/80 border border-emerald-400/40 flex items-center justify-center">
+          <Leaf className="w-4.5 h-4.5 text-emerald-400 fill-emerald-400/30" />
         </div>
       );
     }
     if (b.iconType === "agri") {
       return (
-        <div className="w-6 h-6 rounded-md bg-emerald-950 flex items-center justify-center p-1">
-          <Sprout className="w-4 h-4 text-emerald-400" />
+        <div className="w-7 h-7 rounded-lg bg-emerald-950/80 border border-emerald-400/40 flex items-center justify-center">
+          <Sprout className="w-4.5 h-4.5 text-emerald-400 fill-emerald-400/30" />
         </div>
       );
     }
@@ -293,14 +283,14 @@ export const UserBookmarks = memo(function UserBookmarks() {
         <img
           src={favicon}
           alt=""
-          className="w-5 h-5 object-contain rounded-xs"
+          className="w-6 h-6 object-contain rounded-xs"
           loading="lazy"
           onError={handleFaviconError}
         />
       );
     }
 
-    return <span className="text-sm font-black text-white">{getInitial(b.name)}</span>;
+    return <span className="text-base font-black text-white">{getInitial(b.name)}</span>;
   };
 
   const [editMode, setEditMode] = useState(false);
@@ -332,9 +322,9 @@ export const UserBookmarks = memo(function UserBookmarks() {
 
   return (
     <>
-      <div className="w-full bg-[#081716]/78 backdrop-blur-md border border-slate-400/20 rounded-[18px] p-2.5 sm:p-3.5 shadow-[inset_0_1px_rgba(255,255,255,0.06),0_14px_30px_rgba(0,0,0,0.24)] relative z-10">
-        {/* Header with MY SITES and Right Controls matching Quick Access */}
-        <div className="flex items-center justify-between px-1 mb-2">
+      <div className="w-full bg-[#081716]/85 backdrop-blur-md border border-emerald-700/50 rounded-2xl p-3 sm:p-4 shadow-2xl relative z-10">
+        {/* Header with MY SITES and Right Controls */}
+        <div className="flex items-center justify-between px-1 mb-2.5">
           <span className="text-xs sm:text-sm font-black uppercase tracking-[0.14em] text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">
             {t("home.my_sites", { defaultValue: "MY SITES" })}
           </span>
@@ -350,7 +340,6 @@ export const UserBookmarks = memo(function UserBookmarks() {
                 <span>Reset</span>
               </button>
             )}
-
 
             <button
               onClick={() => setEditMode(m => !m)}
@@ -370,13 +359,13 @@ export const UserBookmarks = memo(function UserBookmarks() {
           </div>
         </div>
 
-        {/* 10-Column Responsive Grid matching Quick Access */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-1.5">
+        {/* Horizontal App Icons Row matching reference screenshot */}
+        <div className="flex items-center gap-3.5 sm:gap-5 overflow-x-auto no-scrollbar py-1 px-0.5">
           {bookmarks.map((b, idx) => {
             const isActive = panel.open && panel.url === normalizeUrl(b.url);
 
             return (
-              <div key={b.id + idx} className="relative group min-w-0">
+              <div key={b.id + idx} className="relative group shrink-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -387,84 +376,53 @@ export const UserBookmarks = memo(function UserBookmarks() {
                     }
                   }}
                   data-testid={`bookmark-${b.id}`}
-                  className={`relative w-full h-[52px] sm:h-[55px] flex flex-col items-center justify-center gap-0.5 rounded-[11px] border transition-all duration-150 py-1 px-1.5 shadow-md cursor-pointer group-hover:-translate-y-0.5 ${
-                    editMode
-                      ? "bg-[#0c2e2a] border-2 border-amber-400 text-white shadow-amber-400/20"
-                      : isActive
-                      ? "ring-2 ring-emerald-400 bg-[#123835] border-emerald-400 text-white"
-                      : "bg-[#0a2321] hover:bg-[#103330] border-emerald-700/50 hover:border-emerald-400/90 text-white active:scale-95"
-                  }`}
+                  className="flex flex-col items-center gap-1.5 w-[56px] sm:w-[62px] cursor-pointer group focus:outline-none select-none"
                 >
                   <div
-                    className="w-5 h-5 rounded-md flex items-center justify-center overflow-hidden shrink-0 shadow-xs"
+                    className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-md transition-all duration-150 group-hover:scale-105 group-hover:shadow-lg ${b.color || "bg-emerald-700"} ${
+                      isActive ? "ring-2 ring-emerald-400 scale-105" : ""
+                    } ${editMode ? "ring-2 ring-amber-400" : ""}`}
                   >
                     {renderIcon(b)}
                   </div>
-                  <span className="text-[10.5px] sm:text-xs font-black text-white text-center leading-tight w-full truncate drop-shadow px-0.5">
+                  <span className="text-[10px] sm:text-[11px] font-black text-white text-center leading-tight truncate w-full tracking-tight drop-shadow-xs">
                     {b.name}
                   </span>
                 </button>
 
-                {/* Edit Mode Controls - High contrast & crystal clear */}
+                {/* Edit Mode Controls */}
                 {editMode && (
-                  <div className="absolute inset-0 rounded-[11px] pointer-events-none z-20">
-                    <div className="absolute top-0.5 left-0.5 flex items-center gap-0.5 pointer-events-auto">
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); moveLeft(b.id); }}
-                        disabled={idx === 0}
-                        className="w-4.5 h-4.5 rounded bg-black/90 border border-white/80 text-white flex items-center justify-center hover:bg-emerald-600 disabled:opacity-20 shadow-md transition-all cursor-pointer"
-                        title="Move Left"
-                      >
-                        <ChevronLeft className="h-3 w-3 stroke-[3]" />
-                      </button>
-                    </div>
-
-                    <div className="absolute top-0.5 right-0.5 flex items-center gap-0.5 pointer-events-auto">
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); openEdit(b); }}
-                        className="w-4.5 h-4.5 rounded bg-amber-400 border border-black/60 text-black flex items-center justify-center hover:bg-amber-300 shadow-md transition-all cursor-pointer"
-                        title="Edit Site Name & URL"
-                      >
-                        <Pencil className="h-2.5 w-2.5 stroke-[2.5]" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); deleteBookmark(b.id); }}
-                        className="w-4.5 h-4.5 rounded bg-red-600 border border-white/90 text-white flex items-center justify-center hover:bg-red-500 shadow-md transition-all cursor-pointer"
-                        title="Delete Site"
-                      >
-                        <X className="h-3 w-3 stroke-[3]" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); moveRight(b.id); }}
-                        disabled={idx === bookmarks.length - 1}
-                        className="w-4.5 h-4.5 rounded bg-black/90 border border-white/80 text-white flex items-center justify-center hover:bg-emerald-600 disabled:opacity-20 shadow-md transition-all cursor-pointer"
-                        title="Move Right"
-                      >
-                        <ChevronRight className="h-3 w-3 stroke-[3]" />
-                      </button>
-                    </div>
+                  <div className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 z-20">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); deleteBookmark(b.id); }}
+                      className="w-5 h-5 rounded-full bg-red-600 border border-white text-white flex items-center justify-center hover:bg-red-500 shadow-md transition-all cursor-pointer"
+                      title="Remove Bookmark"
+                    >
+                      <X className="h-3 w-3 stroke-[2.5]" />
+                    </button>
                   </div>
                 )}
               </div>
             );
           })}
 
-          {/* Add Site Tile (Card) */}
-          <button
-            type="button"
-            onClick={openAdd}
-            data-testid="bookmark-add-new"
-            className="w-full h-[52px] sm:h-[55px] flex flex-col items-center justify-center gap-0.5 rounded-[11px] border border-dashed border-emerald-400/70 bg-[#061917]/90 hover:bg-[#0a2724] hover:border-emerald-300 transition-all text-white py-1 px-1.5 shadow-xs cursor-pointer group hover:-translate-y-0.5 active:scale-95"
-          >
-            <Plus className="h-4 w-4 text-emerald-400 group-hover:scale-110 transition-transform stroke-[2.5]" />
-            <span className="text-[10.5px] sm:text-xs font-black text-white text-center leading-tight">
-              Add Site
-            </span>
-          </button>
+          {/* Add Site Button matching reference screenshot */}
+          <div className="shrink-0">
+            <button
+              type="button"
+              onClick={openAdd}
+              data-testid="bookmark-add-site"
+              className="flex flex-col items-center gap-1.5 w-[56px] sm:w-[62px] cursor-pointer group focus:outline-none select-none"
+            >
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl border-2 border-dashed border-white/40 group-hover:border-emerald-400 bg-white/5 group-hover:bg-emerald-500/15 flex items-center justify-center text-white/70 group-hover:text-emerald-300 transition-all duration-150 shadow-xs group-hover:scale-105">
+                <Plus className="h-5 w-5 stroke-[2.5]" />
+              </div>
+              <span className="text-[10px] sm:text-[11px] font-black text-white text-center leading-tight truncate w-full tracking-tight drop-shadow-xs">
+                Add site
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* ── Inline mini-browser panel ── */}

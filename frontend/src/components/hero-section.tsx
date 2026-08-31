@@ -1,5 +1,5 @@
 import "leaflet/dist/leaflet.css";
-import { useEffect, useLayoutEffect, useState, useRef, memo } from "react";
+import { useEffect, useLayoutEffect, useState, useRef, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ import {
   ShieldCheck, Truck, Sprout, Globe, Activity, Satellite,
   ShoppingBag, ShoppingCart, Zap, Sun, Droplets,
   BarChart3, Wifi, Compass, Mountain, Map, Plus, MapPin,
-  ChevronRight, Check,
+  ChevronLeft, ChevronRight, Check,
 } from "lucide-react";
 import { LeafletFarmerMap } from "./leaflet-farmer-map";
 import { HeroServiceGrid } from "./hero-service-grid";
@@ -87,6 +87,23 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
   const [heroMapMode, setHeroMapMode] = useState<HeroMapMode>("products");
   const [heroTileStyle, setHeroTileStyle] = useState<"standard" | "satellite" | "terrain" | "hybrid">("standard");
   const [heroLeftPct, setHeroLeftPct] = useState(42);
+  const [activeHeroCta, setActiveHeroCta] = useState<"shop" | "map" | null>(null);
+
+  const handleShopNow = useCallback(() => {
+    setActiveHeroCta("shop");
+    const carouselEl = document.getElementById("category-carousel") || document.querySelector("[data-testid='category-carousel']");
+    if (carouselEl) {
+      carouselEl.scrollIntoView({ behavior: "smooth" });
+    } else {
+      onBrowse();
+    }
+  }, [onBrowse]);
+
+  const handleLiveMap = useCallback(() => {
+    setActiveHeroCta("map");
+    setHeroTileStyle(prev => prev === "satellite" ? "terrain" : "satellite");
+  }, []);
+
   const heroGridRef = useRef<HTMLDivElement | null>(null);
   const heroLeftRef = useRef<HTMLDivElement | null>(null);
   const heroDragging = useRef<{ startX: number; startPct: number; containerW: number } | null>(null);
@@ -175,8 +192,29 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
     return () => window.removeEventListener("resize", applyWidth);
   }, [heroLeftPct]);
 
-  const freshPickProducts = homeRecommendations?.freshPicks ?? [];
-  const featuredProducts = homeRecommendations?.featuredProducts ?? [];
+  const featuredScrollRef = useRef<HTMLDivElement>(null);
+  const freshPicksScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollContainer = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
+    if (ref.current) {
+      const scrollAmount = Math.max(320, ref.current.clientWidth * 0.75);
+      ref.current.scrollBy({
+        left: direction === "right" ? scrollAmount : -scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const rawFreshPicks = homeRecommendations?.freshPicks ?? [];
+  const freshPickProducts = rawFreshPicks.length > 0
+    ? rawFreshPicks
+    : products.filter(p => p.isFreshPick || p.isOrganic);
+
+  const rawFeatured = homeRecommendations?.featuredProducts ?? [];
+  const featuredProducts = rawFeatured.length > 0
+    ? rawFeatured
+    : products.filter(p => p.isFeatured || (p.rating ?? 0) >= 4.0 || p.isOrganic || p.isFreshPick);
+
   const farmerCount = new Set(products.map(p => p.farmerId)).size;
 
   const openProductCategory = (product: Product) => {
@@ -225,19 +263,19 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
           {/* ──────── MOBILE HERO (compact — Cyber HUD style) ──────── */}
           <div className="flex lg:hidden flex-col px-3 pt-3 pb-2 w-full min-w-0 gap-2.5 bg-[#061413]">
             {/* Live status pills */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-              <div className="inline-flex items-center gap-1.5 bg-[#0a2723] border border-emerald-500/80 rounded-full px-2.5 py-0.5 shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                <Leaf className="w-3 h-3 text-emerald-400" />
-                <span className="text-[10.5px] font-black text-emerald-300 uppercase tracking-wider">{t("home.farm_to_table")}</span>
+            <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-1">
+              <div className="inline-flex items-center gap-2 bg-[#0a2723] border border-emerald-500/80 rounded-full px-3.5 py-1 shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                <Leaf className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="text-xs sm:text-[13px] font-black text-emerald-300 uppercase tracking-wider">{t("home.farm_to_table")}</span>
               </div>
-              <div className="inline-flex items-center gap-1.5 bg-[#0a2723] border border-emerald-500/70 rounded-full px-2.5 py-0.5 shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10.5px] font-black text-emerald-300">{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
+              <div className="inline-flex items-center gap-2 bg-[#0a2723] border border-emerald-500/70 rounded-full px-3.5 py-1 shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="text-xs sm:text-[13px] font-black text-emerald-300 uppercase tracking-wider">{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
               </div>
-              <span className="text-[11px] text-white/40 shrink-0">·</span>
-              <span className="text-[11px] font-bold text-white/70 shrink-0"><span className="text-white font-black">{platformStats?.products ?? products.length}</span> {t("home.products")}</span>
-              <span className="text-[11px] text-white/40 shrink-0">·</span>
-              <span className="text-[11px] font-bold text-white/70 shrink-0"><span className="text-white font-black">{platformStats?.freeItems ?? shareCareItems.length}</span> {t("home.free_items")}</span>
+              <span className="text-xs text-white/40 shrink-0">·</span>
+              <span className="text-xs font-bold text-white/70 shrink-0"><span className="text-white font-black">{platformStats?.products ?? products.length}</span> {t("home.products")}</span>
+              <span className="text-xs text-white/40 shrink-0">·</span>
+              <span className="text-xs font-bold text-white/70 shrink-0"><span className="text-white font-black">{platformStats?.freeItems ?? shareCareItems.length}</span> {t("home.free_items")}</span>
             </div>
 
             {/* Headline */}
@@ -271,13 +309,13 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             </div>
 
             {/* AI Crop Intelligence & 2027 Field Network */}
-            <div className="flex items-center justify-between gap-2 py-1">
-              <div className="inline-flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/60 rounded-lg px-2.5 py-1 shadow-xs">
-                <Activity className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                <span className="text-[11px] font-black uppercase tracking-wider text-white">
+            <div className="flex items-center justify-between gap-2 py-2 my-2">
+              <div className="inline-flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/70 rounded-xl px-3 py-1 shadow-xs">
+                <Activity className="h-4 w-4 text-emerald-400 shrink-0" />
+                <span className="text-xs sm:text-[13px] font-black uppercase tracking-wider text-white">
                   AI CROP INTELLIGENCE
                 </span>
-                <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
+                <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">
                   OPTIMAL
                 </span>
               </div>
@@ -288,23 +326,35 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             </div>
 
             {/* CTAs */}
-            <div className="flex gap-2 mt-1">
-              <Button
-                onClick={onBrowse}
+            <div className="flex gap-2.5 mt-2 mb-3">
+              <button
+                type="button"
+                onClick={handleShopNow}
                 data-testid="button-mobile-shop-now"
-                className="flex-1 h-11 bg-[#0e2a28] hover:bg-[#143d3a] border border-emerald-600/50 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md gap-1.5 px-2"
+                className="flex-1 h-11 border-2 text-xs font-black uppercase tracking-wider rounded-xl shadow-md flex items-center justify-center gap-1.5 px-2 transition-all cursor-pointer select-none"
+                style={
+                  activeHeroCta === "shop"
+                    ? { backgroundColor: "#f59e0b", color: "#000000", borderColor: "#d97706", boxShadow: "0 0 24px rgba(245,158,11,0.6)" }
+                    : { backgroundColor: "#059669", color: "#ffffff", borderColor: "#34d399", boxShadow: "0 0 16px rgba(16,185,129,0.35)" }
+                }
               >
-                {t("home.shop_now")}<ArrowRight className="h-4 w-4 text-amber-400" />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/map")}
+                <span>{t("home.shop_now")}</span>
+                <ArrowRight className="h-4 w-4" style={{ color: activeHeroCta === "shop" ? "#000000" : "#ffffff" }} />
+              </button>
+              <button
+                type="button"
+                onClick={handleLiveMap}
                 data-testid="button-mobile-live-map"
-                className="flex-1 h-11 border-2 border-emerald-400 bg-emerald-500/20 text-emerald-300 text-xs font-black uppercase tracking-wider rounded-xl gap-1.5 px-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                className="flex-1 h-11 border-2 text-xs font-black uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 px-2 transition-all cursor-pointer select-none"
+                style={
+                  activeHeroCta === "map"
+                    ? { backgroundColor: "#f59e0b", color: "#000000", borderColor: "#d97706", boxShadow: "0 0 24px rgba(245,158,11,0.6)" }
+                    : { backgroundColor: "#059669", color: "#ffffff", borderColor: "#34d399", boxShadow: "0 0 16px rgba(16,185,129,0.35)" }
+                }
               >
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                {t("home.live_map")}
-              </Button>
+                <span className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: activeHeroCta === "map" ? "#000000" : "#a7f3d0" }} />
+                <span>{t("home.live_map")}</span>
+              </button>
             </div>
           </div>
 
@@ -312,13 +362,13 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
           <div ref={heroLeftRef} className="hidden lg:flex flex-col justify-center px-6 lg:px-8 py-5 lg:py-6 w-full overflow-hidden min-w-0">
 
             {/* Top pill tags */}
-            <div className="flex items-center gap-2.5 flex-wrap mb-3">
-              <div className="inline-flex items-center gap-1.5 bg-[#0a2723] border border-emerald-500/80 rounded-full px-3.5 py-1 text-xs font-black text-emerald-300 uppercase tracking-wider shadow-[0_0_12px_rgba(16,185,129,0.25)]">
-                <Leaf className="h-4 w-4 text-emerald-400" />
-                {t("home.farm_to_table")}
+            <div className="flex items-center gap-3 flex-wrap mb-3.5">
+              <div className="inline-flex items-center gap-2 bg-[#0a2723] border border-emerald-500/80 rounded-full px-4 py-1.5 text-sm sm:text-[14.5px] font-black text-emerald-300 uppercase tracking-wider shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                <Leaf className="h-4.5 w-4.5 text-emerald-400 shrink-0" />
+                <span>{t("home.farm_to_table")}</span>
               </div>
-              <div className="inline-flex items-center gap-2 bg-[#0a2723] border border-emerald-500/80 rounded-full px-3.5 py-1 text-xs font-black text-emerald-300 uppercase tracking-wider shadow-[0_0_12px_rgba(16,185,129,0.25)]">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
+              <div className="inline-flex items-center gap-2.5 bg-[#0a2723] border border-emerald-500/80 rounded-full px-4 py-1.5 text-sm sm:text-[14.5px] font-black text-emerald-300 uppercase tracking-wider shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-xs shrink-0" />
                 <span>{platformStats?.farmers ?? farmerCount} {t("home.farmers")}</span>
               </div>
             </div>
@@ -336,139 +386,130 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
               Connecting you directly with local growers, Fair prices, verified quality, and sustainable impact.
             </p>
 
-            {/* 4 HUD Stat Cards + 3D Wireframe Cyber Globe with 2027 Badge */}
-            <div className="flex items-center gap-3 mb-4 max-w-xl">
-              {/* 4 Metric Cards */}
-              <div className="grid grid-cols-4 gap-2 flex-1">
-                {/* Farmer Stat Card */}
-                <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-amber-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center mb-1 text-amber-400">
-                    <Users className="h-4 w-4" />
-                  </div>
-                  <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
-                    {platformStats?.farmers ?? farmerCount}
-                  </span>
-                  <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
-                    FARMERS
-                  </span>
+            {/* 4 HUD Metric Stat Cards */}
+            <div className="grid grid-cols-4 gap-2.5 xl:gap-3.5 mb-4 max-w-2xl w-full">
+              {/* Farmer Stat Card */}
+              <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-amber-400 rounded-xl py-2.5 px-2 flex flex-col items-center justify-between text-center shadow-lg hover:border-emerald-500 transition-all min-h-[88px]">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-amber-400">
+                  <Users className="h-4 w-4" />
                 </div>
-
-                {/* Products Stat Card */}
-                <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-cyan-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center mb-1 text-cyan-400">
-                    <Sprout className="h-4 w-4" />
-                  </div>
-                  <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
-                    {platformStats?.products ?? products.length}
-                  </span>
-                  <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
-                    PRODUCTS
-                  </span>
-                </div>
-
-                {/* Free Items Stat Card */}
-                <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-orange-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center mb-1 text-orange-400">
-                    <Zap className="h-4 w-4" />
-                  </div>
-                  <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
-                    {platformStats?.freeItems ?? shareCareItems.length}
-                  </span>
-                  <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
-                    FREE ITEMS
-                  </span>
-                </div>
-
-                {/* Buyers Stat Card */}
-                <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-blue-400 rounded-xl py-2 px-2 flex flex-col items-center text-center shadow-lg hover:border-emerald-500 transition-all">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center mb-1 text-blue-400">
-                    <ShoppingBag className="h-4 w-4" />
-                  </div>
-                  <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
-                    {platformStats?.buyers ?? 1}
-                  </span>
-                  <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
-                    BUYERS
-                  </span>
-                </div>
+                <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
+                  {platformStats?.farmers ?? farmerCount}
+                </span>
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
+                  FARMERS
+                </span>
               </div>
 
-              {/* AI status card; the generated backdrop supplies the globe artwork. */}
-              <div className="relative w-28 h-20 shrink-0 hidden sm:flex items-center justify-center">
-                <div className="relative z-10 bg-[#0a1b1a]/88 border border-slate-400/25 rounded-xl px-2.5 py-1.5 text-center shadow-[inset_0_1px_rgba(255,255,255,0.08),0_12px_28px_rgba(0,0,0,0.32)] backdrop-blur-md">
-                  <span className="text-xs font-black text-emerald-300 block leading-tight tracking-wider">
-                    2027
-                  </span>
-                  <span className="text-[8.5px] font-black uppercase text-white/90 block leading-tight">
-                    AI Crop Intelligence
-                  </span>
-                  <span className="text-[8px] font-black uppercase text-emerald-400 flex items-center justify-center gap-1 mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active
-                  </span>
+              {/* Products Stat Card */}
+              <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-cyan-400 rounded-xl py-2.5 px-2 flex flex-col items-center justify-between text-center shadow-lg hover:border-emerald-500 transition-all min-h-[88px]">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-cyan-400">
+                  <Sprout className="h-4 w-4" />
                 </div>
+                <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
+                  {platformStats?.products ?? products.length}
+                </span>
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
+                  PRODUCTS
+                </span>
+              </div>
+
+              {/* Free Items Stat Card */}
+              <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-orange-400 rounded-xl py-2.5 px-2 flex flex-col items-center justify-between text-center shadow-lg hover:border-emerald-500 transition-all min-h-[88px]">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-orange-400">
+                  <Zap className="h-4 w-4" />
+                </div>
+                <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
+                  {platformStats?.freeItems ?? shareCareItems.length}
+                </span>
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
+                  FREE ITEMS
+                </span>
+              </div>
+
+              {/* Buyers Stat Card */}
+              <div className="bg-[#0b2120]/95 backdrop-blur-md border border-emerald-800/60 border-t-2 border-t-blue-400 rounded-xl py-2.5 px-2 flex flex-col items-center justify-between text-center shadow-lg hover:border-emerald-500 transition-all min-h-[88px]">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-blue-400">
+                  <ShoppingBag className="h-4 w-4" />
+                </div>
+                <span className="text-lg xl:text-xl font-black text-white leading-none my-0.5">
+                  {platformStats?.buyers ?? 1}
+                </span>
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-300">
+                  BUYERS
+                </span>
               </div>
             </div>
 
             {/* AI Crop Intelligence & 2027 Field Network */}
-            <div className="space-y-2 mb-4">
+            <div className="space-y-3.5 mb-6">
               <div>
-                <div className="inline-flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/60 rounded-lg px-3 py-1 shadow-xs backdrop-blur-xs">
-                  <Activity className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
+                <div className="inline-flex items-center gap-2.5 bg-emerald-950/80 border border-emerald-500/70 rounded-xl px-3.5 py-1.5 shadow-md backdrop-blur-sm">
+                  <Activity className="h-5 w-5 text-emerald-400 shrink-0" />
+                  <span className="text-sm sm:text-base font-black uppercase tracking-wider text-white">
                     AI CROP INTELLIGENCE
                   </span>
-                  <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 text-[9.5px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                  <span className="bg-emerald-500/30 text-emerald-300 border border-emerald-400/50 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-lg uppercase tracking-wider shadow-xs">
                     OPTIMAL
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs sm:text-sm font-black text-white tracking-widest drop-shadow-md">
-                <Zap className="h-4 w-4 text-cyan-400 fill-cyan-400 shrink-0" />
+              <div className="flex items-center gap-2 text-sm sm:text-[15px] font-black text-white tracking-widest drop-shadow-md">
+                <Zap className="h-4.5 w-4.5 text-cyan-400 fill-cyan-400 shrink-0" />
                 <span>2027 FIELD NETWORK</span>
               </div>
             </div>
 
             {/* Action Buttons Row */}
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <Button
-                onClick={onBrowse}
-                className="bg-[#0a2220] hover:bg-[#123835] border border-emerald-600/60 hover:border-emerald-400 text-white px-6 h-11 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl shadow-lg gap-2 transition-all"
+            <div className="flex items-center gap-3.5 mb-6 flex-wrap">
+              <button
+                type="button"
+                onClick={handleShopNow}
+                data-testid="button-desktop-shop-now"
+                className="px-6 h-11 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all border-2 cursor-pointer select-none"
+                style={
+                  activeHeroCta === "shop"
+                    ? { backgroundColor: "#f59e0b", color: "#000000", borderColor: "#d97706", boxShadow: "0 0 24px rgba(245,158,11,0.6)" }
+                    : { backgroundColor: "#059669", color: "#ffffff", borderColor: "#34d399", boxShadow: "0 0 16px rgba(16,185,129,0.35)" }
+                }
               >
                 <span>SHOP NOW</span>
-                <ArrowRight className="h-4 w-4 text-amber-400" />
-              </Button>
+                <ArrowRight className="h-4 w-4" style={{ color: activeHeroCta === "shop" ? "#000000" : "#ffffff" }} />
+              </button>
 
-              <Button
-                variant="outline"
-                className="border-2 border-emerald-400 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 px-6 h-11 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl gap-2 shadow-[0_0_18px_rgba(16,185,129,0.35)] cursor-pointer"
-                onClick={() => navigate("/map")}
+              <button
+                type="button"
+                onClick={handleLiveMap}
+                data-testid="button-desktop-live-map"
+                className="px-6 h-11 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all border-2 cursor-pointer select-none"
+                style={
+                  activeHeroCta === "map"
+                    ? { backgroundColor: "#f59e0b", color: "#000000", borderColor: "#d97706", boxShadow: "0 0 24px rgba(245,158,11,0.6)" }
+                    : { backgroundColor: "#059669", color: "#ffffff", borderColor: "#34d399", boxShadow: "0 0 16px rgba(16,185,129,0.35)" }
+                }
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: activeHeroCta === "map" ? "#000000" : "#a7f3d0" }} />
                 <span>LIVE MAP</span>
-              </Button>
+              </button>
             </div>
 
             {/* Trust Badges Row */}
-            <div className="flex gap-3.5 sm:gap-5 flex-wrap items-center">
-              <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-black">
-                <Check className="h-4 w-4 text-emerald-400 stroke-[2.5]" />
+            <div className="flex gap-4 sm:gap-6 flex-wrap items-center pt-2">
+              <div className="flex items-center gap-2 text-sm sm:text-[14.5px] text-emerald-300 font-black tracking-tight drop-shadow-xs">
+                <Check className="h-4.5 w-4.5 text-emerald-400 stroke-[2.8] shrink-0" />
                 <span>Verified Farms</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-blue-300 font-black">
-                <Truck className="h-4 w-4 text-blue-400 stroke-[2.5]" />
+              <div className="flex items-center gap-2 text-sm sm:text-[14.5px] text-blue-300 font-black tracking-tight drop-shadow-xs">
+                <Truck className="h-4.5 w-4.5 text-blue-400 stroke-[2.8] shrink-0" />
                 <span>Farm-to-Door</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-black">
-                <Leaf className="h-4 w-4 text-emerald-400 stroke-[2.5]" />
+              <div className="flex items-center gap-2 text-sm sm:text-[14.5px] text-emerald-300 font-black tracking-tight drop-shadow-xs">
+                <Leaf className="h-4.5 w-4.5 text-emerald-400 stroke-[2.8] shrink-0" />
                 <span>100% Natural</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-purple-300 font-black">
-                <Globe className="h-4 w-4 text-purple-400 stroke-[2.5]" />
+              <div className="flex items-center gap-2 text-sm sm:text-[14.5px] text-purple-300 font-black tracking-tight drop-shadow-xs">
+                <Globe className="h-4.5 w-4.5 text-purple-400 stroke-[2.8] shrink-0" />
                 <span>75+ Regions</span>
-              </div>
-              <div className="bg-[#0c2a27] border border-emerald-500/60 text-emerald-300 text-[11px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <Check className="h-3 w-3 stroke-[2.5]" />
-                <span>2027 Target</span>
               </div>
             </div>
 
@@ -536,61 +577,59 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative hidden lg:flex flex-1 p-2.5 pl-0"
+            className="relative hidden lg:flex min-w-0 flex-1 p-2.5 pl-0"
           >
             {/* Outer Gunmetal Metallic Bezel Frame */}
-            <div className="relative w-full h-full rounded-3xl p-1 bg-gradient-to-b from-[#163330] via-[#091a18] to-[#040f0e] border-2 border-[#1a4b44] shadow-[0_0_35px_rgba(4,20,18,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col overflow-hidden">
+            <div className="relative w-full h-full min-w-0 [container-type:inline-size] rounded-3xl p-1 bg-gradient-to-b from-[#163330] via-[#091a18] to-[#040f0e] border-2 border-[#1a4b44] shadow-[0_0_35px_rgba(4,20,18,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col overflow-hidden">
 
               {/* Top Notch Header */}
               <div className="flex items-center justify-between px-3.5 py-2 bg-[#061413]/95 border-b border-[#143d37] z-30 rounded-t-2xl gap-3">
-                {/* Left Layer Switcher Tabs */}
-                <div className="flex items-center gap-1 bg-[#030c0b]/90 p-1 rounded-xl border border-[#143d37]">
-                  <button
-                    onClick={() => setHeroTileStyle("standard")}
-                    className={`px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                      heroTileStyle === "standard"
-                        ? "bg-amber-400 text-amber-950 shadow-sm font-black"
-                        : "text-slate-300 hover:text-white hover:bg-[#0b211f]"
-                    }`}
-                  >
-                    STANDARD
-                  </button>
-                  <button
-                    onClick={() => setHeroTileStyle("satellite")}
-                    className={`px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                      heroTileStyle === "satellite"
-                        ? "bg-amber-400 text-amber-950 shadow-sm font-black"
-                        : "text-slate-300 hover:text-white hover:bg-[#0b211f]"
-                    }`}
-                  >
-                    SATELLITE
-                  </button>
-                  <button
-                    onClick={() => setHeroTileStyle("terrain")}
-                    className={`px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                      heroTileStyle === "terrain"
-                        ? "bg-amber-400 text-amber-950 shadow-sm font-black"
-                        : "text-slate-300 hover:text-white hover:bg-[#0b211f]"
-                    }`}
-                  >
-                    TERRAIN / 3D
-                  </button>
-                  <button
-                    onClick={() => navigate("/map")}
-                    className="px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-300 hover:text-emerald-200 hover:bg-[#0b211f] transition-all cursor-pointer"
-                  >
-                    BUYERS VIEW
-                  </button>
+                {/* Left Layer Switcher Tabs + Buyers View */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1 bg-[#030c0b]/90 p-1 rounded-xl border border-[#143d37]">
+                    <button
+                      onClick={() => setHeroTileStyle("standard")}
+                      className={`px-3 py-1 rounded-lg text-[10px] xl:text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        heroTileStyle === "standard"
+                          ? "bg-amber-400 text-amber-950 shadow-sm font-black"
+                          : "bg-emerald-700 text-white shadow-sm hover:bg-emerald-600"
+                      }`}
+                    >
+                      STANDARD
+                    </button>
+                    <button
+                      onClick={() => setHeroTileStyle("satellite")}
+                      className={`px-3 py-1 rounded-lg text-[10px] xl:text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        heroTileStyle === "satellite"
+                          ? "bg-amber-400 text-amber-950 shadow-sm font-black"
+                          : "bg-emerald-700 text-white shadow-sm hover:bg-emerald-600"
+                      }`}
+                    >
+                      SATELLITE
+                    </button>
+                    <button
+                      onClick={() => setHeroTileStyle("terrain")}
+                      className={`px-3 py-1 rounded-lg text-[10px] xl:text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        heroTileStyle === "terrain"
+                          ? "bg-amber-400 text-amber-950 shadow-sm font-black"
+                          : "bg-emerald-700 text-white shadow-sm hover:bg-emerald-600"
+                      }`}
+                    >
+                      TERRAIN / 3D
+                    </button>
+                  </div>
                 </div>
 
                 {/* Center AGRI CONNECT HUD Badge */}
-                <div className="bg-gradient-to-r from-[#0d2a27] via-[#103a35] to-[#0d2a27] border border-[#1b554c] rounded-xl px-3.5 py-1 shadow-md flex items-center gap-2 shrink-0">
-                  <Leaf className="h-4 w-4 text-emerald-400 fill-emerald-400" />
-                  <span className="text-xs font-black tracking-widest text-emerald-300 uppercase">AGRI CONNECT</span>
+                <div className="flex items-center justify-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#0d2a27] via-[#103a35] to-[#0d2a27] border border-[#1b554c] shadow-md shrink-0">
+                  <Leaf className="h-5 w-5 shrink-0 text-emerald-400 fill-emerald-400" />
+                  <span className="text-sm xl:text-base font-black tracking-wider text-emerald-300 uppercase whitespace-nowrap">
+                    AGRI CONNECT
+                  </span>
                 </div>
 
                 {/* Right Status LEDs */}
-                <div className="flex items-center gap-2.5 shrink-0">
+                <div className="flex items-center justify-end gap-2 shrink-0">
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-950/40 border border-cyan-700/40 text-[10px] font-black tracking-wider text-cyan-300">
                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                     <span>NETWORK</span>
@@ -647,17 +686,6 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                   <circle cx="520" cy="200" r="6" fill="#38bdf8" stroke="#ffffff" strokeWidth="2" />
                   <circle cx="680" cy="160" r="5" fill="#fbbf24" stroke="#ffffff" strokeWidth="2" />
                 </svg>
-
-                {/* Floating Top-Left Route Tracker Badge */}
-                <div className="absolute top-3 left-3 z-[1200] bg-[#071917]/90 backdrop-blur-md border border-emerald-600/70 rounded-xl px-2.5 py-1.5 shadow-xl text-white pointer-events-auto">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-300">
-                      CURRENT FAIR-PRICE ROUTES
-                    </span>
-                  </div>
-                </div>
-
 
                 {/* Floating Weather Card (Bottom Left) */}
                 <div className="absolute bottom-12 left-3 z-[1200] bg-[#071917]/95 backdrop-blur-md border border-emerald-700/60 rounded-xl p-2.5 shadow-2xl text-white w-44 pointer-events-auto">
@@ -717,9 +745,9 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                 </div>
 
                 {/* Bottom Center Status Notch */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-[1200] bg-[#071917]/95 border-2 border-emerald-500/80 rounded-full px-4 py-1 text-center shadow-xl flex items-center gap-2 whitespace-nowrap">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10.5px] sm:text-xs font-black uppercase tracking-wider text-emerald-300">
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-[1200] w-max max-w-[calc(100%_-_1rem)] bg-[#071917]/95 border-2 border-emerald-500/80 rounded-full px-5 py-2 text-center shadow-xl flex items-center justify-center gap-2.5">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="min-w-0 text-base xl:text-lg font-extrabold uppercase leading-snug tracking-[0.06em] text-emerald-200">
                     AgriConnect AI Powered Map
                   </span>
                 </div>
@@ -742,118 +770,73 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
       <div className="relative z-10 bg-background border-t border-border/50">
 
         {/* ─── FRESH PICKS CAROUSEL ─── */}
-        <div className="px-3 sm:container sm:mx-auto sm:px-4 py-2 sm:py-3">
-          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-            <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="w-full px-3 py-2 sm:px-5 lg:px-7">
+          <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-foreground/60">{t("home.fresh_picks")}</span>
-              <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 h-4">{freshPickProducts.slice(0, 14).length}</Badge>
+              <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 h-4">{freshPickProducts.length}</Badge>
             </div>
-            <Button variant="ghost" size="sm" onClick={onBrowse} className="h-6 px-2 text-[10px] font-bold text-primary hover:text-primary gap-1">
-              {t("common.all")} <ArrowRight className="h-3 w-3" />
-            </Button>
-          </div>
-          {homeRecommendations && (
-            <p className="mb-2 text-[10px] font-semibold leading-snug text-muted-foreground sm:text-xs">
-              In-stock fresh food listed within the last {homeRecommendations.freshnessWindowDays} days and available within {homeRecommendations.nearbyRadiusKm} km of {homeRecommendations.location.label}. Nearest products are shown first, followed by higher stock and ratings.
-            </p>
-          )}
-          <div className="flex gap-1.5 sm:gap-2.5 overflow-x-auto pb-1 sm:pb-1.5 no-scrollbar">
-            {freshPickProducts.slice(0, 14).map((product, idx) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.02 }}
-                whileHover={{ y: -3 }}
-                className="flex-shrink-0 w-[88px] sm:w-[112px] group"
-                data-testid={`product-card-${product.id}`}
+            {homeRecommendations && (
+              <p className="order-last w-full text-[10px] font-semibold leading-snug text-muted-foreground sm:text-xs lg:order-none lg:w-auto lg:min-w-0 lg:flex-1">
+                In-stock fresh food listed within the last {homeRecommendations.freshnessWindowDays} days and available within {homeRecommendations.nearbyRadiusKm} km of {homeRecommendations.location.label}. Nearest products are shown first, followed by higher stock and ratings.
+              </p>
+            )}
+            <div className="flex items-center gap-1 ml-auto">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => scrollContainer(freshPicksScrollRef, "left")}
+                className="h-6 w-6 sm:h-7 sm:w-7 rounded-full border-border/80 bg-background hover:bg-muted text-foreground shadow-xs cursor-pointer"
+                title="Previous products"
+                aria-label="Previous fresh pick products"
+                data-testid="btn-freshpicks-scroll-left"
               >
-                <div
-                  role="link"
-                  tabIndex={0}
-                  aria-label={`Browse ${product.name} in its category`}
-                  onClick={() => openProductCategory(product)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openProductCategory(product);
-                    }
-                  }}
-                  className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border border-border/50 bg-muted mb-1 sm:mb-1.5 shadow-xs transition-all group-hover:shadow-md group-hover:border-primary/30 group-hover:scale-[1.02]"
-                >
-                  <img
-                    src={resolveProductImageForProduct(product).src}
-                    alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    loading="lazy"
-                    onError={(e) => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1540420828642-fca2c5c18abe?w=300&h=300&fit=crop`; }}
-                  />
-                  <div className="absolute top-1 right-1">
-                    <Badge className="bg-primary/95 border-none h-4 sm:h-5 px-1 sm:px-1.5 text-[8px] sm:text-[10px] font-bold shadow-xs">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</Badge>
-                  </div>
-                  <FavoriteProductButton
-                    productId={product.id}
-                    productName={product.name}
-                    data-testid={`button-hero-favorite-${product.id}`}
-                    className="!absolute bottom-1 right-1 h-6 w-6 bg-background/95 text-red-500 shadow-md hover:bg-red-50 hover:text-red-600"
-                  />
-                  {product.isOrganic && (
-                    <div className="absolute top-1 left-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-green-500 flex items-center justify-center">
-                      <Leaf className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-white" />
-                    </div>
-                  )}
-                </div>
-                <h3 className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-primary transition-colors">{product.name}</h3>
-                <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-tight">
-                  {product.farmerName} · {product.distance?.toFixed(1)} km
-                </p>
-                <div className="flex items-center gap-0.5 mt-0.5">
-                  <span className="text-[11px] sm:text-[13px] font-black text-primary leading-none">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</span>
-                  <span className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">/{product.unit}</span>
-                </div>
-                <Button
-                  size="sm"
-                  className="w-full mt-1 h-6 sm:h-7 px-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-tight gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-                  onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
-                  data-testid={`button-hero-add-${product.id}`}
-                >
-                  <ShoppingCart className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                  {t("product.add_short")}
-                </Button>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* ─── FEATURED PRODUCTS ─── */}
-        {featuredProducts.length > 0 && (
-          <div className="px-3 sm:container sm:mx-auto sm:px-4 pb-2 sm:pb-3">
-            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">{t("home.featured")}</span>
-                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 text-[8px] sm:text-[9px] px-1 sm:px-1.5 h-4">{t("home.top_picks")}</Badge>
-              </div>
-              <Button variant="ghost" size="sm" onClick={onBrowse} className="h-6 px-2 text-[10px] font-bold text-amber-600 hover:text-amber-700 gap-1">
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => scrollContainer(freshPicksScrollRef, "right")}
+                className="h-6 w-6 sm:h-7 sm:w-7 rounded-full border-border/80 bg-background hover:bg-muted text-foreground shadow-xs cursor-pointer"
+                title="Next products"
+                aria-label="Next fresh pick products"
+                data-testid="btn-freshpicks-scroll-right"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onBrowse} className="h-6 shrink-0 px-2 text-[10px] font-bold text-primary hover:text-primary gap-1">
                 {t("common.all")} <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
-            {homeRecommendations && (
-              <p className="mb-2 text-[10px] font-semibold leading-snug text-muted-foreground sm:text-xs">
-                In-stock featured listings available within {homeRecommendations.nearbyRadiusKm} km of {homeRecommendations.location.label}, ordered by distance, stock, rating, and recency.
-              </p>
-            )}
-            <div className="flex gap-1.5 sm:gap-2.5 overflow-x-auto pb-1 sm:pb-1.5 no-scrollbar">
-              {featuredProducts.slice(0, 16).map((product, idx) => (
+          </div>
+
+          <div className="relative group/freshpicks">
+            {/* Floating Left Paddle Button */}
+            <button
+              type="button"
+              onClick={() => scrollContainer(freshPicksScrollRef, "left")}
+              className="absolute -left-2 sm:-left-3.5 top-1/2 -translate-y-1/2 z-20 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-background/95 hover:bg-background border border-border/90 shadow-xl flex items-center justify-center text-foreground hover:scale-110 active:scale-95 transition-all opacity-0 group-hover/freshpicks:opacity-100 focus:opacity-100 cursor-pointer backdrop-blur-xs"
+              aria-label="Scroll fresh picks left"
+              data-testid="paddle-freshpicks-scroll-left"
+            >
+              <ChevronLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            </button>
+
+            {/* Scrollable Container with sleek scrollbar */}
+            <div
+              ref={freshPicksScrollRef}
+              className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 scroll-smooth [scrollbar-width:thin] [scrollbar-color:rgba(16,185,129,0.35)_transparent] scrollbar-thin scrollbar-thumb-emerald-500/40 hover:scrollbar-thumb-emerald-500/70 empty:hidden"
+            >
+              {freshPickProducts.slice(0, 48).map((product, idx) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.025 }}
+                  transition={{ delay: idx * 0.015 }}
                   whileHover={{ y: -3 }}
-                  className="flex-shrink-0 w-[88px] sm:w-[122px] group"
-                  data-testid={`featured-card-${product.id}`}
+                  className="flex-shrink-0 w-[88px] sm:w-[112px] group"
+                  data-testid={`product-card-${product.id}`}
                 >
                   <div
                     role="link"
@@ -866,7 +849,7 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                         openProductCategory(product);
                       }
                     }}
-                    className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 border-amber-200/60 dark:border-amber-700/40 bg-muted mb-1 sm:mb-1.5 shadow-xs transition-all group-hover:shadow-md group-hover:border-amber-400 group-hover:scale-[1.02]"
+                    className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border border-border/50 bg-muted mb-1 sm:mb-1.5 shadow-xs transition-all group-hover:shadow-md group-hover:border-primary/30 group-hover:scale-[1.02]"
                   >
                     <img
                       src={resolveProductImageForProduct(product).src}
@@ -875,32 +858,31 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                       loading="lazy"
                       onError={(e) => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1540420828642-fca2c5c18abe?w=300&h=300&fit=crop`; }}
                     />
-                    <div className="absolute top-1 left-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-400 flex items-center justify-center shadow-xs">
-                      <Star className="h-2 w-2 sm:h-3 sm:w-3 text-white fill-white" />
-                    </div>
-                    <div className="absolute top-1 right-1">
-                      <Badge className="bg-background/90 border border-amber-300 text-amber-700 dark:text-amber-300 h-4 sm:h-5 px-1 sm:px-1.5 text-[8px] sm:text-[10px] font-bold">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</Badge>
-                    </div>
                     <FavoriteProductButton
                       productId={product.id}
                       productName={product.name}
-                      data-testid={`button-hero-featured-favorite-${product.id}`}
+                      data-testid={`button-hero-favorite-${product.id}`}
                       className="!absolute bottom-1 right-1 h-6 w-6 bg-background/95 text-red-500 shadow-md hover:bg-red-50 hover:text-red-600"
                     />
+                    {product.isOrganic && (
+                      <div className="absolute top-1 left-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-green-500 flex items-center justify-center">
+                        <Leaf className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-white" />
+                      </div>
+                    )}
                   </div>
-                  <h3 className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-amber-600 transition-colors">{product.name}</h3>
+                  <h3 className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-primary transition-colors">{product.name}</h3>
                   <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-tight">
                     {product.farmerName} · {product.distance?.toFixed(1)} km
                   </p>
                   <div className="flex items-center gap-0.5 mt-0.5">
-                    <span className="text-[11px] sm:text-[13px] font-black text-amber-600 dark:text-amber-400 leading-none">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</span>
+                    <span className="text-[11px] sm:text-[13px] font-black text-primary leading-none">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</span>
                     <span className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">/{product.unit}</span>
                   </div>
                   <Button
                     size="sm"
-                    className="w-full mt-1 h-6 sm:h-7 px-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-tight gap-1 bg-amber-500 hover:bg-amber-600 text-white"
+                    className="w-full mt-1 h-6 sm:h-7 px-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-tight gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
-                    data-testid={`button-hero-featured-add-${product.id}`}
+                    data-testid={`button-hero-add-${product.id}`}
                   >
                     <ShoppingCart className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     {t("product.add_short")}
@@ -908,13 +890,159 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
                 </motion.div>
               ))}
             </div>
+
+            {/* Floating Right Paddle Button */}
+            <button
+              type="button"
+              onClick={() => scrollContainer(freshPicksScrollRef, "right")}
+              className="absolute -right-2 sm:-right-3.5 top-1/2 -translate-y-1/2 z-20 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-background/95 hover:bg-background border border-border/90 shadow-xl flex items-center justify-center text-foreground hover:scale-110 active:scale-95 transition-all opacity-0 group-hover/freshpicks:opacity-100 focus:opacity-100 cursor-pointer backdrop-blur-xs"
+              aria-label="Scroll fresh picks right"
+              data-testid="paddle-freshpicks-scroll-right"
+            >
+              <ChevronRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            </button>
+          </div>
+        </div>
+
+        {/* ─── FEATURED PRODUCTS ─── */}
+        {featuredProducts.length > 0 && (
+          <div className="w-full px-3 pb-2 sm:px-5 lg:px-7">
+            <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">{t("home.featured")}</span>
+                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 text-[8px] sm:text-[9px] px-1 sm:px-1.5 h-4">{t("home.top_picks")}</Badge>
+              </div>
+              {homeRecommendations && (
+                <p className="order-last w-full text-[10px] font-semibold leading-snug text-muted-foreground sm:text-xs lg:order-none lg:w-auto lg:min-w-0 lg:flex-1">
+                  In-stock featured listings available within {homeRecommendations.nearbyRadiusKm} km of {homeRecommendations.location.label}, ordered by distance, stock, rating, and recency.
+                </p>
+              )}
+              <div className="flex items-center gap-1 ml-auto">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => scrollContainer(featuredScrollRef, "left")}
+                  className="h-6 w-6 sm:h-7 sm:w-7 rounded-full border-border/80 bg-background hover:bg-muted text-foreground shadow-xs cursor-pointer"
+                  title="Previous products"
+                  aria-label="Previous featured products"
+                  data-testid="btn-featured-scroll-left"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => scrollContainer(featuredScrollRef, "right")}
+                  className="h-6 w-6 sm:h-7 sm:w-7 rounded-full border-border/80 bg-background hover:bg-muted text-foreground shadow-xs cursor-pointer"
+                  title="Next products"
+                  aria-label="Next featured products"
+                  data-testid="btn-featured-scroll-right"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onBrowse} className="h-6 shrink-0 px-2 text-[10px] font-bold text-amber-600 hover:text-amber-700 gap-1">
+                  {t("common.all")} <ArrowRight className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="relative group/featured">
+              {/* Floating Left Paddle Button */}
+              <button
+                type="button"
+                onClick={() => scrollContainer(featuredScrollRef, "left")}
+                className="absolute -left-2 sm:-left-3.5 top-1/2 -translate-y-1/2 z-20 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-background/95 hover:bg-background border border-border/90 shadow-xl flex items-center justify-center text-foreground hover:scale-110 active:scale-95 transition-all opacity-0 group-hover/featured:opacity-100 focus:opacity-100 cursor-pointer backdrop-blur-xs"
+                aria-label="Scroll featured left"
+                data-testid="paddle-featured-scroll-left"
+              >
+                <ChevronLeft className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              </button>
+
+              {/* Scrollable Container with sleek scrollbar */}
+              <div
+                ref={featuredScrollRef}
+                className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 scroll-smooth [scrollbar-width:thin] [scrollbar-color:rgba(245,158,11,0.35)_transparent] scrollbar-thin scrollbar-thumb-amber-400/40 hover:scrollbar-thumb-amber-500/70"
+              >
+                {featuredProducts.slice(0, 48).map((product, idx) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.015 }}
+                    whileHover={{ y: -3 }}
+                    className="flex-shrink-0 w-[88px] sm:w-[122px] group"
+                    data-testid={`featured-card-${product.id}`}
+                  >
+                    <div
+                      role="link"
+                      tabIndex={0}
+                      aria-label={`Browse ${product.name} in its category`}
+                      onClick={() => openProductCategory(product)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openProductCategory(product);
+                        }
+                      }}
+                      className="cursor-pointer relative aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 border-amber-200/60 dark:border-amber-700/40 bg-muted mb-1 sm:mb-1.5 shadow-xs transition-all group-hover:shadow-md group-hover:border-amber-400 group-hover:scale-[1.02]"
+                    >
+                      <img
+                        src={resolveProductImageForProduct(product).src}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1540420828642-fca2c5c18abe?w=300&h=300&fit=crop`; }}
+                      />
+                      <div className="absolute top-1 left-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-400 flex items-center justify-center shadow-xs">
+                        <Star className="h-2 w-2 sm:h-3 sm:w-3 text-white fill-white" />
+                      </div>
+                      <FavoriteProductButton
+                        productId={product.id}
+                        productName={product.name}
+                        data-testid={`button-hero-featured-favorite-${product.id}`}
+                        className="!absolute bottom-1 right-1 h-6 w-6 bg-background/95 text-red-500 shadow-md hover:bg-red-50 hover:text-red-600"
+                      />
+                    </div>
+                    <h3 className="text-[10px] sm:text-[12px] font-bold text-foreground truncate group-hover:text-amber-600 transition-colors">{product.name}</h3>
+                    <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate leading-tight">
+                      {product.farmerName} · {product.distance?.toFixed(1)} km
+                    </p>
+                    <div className="flex items-center gap-0.5 mt-0.5">
+                      <span className="text-[11px] sm:text-[13px] font-black text-amber-600 dark:text-amber-400 leading-none">{format(product.price, { sourceCurrency: product.currency || "GBP" })}</span>
+                      <span className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">/{product.unit}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full mt-1 h-6 sm:h-7 px-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-tight gap-1 bg-amber-500 hover:bg-amber-600 text-white"
+                      onClick={(e) => { e.stopPropagation(); onAddToCart?.(product); }}
+                      data-testid={`button-hero-featured-add-${product.id}`}
+                    >
+                      <ShoppingCart className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                      {t("product.add_short")}
+                    </Button>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Floating Right Paddle Button */}
+              <button
+                type="button"
+                onClick={() => scrollContainer(featuredScrollRef, "right")}
+                className="absolute -right-2 sm:-right-3.5 top-1/2 -translate-y-1/2 z-20 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-background/95 hover:bg-background border border-border/90 shadow-xl flex items-center justify-center text-foreground hover:scale-110 active:scale-95 transition-all opacity-0 group-hover/featured:opacity-100 focus:opacity-100 cursor-pointer backdrop-blur-xs"
+                aria-label="Scroll featured right"
+                data-testid="paddle-featured-scroll-right"
+              >
+                <ChevronRight className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              </button>
+            </div>
           </div>
         )}
 
         {/* ─── COMMUNITY FREE ITEMS ─── */}
         {shareCareItems.length > 0 && (
-          <div className="px-3 sm:container sm:mx-auto sm:px-4 pb-2 sm:pb-3">
-            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+          <div className="w-full px-3 pb-2 sm:px-5 lg:px-7">
+            <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-orange-500 animate-pulse" />
                 <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-orange-600 dark:text-orange-400">{t("home.free_items")}</span>
@@ -955,17 +1083,17 @@ export const HeroSection = memo(function HeroSection({ onBrowse, products, onFar
 
         {/* ─── ALL CATEGORIES ─── */}
         <div className="border-t border-border/30 bg-background">
-          <div className="px-3 sm:container sm:mx-auto sm:px-4 pt-2 sm:pt-4 pb-3 sm:pb-5">
+          <div className="w-full px-3 pt-2 pb-3 sm:px-5 lg:px-7">
 
-            <div className="flex items-center gap-2 sm:gap-2.5 mb-2.5 sm:mb-3 flex-wrap">
-              <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-primary flex-shrink-0" />
-              <h2 className="text-xs sm:text-sm md:text-base font-black uppercase tracking-[0.12em] text-foreground">{t("home.all_categories")}</h2>
-              <span className="text-xs text-muted-foreground font-black">
+            <div className="flex items-center gap-2 sm:gap-2.5 mb-2 flex-wrap">
+              <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-primary flex-shrink-0" />
+              <h2 className="text-lg sm:text-xl md:text-2xl font-extrabold uppercase leading-tight tracking-[0.06em] text-foreground">{t("home.all_categories")}</h2>
+              <span className="text-sm sm:text-base md:text-lg leading-tight whitespace-nowrap text-muted-foreground font-bold">
                 ({homeCategoryTiles.length})
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]">
               {homeCategoryTiles.map((tile) => {
                 const image = resolveCategoryImage(tile.imageId, tile.imageUrl, tile.categoryId);
                 return (

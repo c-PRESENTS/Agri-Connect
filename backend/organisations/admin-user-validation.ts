@@ -18,7 +18,7 @@ const optionalDate = z.preprocess(
 
 const userDirectoryQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+  pageSize: z.coerce.number().int().min(1).max(200).default(20),
   search: optionalText(160),
   accountType: z.preprocess(
     (value) => typeof value === "string" && value.trim() ? value.trim() : undefined,
@@ -53,10 +53,10 @@ const userDirectoryQuerySchema = z.object({
 
 const verificationQueueQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+  pageSize: z.coerce.number().int().min(1).max(200).default(20),
   search: optionalText(160),
   status: z.preprocess(
-    (value) => typeof value === "string" && value.trim() ? value.split(",").filter(Boolean) : undefined,
+    (value) => typeof value === "string" && value.trim() ? (value === "all" ? undefined : value.split(",").filter(Boolean)) : undefined,
     z.array(sellerVerificationStatusSchema).min(1).max(8).optional(),
   ),
   country: optionalText(2, /^[A-Za-z]{2}$/),
@@ -87,10 +87,11 @@ export function parseAdminUserDirectoryQuery(query: Record<string, unknown>): Ad
 }
 
 export function parseAdminVerificationQueueQuery(query: Record<string, unknown>): AdminVerificationQueueQuery {
+  const isStatusAll = query.status === "all" || query.all === "true";
   const parsed = verificationQueueQuerySchema.parse(query);
   return {
     ...parsed,
     country: parsed.country?.toUpperCase(),
-    status: parsed.status ?? ["pending_review", "needs_information"],
+    status: isStatusAll ? undefined : (parsed.status ?? undefined),
   };
 }

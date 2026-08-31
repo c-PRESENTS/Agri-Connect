@@ -38,23 +38,23 @@ export const CategoryCarousel = memo(function CategoryCarousel({
   };
 
   return (
-    <section className="py-4 sm:py-8 md:py-10 px-3 sm:px-6 lg:px-8" style={{ contentVisibility: "auto", containIntrinsicSize: "400px" }}>
+    <section id="category-carousel" className="py-6 sm:py-10 md:py-12 px-3 sm:px-6 lg:px-8 bg-white" style={{ contentVisibility: "auto", containIntrinsicSize: "400px" }}>
       <div className="w-full max-w-[1700px] mx-auto">
-        <div className="flex items-center justify-between mb-3 sm:mb-6 md:mb-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
           <div className="min-w-0">
-            <span className="text-primary font-black text-sm sm:text-base md:text-lg lg:text-xl uppercase tracking-wider block mb-1">
-              {t("category.browse_by_category")}
+            <span className="text-amber-600 font-black text-sm sm:text-base md:text-lg uppercase tracking-wider block mb-1">
+              {t("category.browse_by_category", { defaultValue: "BROWSE BY CATEGORY" })}
             </span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mt-1 sm:mt-2 leading-tight">
-              {t("category.explore_description")}
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 mt-1 sm:mt-2 leading-tight">
+              {t("category.explore_description", { defaultValue: "Explore our wide range of farm products and services" })}
             </h2>
             <Link
               href="/categories"
-              className="mt-2.5 sm:mt-3.5 inline-flex items-center gap-2 bg-gradient-to-r from-primary to-green-600 bg-clip-text text-base sm:text-lg md:text-xl lg:text-2xl font-black text-transparent hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm"
+              className="mt-2.5 sm:mt-3.5 inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-800 text-base sm:text-lg md:text-xl font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-sm transition-colors"
               data-testid="link-view-all-categories"
             >
-              {t("category.view_all_categories")}
-              <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 font-black stroke-[2.5]" aria-hidden="true" />
+              {t("category.view_all_categories", { defaultValue: "View all categories" })}
+              <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-700 font-black stroke-[2.5]" aria-hidden="true" />
             </Link>
           </div>
           <div className="hidden sm:flex gap-2.5">
@@ -62,19 +62,19 @@ export const CategoryCarousel = memo(function CategoryCarousel({
               variant="outline" 
               size="icon" 
               onClick={() => scroll("left")}
-              className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border-2 border-primary/40 hover:border-primary hover:bg-primary/10 shadow-sm"
+              className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border-2 border-slate-200 hover:border-emerald-600 hover:bg-emerald-50 text-slate-800 shadow-sm"
               data-testid="button-scroll-left"
             >
-              <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
+              <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
             <Button 
               variant="outline" 
               size="icon" 
               onClick={() => scroll("right")}
-              className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border-2 border-primary/40 hover:border-primary hover:bg-primary/10 shadow-sm"
+              className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border-2 border-slate-200 hover:border-emerald-600 hover:bg-emerald-50 text-slate-800 shadow-sm"
               data-testid="button-scroll-right"
             >
-              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-foreground" />
+              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
           </div>
         </div>

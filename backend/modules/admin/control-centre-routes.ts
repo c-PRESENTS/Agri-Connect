@@ -503,12 +503,15 @@ export function registerOrganisationControlCentreRoutes(app: Express) {
     } catch (error) { return sendError(error, res); }
   });
 
-  app.get("/api/admin/resources/:module", isAuthenticated, modulePermission("read"), requirePlatformSuperAdmin, async (req, res) => {
+  const handleListResources = async (req: any, res: any) => {
     try { return res.json(await listControlCentreResources(controlCentreResourceModuleSchema.parse(req.params.module))); }
     catch (error) { return sendError(error, res); }
-  });
+  };
 
-  app.patch("/api/admin/resources/:module/:resourceId", isAuthenticated, modulePermission("manage"), requirePlatformSuperAdmin, async (req, res) => {
+  app.get("/api/admin/resources/:module", isAuthenticated, modulePermission("read"), requirePlatformSuperAdmin, handleListResources);
+  app.get("/api/admin/control-centre/resources/:module", isAuthenticated, modulePermission("read"), requirePlatformSuperAdmin, handleListResources);
+
+  const handlePatchResource = async (req: any, res: any) => {
     try {
       const module = controlCentreResourceModuleSchema.parse(req.params.module);
       const id = idSchema.parse(req.params.resourceId);
@@ -547,7 +550,10 @@ export function registerOrganisationControlCentreRoutes(app: Express) {
         permissionCode: permission,
       }) });
     } catch (error) { return sendError(error, res); }
-  });
+  };
+
+  app.patch("/api/admin/resources/:module/:resourceId", isAuthenticated, modulePermission("manage"), requirePlatformSuperAdmin, handlePatchResource);
+  app.patch("/api/admin/control-centre/resources/:module/:resourceId", isAuthenticated, modulePermission("manage"), requirePlatformSuperAdmin, handlePatchResource);
 
   app.get("/api/admin/global-operations/map", isAuthenticated, requireAdminPermission("regions.view"), requirePlatformSuperAdmin, async (req, res) => {
     try {
