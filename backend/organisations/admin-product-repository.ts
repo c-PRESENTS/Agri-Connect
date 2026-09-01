@@ -97,19 +97,40 @@ export async function listAdminProducts(input: AdminProductQuery): Promise<Admin
   params.push(input.pageSize, (input.page - 1) * input.pageSize);
   const limit = `$${params.length - 1}`;
   const offset = `$${params.length}`;
-  const result = await pool.query(
-    `SELECT ${SELECT_PRODUCT},count(*) OVER()::int AS total_count
-       FROM commerce_products p
-       ${PRODUCT_JOINS}
-       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-      ORDER BY ${sortColumns[input.sort]} ${input.direction.toUpperCase()},p.id
-      LIMIT ${limit} OFFSET ${offset}`,
-    params,
-  );
+  const [result, statsResult] = await Promise.all([
+    pool.query(
+      `SELECT ${SELECT_PRODUCT},count(*) OVER()::int AS total_count
+         FROM commerce_products p
+         ${PRODUCT_JOINS}
+         ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+        ORDER BY ${sortColumns[input.sort]} ${input.direction.toUpperCase()},p.id
+        LIMIT ${limit} OFFSET ${offset}`,
+      params,
+    ),
+    pool.query(
+      `SELECT
+         count(*)::int AS total,
+         count(*) FILTER (WHERE moderation_status='approved')::int AS approved,
+         count(*) FILTER (WHERE moderation_status='pending_review')::int AS pending,
+         count(*) FILTER (WHERE moderation_status='changes_requested')::int AS changes,
+         count(*) FILTER (WHERE is_featured=true)::int AS featured,
+         count(*) FILTER (WHERE is_fresh_pick=true)::int AS fresh_picks
+       FROM commerce_products`
+    ),
+  ]);
   const total = Number(result.rows[0]?.total_count ?? 0);
+  const statsRow = statsResult.rows[0];
   return {
     products: result.rows.map(mapProduct),
     pagination: { page: input.page, pageSize: input.pageSize, total, pageCount: Math.ceil(total / input.pageSize) },
+    stats: {
+      total: Number(statsRow?.total ?? total),
+      approved: Number(statsRow?.approved ?? 0),
+      pending: Number(statsRow?.pending ?? 0),
+      changes: Number(statsRow?.changes ?? 0),
+      featured: Number(statsRow?.featured ?? 0),
+      freshPicks: Number(statsRow?.fresh_picks ?? 0),
+    },
     generatedAt: new Date().toISOString(),
   };
 }

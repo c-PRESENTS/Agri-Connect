@@ -35,7 +35,7 @@ export const productModerationEvents = pgTable(
 
 export const adminProductQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+  pageSize: z.coerce.number().int().min(1).max(200).default(20),
   search: z.string().trim().max(120).optional(),
   status: productModerationStatusSchema.optional(),
   categoryId: z.string().trim().min(1).max(120).optional(),
@@ -48,7 +48,7 @@ export const adminProductQuerySchema = z.object({
 });
 
 export const productModerationActionSchema = z.object({
-  expectedUpdatedAt: z.string().datetime(),
+  expectedUpdatedAt: z.string().datetime().optional(),
   reason: z.string().trim().min(3).max(2000).optional(),
 });
 
@@ -57,7 +57,7 @@ export const productModerationReasonActionSchema = productModerationActionSchema
 });
 
 export const productPromotionActionSchema = z.object({
-  expectedUpdatedAt: z.string().datetime(),
+  expectedUpdatedAt: z.string().datetime().optional(),
   enabled: z.boolean(),
 });
 
@@ -102,6 +102,14 @@ export interface AdminProductListItem {
 export interface AdminProductsResponse {
   products: AdminProductListItem[];
   pagination: { page: number; pageSize: number; total: number; pageCount: number };
+  stats?: {
+    total: number;
+    approved: number;
+    pending: number;
+    changes: number;
+    featured: number;
+    freshPicks: number;
+  };
   generatedAt: string;
 }
 
