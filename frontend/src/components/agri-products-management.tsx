@@ -80,6 +80,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
+import { resolveProductImageForProduct } from "@/lib/product-images";
+import { SafeProductImage } from "@/components/safe-product-image";
 
 export type AdminProductItem = {
   id: string;
@@ -113,18 +116,23 @@ export type AdminProductItem = {
   };
 };
 
+export type ModerationEventItem = {
+  id: string;
+  eventType: string;
+  fromStatus?: string | null;
+  toStatus: string;
+  reason?: string | null;
+  actorId?: string | null;
+  actorName: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+};
+
 export type AdminProductDetail = AdminProductItem & {
   description?: string;
+  images?: string[];
   productData?: Record<string, unknown>;
-  history: Array<{
-    id: string;
-    eventType: string;
-    fromStatus?: string | null;
-    toStatus: string;
-    reason?: string | null;
-    actorName: string;
-    createdAt: string;
-  }>;
+  history?: ModerationEventItem[];
 };
 
 function timeAgo(dateString?: string | null): string {
@@ -143,11 +151,17 @@ function timeAgo(dateString?: string | null): string {
 }
 
 function money(amount: number, currency = "GBP"): string {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: currency.toUpperCase() === "GBP" ? "GBP" : currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
+  const numeric = typeof amount === "number" && !isNaN(amount) ? amount : Number(amount) || 0;
+  const curr = typeof currency === "string" && currency.trim() ? currency.trim().toUpperCase() : "GBP";
+  try {
+    return new Intl.NumberFormat(curr === "INR" ? "en-IN" : "en-GB", {
+      style: "currency",
+      currency: curr,
+      minimumFractionDigits: 2,
+    }).format(numeric);
+  } catch {
+    return `${curr} ${numeric.toFixed(2)}`;
+  }
 }
 
 function StatCard({
@@ -212,6 +226,14 @@ export function AgriProductsManagement({
   const { data: productsData, isLoading, refetch, isFetching } = useQuery<{
     products: AdminProductItem[];
     pagination: { total: number; page: number; pageSize: number; pageCount: number };
+    stats?: {
+      total: number;
+      approved: number;
+      pending: number;
+      changes: number;
+      featured: number;
+      freshPicks: number;
+    };
   }>({
     queryKey: ["/api/admin/products", { page: 1, pageSize: 200, sort: "updatedAt", direction: "desc" }],
     queryFn: async () => {
@@ -223,7 +245,10 @@ export function AgriProductsManagement({
   const products = useMemo(() => productsData?.products ?? [], [productsData]);
 
   // Query single product detail for Drawer
-  const { data: detailData, isLoading: isLoadingDetail } = useQuery<{ product: AdminProductDetail }>({
+  const { data: detailData, isLoading: isLoadingDetail, isError: isDetailError } = useQuery<{
+    product: AdminProductDetail;
+    moderationHistory?: ModerationEventItem[];
+  }>({
     queryKey: ["/api/admin/products", selectedProductId],
     queryFn: async () => {
       if (!selectedProductId) return null as never;
@@ -233,6 +258,7 @@ export function AgriProductsManagement({
     enabled: Boolean(selectedProductId),
   });
   const productDetail = detailData?.product;
+  const historyList = useMemo(() => detailData?.moderationHistory ?? productDetail?.history ?? [], [detailData, productDetail]);
 
   // Extract unique categories
   const categories = useMemo(() => {
@@ -274,7 +300,10 @@ export function AgriProductsManagement({
 
   // KPI Metrics
   const stats = useMemo(() => {
-    const total = products.length;
+    if (productsData?.stats) {
+      return productsData.stats;
+    }
+    const total = productsData?.pagination?.total ?? products.length;
     const approved = products.filter((p) => p.moderationStatus === "approved").length;
     const pending = products.filter((p) => p.moderationStatus === "pending_review").length;
     const changes = products.filter((p) => p.moderationStatus === "changes_requested").length;
@@ -289,12 +318,30 @@ export function AgriProductsManagement({
       featured,
       freshPicks,
     };
-  }, [products]);
+  }, [products, productsData]);
 
   // Mutations
   const reviewMutation = useMutation({
-    mutationFn: async ({ id, action, reason }: { id: string; action: string; reason: string }) => {
-      const res = await apiRequest("POST", `/api/admin/products/${id}/${action}`, { reason });
+    mutationFn: async ({
+      id,
+      action,
+      reason,
+      expectedUpdatedAt,
+    }: {
+      id: string;
+      action: string;
+      reason: string;
+      expectedUpdatedAt?: string;
+    }) => {
+      const payload: { reason: string; expectedUpdatedAt?: string } = { reason };
+      if (expectedUpdatedAt) {
+        try {
+          payload.expectedUpdatedAt = new Date(expectedUpdatedAt).toISOString();
+        } catch {
+          // ignore
+        }
+      }
+      const res = await apiRequest("POST", `/api/admin/products/${id}/${action}`, payload);
       return res.json();
     },
     onSuccess: (_, vars) => {
@@ -313,14 +360,32 @@ export function AgriProductsManagement({
   });
 
   const togglePlacementMutation = useMutation({
-    mutationFn: async ({ id, type, enabled }: { id: string; type: "feature" | "fresh-pick"; enabled: boolean }) => {
-      const res = await apiRequest("POST", `/api/admin/products/${id}/${type}`, { enabled });
+    mutationFn: async ({
+      id,
+      type,
+      enabled,
+      expectedUpdatedAt,
+    }: {
+      id: string;
+      type: "feature" | "fresh-pick";
+      enabled: boolean;
+      expectedUpdatedAt?: string;
+    }) => {
+      const payload: { enabled: boolean; expectedUpdatedAt?: string } = { enabled };
+      if (expectedUpdatedAt) {
+        try {
+          payload.expectedUpdatedAt = new Date(expectedUpdatedAt).toISOString();
+        } catch {
+          // ignore
+        }
+      }
+      const res = await apiRequest("POST", `/api/admin/products/${id}/${type}`, payload);
       return res.json();
     },
     onSuccess: (_, vars) => {
       toast({
         title: vars.type === "feature" ? "Featured Placement" : "Fresh Pick Placement",
-        description: `Product ${vars.enabled ? "added to" : "removed from"} homepage showcase.`,
+        description: `Product ${vars.enabled ? "added to" : "removed from"} showcase.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/products"] });
       if (selectedProductId) queryClient.invalidateQueries({ queryKey: ["/api/admin/products", selectedProductId] });
@@ -606,20 +671,30 @@ export function AgriProductsManagement({
                     >
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
-                          {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="h-10 w-10 shrink-0 rounded-lg object-cover border border-slate-200"
-                            />
-                          ) : (
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 font-bold text-[#053f36]">
-                              <Leaf className="h-5 w-5" />
-                            </div>
-                          )}
+                          {(() => {
+                            const imageRes = resolveProductImageForProduct({
+                              id: product.id,
+                              name: product.name,
+                              categoryId: product.categoryId,
+                              subcategoryId: product.subcategoryId,
+                              images: product.image ? [product.image] : [],
+                            });
+                            return (
+                              <SafeProductImage
+                                src={imageRes.src}
+                                fallbackSrc={imageRes.fallbackSrc}
+                                alt={product.name}
+                                className="h-10 w-10 shrink-0 rounded-lg object-cover border border-slate-200"
+                              />
+                            );
+                          })()}
                           <div className="min-w-0">
                             <button
-                              onClick={() => setSelectedProductId(product.id)}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProductId(product.id);
+                              }}
                               className="font-bold text-slate-900 hover:text-[#078c52] hover:underline text-left block truncate max-w-[200px]"
                             >
                               {product.name}
@@ -713,37 +788,44 @@ export function AgriProductsManagement({
                       </td>
 
                       <td className="px-4 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="icon"
-                            onClick={() => setSelectedProductId(product.id)}
-                            className="h-7 w-7 text-slate-500 hover:text-slate-900"
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedProductId(product.id);
+                            }}
+                            className="h-[46px] w-[46px] rounded-xl border border-slate-200 bg-white text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 shadow-xs transition-all active:scale-95"
                             title="Inspect product dossier"
+                            aria-label={`Inspect ${product.name}`}
                           >
-                            <Eye className="h-3.5 w-3.5" />
+                            <Eye className="!h-[30px] !w-[30px] text-slate-600 group-hover:text-emerald-700 transition-colors" strokeWidth={2.2} />
                           </Button>
 
                           {canEdit && (
                             <Button
                               variant="ghost"
                               size="icon"
+                              type="button"
                               onClick={() => {
                                 setReviewTarget(product);
                                 setReviewAction("approve");
                                 setReviewReason("Approved for marketplace distribution.");
                               }}
-                              className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                              className="h-[46px] w-[46px] rounded-xl text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
                               title="Quick Approve"
                             >
-                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              <CheckCircle2 className="!h-[26px] !w-[26px]" strokeWidth={2.2} />
                             </Button>
                           )}
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-slate-900">
-                                <MoreHorizontal className="h-3.5 w-3.5" />
+                              <Button variant="ghost" size="icon" type="button" className="h-[46px] w-[46px] rounded-xl text-slate-400 hover:text-slate-900 transition-colors">
+                                <MoreHorizontal className="!h-[26px] !w-[26px]" strokeWidth={2.2} />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48 text-xs font-medium">
@@ -787,6 +869,7 @@ export function AgriProductsManagement({
                                     id: product.id,
                                     type: "feature",
                                     enabled: !product.isFeatured,
+                                    expectedUpdatedAt: product.updatedAt,
                                   })
                                 }
                               >
@@ -799,6 +882,7 @@ export function AgriProductsManagement({
                                     id: product.id,
                                     type: "fresh-pick",
                                     enabled: !product.isFreshPick,
+                                    expectedUpdatedAt: product.updatedAt,
                                   })
                                 }
                               >
@@ -854,6 +938,11 @@ export function AgriProductsManagement({
       {/* Product Detail Drawer */}
       <Sheet open={Boolean(selectedProductId)} onOpenChange={(open) => !open && setSelectedProductId(null)}>
         <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
+          <SheetHeader className="sr-only">
+            <SheetTitle>{productDetail?.name || "Product Inspection Dossier"}</SheetTitle>
+            <SheetDescription>Product moderation status, producer specifications, and history.</SheetDescription>
+          </SheetHeader>
+
           {isLoadingDetail ? (
             <div className="flex h-full items-center justify-center p-8">
               <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
@@ -864,17 +953,25 @@ export function AgriProductsManagement({
               <div className="bg-[#053f36] p-6 text-white">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    {productDetail.image ? (
-                      <img
-                        src={productDetail.image}
-                        alt={productDetail.name}
-                        className="h-14 w-14 rounded-xl object-cover border-2 border-white/20 shadow-md"
-                      />
-                    ) : (
-                      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-lime-400 font-bold text-[#053f36]">
-                        <Leaf className="h-7 w-7" />
-                      </div>
-                    )}
+                    {(() => {
+                      const detailImageRes = resolveProductImageForProduct({
+                        id: productDetail.id,
+                        name: productDetail.name,
+                        categoryId: productDetail.categoryId,
+                        subcategoryId: productDetail.subcategoryId,
+                        images: productDetail.images?.length
+                          ? productDetail.images
+                          : (productDetail.image ? [productDetail.image] : []),
+                      });
+                      return (
+                        <SafeProductImage
+                          src={detailImageRes.src}
+                          fallbackSrc={detailImageRes.fallbackSrc}
+                          alt={productDetail.name}
+                          className="h-14 w-14 rounded-xl object-cover border-2 border-white/20 shadow-md"
+                        />
+                      );
+                    })()}
                     <div>
                       <h2 className="text-lg font-black">{productDetail.name}</h2>
                       <div className="mt-1 flex items-center gap-2">
@@ -892,12 +989,6 @@ export function AgriProductsManagement({
                       </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setSelectedProductId(null)}
-                    className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
                 </div>
 
                 {/* 4 Stat Boxes */}
@@ -925,11 +1016,11 @@ export function AgriProductsManagement({
 
               {/* Tabs */}
               <Tabs defaultValue="specs" className="flex-1 p-6">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-200">
-                  <TabsTrigger value="specs" className="text-xs font-bold">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-200 h-10 p-1 rounded-xl">
+                  <TabsTrigger value="specs" className="text-xs sm:text-sm font-bold rounded-lg">
                     Product & Seller Specs
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="text-xs font-bold">
+                  <TabsTrigger value="history" className="text-xs sm:text-sm font-bold rounded-lg">
                     Moderation History
                   </TabsTrigger>
                 </TabsList>
@@ -964,58 +1055,81 @@ export function AgriProductsManagement({
                   </Card>
 
                   {/* Actions */}
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
+                  <div className="space-y-3 pt-2">
+                    <div className="flex flex-col sm:flex-row gap-2.5">
                       <Button
-                        className="flex-1 bg-[#078c52] text-white hover:bg-[#067343] text-xs h-9"
+                        className="flex-1 bg-[#078c52] text-white hover:bg-[#067343] text-sm font-bold h-11 rounded-xl shadow-xs active:scale-[0.98] transition-all"
                         onClick={() => {
                           setReviewTarget(productDetail);
                           setReviewAction("approve");
                           setReviewReason("Approved for marketplace distribution.");
                         }}
                       >
-                        <ThumbsUp className="mr-1.5 h-3.5 w-3.5" /> Approve Listing
+                        <ThumbsUp className="mr-2 !h-5 !w-5" /> Approve Listing
                       </Button>
                       <Button
                         variant="outline"
-                        className="flex-1 text-xs h-9 text-amber-700 border-amber-300 hover:bg-amber-50"
+                        className="flex-1 text-sm font-bold h-11 rounded-xl text-amber-800 border-amber-300 bg-amber-50/40 hover:bg-amber-100/70 hover:border-amber-400 active:scale-[0.98] transition-all"
                         onClick={() => {
                           setReviewTarget(productDetail);
                           setReviewAction("request-changes");
                           setReviewReason("");
                         }}
                       >
-                        <Pencil className="mr-1.5 h-3.5 w-3.5" /> Request Changes
+                        <Pencil className="mr-2 !h-5 !w-5" /> Request Changes
                       </Button>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2.5">
                       <Button
                         variant="outline"
-                        className="flex-1 text-xs h-9"
+                        disabled={togglePlacementMutation.isPending}
+                        className={cn(
+                          "flex-1 text-sm font-bold h-11 rounded-xl active:scale-[0.98] transition-all disabled:opacity-50",
+                          productDetail.isFeatured
+                            ? "bg-purple-600 text-white hover:bg-purple-700 border-purple-600 shadow-xs"
+                            : "text-purple-800 border-purple-200 bg-purple-50/40 hover:bg-purple-100/70 hover:border-purple-300",
+                        )}
                         onClick={() =>
                           togglePlacementMutation.mutate({
                             id: productDetail.id,
                             type: "feature",
                             enabled: !productDetail.isFeatured,
+                            expectedUpdatedAt: productDetail.updatedAt,
                           })
                         }
                       >
-                        <Sparkles className="mr-1.5 h-3.5 w-3.5 text-purple-600" />
+                        {togglePlacementMutation.isPending && togglePlacementMutation.variables?.type === "feature" ? (
+                          <RefreshCw className="mr-2 !h-5 !w-5 animate-spin text-current" />
+                        ) : (
+                          <Sparkles className={cn("mr-2 !h-5 !w-5", productDetail.isFeatured ? "text-white" : "text-purple-600")} />
+                        )}
                         {productDetail.isFeatured ? "Remove Featured" : "Feature on Homepage"}
                       </Button>
+
                       <Button
                         variant="outline"
-                        className="flex-1 text-xs h-9"
+                        disabled={togglePlacementMutation.isPending}
+                        className={cn(
+                          "flex-1 text-sm font-bold h-11 rounded-xl active:scale-[0.98] transition-all disabled:opacity-50",
+                          productDetail.isFreshPick
+                            ? "bg-lime-600 text-white hover:bg-lime-700 border-lime-600 shadow-xs"
+                            : "text-lime-900 border-lime-300 bg-lime-50/40 hover:bg-lime-100/70 hover:border-lime-400",
+                        )}
                         onClick={() =>
                           togglePlacementMutation.mutate({
                             id: productDetail.id,
                             type: "fresh-pick",
                             enabled: !productDetail.isFreshPick,
+                            expectedUpdatedAt: productDetail.updatedAt,
                           })
                         }
                       >
-                        <Leaf className="mr-1.5 h-3.5 w-3.5 text-lime-600" />
+                        {togglePlacementMutation.isPending && togglePlacementMutation.variables?.type === "fresh-pick" ? (
+                          <RefreshCw className="mr-2 !h-5 !w-5 animate-spin text-current" />
+                        ) : (
+                          <Leaf className={cn("mr-2 !h-5 !w-5", productDetail.isFreshPick ? "text-white" : "text-lime-600")} />
+                        )}
                         {productDetail.isFreshPick ? "Remove Fresh Pick" : "Mark as Fresh Pick"}
                       </Button>
                     </div>
@@ -1024,13 +1138,14 @@ export function AgriProductsManagement({
 
                 {/* History Tab */}
                 <TabsContent value="history" className="mt-4 space-y-2">
-                  {productDetail.history?.length === 0 ? (
+                  {historyList.length === 0 ? (
                     <div className="p-8 text-center text-slate-400">
                       <Clock className="mx-auto mb-2 h-7 w-7 text-slate-300" />
                       <p className="font-semibold">No moderation events recorded</p>
+                      <p className="text-xs text-slate-400 mt-1">This product has not had any manual moderation actions applied yet.</p>
                     </div>
                   ) : (
-                    productDetail.history.map((event) => (
+                    historyList.map((event) => (
                       <div key={event.id} className="rounded-lg border border-slate-200 bg-white p-3 text-xs">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-800 capitalize">
@@ -1046,6 +1161,15 @@ export function AgriProductsManagement({
                   )}
                 </TabsContent>
               </Tabs>
+            </div>
+          ) : isDetailError || !productDetail ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px]">
+              <AlertCircle className="h-8 w-8 text-rose-500 mb-2" />
+              <p className="font-bold text-slate-800 text-sm">Product Dossier Unavailable</p>
+              <p className="text-xs text-slate-500 mt-1">Unable to load details for SKU {selectedProductId}.</p>
+              <Button size="sm" variant="outline" className="mt-4" onClick={() => setSelectedProductId(null)}>
+                Close
+              </Button>
             </div>
           ) : null}
         </SheetContent>
@@ -1093,6 +1217,7 @@ export function AgriProductsManagement({
                     id: reviewTarget.id,
                     action: reviewAction,
                     reason: reviewReason.trim(),
+                    expectedUpdatedAt: reviewTarget.updatedAt,
                   });
                 }
               }}
