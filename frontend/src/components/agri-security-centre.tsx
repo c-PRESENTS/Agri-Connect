@@ -1178,56 +1178,57 @@ export function AgriSecurityCentre({ onNavigate }: { onNavigate?: (section: Admi
 
       {/* Event Details Sheet Drawer */}
       <Sheet open={Boolean(selectedEvent)} onOpenChange={(open) => !open && setSelectedEvent(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-0 overflow-y-auto bg-slate-50">
+        <SheetContent side="right" className="w-full sm:max-w-lg p-0 overflow-y-auto bg-slate-50" hideCloseButton>
           {selectedEvent && (
             <div className="flex flex-col min-h-full">
-              <div className="bg-[#053f36] p-6 text-white">
-                <div className="flex items-start justify-between">
+              <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+                <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-black">Authentication Audit Event</h2>
-                    <p className="text-xs text-white/70 mt-1 font-mono">Event #{selectedEvent.id}</p>
+                    <h2 className="text-xl sm:text-2xl font-black tracking-tight">Authentication Audit Event</h2>
+                    <p className="text-xs sm:text-sm text-emerald-200 mt-1.5 font-mono font-bold">Event #{selectedEvent.id}</p>
                   </div>
                   <button
                     onClick={() => setSelectedEvent(null)}
-                    className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                    aria-label="Close event drawer"
+                    className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
               </div>
 
-              <div className="p-6 space-y-4 text-xs">
-                <Card className="border-slate-200 rounded-2xl">
-                  <CardContent className="p-4 space-y-2.5">
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Method</span>
-                      <span className="font-bold text-slate-900 uppercase">{selectedEvent.method}</span>
+              <div className="p-6 sm:p-7 space-y-6">
+                <Card className="border-slate-200 rounded-2xl bg-white shadow-xs">
+                  <CardContent className="p-5 sm:p-6 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 gap-1">
+                      <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Method</span>
+                      <span className="text-sm sm:text-base font-black text-slate-900 uppercase">{selectedEvent.method}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Outcome</span>
-                      <Badge className={selectedEvent.outcome === "success" ? "bg-emerald-100 text-emerald-800 border-none" : "bg-rose-100 text-rose-800 border-none"}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 gap-1">
+                      <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Outcome</span>
+                      <Badge className={selectedEvent.outcome === "success" ? "bg-emerald-100 text-emerald-800 border-none text-xs font-black uppercase px-2.5 py-1" : "bg-rose-100 text-rose-800 border-none text-xs font-black uppercase px-2.5 py-1"}>
                         {selectedEvent.outcome.toUpperCase()}
                       </Badge>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Timestamp</span>
-                      <span className="font-mono text-slate-700">{new Date(selectedEvent.occurredAt).toLocaleString()}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 gap-1">
+                      <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Timestamp</span>
+                      <span className="font-mono text-xs sm:text-sm font-bold text-slate-800">{new Date(selectedEvent.occurredAt).toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-slate-500">Reason / Code</span>
-                      <span className="font-mono text-slate-700">{selectedEvent.failureCode || "None (Successful authentication)"}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1">
+                      <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Reason / Code</span>
+                      <span className="font-mono text-xs sm:text-sm font-bold text-slate-800">{selectedEvent.failureCode || "None (Successful authentication)"}</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Button
-                  className="w-full bg-[#078c52] text-white hover:bg-[#067343] font-bold rounded-xl"
+                  className="w-full h-12 sm:h-13 text-sm sm:text-base font-black rounded-xl bg-[#053f36] hover:bg-[#075347] text-white active:scale-[0.98] transition-all shadow-xs cursor-pointer"
                   onClick={() => {
                     navigator.clipboard.writeText(JSON.stringify(selectedEvent, null, 2));
                     toast({ title: "Event JSON Copied" });
                   }}
                 >
-                  <Copy className="mr-1.5 h-4 w-4" /> Copy Event JSON
+                  <Copy className="mr-2 h-5 w-5 text-lime-300" /> Copy Event JSON
                 </Button>
               </div>
             </div>

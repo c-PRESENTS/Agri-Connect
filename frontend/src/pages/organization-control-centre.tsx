@@ -363,7 +363,7 @@ export default function OrganisationControlCentrePage({ defaultSection = "overvi
           onOrganisationChange={organisations.setActiveOrganisation}
         />
         <main className="mx-auto max-w-[1680px] px-4 pb-10 pt-5 sm:px-5 lg:px-6">
-          {section === "overview" ? <OverviewDashboard onNavigate={navigate} /> : section === "analytics" ? <AgriAnalyticsDashboard onNavigate={navigate} /> : section === "revenue" ? <AgriRevenueDashboard onNavigate={navigate} /> : section === "security" ? <AgriSecurityCentre onNavigate={navigate} /> : section === "global-operations" ? <AgriGlobalOperations permissions={access.data?.permissions ?? []} /> : section === "users" ? <UsersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "farmers" ? <AgriFarmersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "sellers" ? <AgriSellersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "buyers" ? <AgriBuyersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "students" ? <AgriStudentsManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "researchers" ? <AgriResearchersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "logistics-partners" ? <AgriLogisticsPartnersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "verification" ? <AgriVerificationCentre permissions={access.data?.permissions ?? []} /> : section === "organisations" ? <AgriOrganisationsManagement permissions={access.data?.permissions ?? []} /> : section === "employees" ? <AgriEmployeesManagement permissions={access.data?.permissions ?? []} /> : section === "products" ? <AgriProductsManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "categories" ? <AgriCategoriesManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "regions" ? <AgriRegionsManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "content" ? <AgriContentManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "orders" ? <AgriOrdersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "logistics" ? <AgriLogisticsManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "data" ? <AgriDataCentre permissions={access.data?.permissions ?? []} /> : section === "audit" ? <AgriAuditLogs permissions={access.data?.permissions ?? []} /> : section === "settings" ? <AgriPlatformSettings permissions={access.data?.permissions ?? []} /> : <ControlResourceSection section={section} permissions={access.data?.permissions ?? []} />}
+          {section === "overview" ? <OverviewDashboard onNavigate={navigate} /> : section === "analytics" ? <AgriAnalyticsDashboard onNavigate={navigate} /> : section === "revenue" ? <AgriRevenueDashboard onNavigate={navigate} /> : section === "security" ? <AgriSecurityCentre onNavigate={navigate} /> : section === "global-operations" ? <AgriGlobalOperations onNavigate={navigate} permissions={access.data?.permissions ?? []} /> : section === "users" ? <UsersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "farmers" ? <AgriFarmersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "sellers" ? <AgriSellersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "buyers" ? <AgriBuyersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "students" ? <AgriStudentsManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "researchers" ? <AgriResearchersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "logistics-partners" ? <AgriLogisticsPartnersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "verification" ? <AgriVerificationCentre permissions={access.data?.permissions ?? []} /> : section === "organisations" ? <AgriOrganisationsManagement permissions={access.data?.permissions ?? []} /> : section === "employees" ? <AgriEmployeesManagement permissions={access.data?.permissions ?? []} /> : section === "products" ? <AgriProductsManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "categories" ? <AgriCategoriesManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "regions" ? <AgriRegionsManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "content" ? <AgriContentManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "orders" ? <AgriOrdersManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "logistics" ? <AgriLogisticsManagement initialSearch={search} permissions={access.data?.permissions ?? []} /> : section === "data" ? <AgriDataCentre permissions={access.data?.permissions ?? []} /> : section === "audit" ? <AgriAuditLogs permissions={access.data?.permissions ?? []} /> : section === "settings" ? <AgriPlatformSettings permissions={access.data?.permissions ?? []} /> : <ControlResourceSection section={section} permissions={access.data?.permissions ?? []} />}
         </main>
       </div>
     </div>
@@ -486,11 +486,11 @@ function AdminSidebar({
           onClick={() => window.location.assign("/")}
           className={`group flex w-full items-center ${
             collapsed ? "justify-center px-2 py-2" : "gap-3 px-4 py-3 text-left"
-          } rounded-xl text-sm font-black bg-white/10 text-white hover:bg-white/20 transition-all border border-white/15 shadow-2xs cursor-pointer`}
+          } rounded-xl text-base font-black bg-white/10 text-white hover:bg-white/20 transition-all border border-white/15 shadow-2xs cursor-pointer`}
           title="Go to Public Website"
         >
-          <Globe className="h-4.5 w-4.5 shrink-0 text-lime-400" />
-          {!collapsed && <span className="min-w-0 flex-1 whitespace-nowrap font-black text-sm">Public Website</span>}
+          <Globe className="h-5 w-5 shrink-0 text-lime-400" />
+          {!collapsed && <span className="min-w-0 flex-1 whitespace-nowrap font-black text-base">Public Website</span>}
           {!collapsed && <ArrowUpRight className="h-4 w-4 shrink-0 text-white/70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />}
         </button>
       </div>
@@ -592,14 +592,14 @@ function AdminHeader({
             <AgriControlCentreBadge onClick={() => onNavigate("overview")} />
             <Button
               variant="outline"
-              size="sm"
+              size="default"
               onClick={() => navigate("/")}
               title="Go to AgriConnect Public Marketplace"
-              className="hidden xl:inline-flex items-center gap-1.5 h-8.5 px-3 rounded-xl border-emerald-800/20 bg-white/95 hover:bg-emerald-50 hover:border-emerald-600/40 text-emerald-900 font-black text-xs shadow-2xs transition-all"
+              className="hidden xl:inline-flex items-center gap-2 h-9.5 px-3.5 rounded-xl border-emerald-800/20 bg-white/95 hover:bg-emerald-50 hover:border-emerald-600/40 text-emerald-900 font-black text-sm shadow-2xs transition-all cursor-pointer"
             >
-              <Globe className="h-3.5 w-3.5 text-emerald-700" />
+              <Globe className="h-4 w-4 text-emerald-700" />
               <span>Public Website</span>
-              <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" />
+              <ArrowUpRight className="h-4 w-4 text-emerald-600" />
             </Button>
           </div>
 
@@ -615,14 +615,14 @@ function AdminHeader({
           {/* Public Website Button for Medium screens */}
           <Button
             variant="outline"
-            size="sm"
+            size="default"
             onClick={() => navigate("/")}
             title="Go to AgriConnect Public Marketplace"
-            className="xl:hidden hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-slate-200 bg-white hover:bg-emerald-50 text-emerald-900 font-bold text-xs shadow-2xs shrink-0"
+            className="xl:hidden hidden sm:inline-flex items-center gap-2 h-9.5 px-3.5 rounded-xl border-slate-200 bg-white hover:bg-emerald-50 text-emerald-900 font-black text-sm shadow-2xs shrink-0 cursor-pointer"
           >
-            <Globe className="h-3.5 w-3.5 text-emerald-700" />
+            <Globe className="h-4 w-4 text-emerald-700" />
             <span>Website</span>
-            <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
+            <ArrowUpRight className="h-4 w-4 text-slate-400" />
           </Button>
 
           {/* Functional Region Selector */}
@@ -632,7 +632,7 @@ function AdminHeader({
               aria-label="Filter by region"
               value={selectedRegion}
               onChange={(e) => handleRegionChange(e.target.value)}
-              className="h-10 rounded-xl border border-slate-200/90 dark:border-border/60 bg-white dark:bg-card pl-7 pr-7 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs outline-none hover:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
+              className="h-10 rounded-xl border border-slate-200/90 dark:border-border/60 bg-white dark:bg-card pl-7 pr-7 text-sm font-bold text-slate-800 dark:text-slate-200 shadow-2xs outline-none hover:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
               title="Filter by Market Region"
               data-testid="select-admin-region"
             >
@@ -650,16 +650,16 @@ function AdminHeader({
             </select>
           </div>
 
-          <label className="hidden items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50/70 px-3 text-[10px] font-black text-emerald-900 2xl:flex">
+          <label className="hidden items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3.5 h-10 text-xs font-black text-emerald-900 2xl:flex">
             <Building2 className="h-4 w-4 text-emerald-700" />
-            <select aria-label="Active organisation" value={activeOrganisationId ?? ""} onChange={(event) => onOrganisationChange(event.target.value)} className="max-w-40 bg-transparent outline-none">
+            <select aria-label="Active organisation" value={activeOrganisationId ?? ""} onChange={(event) => onOrganisationChange(event.target.value)} className="max-w-40 bg-transparent outline-none text-xs font-bold cursor-pointer">
               {organisations.length === 0 && <option value="">No organisations</option>}
               {organisations.map((organisation) => <option key={organisation.id} value={organisation.id}>{organisation.name}</option>)}
             </select>
           </label>
           <Button
             onClick={() => setIsExportDialogOpen(true)}
-            className="hidden sm:flex h-10 rounded-lg bg-[#0d604e] px-4 text-xs font-black text-white hover:bg-[#084c3e] items-center gap-1.5 shadow-2xs"
+            className="hidden sm:flex h-10 rounded-xl bg-[#0d604e] px-4.5 text-sm font-black text-white hover:bg-[#084c3e] items-center gap-2 shadow-2xs cursor-pointer"
             title="Export Enterprise Datasets & Reports"
             data-testid="button-admin-export"
           >
@@ -694,19 +694,19 @@ function AdminHeader({
               </Avatar>
               <span className="hidden max-w-28 truncate text-[11px] font-bold leading-tight sm:block">{user?.name || "Super Admin"}<span className="block text-[10px] font-medium text-slate-400">AgriConnect Org</span></span>
             </button>
-            <div className="invisible absolute right-0 top-full mt-2 w-48 rounded-xl border border-slate-200 bg-white p-2 opacity-0 shadow-xl transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 z-50">
-              <button onClick={() => setIsNotificationsOpen(true)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">
-                <Bell className="h-4 w-4 text-emerald-600" /> Notifications
+            <div className="invisible absolute right-0 top-full mt-2 w-52 rounded-xl border border-slate-200 bg-white p-2 opacity-0 shadow-xl transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 z-50">
+              <button onClick={() => setIsNotificationsOpen(true)} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 cursor-pointer">
+                <Bell className="h-4.5 w-4.5 text-emerald-600" /> Notifications
                 {unreadCount > 0 && <Badge className="ml-auto bg-rose-600 text-white text-[9px] px-1 py-0">{unreadCount}</Badge>}
               </button>
-              <button onClick={() => setIsExportDialogOpen(true)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50">
-                <Download className="h-4 w-4 text-emerald-600" /> Export Datasets
+              <button onClick={() => setIsExportDialogOpen(true)} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 cursor-pointer">
+                <Download className="h-4.5 w-4.5 text-emerald-600" /> Export Datasets
               </button>
-              <button onClick={() => navigate("/")} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold text-emerald-800 hover:bg-emerald-50">
-                <Globe className="h-4 w-4 text-emerald-600" /> Public Website
+              <button onClick={() => navigate("/")} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-emerald-800 hover:bg-emerald-50 cursor-pointer">
+                <Globe className="h-4.5 w-4.5 text-emerald-600" /> Public Website
               </button>
-              <button onClick={onLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold text-slate-600 hover:bg-slate-50 border-t border-slate-100 mt-1 pt-2">
-                <LogOut className="h-4 w-4" /> Sign out
+              <button onClick={onLogout} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-slate-600 hover:bg-slate-50 border-t border-slate-100 mt-1 pt-2.5 cursor-pointer">
+                <LogOut className="h-4.5 w-4.5" /> Sign out
               </button>
             </div>
           </div>
@@ -1677,7 +1677,85 @@ function VerificationCentre() {
     <div className="space-y-5">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Management / Verification</p><h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Verification centre</h1><p className="mt-1 text-sm text-slate-500">Review seller verification cases with the platform’s established, audited workflow.</p></div><Badge className="w-fit bg-emerald-100 text-emerald-800"><ShieldCheck className="mr-1 h-3.5 w-3.5" /> Permission-gated reviews</Badge></div>
       <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm"><CardContent className="p-0">{isLoading ? <TableSkeleton /> : isError ? <ErrorState message="Unable to load verification cases." onRetry={() => refetch()} /> : <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left"><thead className="bg-slate-50 text-[10px] font-black uppercase tracking-wide text-slate-400"><tr><th className="px-5 py-3">Seller</th><th className="px-4 py-3">Business type</th><th className="px-4 py-3">Country</th><th className="px-4 py-3">Submitted</th><th className="px-4 py-3">Status</th><th className="px-5 py-3 text-right">Review</th></tr></thead><tbody className="divide-y divide-slate-100">{cases.map((item) => <tr key={item.id} className="hover:bg-emerald-50/30"><td className="px-5 py-4"><p className="text-xs font-black">{item.legalName || item.sellerName || item.sellerEmail || "Seller"}</p><p className="mt-1 text-[10px] text-slate-400">{item.sellerEmail || item.contactEmail}</p></td><td className="px-4 py-4 text-xs font-semibold capitalize text-slate-600">{item.entityType.replaceAll("_", " ")}</td><td className="px-4 py-4 text-xs font-semibold text-slate-600">{item.country}</td><td className="px-4 py-4 text-xs text-slate-500">{formatDate(item.submittedAt)}</td><td className="px-4 py-4"><Badge className={item.status === "verified" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>{item.status.replaceAll("_", " ")}</Badge></td><td className="px-5 py-4 text-right"><Button variant="outline" className="h-8 rounded-lg text-xs font-bold" onClick={() => setSelected(item)}>Open review</Button></td></tr>)}</tbody></table></div>}{!isLoading && !isError && !cases.length && <EmptyState icon={FileCheck2} message="No seller verification cases match this queue." />}</CardContent></Card>
-      <Sheet open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}><SheetContent side="right" className="w-full overflow-y-auto bg-[#f8fbf7] sm:max-w-lg"><SheetHeader><SheetTitle>Review seller verification</SheetTitle><SheetDescription>{selected?.legalName || selected?.sellerEmail} · {selected?.status.replaceAll("_", " ")}</SheetDescription></SheetHeader><div className="mt-6 space-y-4"><InfoBlock title="Review rules"><p className="text-xs leading-5 text-slate-600">Approval uses the existing seller-verification review endpoint. The authoritative workflow validates the case, records the review event, and updates seller capability only through the verified case state.</p></InfoBlock><label className="block text-xs font-black text-slate-700">Review reason<textarea value={reason} onChange={(event) => setReason(event.target.value)} minLength={3} maxLength={2000} placeholder="Explain the review decision (minimum 3 characters)" className="mt-2 min-h-28 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-medium outline-none focus:border-emerald-500" /></label>{review.isError && <p className="rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-700">The review could not be saved. Confirm your permissions and case requirements.</p>}<div className="grid grid-cols-2 gap-2"><Button disabled={!selected || reason.trim().length < 3 || !canApprove || review.isPending} onClick={() => selected && review.mutate({ caseId: selected.id, decision: "verified" })} className="h-11 rounded-xl bg-emerald-700 text-xs font-black hover:bg-emerald-800"><CheckCircle2 className="h-4 w-4" /> Approve</Button><Button disabled={!selected || reason.trim().length < 3 || !canReject || review.isPending} onClick={() => selected && review.mutate({ caseId: selected.id, decision: "rejected" })} variant="outline" className="h-11 rounded-xl text-xs font-black text-rose-700"><XCircle className="h-4 w-4" /> Reject</Button><Button disabled={!selected || reason.trim().length < 3 || review.isPending} onClick={() => selected && review.mutate({ caseId: selected.id, decision: "needs_information" })} variant="outline" className="col-span-2 h-11 rounded-xl text-xs font-black"><FileCheck2 className="h-4 w-4" /> Request information</Button></div><p className="text-[10px] leading-4 text-slate-400">Document review remains protected; use the established secure document viewer before entering a final decision.</p></div></SheetContent></Sheet>
+      <Sheet open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
+        <SheetContent side="right" className="w-full overflow-y-auto bg-slate-50 sm:max-w-2xl p-0" hideCloseButton>
+          <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight">Review Seller Verification</h2>
+                <p className="mt-1.5 text-xs sm:text-sm font-bold text-white/80">
+                  {selected?.legalName || selected?.sellerEmail} · <span className="capitalize text-lime-300">{selected?.status.replaceAll("_", " ")}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setSelected(null)}
+                aria-label="Close review drawer"
+                className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-7 space-y-6">
+            <InfoBlock title="Review rules">
+              <p className="text-xs sm:text-sm leading-6 text-slate-600 font-medium">
+                Approval uses the existing seller-verification review endpoint. The authoritative workflow validates the case, records the review event, and updates seller capability only through the verified case state.
+              </p>
+            </InfoBlock>
+
+            <div className="space-y-2">
+              <label className="block text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
+                Review reason (required for audit log) *
+              </label>
+              <textarea
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                minLength={3}
+                maxLength={2000}
+                placeholder="Explain the review decision (minimum 3 characters)..."
+                className="min-h-32 w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-medium outline-none focus:border-[#078c52] focus:ring-1 focus:ring-[#078c52]"
+              />
+            </div>
+
+            {review.isError && (
+              <p className="rounded-xl bg-rose-50 p-4 text-xs sm:text-sm font-bold text-rose-700 border border-rose-200">
+                The review could not be saved. Confirm your permissions and case requirements.
+              </p>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <Button
+                disabled={!selected || reason.trim().length < 3 || !canApprove || review.isPending}
+                onClick={() => selected && review.mutate({ caseId: selected.id, decision: "verified" })}
+                className="h-12 sm:h-13 rounded-xl bg-[#053f36] text-sm sm:text-base font-black text-white hover:bg-[#075347] active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+              >
+                <CheckCircle2 className="mr-2 h-5 w-5 text-lime-300" /> Approve & Certify
+              </Button>
+              <Button
+                disabled={!selected || reason.trim().length < 3 || !canReject || review.isPending}
+                onClick={() => selected && review.mutate({ caseId: selected.id, decision: "rejected" })}
+                variant="outline"
+                className="h-12 sm:h-13 rounded-xl border-rose-300 text-rose-700 bg-rose-50 hover:bg-rose-100 text-sm sm:text-base font-black active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+              >
+                <XCircle className="mr-2 h-5 w-5" /> Reject Case
+              </Button>
+              <Button
+                disabled={!selected || reason.trim().length < 3 || review.isPending}
+                onClick={() => selected && review.mutate({ caseId: selected.id, decision: "needs_information" })}
+                variant="outline"
+                className="sm:col-span-2 h-12 sm:h-13 rounded-xl border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100 text-sm sm:text-base font-black active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+              >
+                <FileCheck2 className="mr-2 h-5 w-5 text-amber-600" /> Request Information
+              </Button>
+            </div>
+
+            <p className="text-xs leading-relaxed text-slate-500 font-medium">
+              Document review remains protected; use the established secure document viewer before entering a final decision.
+            </p>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -1723,7 +1801,141 @@ function OrganisationApplications({ permissions }: { permissions: string[] }) {
   const { data, isLoading, isError, refetch } = useQuery<{ applications: OrganisationApplication[] }>({ queryKey: [endpoint] });
   const review = useMutation({ mutationFn: ({ id, status }: { id: string; status: "approved" | "rejected" | "documents_required" }) => apiRequest("POST", `/api/admin/organisations/applications/${id}/review`, { status, reason: reason.trim() }), onSuccess: () => { setSelected(null); setReason(""); queryClient.invalidateQueries({ queryKey: [endpoint] }); queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] }); } });
   const canReview = permissions.includes("organisations.review"); const canApprove = canReview && permissions.includes("organisations.approve");
-  return <div className="space-y-5"><div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="text-xs font-black uppercase tracking-[.18em] text-emerald-700">Organisation</p><h1 className="mt-1 text-2xl font-black sm:text-3xl">Organisation applications</h1><p className="mt-1 text-sm text-slate-500">Review submitted owner applications using the audited server workflow.</p></div><Button asChild className="bg-[#183f35]"><a href="/regional-organisation">Start application</a></Button></div><Card className="overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm"><CardContent className="p-0">{isLoading ? <TableSkeleton /> : isError ? <ErrorState message="Unable to load organisation applications." onRetry={() => refetch()} /> : <div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase text-slate-400"><tr><th className="p-4">Organisation</th><th className="p-4">Official email</th><th className="p-4">Submitted</th><th className="p-4">Status</th><th className="p-4 text-right">Review</th></tr></thead><tbody>{(data?.applications ?? []).map((item) => <tr key={item.id} className="border-t"><td className="p-4 font-bold">{item.organisationName || item.id}</td><td className="p-4 text-slate-600">{item.officialEmail || "—"}</td><td className="p-4">{formatDate(item.submittedAt || item.createdAt)}</td><td className="p-4 capitalize">{item.status.replaceAll("_", " ")}</td><td className="p-4 text-right"><Button size="sm" variant="outline" disabled={!canReview || !["pending_review", "documents_required"].includes(item.status)} onClick={() => setSelected(item.id)}>Review</Button></td></tr>)}</tbody></table></div>}{!isLoading && !isError && !(data?.applications?.length) && <EmptyState icon={Boxes} message="No organisation applications are available." />}</CardContent></Card><Sheet open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}><SheetContent><SheetHeader><SheetTitle>Review application</SheetTitle><SheetDescription>A reason of at least three characters is required and recorded in the audit trail.</SheetDescription></SheetHeader><textarea value={reason} onChange={(event) => setReason(event.target.value)} minLength={3} maxLength={1000} className="mt-5 min-h-28 w-full rounded-xl border p-3 text-sm" placeholder="Reason for this decision" /><div className="mt-4 grid gap-2"><Button disabled={!canApprove || reason.trim().length < 3 || review.isPending} onClick={() => selected && review.mutate({ id: selected, status: "approved" })}>Approve</Button><Button disabled={!canReview || reason.trim().length < 3 || review.isPending} variant="outline" onClick={() => selected && review.mutate({ id: selected, status: "documents_required" })}>Request documents</Button><Button disabled={!canReview || reason.trim().length < 3 || review.isPending} variant="outline" className="text-rose-700" onClick={() => selected && review.mutate({ id: selected, status: "rejected" })}>Reject</Button>{review.isError && <p className="text-xs text-rose-700">The review could not be saved.</p>}</div></SheetContent></Sheet></div>;
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[.18em] text-emerald-700">Organisation</p>
+          <h1 className="mt-1 text-2xl font-black sm:text-3xl">Organisation applications</h1>
+          <p className="mt-1 text-sm text-slate-500">Review submitted owner applications using the audited server workflow.</p>
+        </div>
+        <Button asChild className="h-11 px-5 rounded-xl bg-[#183f35] hover:bg-[#123129] font-bold text-white shadow-xs">
+          <a href="/regional-organisation">Start application</a>
+        </Button>
+      </div>
+      <Card className="overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm">
+        <CardContent className="p-0">
+          {isLoading ? (
+            <TableSkeleton />
+          ) : isError ? (
+            <ErrorState message="Unable to load organisation applications." onRetry={() => refetch()} />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[650px] text-left text-xs">
+                <thead className="bg-slate-50 text-[10px] uppercase font-black text-slate-400">
+                  <tr>
+                    <th className="p-4">Organisation</th>
+                    <th className="p-4">Official email</th>
+                    <th className="p-4">Submitted</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Review</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data?.applications ?? []).map((item) => (
+                    <tr key={item.id} className="border-t hover:bg-slate-50/60 transition-colors">
+                      <td className="p-4 font-bold text-slate-900">{item.organisationName || item.id}</td>
+                      <td className="p-4 text-slate-600">{item.officialEmail || "—"}</td>
+                      <td className="p-4 font-medium text-slate-500">{formatDate(item.submittedAt || item.createdAt)}</td>
+                      <td className="p-4">
+                        <Badge variant="outline" className="capitalize font-bold text-xs">
+                          {item.status.replaceAll("_", " ")}
+                        </Badge>
+                      </td>
+                      <td className="p-4 text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-9 px-3 rounded-xl text-xs font-bold"
+                          disabled={!canReview || !["pending_review", "documents_required"].includes(item.status)}
+                          onClick={() => setSelected(item.id)}
+                        >
+                          Review
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {!isLoading && !isError && !data?.applications?.length && (
+            <EmptyState icon={Boxes} message="No organisation applications are available." />
+          )}
+        </CardContent>
+      </Card>
+
+      <Sheet open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
+        <SheetContent side="right" className="w-full overflow-y-auto bg-slate-50 sm:max-w-2xl p-0" hideCloseButton>
+          <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight">Review Application Dossier</h2>
+                <p className="mt-1.5 text-xs sm:text-sm font-medium text-white/80">
+                  A decision reason of at least 3 characters is recorded in the audit trail.
+                </p>
+              </div>
+              <button
+                onClick={() => setSelected(null)}
+                aria-label="Close review drawer"
+                className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-7 space-y-6">
+            <div className="space-y-2">
+              <label className="block text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
+                Decision rationale & audit note *
+              </label>
+              <textarea
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                minLength={3}
+                maxLength={1000}
+                className="min-h-32 w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-medium outline-none focus:border-[#078c52] focus:ring-1 focus:ring-[#078c52]"
+                placeholder="Detail reason for this operational decision (minimum 3 characters)..."
+              />
+            </div>
+
+            {review.isError && (
+              <p className="rounded-xl bg-rose-50 p-4 text-xs sm:text-sm font-bold text-rose-700 border border-rose-200">
+                The review could not be saved. Please re-check permissions and try again.
+              </p>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <Button
+                disabled={!canApprove || reason.trim().length < 3 || review.isPending}
+                onClick={() => selected && review.mutate({ id: selected, status: "approved" })}
+                className="h-12 sm:h-13 rounded-xl bg-[#053f36] text-sm sm:text-base font-black text-white hover:bg-[#075347] active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+              >
+                <CheckCircle2 className="mr-2 h-5 w-5 text-lime-300" /> Approve Application
+              </Button>
+              <Button
+                disabled={!canReview || reason.trim().length < 3 || review.isPending}
+                variant="outline"
+                className="h-12 sm:h-13 rounded-xl border-rose-300 text-rose-700 bg-rose-50 hover:bg-rose-100 text-sm sm:text-base font-black active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                onClick={() => selected && review.mutate({ id: selected, status: "rejected" })}
+              >
+                <XCircle className="mr-2 h-5 w-5" /> Reject Application
+              </Button>
+              <Button
+                disabled={!canReview || reason.trim().length < 3 || review.isPending}
+                variant="outline"
+                className="sm:col-span-2 h-12 sm:h-13 rounded-xl border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100 text-sm sm:text-base font-black active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                onClick={() => selected && review.mutate({ id: selected, status: "documents_required" })}
+              >
+                <FileCheck2 className="mr-2 h-5 w-5 text-amber-600" /> Request Documents
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
 }
 
 function EmployeesManagement({ permissions }: { permissions: string[] }) {
@@ -1939,27 +2151,128 @@ function ResourceModuleSection({ module, config, permissions }: { module: string
     update.mutate({ record, action: action.action, reason: reason.trim() });
   };
   const Icon = config.icon;
-  return <div className="space-y-5">
-    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-      <div><p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">{config.eyebrow}</p><h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{config.title}</h1><p className="mt-1 max-w-2xl text-sm text-slate-500">{config.description}</p></div>
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-emerald-700">{config.eyebrow}</p>
+          <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{config.title}</h1>
+          <p className="mt-1 max-w-2xl text-sm sm:text-base font-medium text-slate-600">{config.description}</p>
+        </div>
+      </div>
+
+      <Card className="rounded-2xl border border-slate-200 bg-white shadow-xs">
+        <CardContent className="p-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="h-11 pl-11 text-base font-medium rounded-xl border-slate-200"
+              placeholder={`Search ${config.title.toLowerCase()}...`}
+            />
+          </div>
+          <p className="mt-2.5 text-xs sm:text-sm font-medium text-slate-500">
+            Creation stays in the established AgriConnect workflow for this record type; this view exposes only validated control actions.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+        <CardHeader className="flex-row items-center gap-3.5 space-y-0 border-b border-slate-100 bg-slate-50/50 p-5">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-[#053f36] shadow-inner">
+            <Icon className="h-5 w-5" strokeWidth={2.4} />
+          </div>
+          <div>
+            <CardTitle className="text-lg font-black text-slate-900">{config.title} records</CardTitle>
+            <p className="mt-0.5 text-xs sm:text-sm font-medium text-slate-500">Live operational data</p>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <TableSkeleton />
+          ) : isError ? (
+            <ErrorState message="Unable to load this operational module." onRetry={() => refetch()} />
+          ) : filtered.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px] text-left text-sm">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs font-black uppercase tracking-wider text-slate-600">
+                  <tr>
+                    <th className="px-5 py-3.5">Record</th>
+                    <th className="px-5 py-3.5">Details</th>
+                    <th className="px-5 py-3.5">Status</th>
+                    <th className="px-5 py-3.5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {filtered.map((record, index) => {
+                    const id = String(record.id ?? "");
+                    const recordName = String(module === "orders" ? record.orderNumber ?? record.name ?? id : record.name ?? record.title ?? record.email ?? id) || `Record ${index + 1}`;
+                    const status = String(record.status ?? "active");
+                    const action = module === "orders" || module === "logistics" ? orderLifecycleAction(status) : resourceLifecycleAction(module, status);
+                    const detail = Object.entries(record).filter(([key]) => !["id", "name", "title", "status", "metadata"].includes(key)).slice(0, 2).map(([key, value]) => `${key}: ${String(value)}`).join(" · ");
+                    const canAct = canManage && Boolean(action) && (!action?.permission || permissions.includes(action.permission));
+                    const isCancelAction = action?.action === "cancel" || action?.action === "suspend" || action?.action === "deactivate";
+
+                    return (
+                      <tr key={id || index} className="group transition-colors hover:bg-emerald-50/40">
+                        <td className="px-5 py-4 font-black text-sm sm:text-base text-slate-900">
+                          {recordName}
+                        </td>
+                        <td className="max-w-md truncate px-5 py-4 text-xs sm:text-sm font-medium text-slate-600">
+                          {detail || "—"}
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black capitalize ${
+                            status === "open" || status === "active" || status === "published" || status === "approved" || status === "verified"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : status === "cancelled" || status === "suspended" || status === "deactivated"
+                              ? "bg-rose-100 text-rose-800"
+                              : "bg-slate-100 text-slate-800"
+                          }`}>
+                            <span className={`h-2 w-2 rounded-full ${
+                              status === "open" || status === "active" || status === "published" || status === "approved" || status === "verified"
+                                ? "bg-emerald-500"
+                                : status === "cancelled" || status === "suspended" || status === "deactivated"
+                                ? "bg-rose-500"
+                                : "bg-slate-400"
+                            }`} />
+                            {status.replaceAll("_", " ")}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          {action ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!canAct || !id || update.isPending}
+                              onClick={() => runAction(record, action)}
+                              className={`h-9 px-4 rounded-xl text-sm font-black transition-all cursor-pointer active:scale-95 shadow-2xs ${
+                                isCancelAction
+                                  ? "border-slate-200 text-slate-700 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                                  : "border-slate-200 text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-800"
+                              }`}
+                            >
+                              {action.label}
+                            </Button>
+                          ) : (
+                            <span className="text-xs font-bold text-slate-400">No safe transition</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={Icon} message={search ? "No records match your search." : "No records are available for this module yet."} />
+          )}
+          {update.isError && <p className="m-4 text-xs font-bold text-rose-700">The status update could not be saved. Please retry.</p>}
+        </CardContent>
+      </Card>
     </div>
-    <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardContent className="p-4"><div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" /><Input value={search} onChange={(event) => setSearch(event.target.value)} className="pl-9" placeholder={`Search ${config.title.toLowerCase()}`} /></div><p className="mt-2 text-xs text-slate-500">Creation stays in the established AgriConnect workflow for this record type; this view exposes only validated control actions.</p></CardContent></Card>
-    <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm">
-      <CardHeader className="flex-row items-center gap-3 space-y-0 p-5"><div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-700"><Icon className="h-5 w-5" /></div><div><CardTitle className="text-base font-black">{config.title} records</CardTitle><p className="mt-1 text-xs text-slate-400">Live operational data</p></div></CardHeader>
-      <CardContent className="p-0">
-        {isLoading ? <TableSkeleton /> : isError ? <ErrorState message="Unable to load this operational module." onRetry={() => refetch()} /> : filtered.length ? <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase text-slate-400"><tr><th className="p-4">Record</th><th className="p-4">Details</th><th className="p-4">Status</th><th className="p-4 text-right">Action</th></tr></thead><tbody>{filtered.map((record, index) => {
-          const id = String(record.id ?? "");
-          const recordName = String(module === "orders" ? record.orderNumber ?? record.name ?? id : record.name ?? record.title ?? record.email ?? id) || `Record ${index + 1}`;
-          const status = String(record.status ?? "active");
-          const action = module === "orders" || module === "logistics" ? orderLifecycleAction(status) : resourceLifecycleAction(module, status);
-          const detail = Object.entries(record).filter(([key]) => !["id", "name", "title", "status", "metadata"].includes(key)).slice(0, 2).map(([key, value]) => `${key}: ${String(value)}`).join(" · ");
-          const canAct = canManage && Boolean(action) && (!action?.permission || permissions.includes(action.permission));
-          return <tr key={id || index} className="border-t"><td className="p-4 font-bold">{recordName}</td><td className="max-w-xs truncate p-4 text-slate-500">{detail || "—"}</td><td className="p-4 capitalize"><Badge variant="secondary">{status.replaceAll("_", " ")}</Badge></td><td className="p-4 text-right">{action ? <Button size="sm" variant="outline" disabled={!canAct || !id || update.isPending} onClick={() => runAction(record, action)}>{action.label}</Button> : <span className="text-[11px] font-semibold text-slate-400">No safe transition</span>}</td></tr>;
-        })}</tbody></table></div> : <EmptyState icon={Icon} message={search ? "No records match your search." : "No records are available for this module yet."} />}
-        {update.isError && <p className="m-4 text-xs text-rose-700">The status update could not be saved. Please retry.</p>}
-      </CardContent>
-    </Card>
-  </div>;
+  );
 }
 
 const operationalSections = {
@@ -1983,13 +2296,70 @@ function OperationalEndpointSection({ section, permissions }: { section: keyof t
   const canBackup = permissions.includes("data.request_backup");
   const Icon = config.icon;
   const values = operationalRows(data);
-  return <div className="space-y-5">
-    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="text-xs font-black uppercase tracking-[.18em] text-emerald-700">System operations</p><h1 className="mt-1 text-2xl font-black sm:text-3xl">{config.title}</h1><p className="mt-1 text-sm text-slate-500">{config.description}</p></div>{section === "data" && <Button disabled={!canBackup || backup.isPending} onClick={requestBackup}>{backup.isPending ? "Requesting…" : "Request backup"}</Button>}</div>
-    {section === "data" && !canBackup && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">Your role can view data operations but cannot request a backup.</p>}
-    {backup.isError && <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">The backup request could not be completed. Please retry.</p>}
-    {backup.isSuccess && <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">Backup request recorded and audited. Execution remains pending until an external backup provider or operator processes it.</p>}
-    <Card className="overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader className="flex-row items-center gap-3 space-y-0 p-5"><div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-700"><Icon className="h-5 w-5" /></div><div><CardTitle className="text-base font-black">Operational activity</CardTitle><p className="mt-1 text-xs text-slate-400">Current server-authoritative information</p></div></CardHeader><CardContent className="p-0">{isLoading ? <TableSkeleton /> : isError ? <ErrorState message={`Unable to load ${config.title.toLowerCase()}.`} onRetry={() => refetch()} /> : values.length ? <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase text-slate-400"><tr><th className="p-4">Item</th><th className="p-4">Details</th><th className="p-4">Status / time</th></tr></thead><tbody>{values.slice(0, 50).map((row, index) => <tr key={row.id || index} className="border-t"><td className="p-4 font-bold">{row.label}</td><td className="max-w-md p-4 text-slate-600">{row.detail || "—"}</td><td className="p-4 text-slate-500">{row.status}</td></tr>)}</tbody></table></div> : <EmptyState icon={Icon} message="No operational activity is available yet." />}</CardContent></Card>
-  </div>;
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs sm:text-sm font-black uppercase tracking-[0.18em] text-emerald-700">System operations</p>
+          <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">{config.title}</h1>
+          <p className="mt-1 text-sm sm:text-base font-medium text-slate-600">{config.description}</p>
+        </div>
+        {section === "data" && (
+          <Button
+            disabled={!canBackup || backup.isPending}
+            onClick={requestBackup}
+            className="h-11 px-5 rounded-xl text-base font-black bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
+          >
+            {backup.isPending ? "Requesting…" : "Request backup"}
+          </Button>
+        )}
+      </div>
+      {section === "data" && !canBackup && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs sm:text-sm font-medium text-amber-800">Your role can view data operations but cannot request a backup.</p>}
+      {backup.isError && <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs sm:text-sm font-medium text-rose-800">The backup request could not be completed. Please retry.</p>}
+      {backup.isSuccess && <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs sm:text-sm font-medium text-emerald-800">Backup request recorded and audited. Execution remains pending until an external backup provider or operator processes it.</p>}
+      <Card className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+        <CardHeader className="flex-row items-center gap-3.5 space-y-0 border-b border-slate-100 bg-slate-50/50 p-5">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-[#053f36] shadow-inner">
+            <Icon className="h-5 w-5" strokeWidth={2.4} />
+          </div>
+          <div>
+            <CardTitle className="text-lg font-black text-slate-900">Operational activity</CardTitle>
+            <p className="mt-0.5 text-xs sm:text-sm font-medium text-slate-500">Current server-authoritative information</p>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <TableSkeleton />
+          ) : isError ? (
+            <ErrorState message={`Unable to load ${config.title.toLowerCase()}.`} onRetry={() => refetch()} />
+          ) : values.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left text-sm">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs font-black uppercase tracking-wider text-slate-600">
+                  <tr>
+                    <th className="px-5 py-3.5">Item</th>
+                    <th className="px-5 py-3.5">Details</th>
+                    <th className="px-5 py-3.5">Status / time</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {values.slice(0, 50).map((row, index) => (
+                    <tr key={row.id || index} className="group transition-colors hover:bg-emerald-50/40">
+                      <td className="px-5 py-4 font-black text-sm sm:text-base text-slate-900">{row.label}</td>
+                      <td className="max-w-md px-5 py-4 text-xs sm:text-sm font-medium text-slate-600">{row.detail || "—"}</td>
+                      <td className="px-5 py-4 text-xs sm:text-sm font-bold text-slate-700">{row.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={Icon} message="No operational activity is available yet." />
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function operationalRows(data: unknown): Array<{ id: string; label: string; detail: string; status: string }> {
@@ -2087,7 +2457,19 @@ function FarmersManagement({ initialSearch, permissions }: { initialSearch: stri
         <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm"><CardHeader className="p-4 pb-1"><CardTitle className="text-sm font-black text-[#163d34]">Farmers by region</CardTitle><p className="mt-0.5 text-[10px] text-slate-400">Current page distribution</p></CardHeader><CardContent className="flex h-44 items-center gap-2 p-3"><div className="h-32 w-32 shrink-0"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={regionChart.length ? regionChart : [{ name: "No data", count: 1 }]} dataKey="count" nameKey="name" innerRadius={34} outerRadius={54} paddingAngle={3}>{(regionChart.length ? regionChart : [{ name: "No data", count: 1 }]).map((entry, index) => <Cell key={entry.name} fill={["#159a78", "#52b788", "#f0b429", "#79c267", "#b7dfb0"][index % 5]} />)}</Pie></PieChart></ResponsiveContainer></div><div className="min-w-0 space-y-1.5">{(regionChart.length ? regionChart.slice(0, 4) : [{ name: "No data", count: 0 }]).map((entry, index) => <div key={entry.name} className="flex items-center gap-1.5 text-[10px]"><i className="h-2 w-2 rounded-full" style={{ backgroundColor: ["#159a78", "#52b788", "#f0b429", "#79c267"][index % 4] }} /><span className="truncate text-slate-500">{entry.name}</span><b className="ml-auto text-slate-700">{entry.count}</b></div>)}</div></CardContent></Card>
          <TopPerformingFarmers farmers={overview?.topFarmers ?? items.slice().sort((a, b) => b.rating - a.rating).map((farmer) => ({ ...farmer, revenue: 0 }))} onSelect={setSelectedFarmer} />
       </div>
-      {selectedFarmer && <><aside className="fixed bottom-0 right-0 top-[4.25rem] z-30 hidden w-[20rem] overflow-y-auto border-l border-slate-200 bg-[#f8fbf7] shadow-2xl lg:block"><FarmerPanelHeader detail={detail} selectedFarmer={selectedFarmer} onClose={() => setSelectedFarmer(null)} />{detailLoading || !detail ? <TableSkeleton /> : <FarmerDrawer detail={detail} />}</aside><div className="fixed inset-0 z-40 bg-slate-950/30 lg:hidden" onClick={() => setSelectedFarmer(null)} aria-hidden="true" /><aside className="fixed bottom-0 right-0 top-0 z-50 w-full overflow-y-auto border-l border-slate-200 bg-[#f8fbf7] shadow-2xl sm:max-w-xl lg:hidden"><FarmerPanelHeader detail={detail} selectedFarmer={selectedFarmer} onClose={() => setSelectedFarmer(null)} />{detailLoading || !detail ? <TableSkeleton /> : <FarmerDrawer detail={detail} />}</aside></>}
+      {selectedFarmer && (
+        <>
+          <aside className="fixed bottom-0 right-0 top-[4.25rem] z-30 hidden w-[28rem] overflow-y-auto border-l border-slate-200 bg-[#f8fbf7] shadow-2xl lg:block">
+            <FarmerPanelHeader detail={detail} selectedFarmer={selectedFarmer} onClose={() => setSelectedFarmer(null)} />
+            {detailLoading || !detail ? <TableSkeleton /> : <FarmerDrawer detail={detail} />}
+          </aside>
+          <div className="fixed inset-0 z-40 bg-slate-950/30 lg:hidden" onClick={() => setSelectedFarmer(null)} aria-hidden="true" />
+          <aside className="fixed bottom-0 right-0 top-0 z-50 w-full overflow-y-auto border-l border-slate-200 bg-[#f8fbf7] shadow-2xl sm:max-w-xl lg:hidden">
+            <FarmerPanelHeader detail={detail} selectedFarmer={selectedFarmer} onClose={() => setSelectedFarmer(null)} />
+            {detailLoading || !detail ? <TableSkeleton /> : <FarmerDrawer detail={detail} />}
+          </aside>
+        </>
+      )}
     </div>
   );
 }
@@ -2135,64 +2517,156 @@ function exportFarmers(items: Farmer[]) {
 }
 
 function FarmerPanelHeader({ detail, selectedFarmer, onClose }: { detail?: FarmerDetail; selectedFarmer: string; onClose: () => void }) {
-  return <div className="border-b border-slate-200 bg-white p-5"><div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><Avatar className="h-12 w-12 rounded-xl"><AvatarImage src={detail?.avatar} /><AvatarFallback className="rounded-xl bg-emerald-100 text-base font-black text-emerald-800">{initials(detail?.name || "F")}</AvatarFallback></Avatar><div className="min-w-0"><div className="flex items-center gap-1.5"><h2 className="truncate text-sm font-black text-[#163d34]">{detail?.name || "Farmer details"}</h2>{detail?.status === "verified" && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />}</div><p className="mt-0.5 truncate text-[10px] text-slate-400">Farmer ID: {detail?.id || selectedFarmer}</p><p className="mt-0.5 text-[10px] text-slate-500">{detail?.region || "Loading location"}</p></div></div><button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close farmer details"><X className="h-4 w-4" /></button></div>{detail?.status && <Badge className={`mt-3 ${detail.status === "verified" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{detail.status.replaceAll("_", " ")}</Badge>}</div>;
+  return (
+    <div className="bg-[#053f36] p-6 text-white shadow-md">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          <Avatar className="h-14 w-14 rounded-2xl border-2 border-white/20 shadow-md shrink-0">
+            <AvatarImage src={detail?.avatar} />
+            <AvatarFallback className="rounded-2xl bg-lime-400 text-lg font-black text-[#053f36]">
+              {initials(detail?.name || "F")}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h2 className="truncate text-xl font-black text-white">{detail?.name || "Farmer details"}</h2>
+              {detail?.status === "verified" && <CheckCircle2 className="h-5 w-5 shrink-0 text-lime-300" />}
+            </div>
+            <p className="mt-1 font-mono text-xs font-bold text-white/70 truncate">ID: {detail?.id || selectedFarmer}</p>
+            <p className="mt-0.5 text-xs font-semibold text-emerald-200 truncate">{detail?.region || "Loading location"}</p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
+          aria-label="Close farmer details"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+      {detail?.status && (
+        <div className="mt-4">
+          <Badge
+            variant="outline"
+            className={`text-xs font-black uppercase px-2.5 py-0.5 ${
+              detail.status === "verified"
+                ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-200"
+                : "border-amber-400/40 bg-amber-500/20 text-amber-200"
+            }`}
+          >
+            {detail.status.replaceAll("_", " ")}
+          </Badge>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function FarmerDrawer({ detail }: { detail: FarmerDetail }) {
   return (
-    <div className="p-5">
-      <div className="grid grid-cols-4 gap-2">
+    <div className="p-6 space-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <DetailStat label="Farm size" value="—" />
         <DetailStat label="Products" value={String(detail.products)} />
         <DetailStat label="Orders" value={compact(detail.orders)} />
         <DetailStat label="Revenue" value={money(detail.revenue)} />
       </div>
-      <Tabs defaultValue="overview" className="mt-6">
-        <TabsList className="grid w-full grid-cols-5 rounded-xl bg-emerald-50 p-1">
-          <TabsTrigger value="overview" className="rounded-lg px-1 text-[9px]">Overview</TabsTrigger>
-          <TabsTrigger value="documents" className="rounded-lg px-1 text-[9px]">Documents</TabsTrigger>
-          <TabsTrigger value="products" className="rounded-lg px-1 text-[9px]">Products</TabsTrigger>
-          <TabsTrigger value="activity" className="rounded-lg px-1 text-[9px]">Activity</TabsTrigger>
-          <TabsTrigger value="orders" className="rounded-lg px-1 text-[9px]">Orders</TabsTrigger>
+      <Tabs defaultValue="overview" className="mt-4">
+        <TabsList className="grid w-full grid-cols-5 bg-slate-200 h-11 p-1 rounded-xl">
+          <TabsTrigger value="overview" className="rounded-lg px-1 text-xs font-bold">Overview</TabsTrigger>
+          <TabsTrigger value="documents" className="rounded-lg px-1 text-xs font-bold">Documents</TabsTrigger>
+          <TabsTrigger value="products" className="rounded-lg px-1 text-xs font-bold">Products</TabsTrigger>
+          <TabsTrigger value="activity" className="rounded-lg px-1 text-xs font-bold">Activity</TabsTrigger>
+          <TabsTrigger value="orders" className="rounded-lg px-1 text-xs font-bold">Orders</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="space-y-4 pt-4">
           <InfoBlock title="Contact details">
-            <p className="flex items-center gap-2 text-xs font-bold"><Phone className="h-3.5 w-3.5 text-emerald-600" />{detail.phone || "No phone provided"}</p>
-            <p className="mt-2 flex items-center gap-2 text-xs text-slate-600"><Mail className="h-3.5 w-3.5 text-emerald-600" />{detail.email || "No email provided"}</p>
-            <p className="mt-2 flex items-center gap-2 text-xs text-slate-600"><MapPin className="h-3.5 w-3.5 text-emerald-600" />{detail.region}</p>
+            <p className="flex items-center gap-2 text-sm font-bold text-slate-800"><Phone className="h-4 w-4 text-emerald-600 shrink-0" />{detail.phone || "No phone provided"}</p>
+            <p className="mt-2 flex items-center gap-2 text-sm text-slate-600 font-medium"><Mail className="h-4 w-4 text-emerald-600 shrink-0" />{detail.email || "No email provided"}</p>
+            <p className="mt-2 flex items-center gap-2 text-sm text-slate-600 font-medium"><MapPin className="h-4 w-4 text-emerald-600 shrink-0" />{detail.region}</p>
           </InfoBlock>
           <InfoBlock title="Organisation & region">
-            <p className="text-xs font-bold text-slate-700">Organisation information is not attached to this farmer record.</p>
-            <p className="mt-2 text-xs text-slate-500">Region: <span className="font-bold text-slate-700">{detail.region}</span></p>
-            <p className="mt-1 text-xs text-slate-500">Rating: <span className="font-bold text-amber-600">★ {detail.rating.toFixed(1)}</span> · {detail.reviewCount} reviews</p>
+            <p className="text-sm font-bold text-slate-700">Organisation information is not attached to this farmer record.</p>
+            <p className="mt-2 text-sm text-slate-500 font-medium">Region: <span className="font-bold text-slate-800">{detail.region}</span></p>
+            <p className="mt-1 text-sm text-slate-500 font-medium">Rating: <span className="font-bold text-amber-600">★ {detail.rating.toFixed(1)}</span> · {detail.reviewCount} reviews</p>
           </InfoBlock>
         </TabsContent>
-        <TabsContent value="documents" className="pt-4">
+        <TabsContent value="documents" className="pt-4 space-y-4">
           <InfoBlock title="Verification status">
-            <div className="flex items-center justify-between"><span className="text-xs font-bold">Seller verification case</span><Badge className={detail.status === "verified" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>{detail.status.replaceAll("_", " ")}</Badge></div>
-            <div className="mt-4 space-y-3">{["Identity proof", "Address proof", "Land ownership", "Bank details", "Tax information"].map((document) => <div key={document} className="flex items-center justify-between text-[11px]"><span className="flex items-center gap-2 font-semibold text-slate-600"><FileCheck2 className="h-3.5 w-3.5 text-slate-400" />{document}</span><span className="text-[9px] font-bold text-slate-400">Protected review</span></div>)}</div>
-            <p className="mt-4 text-xs leading-5 text-slate-500">Document contents and review decisions remain restricted to the protected Verification Centre.</p>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-slate-800">Seller verification case</span>
+              <Badge className={detail.status === "verified" ? "bg-emerald-100 text-emerald-800 font-bold" : "bg-amber-100 text-amber-800 font-bold"}>
+                {detail.status.replaceAll("_", " ")}
+              </Badge>
+            </div>
+            <div className="mt-4 space-y-3">
+              {["Identity proof", "Address proof", "Land ownership", "Bank details", "Tax information"].map((document) => (
+                <div key={document} className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
+                  <span className="flex items-center gap-2 font-semibold text-slate-700">
+                    <FileCheck2 className="h-4 w-4 text-emerald-600" />{document}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">Protected review</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-xs leading-relaxed text-slate-500 font-medium">
+              Document contents and review decisions remain restricted to the protected Verification Centre.
+            </p>
           </InfoBlock>
         </TabsContent>
-        <TabsContent value="products" className="space-y-2 pt-4">
-          {detail.productList.length ? detail.productList.map((product) => <div key={product.id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3"><div><p className="text-xs font-bold">{product.name}</p><p className="mt-1 text-[10px] text-slate-400">{product.stock} in stock · {money(product.price)}</p></div><Badge variant="outline" className="text-[10px]">{product.status || "published"}</Badge></div>) : <EmptyState icon={Package} message="No products listed." />}
+        <TabsContent value="products" className="space-y-3 pt-4">
+          {detail.productList.length ? (
+            detail.productList.map((product) => (
+              <div key={product.id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+                <div>
+                  <p className="text-sm font-bold text-slate-900">{product.name}</p>
+                  <p className="mt-1 text-xs text-slate-400 font-medium">{product.stock} in stock · {money(product.price)}</p>
+                </div>
+                <Badge variant="outline" className="text-xs font-bold uppercase">{product.status || "published"}</Badge>
+              </div>
+            ))
+          ) : (
+            <EmptyState icon={Package} message="No products listed." />
+          )}
         </TabsContent>
-        <TabsContent value="activity" className="pt-4">
-          {detail.activity.length ? detail.activity.map((item, index) => <div key={`${item.action}-${index}`} className="flex gap-3 border-b border-slate-200 py-3"><Activity className="mt-0.5 h-4 w-4 text-emerald-600" /><div><p className="text-xs font-bold">{item.action.replaceAll(".", " ")}</p><p className="text-[10px] text-slate-400">{relativeTime(item.occurredAt)}</p></div></div>) : <EmptyState icon={Activity} message="No admin activity recorded." />}
+        <TabsContent value="activity" className="pt-4 space-y-3">
+          {detail.activity.length ? (
+            detail.activity.map((item, index) => (
+              <div key={`${item.action}-${index}`} className="flex gap-3 border-b border-slate-200 pb-3">
+                <Activity className="mt-0.5 h-4 w-4 text-emerald-600 shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-slate-800">{item.action.replaceAll(".", " ")}</p>
+                  <p className="text-xs text-slate-400">{relativeTime(item.occurredAt)}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <EmptyState icon={Activity} message="No admin activity recorded." />
+          )}
         </TabsContent>
-        <TabsContent value="orders" className="pt-4">
+        <TabsContent value="orders" className="pt-4 space-y-4">
           <InfoBlock title="Order performance">
-            <p className="text-xs font-bold text-slate-700">{compact(detail.orders)} completed orders</p>
-            <p className="mt-2 text-xs text-slate-500">Lifetime sales: <span className="font-black text-slate-700">{money(detail.revenue)}</span></p>
-            <p className="mt-3 text-xs leading-5 text-slate-500">Individual order records are available through the Orders Management workspace.</p>
+            <p className="text-sm font-bold text-slate-800">{compact(detail.orders)} completed orders</p>
+            <p className="mt-2 text-sm text-slate-500 font-medium">Lifetime sales: <span className="font-black text-slate-900">{money(detail.revenue)}</span></p>
+            <p className="mt-3 text-xs leading-relaxed text-slate-500 font-medium">Individual order records are available through the Orders Management workspace.</p>
           </InfoBlock>
         </TabsContent>
       </Tabs>
       <InfoBlock title="Quick actions">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2.5">
           {[[Eye, "View profile"], [Pencil, "Edit details"], [LockKeyhole, "Suspend farmer"], [FileCheck2, "Reset password"], [MapPin, "Assign region"], [Mail, "Send message"]].map(([Icon, label]) => {
             const ActionIcon = Icon as LucideIcon;
-            return <button key={label as string} disabled title="This action is managed by its dedicated protected workspace." className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border border-slate-100 bg-slate-50 px-1 text-center text-[9px] font-bold text-slate-400 disabled:cursor-not-allowed"><ActionIcon className="h-3.5 w-3.5 text-emerald-500/60" />{label as string}</button>;
+            return (
+              <button
+                key={label as string}
+                disabled
+                title="This action is managed by its dedicated protected workspace."
+                className="flex min-h-18 flex-col items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white p-2 text-center text-xs font-bold text-slate-400 disabled:cursor-not-allowed shadow-xs"
+              >
+                <ActionIcon className="h-4 w-4 text-emerald-600/70" />
+                {label as string}
+              </button>
+            );
           })}
         </div>
       </InfoBlock>
@@ -2201,11 +2675,21 @@ function FarmerDrawer({ detail }: { detail: FarmerDetail }) {
 }
 
 function DetailStat({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-xl border border-slate-200 bg-white p-3"><p className="text-[10px] font-bold text-slate-400">{label}</p><p className="mt-1 truncate text-sm font-black">{value}</p></div>;
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs text-center">
+      <p className="text-xs uppercase font-black tracking-wider text-slate-400">{label}</p>
+      <p className="mt-1 truncate text-base sm:text-lg font-black text-slate-900">{value}</p>
+    </div>
+  );
 }
 
 function InfoBlock({ title, children }: { title: string; children: ReactNode }) {
-  return <div className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-3 text-xs font-black uppercase tracking-wide text-slate-400">{title}</h3>{children}</div>;
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+      <h3 className="mb-3 text-xs sm:text-sm font-black uppercase tracking-wider text-slate-500">{title}</h3>
+      {children}
+    </div>
+  );
 }
 
 function DashboardSkeleton() {
