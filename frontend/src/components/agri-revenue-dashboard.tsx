@@ -10,7 +10,9 @@ import {
   BarChart3,
   Building2,
   Calendar,
+  Check,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
   Clock,
   CreditCard,
@@ -34,6 +36,7 @@ import {
   PiggyBank,
   Receipt,
   RefreshCw,
+  RotateCcw,
   Scale,
   Search,
   Send,
@@ -75,6 +78,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -246,6 +250,7 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
 
   // Release Escrow Payout Modal
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
+  const [isScopePopoverOpen, setIsScopePopoverOpen] = useState(false);
 
   const endpoint = `/api/admin/revenue?days=${days}&currency=${selectedCurrency}`;
   const { data, isLoading, isError, isFetching, refetch } = useQuery<RevenueResponse>({
@@ -1051,10 +1056,143 @@ export function AgriRevenueDashboard({ onNavigate }: { onNavigate: (section: Adm
           })}
         </div>
 
-        <div className="hidden items-center gap-2 text-sm font-bold text-slate-500 md:flex">
-          <Filter className="h-4 w-4 text-emerald-700" />
-          <span>Scope: <strong className="text-slate-800">{selectedCurrency.toUpperCase()} · Last {days} Days</strong></span>
-        </div>
+        {/* Interactive Scope & Time Horizon Filter Button */}
+        <Popover open={isScopePopoverOpen} onOpenChange={setIsScopePopoverOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label="Filter Revenue Scope and Time Horizon"
+              className="group inline-flex items-center gap-2.5 rounded-xl border border-slate-200/90 bg-white px-4 py-2.5 text-sm font-black text-slate-700 shadow-xs hover:border-emerald-500 hover:bg-emerald-50/50 hover:text-emerald-950 transition-all cursor-pointer active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            >
+              <Filter className={`h-4 w-4 text-emerald-700 transition-transform duration-300 ${isFetching ? "animate-spin text-emerald-600" : "group-hover:rotate-12"}`} />
+              <span className="flex items-center gap-1.5">
+                <span className="font-semibold text-slate-500">Scope:</span>
+                <strong className="text-slate-900 font-black">
+                  {selectedCurrency === "all" ? "ALL" : selectedCurrency} · {days === "365" ? "All Time" : `Last ${days} Days`}
+                </strong>
+              </span>
+              <ChevronDown className={`h-4 w-4 text-slate-400 group-hover:text-emerald-700 transition-transform duration-200 ${isScopePopoverOpen ? "rotate-180 text-emerald-700" : ""}`} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" sideOffset={8} className="w-[340px] sm:w-[380px] p-4 rounded-2xl border-slate-200 bg-white shadow-2xl space-y-4">
+            {/* Popover Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 shadow-2xs">
+                  <Filter className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 leading-tight">Settlement Scope & Horizon</h4>
+                  <p className="text-xs font-medium text-slate-500">Filter multi-currency farm ledger</p>
+                </div>
+              </div>
+              <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs font-black uppercase tracking-wider">
+                Live Sync
+              </Badge>
+            </div>
+
+            {/* Currency Scope Section */}
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-600">
+                Currency Trade Scope
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: "all", label: "ALL", sub: "Global Trade" },
+                  { id: "GBP", label: "GBP (£)", sub: "UK Gateways" },
+                  { id: "INR", label: "INR (₹)", sub: "Domestic" },
+                ].map((item) => {
+                  const isSelected = selectedCurrency === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCurrency(item.id as "all" | "GBP" | "INR");
+                      }}
+                      className={`flex flex-col items-center justify-center rounded-xl p-2.5 text-center border transition-all cursor-pointer active:scale-95 ${
+                        isSelected
+                          ? "border-emerald-600 bg-emerald-50/80 text-emerald-950 font-black ring-2 ring-emerald-600/30 shadow-xs"
+                          : "border-slate-200 bg-slate-50/50 text-slate-700 font-bold hover:bg-slate-100 hover:border-slate-300"
+                      }`}
+                    >
+                      <span className="text-xs sm:text-sm font-black">{item.label}</span>
+                      <span className="text-[11px] text-slate-500 font-medium mt-0.5">{item.sub}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Reporting Window Section */}
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-600">
+                Reporting Time Horizon
+              </label>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {[
+                  { id: "7", label: "Last 7 Days" },
+                  { id: "30", label: "Last 30 Days" },
+                  { id: "90", label: "Last 90 Days" },
+                  { id: "180", label: "Last 180 Days" },
+                  { id: "365", label: "All Time" },
+                ].map((option) => {
+                  const isSelected = days === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => {
+                        setDays(option.id);
+                      }}
+                      className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold border transition-all cursor-pointer active:scale-95 ${
+                        isSelected
+                          ? "border-emerald-600 bg-emerald-50/80 text-emerald-950 font-black ring-2 ring-emerald-600/30 shadow-xs"
+                          : "border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100 hover:border-slate-300"
+                      }`}
+                    >
+                      <span>{option.label}</span>
+                      {isSelected && <Check className="h-3.5 w-3.5 text-emerald-700" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Popover Footer Actions */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCurrency("all");
+                  setDays("90");
+                  toast({
+                    title: "Filters Reset",
+                    description: "Reverted to default scope: ALL · Last 90 Days",
+                  });
+                }}
+                className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition cursor-pointer"
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> Reset Defaults
+              </button>
+
+              <Button
+                size="sm"
+                onClick={() => {
+                  setIsScopePopoverOpen(false);
+                  refetch();
+                  toast({
+                    title: "Scope Synchronized",
+                    description: `Viewing ${selectedCurrency.toUpperCase()} across ${days === "365" ? "All Time" : `Last ${days} Days`}`,
+                  });
+                }}
+                className="h-8.5 rounded-lg bg-[#0d604e] hover:bg-[#084c3e] text-white text-xs font-black px-4 cursor-pointer shadow-xs"
+              >
+                Apply & Close
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* TAB CONTENT 1: Cash Velocity Table */}
