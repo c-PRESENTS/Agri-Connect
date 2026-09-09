@@ -937,7 +937,7 @@ export function AgriProductsManagement({
 
       {/* Product Detail Drawer */}
       <Sheet open={Boolean(selectedProductId)} onOpenChange={(open) => !open && setSelectedProductId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
+        <SheetContent side="right" hideCloseButton className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50 border-l border-slate-200 shadow-2xl">
           <SheetHeader className="sr-only">
             <SheetTitle>{productDetail?.name || "Product Inspection Dossier"}</SheetTitle>
             <SheetDescription>Product moderation status, producer specifications, and history.</SheetDescription>
@@ -945,14 +945,14 @@ export function AgriProductsManagement({
 
           {isLoadingDetail ? (
             <div className="flex h-full items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+              <RefreshCw className="h-8 w-8 animate-spin text-emerald-600" />
             </div>
           ) : productDetail ? (
             <div className="flex flex-col min-h-full">
               {/* Header */}
-              <div className="bg-[#053f36] p-6 text-white">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
+              <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
                     {(() => {
                       const detailImageRes = resolveProductImageForProduct({
                         id: productDetail.id,
@@ -968,20 +968,22 @@ export function AgriProductsManagement({
                           src={detailImageRes.src}
                           fallbackSrc={detailImageRes.fallbackSrc}
                           alt={productDetail.name}
-                          className="h-14 w-14 rounded-xl object-cover border-2 border-white/20 shadow-md"
+                          className="h-16 w-16 sm:h-18 sm:w-18 rounded-2xl object-cover border-2 border-white/20 shadow-md shrink-0"
                         />
                       );
                     })()}
-                    <div>
-                      <h2 className="text-lg font-black">{productDetail.name}</h2>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-white/60">ID: {productDetail.id}</span>
+                    <div className="min-w-0">
+                      <h2 className="text-xl sm:text-2xl font-black text-white leading-tight truncate">{productDetail.name}</h2>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-white/90 bg-black/25 px-2.5 py-1 rounded-lg border border-white/10">
+                          ID: {productDetail.id}
+                        </span>
                         <Badge
                           variant="outline"
                           className={
                             productDetail.moderationStatus === "approved"
-                              ? "border-emerald-400/30 bg-emerald-500/20 text-emerald-200"
-                              : "border-amber-400/30 bg-amber-500/20 text-amber-200"
+                              ? "border-emerald-400/40 bg-emerald-500/25 text-emerald-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg"
+                              : "border-amber-400/40 bg-amber-500/25 text-amber-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg"
                           }
                         >
                           {productDetail.moderationStatus}
@@ -989,76 +991,84 @@ export function AgriProductsManagement({
                       </div>
                     </div>
                   </div>
+
+                  <button
+                    onClick={() => setSelectedProductId(null)}
+                    aria-label="Close dossier"
+                    className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
 
                 {/* 4 Stat Boxes */}
-                <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Price</p>
-                    <p className="text-sm font-black text-lime-300">
+                <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Price</p>
+                    <p className="text-base sm:text-lg font-black text-lime-300 mt-0.5">
                       {money(productDetail.price, productDetail.currency)}
                     </p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Stock</p>
-                    <p className="text-xs font-bold text-white">{productDetail.stock} {productDetail.unit}s</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Stock</p>
+                    <p className="text-sm sm:text-base font-black text-white mt-0.5">{productDetail.stock} {productDetail.unit}s</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Seller Status</p>
-                    <p className="text-xs font-bold text-emerald-300 capitalize">{productDetail.seller?.verificationStatus || "Verified"}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Seller</p>
+                    <p className="text-sm sm:text-base font-black text-emerald-300 capitalize truncate mt-0.5">{productDetail.seller?.verificationStatus || "Verified"}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Region</p>
-                    <p className="text-[11px] font-medium text-white/80 truncate">{productDetail.regionName || "UK Hub"}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Region</p>
+                    <p className="text-sm sm:text-base font-bold text-white/90 truncate mt-0.5">{productDetail.regionName || "UK Hub"}</p>
                   </div>
                 </div>
               </div>
 
               {/* Tabs */}
-              <Tabs defaultValue="specs" className="flex-1 p-6">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-200 h-10 p-1 rounded-xl">
-                  <TabsTrigger value="specs" className="text-xs sm:text-sm font-bold rounded-lg">
+              <Tabs defaultValue="specs" className="flex-1 p-6 sm:p-7">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-200 h-12 p-1.5 rounded-xl">
+                  <TabsTrigger value="specs" className="text-sm sm:text-base font-black rounded-lg">
                     Product & Seller Specs
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="text-xs sm:text-sm font-bold rounded-lg">
+                  <TabsTrigger value="history" className="text-sm sm:text-base font-black rounded-lg">
                     Moderation History
                   </TabsTrigger>
                 </TabsList>
 
                 {/* Specs Tab */}
-                <TabsContent value="specs" className="mt-4 space-y-4">
-                  <Card className="border-slate-200">
-                    <CardContent className="p-4 space-y-3 text-xs">
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Category / Subcategory</span>
-                        <span className="font-semibold text-slate-900 capitalize">
+                <TabsContent value="specs" className="mt-5 space-y-5">
+                  <Card className="border-slate-200 rounded-2xl shadow-xs">
+                    <CardContent className="p-5 sm:p-6 space-y-4 text-sm sm:text-base">
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Category / Subcategory</span>
+                        <span className="font-black text-slate-900 capitalize text-sm sm:text-base">
                           {productDetail.categoryId?.replaceAll("_", " ")}
                         </span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Registered Producer</span>
-                        <span className="font-bold text-emerald-800">{productDetail.seller?.name}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Registered Producer</span>
+                        <span className="font-black text-emerald-800 text-sm sm:text-base">{productDetail.seller?.name}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Producer Location</span>
-                        <span className="font-semibold text-slate-900">{productDetail.seller?.location || "UK Regional"}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Producer Location</span>
+                        <span className="font-bold text-slate-900 text-sm sm:text-base">{productDetail.seller?.location || "UK Regional"}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Moderation Reason / Note</span>
-                        <span className="font-medium text-slate-700 italic">{productDetail.moderationReason || "No custom restrictions"}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Moderation Reason / Note</span>
+                        <span className="font-semibold text-slate-700 italic text-sm sm:text-base">{productDetail.moderationReason || "No custom restrictions"}</span>
                       </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-slate-500">Last Reviewed</span>
-                        <span className="font-mono text-slate-600">{timeAgo(productDetail.reviewedAt)}</span>
+                      <div className="flex justify-between items-center py-1.5">
+                        <span className="text-slate-600 font-bold text-sm">Last Reviewed</span>
+                        <span className="font-mono font-bold text-slate-700 text-sm">{timeAgo(productDetail.reviewedAt)}</span>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* Actions */}
                   <div className="space-y-3 pt-2">
-                    <div className="flex flex-col sm:flex-row gap-2.5">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Button
-                        className="flex-1 bg-[#078c52] text-white hover:bg-[#067343] text-sm font-bold h-11 rounded-xl shadow-xs active:scale-[0.98] transition-all"
+                        className="flex-1 bg-[#078c52] text-white hover:bg-[#067343] text-sm sm:text-base font-black h-12 sm:h-13 rounded-xl shadow-xs active:scale-[0.98] transition-all cursor-pointer"
                         onClick={() => {
                           setReviewTarget(productDetail);
                           setReviewAction("approve");
@@ -1069,7 +1079,7 @@ export function AgriProductsManagement({
                       </Button>
                       <Button
                         variant="outline"
-                        className="flex-1 text-sm font-bold h-11 rounded-xl text-amber-800 border-amber-300 bg-amber-50/40 hover:bg-amber-100/70 hover:border-amber-400 active:scale-[0.98] transition-all"
+                        className="flex-1 text-sm sm:text-base font-black h-12 sm:h-13 rounded-xl text-amber-800 border-amber-300 bg-amber-50/60 hover:bg-amber-100 hover:border-amber-400 active:scale-[0.98] transition-all cursor-pointer"
                         onClick={() => {
                           setReviewTarget(productDetail);
                           setReviewAction("request-changes");
@@ -1080,15 +1090,15 @@ export function AgriProductsManagement({
                       </Button>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-2.5">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Button
                         variant="outline"
                         disabled={togglePlacementMutation.isPending}
                         className={cn(
-                          "flex-1 text-sm font-bold h-11 rounded-xl active:scale-[0.98] transition-all disabled:opacity-50",
+                          "flex-1 text-sm sm:text-base font-black h-12 sm:h-13 rounded-xl active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer",
                           productDetail.isFeatured
                             ? "bg-purple-600 text-white hover:bg-purple-700 border-purple-600 shadow-xs"
-                            : "text-purple-800 border-purple-200 bg-purple-50/40 hover:bg-purple-100/70 hover:border-purple-300",
+                            : "text-purple-800 border-purple-200 bg-purple-50/60 hover:bg-purple-100 hover:border-purple-300",
                         )}
                         onClick={() =>
                           togglePlacementMutation.mutate({
@@ -1111,10 +1121,10 @@ export function AgriProductsManagement({
                         variant="outline"
                         disabled={togglePlacementMutation.isPending}
                         className={cn(
-                          "flex-1 text-sm font-bold h-11 rounded-xl active:scale-[0.98] transition-all disabled:opacity-50",
+                          "flex-1 text-sm sm:text-base font-black h-12 sm:h-13 rounded-xl active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer",
                           productDetail.isFreshPick
                             ? "bg-lime-600 text-white hover:bg-lime-700 border-lime-600 shadow-xs"
-                            : "text-lime-900 border-lime-300 bg-lime-50/40 hover:bg-lime-100/70 hover:border-lime-400",
+                            : "text-lime-900 border-lime-300 bg-lime-50/60 hover:bg-lime-100 hover:border-lime-400",
                         )}
                         onClick={() =>
                           togglePlacementMutation.mutate({
@@ -1137,24 +1147,24 @@ export function AgriProductsManagement({
                 </TabsContent>
 
                 {/* History Tab */}
-                <TabsContent value="history" className="mt-4 space-y-2">
+                <TabsContent value="history" className="mt-5 space-y-3">
                   {historyList.length === 0 ? (
                     <div className="p-8 text-center text-slate-400">
-                      <Clock className="mx-auto mb-2 h-7 w-7 text-slate-300" />
-                      <p className="font-semibold">No moderation events recorded</p>
-                      <p className="text-xs text-slate-400 mt-1">This product has not had any manual moderation actions applied yet.</p>
+                      <Clock className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                      <p className="font-bold text-slate-700 text-base">No moderation events recorded</p>
+                      <p className="text-xs sm:text-sm text-slate-400 mt-1">This product has not had any manual moderation actions applied yet.</p>
                     </div>
                   ) : (
                     historyList.map((event) => (
-                      <div key={event.id} className="rounded-lg border border-slate-200 bg-white p-3 text-xs">
+                      <div key={event.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800 capitalize">
+                          <span className="font-black text-slate-900 capitalize text-sm sm:text-base">
                             {event.eventType.replaceAll("_", " ")} ➔ {event.toStatus}
                           </span>
-                          <span className="text-[10px] text-slate-400">{timeAgo(event.createdAt)}</span>
+                          <span className="text-xs font-bold text-slate-400">{timeAgo(event.createdAt)}</span>
                         </div>
-                        <p className="mt-1 text-[11px] text-slate-600">
-                          Actor: {event.actorName} {event.reason ? `· Note: "${event.reason}"` : ""}
+                        <p className="text-xs sm:text-sm text-slate-700 font-medium">
+                          Actor: <strong className="font-bold text-slate-900">{event.actorName}</strong> {event.reason ? `· Note: "${event.reason}"` : ""}
                         </p>
                       </div>
                     ))
@@ -1164,10 +1174,10 @@ export function AgriProductsManagement({
             </div>
           ) : isDetailError || !productDetail ? (
             <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px]">
-              <AlertCircle className="h-8 w-8 text-rose-500 mb-2" />
-              <p className="font-bold text-slate-800 text-sm">Product Dossier Unavailable</p>
-              <p className="text-xs text-slate-500 mt-1">Unable to load details for SKU {selectedProductId}.</p>
-              <Button size="sm" variant="outline" className="mt-4" onClick={() => setSelectedProductId(null)}>
+              <AlertCircle className="h-10 w-10 text-rose-500 mb-2" />
+              <p className="font-black text-slate-900 text-lg">Product Dossier Unavailable</p>
+              <p className="text-sm text-slate-500 mt-1">Unable to load details for SKU {selectedProductId}.</p>
+              <Button size="lg" variant="outline" className="mt-5 font-bold rounded-xl" onClick={() => setSelectedProductId(null)}>
                 Close
               </Button>
             </div>
@@ -1177,39 +1187,38 @@ export function AgriProductsManagement({
 
       {/* Review Modal */}
       <Dialog open={Boolean(reviewTarget)} onOpenChange={(open) => !open && setReviewTarget(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">
+            <DialogTitle className="text-xl font-black text-slate-900">
               {reviewAction === "approve"
                 ? "Approve Catalogue Listing"
                 : reviewAction === "reject"
                 ? "Reject Catalogue Listing"
                 : "Request Farmer Listing Changes"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogDescription className="text-sm font-semibold text-slate-600 mt-1">
               {reviewTarget?.name} · Producer: {reviewTarget?.seller?.name}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 py-2 text-xs">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Audit Justification / Moderation Note *</Label>
+          <div className="space-y-3.5 py-3 text-sm">
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Audit Justification / Moderation Note *</Label>
               <textarea
-                rows={3}
+                rows={4}
                 placeholder="Reason or instructions for this decision (recorded permanently in audit ledger)..."
                 value={reviewReason}
                 onChange={(e) => setReviewReason(e.target.value)}
-                className="w-full rounded-md border border-slate-300 p-2 text-xs focus:border-[#078c52] focus:outline-none"
+                className="w-full rounded-xl border border-slate-300 p-3 text-sm sm:text-base font-medium focus:border-[#078c52] focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all"
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setReviewTarget(null)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2.5 pt-2">
+            <Button variant="outline" className="h-12 px-5 text-sm sm:text-base font-black rounded-xl cursor-pointer" onClick={() => setReviewTarget(null)}>
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={!reviewReason.trim() || reviewMutation.isPending}
               onClick={() => {
                 if (reviewTarget) {
@@ -1221,13 +1230,14 @@ export function AgriProductsManagement({
                   });
                 }
               }}
-              className={
+              className={cn(
+                "h-12 px-6 text-sm sm:text-base font-black rounded-xl text-white shadow-xs cursor-pointer active:scale-95 transition-all",
                 reviewAction === "approve"
-                  ? "bg-[#078c52] text-white hover:bg-[#067343]"
+                  ? "bg-[#078c52] hover:bg-[#067343]"
                   : reviewAction === "reject"
-                  ? "bg-rose-600 text-white hover:bg-rose-700"
-                  : "bg-amber-600 text-white hover:bg-amber-700"
-              }
+                  ? "bg-rose-600 hover:bg-rose-700"
+                  : "bg-amber-600 hover:bg-amber-700"
+              )}
             >
               {reviewMutation.isPending
                 ? "Saving..."

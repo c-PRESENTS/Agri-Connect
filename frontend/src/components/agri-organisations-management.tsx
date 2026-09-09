@@ -82,6 +82,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
 
 export type OrganisationApplication = {
   id: string;
@@ -836,49 +837,50 @@ export function AgriOrganisationsManagement({
 
       {/* Slide-over Drawer for Application Dossier */}
       <Sheet open={Boolean(selectedApp)} onOpenChange={(open) => !open && setSelectedApp(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
+        <SheetContent side="right" hideCloseButton className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50 border-l border-slate-200 shadow-2xl">
           {selectedApp && (
             <div className="flex flex-col min-h-full">
               {/* Header */}
-              <div className="bg-[#053f36] p-6 text-white">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-400 font-bold text-[#053f36]">
+              <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-gradient-to-br from-lime-300 to-lime-400 font-bold text-[#053f36] shadow-md shrink-0 ring-4 ring-lime-400/20">
                       <Building2 className="h-6 w-6" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-black">{selectedApp.organisationName}</h2>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-white/60">ID: {selectedApp.id}</span>
+                    <div className="min-w-0">
+                      <h2 className="text-xl sm:text-2xl font-black text-white leading-tight truncate">{selectedApp.organisationName}</h2>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-white/90 bg-black/25 px-2.5 py-1 rounded-lg border border-white/10">ID: {selectedApp.id}</span>
                         {getStatusBadge(selectedApp.status)}
                       </div>
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedApp(null)}
-                    className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                    aria-label="Close dossier"
+                    className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
                 {/* 4 Stat Boxes */}
-                <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Region</p>
-                    <p className="text-xs font-bold text-white truncate">{selectedApp.applicationData?.region || "—"}</p>
+                <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Region</p>
+                    <p className="text-sm sm:text-base font-black text-white truncate mt-0.5">{selectedApp.applicationData?.region || "—"}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Members</p>
-                    <p className="text-base font-black text-lime-300">{selectedApp.applicationData?.memberCount ?? "—"}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Members</p>
+                    <p className="text-base sm:text-lg font-black text-lime-300 mt-0.5">{selectedApp.applicationData?.memberCount ?? "—"}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Documents</p>
-                    <p className="text-base font-black text-white">{selectedApp.applicationData?.documents?.length ?? 0}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Documents</p>
+                    <p className="text-sm sm:text-base font-black text-white mt-0.5">{selectedApp.applicationData?.documents?.length ?? 0}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Submitted</p>
-                    <p className="text-[11px] font-medium text-white/80">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Submitted</p>
+                    <p className="text-sm sm:text-base font-bold text-white/90 truncate mt-0.5">
                       {selectedApp.submittedAt ? new Date(selectedApp.submittedAt).toLocaleDateString("en-GB") : "Draft"}
                     </p>
                   </div>
@@ -886,34 +888,34 @@ export function AgriOrganisationsManagement({
               </div>
 
               {/* Body */}
-              <div className="p-6 space-y-4 flex-1">
-                <Card className="border-slate-200">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xs font-bold uppercase text-slate-500">
+              <div className="p-6 sm:p-7 space-y-5 flex-1">
+                <Card className="border-slate-200 rounded-2xl shadow-xs">
+                  <CardHeader className="p-5 pb-2">
+                    <CardTitle className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
                       Application Filing Details
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2.5 text-xs">
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Official Contact Email</span>
-                      <span className="font-semibold text-slate-900">{selectedApp.officialEmail}</span>
+                  <CardContent className="p-5 pt-2 space-y-3.5 text-sm sm:text-base">
+                    <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                      <span className="text-slate-600 font-bold text-sm">Official Contact Email</span>
+                      <span className="font-mono font-bold text-slate-900 text-sm sm:text-base">{selectedApp.officialEmail}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Contact Officer</span>
-                      <span className="font-semibold text-slate-900">{selectedApp.applicationData?.contactPerson || "—"}</span>
+                    <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                      <span className="text-slate-600 font-bold text-sm">Contact Officer</span>
+                      <span className="font-bold text-slate-900 text-sm sm:text-base">{selectedApp.applicationData?.contactPerson || "—"}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Registration Number</span>
-                      <span className="font-mono font-semibold text-slate-900">{selectedApp.applicationData?.regNumber || "—"}</span>
+                    <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                      <span className="text-slate-600 font-bold text-sm">Registration Number</span>
+                      <span className="font-mono font-bold text-slate-900 text-sm sm:text-base">{selectedApp.applicationData?.regNumber || "—"}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Primary Agricultural Scope</span>
-                      <span className="font-semibold text-slate-900">{selectedApp.applicationData?.primaryCrop || "—"}</span>
+                    <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                      <span className="text-slate-600 font-bold text-sm">Primary Agricultural Scope</span>
+                      <span className="font-bold text-slate-900 text-sm sm:text-base">{selectedApp.applicationData?.primaryCrop || "—"}</span>
                     </div>
                     {selectedApp.reviewReason && (
                       <div className="pt-2">
-                        <span className="text-slate-500 block mb-1">Audit Decision Reason:</span>
-                        <div className="rounded-md bg-slate-100 p-2.5 font-medium text-slate-800">
+                        <span className="text-slate-600 font-bold text-sm block mb-1.5">Audit Decision Reason:</span>
+                        <div className="rounded-xl bg-slate-100 p-3 font-medium text-slate-800 text-sm border border-slate-200">
                           {selectedApp.reviewReason}
                         </div>
                       </div>
@@ -922,25 +924,25 @@ export function AgriOrganisationsManagement({
                 </Card>
 
                 {/* Document Attachments */}
-                <Card className="border-slate-200">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xs font-bold uppercase text-slate-500">
+                <Card className="border-slate-200 rounded-2xl shadow-xs">
+                  <CardHeader className="p-5 pb-2">
+                    <CardTitle className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
                       Submitted Compliance Documents
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2 text-xs">
+                  <CardContent className="p-5 pt-2 space-y-2.5 text-sm">
                     {selectedApp.applicationData?.documents?.length ? (
                       selectedApp.applicationData.documents.map((doc, idx) => (
-                        <div key={`${doc}-${idx}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5">
-                          <div className="flex items-center gap-2">
-                            <FileCheck className="h-4 w-4 text-emerald-600" />
-                            <span className="font-semibold text-slate-800">{doc}</span>
+                        <div key={`${doc}-${idx}`} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+                          <div className="flex items-center gap-2.5">
+                            <FileCheck className="h-5 w-5 text-emerald-600 shrink-0" />
+                            <span className="font-bold text-slate-900">{doc}</span>
                           </div>
-                          <Badge variant="outline" className="text-[10px]">Submitted</Badge>
+                          <Badge variant="outline" className="text-xs font-bold border-emerald-300 bg-emerald-50 text-emerald-900">Submitted</Badge>
                         </div>
                       ))
                     ) : (
-                      <p className="py-3 text-center text-slate-400">No compliance documents submitted.</p>
+                      <p className="py-4 text-center text-slate-400 font-medium">No compliance documents submitted.</p>
                     )}
                   </CardContent>
                 </Card>
@@ -952,9 +954,9 @@ export function AgriOrganisationsManagement({
                       setReviewDecision(selectedApp.status === "documents_required" ? "documents_required" : "approved");
                       setReviewReason(selectedApp.reviewReason || "");
                     }}
-                    className="w-full bg-[#183f35] font-bold text-white hover:bg-[#0f2a23]"
+                    className="w-full bg-[#183f35] font-black text-white hover:bg-[#0f2a23] h-12 sm:h-13 text-sm sm:text-base rounded-xl active:scale-[0.98] transition-all shadow-xs cursor-pointer"
                   >
-                    <ShieldCheck className="mr-2 h-4 w-4" /> Open Review Decision
+                    <ShieldCheck className="mr-2 !h-5 !w-5" /> Open Review Decision
                   </Button>
                 </div>
               </div>
@@ -965,85 +967,84 @@ export function AgriOrganisationsManagement({
 
       {/* Review Decision Modal */}
       <Dialog open={Boolean(reviewApp)} onOpenChange={(open) => !open && setReviewApp(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">
+            <DialogTitle className="text-xl font-black text-slate-900">
               Review Organisation Application
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogDescription className="text-sm font-semibold text-slate-600 mt-1">
               Audit and record decision for <b>{reviewApp?.organisationName}</b> ({reviewApp?.officialEmail}).
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2 text-xs">
+          <div className="space-y-4 py-3 text-sm">
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">Select Review Decision *</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Select Review Decision *</Label>
+              <div className="grid grid-cols-3 gap-2.5">
                 <button
                   type="button"
                   onClick={() => setReviewDecision("approved")}
-                  className={`flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all ${
+                  className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all cursor-pointer ${
                     reviewDecision === "approved"
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-600"
+                      ? "border-emerald-600 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-600 shadow-xs"
                       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  <CheckCircle className="h-5 w-5 text-emerald-600 mb-1" />
-                  <span className="font-bold">Approve</span>
-                  <span className="text-[10px] text-slate-500">Create active org</span>
+                  <CheckCircle className="h-6 w-6 text-emerald-600 mb-1" />
+                  <span className="font-black text-sm">Approve</span>
+                  <span className="text-[11px] text-slate-500 font-medium">Create active org</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setReviewDecision("documents_required")}
-                  className={`flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all ${
+                  className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all cursor-pointer ${
                     reviewDecision === "documents_required"
-                      ? "border-amber-600 bg-amber-50 text-amber-900 ring-2 ring-amber-600"
+                      ? "border-amber-600 bg-amber-50 text-amber-900 ring-2 ring-amber-600 shadow-xs"
                       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  <FileQuestion className="h-5 w-5 text-amber-600 mb-1" />
-                  <span className="font-bold">Request Docs</span>
-                  <span className="text-[10px] text-slate-500">Ask for filings</span>
+                  <FileQuestion className="h-6 w-6 text-amber-600 mb-1" />
+                  <span className="font-black text-sm">Request Docs</span>
+                  <span className="text-[11px] text-slate-500 font-medium">Ask for filings</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setReviewDecision("rejected")}
-                  className={`flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all ${
+                  className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all cursor-pointer ${
                     reviewDecision === "rejected"
-                      ? "border-rose-600 bg-rose-50 text-rose-900 ring-2 ring-rose-600"
+                      ? "border-rose-600 bg-rose-50 text-rose-900 ring-2 ring-rose-600 shadow-xs"
                       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  <XCircle className="h-5 w-5 text-rose-600 mb-1" />
-                  <span className="font-bold">Reject</span>
-                  <span className="text-[10px] text-slate-500">Decline application</span>
+                  <XCircle className="h-6 w-6 text-rose-600 mb-1" />
+                  <span className="font-black text-sm">Reject</span>
+                  <span className="text-[11px] text-slate-500 font-medium">Decline application</span>
                 </button>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-700">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
                 Reason / Compliance Justification (Mandatory for audit trail) *
               </Label>
               <textarea
-                rows={3}
+                rows={4}
                 placeholder="Provide clear rationale for approval, document request, or rejection..."
                 value={reviewReason}
                 onChange={(e) => setReviewReason(e.target.value)}
-                className="w-full rounded-md border border-slate-300 p-2.5 text-xs focus:border-[#078c52] focus:outline-none"
+                className="w-full rounded-xl border border-slate-300 p-3 text-sm sm:text-base font-medium focus:border-[#078c52] focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all"
               />
-              <p className="text-[10px] text-slate-400">Minimum 3 characters required. Written permanently to the admin audit journal.</p>
+              <p className="text-xs text-slate-500 font-medium">Minimum 3 characters required. Written permanently to the admin audit journal.</p>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setReviewApp(null)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2.5 pt-2">
+            <Button variant="outline" onClick={() => setReviewApp(null)} className="h-12 px-5 text-sm sm:text-base font-black rounded-xl cursor-pointer">
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={reviewMutation.isPending || reviewReason.trim().length < 3}
               onClick={() => {
                 if (reviewApp) {
@@ -1054,13 +1055,14 @@ export function AgriOrganisationsManagement({
                   });
                 }
               }}
-              className={
+              className={cn(
+                "h-12 px-6 text-sm sm:text-base font-black text-white rounded-xl active:scale-95 transition-all shadow-xs cursor-pointer",
                 reviewDecision === "approved"
-                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                  ? "bg-emerald-600 hover:bg-emerald-700"
                   : reviewDecision === "documents_required"
-                  ? "bg-amber-600 text-white hover:bg-amber-700"
-                  : "bg-rose-600 text-white hover:bg-rose-700"
-              }
+                  ? "bg-amber-600 hover:bg-amber-700"
+                  : "bg-rose-600 hover:bg-rose-700"
+              )}
             >
               {reviewMutation.isPending ? "Recording decision..." : `Submit ${reviewDecision.replace("_", " ")}`}
             </Button>

@@ -195,6 +195,9 @@ type CategoryExplorerResponse = {
   categoriesNav: CategoryNode[];
   varieties: Array<{ name: string; count: number }>;
   productTotal: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
   products: CategoryExplorerProduct[];
   verifiedOrganisations: VerifiedEntity[];
   largeFarmers: VerifiedEntity[];
@@ -234,7 +237,7 @@ function Delta({ value }: { value: number | null }) {
   );
 }
 
-function ClusterMap({ clusters, onExpand }: { clusters: MapCluster[]; onExpand?: () => void }) {
+function ClusterMap({ clusters, onExpand, onSelect }: { clusters: MapCluster[]; onExpand?: () => void; onSelect: (regionId: string) => void }) {
   const positioned = useMemo(() => {
     const coordinates = clusters.filter((cluster) => cluster.latitude !== null && cluster.longitude !== null);
     const latitudes = coordinates.map((cluster) => cluster.latitude as number);
@@ -263,6 +266,7 @@ function ClusterMap({ clusters, onExpand }: { clusters: MapCluster[]; onExpand?:
         <button
           type="button"
           key={cluster.id}
+          onClick={() => onSelect(cluster.id)}
           className="absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white bg-emerald-700 px-2 py-1 text-[9px] font-black text-white shadow-md"
           style={{ left: String(cluster.left) + "%", top: String(cluster.top) + "%" }}
           title={cluster.name + ": " + cluster.sellerCount + " active sellers"}
@@ -302,7 +306,7 @@ export function AgriCategoriesManagement({
   const [, setLocation] = useLocation();
   const [draftSearch, setDraftSearch] = useState(initialSearch);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [selectedRegion, setSelectedRegion] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("all");
   const [marketplaceMode, setMarketplaceMode] = useState<"local" | "global">("local");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
@@ -315,6 +319,9 @@ export function AgriCategoriesManagement({
   const [cartQuantities, setCartQuantities] = useState<Record<string, number>>({});
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [isOpportunityModalOpen, setIsOpportunityModalOpen] = useState(false);
+  const [pagination, setPagination] = useState({ filter: "", page: 1 });
+  const [showAllVarieties, setShowAllVarieties] = useState(false);
+  const [taxonomyInitialized, setTaxonomyInitialized] = useState(false);
 
   const endpoint = useMemo(() => {
     const params = new URLSearchParams({ scope: marketplaceMode, sortBy, quantity: quantityFilter, quality: qualityFilter });
@@ -343,17 +350,43 @@ export function AgriCategoriesManagement({
     sortBy,
   ]);
 
+  const page = pagination.filter === endpoint ? pagination.page : 1;
+  const pagedEndpoint = endpoint + "&page=" + page;
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery<CategoryExplorerResponse>({
-    queryKey: [endpoint],
+    queryKey: [pagedEndpoint],
     queryFn: async () => {
-      const response = await apiRequest("GET", endpoint);
+      const response = await apiRequest("GET", pagedEndpoint);
       return response.json();
     },
   });
 
+  const invalidateExplorer = () => queryClient.invalidateQueries({
+    predicate: (query) => String(query.queryKey[0]).startsWith("/api/admin/categories/explorer?"),
+  });
+  const clearFilters = () => {
+    setSelectedCategory("");
+    setSelectedSubCategory("");
+    setSelectedVariety("");
+    setDraftSearch("");
+    setSearchQuery("");
+    setPriceFilter("all");
+    setQuantityFilter("any");
+    setQualityFilter("all");
+    setSortBy("relevance");
+    setShowAllVarieties(false);
+    setPagination({ filter: "", page: 1 });
+  };
+  const selectMapRegion = (regionId: string) => {
+    setSelectedRegion(regionId);
+    setMarketplaceMode("local");
+    setIsMapModalOpen(false);
+  };
+
   useEffect(() => {
-    if (!selectedRegion && data?.selectedRegion?.id) setSelectedRegion(data.selectedRegion.id);
-  }, [data?.selectedRegion?.id, selectedRegion]);
+    if (taxonomyInitialized || !data?.categoriesNav.length) return;
+    setExpandedCategories(Object.fromEntries(data.categoriesNav.map((category) => [category.id, true])));
+    setTaxonomyInitialized(true);
+  }, [data?.categoriesNav, taxonomyInitialized]);
 
   useEffect(() => {
     const nextSearch = initialSearch.trim();
@@ -389,7 +422,7 @@ export function AgriCategoriesManagement({
       return response.json();
     },
     onSuccess: (_result, input) => {
-      queryClient.invalidateQueries({ queryKey: [endpoint] });
+      invalidateExplorer();
       toast({ title: input.saved ? "Product saved" : "Product removed", description: "Your saved products are stored with your account." });
     },
     onError: (mutationError: Error) => {
@@ -403,7 +436,7 @@ export function AgriCategoriesManagement({
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [endpoint] });
+      invalidateExplorer();
       setIsOpportunityModalOpen(false);
       toast({ title: "Opportunity claimed", description: "The regional claim is now stored in the marketplace workflow." });
     },
@@ -431,20 +464,26 @@ export function AgriCategoriesManagement({
   const setQuantity = (product: CategoryExplorerProduct, delta: number) => {
     setCartQuantities((current) => {
       const existing = current[product.id] ?? product.minOrderKg;
-      return { ...current, [product.id]: Math.max(product.minOrderKg, existing + delta) };
+      return { ...current, [product.id]: Math.min(product.stockKg, Math.max(product.minOrderKg, existing + delta)) };
     });
   };
 
   const selectCategory = (category: CategoryNode) => {
+    setPriceFilter("all");
+    setQuantityFilter("any");
+    setQualityFilter("all");
     setSelectedCategory(category.id);
     setSelectedSubCategory("");
     setSelectedVariety("");
     setDraftSearch("");
     setSearchQuery("");
-    setExpandedCategories((current) => ({ ...current, [category.id]: !current[category.id] }));
+    setExpandedCategories((current) => ({ ...current, [category.id]: true }));
   };
 
   const selectSubcategory = (categoryId: string, subcategoryId: string) => {
+    setPriceFilter("all");
+    setQuantityFilter("any");
+    setQualityFilter("all");
     setSelectedCategory(categoryId);
     setSelectedSubCategory(subcategoryId);
     setSelectedVariety("");
@@ -461,8 +500,11 @@ export function AgriCategoriesManagement({
   };
 
   return (
-    <div className="-mx-4 -mb-10 -mt-5 min-h-screen bg-[#f4f6f8] pb-16 font-sans text-slate-900">
-      <div className="sticky top-0 z-20 border-b border-slate-200 bg-white px-4 py-2.5 shadow-xs">
+    <div
+      className="-mx-4 -mb-10 -mt-5 flex min-h-screen flex-col bg-[#f4f6f8] pb-16 font-sans text-slate-900 xl:h-[calc(100dvh-7.5rem)] xl:min-h-0 xl:overflow-hidden xl:pb-0"
+      data-testid="admin-categories-management"
+    >
+      <div className="sticky top-0 z-20 shrink-0 border-b border-slate-200 bg-white px-4 py-2 shadow-xs">
         <div className="mx-auto flex max-w-[1720px] flex-wrap items-center justify-between gap-3">
           <form
             className="flex min-w-0 flex-1 flex-wrap items-center gap-2"
@@ -500,7 +542,7 @@ export function AgriCategoriesManagement({
                 </button>
               )}
             </div>
-            <Select value={selectedRegion || "all"} onValueChange={(value) => setSelectedRegion(value === "all" ? "" : value)}>
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
               <SelectTrigger className="h-10 w-[230px] rounded-lg border-slate-300 bg-slate-50/70 text-xs font-semibold">
                 <MapPin className="mr-1 h-3.5 w-3.5 text-emerald-700" />
                 <SelectValue placeholder="All configured regions" />
@@ -536,13 +578,13 @@ export function AgriCategoriesManagement({
               </button>
             </div>
             <Button variant="outline" size="sm" className="hidden h-10 gap-1.5 text-xs font-bold sm:flex" onClick={() => setLocation("/seller")}>
-              <Share2 className="h-3.5 w-3.5" /> Switch to seller account
+              <Share2 className="h-3.5 w-3.5" /> Open seller hub
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1720px] px-3 pt-3.5 lg:px-4">
+      <div className="mx-auto flex w-full max-w-[1720px] flex-1 flex-col px-3 pt-3 lg:px-4 xl:min-h-0">
         {isError && (
           <Card className="mb-3 flex items-center justify-between border-rose-200 bg-rose-50 p-4 text-xs text-rose-800">
             <span>{error instanceof Error ? error.message : "The catalogue data could not be loaded."}</span>
@@ -550,33 +592,50 @@ export function AgriCategoriesManagement({
           </Card>
         )}
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-          <div className="space-y-3.5 xl:col-span-2">
+        <div className="grid grid-cols-1 gap-3 xl:min-h-0 xl:flex-1 xl:grid-cols-[19rem_minmax(0,1fr)_20rem] xl:overflow-hidden">
+          <div className="space-y-3 xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
             <Card className="overflow-hidden rounded-xl border-slate-200 bg-white shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/90 px-3.5 py-2.5">
                 <span className="text-[11px] font-black uppercase tracking-wider text-slate-700">Categories</span>
                 <Badge variant="outline" className="bg-white text-[10px] font-mono">{data?.categoriesNav.length ?? 0} groups</Badge>
               </div>
-              <div className="max-h-[560px] space-y-0.5 overflow-y-auto p-1.5 text-xs">
+              <div className="flex flex-wrap gap-2 border-b p-2">
+                <Button size="sm" variant="outline" onClick={clearFilters}>All categories</Button>
+                <Button size="sm" variant="ghost" onClick={() => setExpandedCategories(Object.fromEntries((data?.categoriesNav ?? []).map((category) => [category.id, true])))}>Expand all</Button>
+                <Button size="sm" variant="ghost" onClick={() => setExpandedCategories({})}>Collapse all</Button>
+              </div>
+              <div className="space-y-0.5 p-1.5 text-xs">
                 {isLoading ? <EntityEmpty message="Loading published taxonomy…" /> : (data?.categoriesNav ?? []).length ? data?.categoriesNav.map((category) => {
                   const Icon = categoryIcons[category.icon] ?? Layers;
-                  const expanded = expandedCategories[category.id] || selectedCategory === category.id;
+                  const expanded = expandedCategories[category.id] === true;
                   return (
                     <div key={category.id}>
-                      <button
-                        type="button"
-                        onClick={() => selectCategory(category)}
-                        className={cn("flex w-full items-center justify-between rounded-lg p-2 text-left font-bold", selectedCategory === category.id ? "bg-emerald-50 text-emerald-800" : "text-slate-700 hover:bg-slate-100")}
-                      >
-                        <span className="flex min-w-0 items-center gap-2">
-                          <Icon className="h-4 w-4 shrink-0 text-emerald-700" />
-                          <span className="truncate">{category.name}</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className="rounded-full bg-slate-100 px-1.5 text-[9px]">{category.count}</span>
-                          {category.subcategories.length ? expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" /> : null}
-                        </span>
-                      </button>
+                      <div className="flex items-start">
+                        {category.subcategories.length > 0 && (
+                          <button
+                            type="button"
+                            aria-label={(expanded ? "Collapse " : "Expand ") + category.name}
+                            aria-expanded={expanded}
+                            onClick={() => setExpandedCategories((current) => ({ ...current, [category.id]: !expanded }))}
+                            className="shrink-0 p-2"
+                          >
+                            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => selectCategory(category)}
+                          className={cn("flex min-w-0 flex-1 items-center justify-between rounded-lg p-2 text-left font-bold", selectedCategory === category.id ? "bg-emerald-50 text-emerald-800" : "text-slate-700 hover:bg-slate-100")}
+                        >
+                          <span className="flex min-w-0 items-center gap-2">
+                            <Icon className="h-4 w-4 shrink-0 text-emerald-700" />
+                            <span className="whitespace-normal break-words leading-snug">{category.name}</span>
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="rounded-full bg-slate-100 px-1.5 text-[9px]">{category.count}</span>
+                          </span>
+                        </button>
+                      </div>
                       {expanded && category.subcategories.length > 0 && (
                         <div className="ml-4 space-y-0.5 border-l border-emerald-200 py-1 pl-2">
                           {category.subcategories.map((subcategory) => (
@@ -586,7 +645,7 @@ export function AgriCategoriesManagement({
                               onClick={() => selectSubcategory(category.id, subcategory.id)}
                               className={cn("flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left", selectedSubCategory === subcategory.id ? "bg-[#e8f7ee] font-black text-[#078c52]" : "text-slate-600 hover:bg-slate-100")}
                             >
-                              <span className="truncate">{subcategory.name}</span>
+                              <span className="whitespace-normal break-words leading-snug">{subcategory.name}</span>
                               <span className="rounded-full bg-slate-100 px-1.5 text-[9px]">{subcategory.count}</span>
                             </button>
                           ))}
@@ -617,7 +676,7 @@ export function AgriCategoriesManagement({
             </EntityCard>
           </div>
 
-          <div className="space-y-3 xl:col-span-7">
+          <div className="space-y-3 xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
               <Kpi icon={Package} value={data?.kpiStats.totalProducts} label={activeCommodityLabel + " products"} loading={isLoading} />
               <Kpi icon={Users} value={data?.kpiStats.approvedSellers} label="Approved sellers" loading={isLoading} />
@@ -626,7 +685,7 @@ export function AgriCategoriesManagement({
               <Kpi icon={Clock} value={data?.kpiStats.avgDeliveryDays === null ? "No data" : data?.kpiStats.avgDeliveryDays} label="Avg. delivery days" loading={isLoading} />
             </div>
 
-            <Card className="space-y-4 rounded-xl border-slate-200 bg-white p-4 shadow-xs">
+            <Card className="space-y-3 rounded-xl border-slate-200 bg-white p-3 shadow-xs">
               <div>
                 <h2 className="text-base font-black text-slate-900">{activeCommodityLabel} · {marketplaceMode === "global" ? "Global marketplace" : selectedRegionLabel}</h2>
                 <p className="mt-0.5 text-xs text-slate-500">
@@ -669,18 +728,12 @@ export function AgriCategoriesManagement({
                     <SelectItem value="premium">Premium grade</SelectItem>
                   </SelectContent>
                 </Select>
-                {(selectedCategory || selectedSubCategory || selectedVariety || searchQuery) && (
+                {(selectedCategory || selectedSubCategory || selectedVariety || searchQuery || priceFilter !== "all" || quantityFilter !== "any" || qualityFilter !== "all" || sortBy !== "relevance") && (
                   <Button
                     variant="ghost"
                     size="sm"
                     className="ml-auto h-8 text-xs"
-                    onClick={() => {
-                      setSelectedCategory("");
-                      setSelectedSubCategory("");
-                      setSelectedVariety("");
-                      setDraftSearch("");
-                      setSearchQuery("");
-                    }}
+                    onClick={clearFilters}
                   >
                     Clear filters
                   </Button>
@@ -690,17 +743,18 @@ export function AgriCategoriesManagement({
               {(data?.varieties ?? []).length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   <button type="button" onClick={() => setSelectedVariety("")} className={cn("rounded-md px-3 py-1 text-xs font-bold", !selectedVariety ? "bg-[#078c52] text-white" : "bg-slate-100 text-slate-700")}>
-                    All varieties ({data?.productTotal ?? 0})
+                    All varieties ({(data?.varieties ?? []).reduce((total, variety) => total + variety.count, 0)})
                   </button>
-                  {data?.varieties.map((variety) => (
+                  {(showAllVarieties ? (data?.varieties ?? []) : (data?.varieties ?? []).slice(0, 12)).map((variety) => (
                     <button type="button" key={variety.name} onClick={() => setSelectedVariety(variety.name)} className={cn("rounded-md px-3 py-1 text-xs font-bold", selectedVariety === variety.name ? "bg-[#078c52] text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200")}>
                       {variety.name} ({variety.count})
                     </button>
                   ))}
+                  {(data?.varieties.length ?? 0) > 12 && <Button size="sm" variant="outline" onClick={() => setShowAllVarieties(!showAllVarieties)}>{showAllVarieties ? "Show fewer varieties" : `Show all ${data?.varieties.length} varieties`}</Button>}
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-2 items-stretch gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
                 {isLoading ? Array.from({ length: 10 }).map((_, index) => (
                   <Card key={index} className="animate-pulse space-y-2 border-slate-200 p-2">
                     <div className="h-32 rounded bg-slate-200" />
@@ -717,7 +771,7 @@ export function AgriCategoriesManagement({
                     images: product.images,
                   });
                   return (
-                    <div key={product.id} className="group flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs hover:border-emerald-300 hover:shadow-md">
+                    <div key={product.id} className="group flex h-full flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs hover:border-emerald-300 hover:shadow-md">
                       <div>
                         <div className="relative mb-2 flex h-36 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
                           <SafeProductImage
@@ -737,7 +791,11 @@ export function AgriCategoriesManagement({
                             <Heart className={cn("h-3.5 w-3.5", product.isSaved && "fill-rose-600 text-rose-600")} />
                           </button>
                         </div>
-                        <h3 className="truncate text-xs font-bold text-slate-900" title={product.title}>{product.title}</h3>
+                        <h3 className="text-xs font-bold text-slate-900">
+                          <button type="button" onClick={() => setLocation("/products/" + encodeURIComponent(product.id))} className="text-left hover:text-emerald-700 hover:underline">
+                            {product.title}
+                          </button>
+                        </h3>
                         <div className="mt-1 flex items-center gap-1 text-[11px]">
                           <span className="truncate font-semibold text-slate-800">{product.sellerName}</span>
                           {product.sellerVerified && <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600" />}
@@ -757,20 +815,20 @@ export function AgriCategoriesManagement({
                       <div className="mt-2.5 space-y-1.5 border-t border-slate-100 pt-2">
                         <div className="flex items-center gap-1">
                           <div className="flex items-center rounded-md border border-slate-200 bg-slate-50 px-1 py-0.5 text-xs font-bold">
-                            <button type="button" onClick={() => setQuantity(product, -1)} className="px-1">−</button>
+                            <button type="button" aria-label={"Decrease quantity for " + product.title} disabled={quantity <= product.minOrderKg} onClick={() => setQuantity(product, -1)} className="px-1 disabled:opacity-40">−</button>
                             <span className="px-1 text-[10px]">{quantity}</span>
-                            <button type="button" onClick={() => setQuantity(product, 1)} className="px-1">+</button>
+                            <button type="button" aria-label={"Increase quantity for " + product.title} disabled={quantity >= product.stockKg} onClick={() => setQuantity(product, 1)} className="px-1 disabled:opacity-40">+</button>
                           </div>
                           <Button
                             size="sm"
-                            disabled={!product.inStock || addToCart.isPending}
+                            disabled={!product.inStock || quantity > product.stockKg || addToCart.isPending}
                             onClick={() => addToCart.mutate({ product, quantity })}
                             className="h-7 flex-1 bg-[#078c52] px-2 text-[10px] font-bold hover:bg-[#067544]"
                           >
                             Add to cart
                           </Button>
                         </div>
-                        <p className="truncate text-center text-[9px] text-slate-400">{product.organisationName ?? "Independent verified seller"}</p>
+                        <p className="truncate text-center text-[9px] text-slate-400">{product.organisationName ?? (product.sellerVerified ? "Independent verified seller" : "Independent seller")}</p>
                       </div>
                     </div>
                   );
@@ -779,12 +837,21 @@ export function AgriCategoriesManagement({
                     <Package className="mx-auto mb-2 h-8 w-8 text-slate-300" />
                     <p className="text-sm font-bold text-slate-700">No approved listings match these filters</p>
                     <p className="text-xs text-slate-400">Clear a filter or publish an approved product to populate this result.</p>
+                    <Button variant="outline" className="mt-3" onClick={clearFilters}>Clear all filters</Button>
                   </div>
                 )}
               </div>
 
-              {data && data.productTotal > products.length && (
-                <p className="text-center text-[10px] text-slate-400">Showing the first {products.length} of {data.productTotal} matching listings.</p>
+              {data && data.productTotal > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs">
+                  <span>Showing {(data.page - 1) * data.pageSize + 1}–{(data.page - 1) * data.pageSize + products.length} of {data.productTotal} listings</span>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" disabled={isFetching || data.page <= 1} onClick={() => setPagination({ filter: endpoint, page: data.page - 1 })}>Previous</Button>
+                    <span>Page {data.page} of {data.pageCount}</span>
+                    <Button variant="outline" size="sm" disabled={isFetching || data.page >= data.pageCount} onClick={() => setPagination({ filter: endpoint, page: data.page + 1 })}>Next</Button>
+                    <Button size="sm" onClick={() => setLocation("/cart")}>View cart</Button>
+                  </div>
+                </div>
               )}
 
               <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-emerald-900/10 bg-emerald-50/70 p-3.5 text-xs sm:flex-row">
@@ -795,20 +862,20 @@ export function AgriCategoriesManagement({
                     <p className="text-[11px] text-slate-600">Compare the same approved database listings without the regional boundary.</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setMarketplaceMode("global")} className="text-xs font-bold">
+                <Button variant="outline" size="sm" onClick={() => { clearFilters(); setMarketplaceMode("global"); }} className="text-xs font-bold">
                   View global results
                 </Button>
               </div>
             </Card>
           </div>
 
-          <div className="space-y-3.5 xl:col-span-3">
+          <div className="space-y-3 xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
             <Card className="overflow-hidden rounded-xl border-slate-200 bg-white shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/90 px-3.5 py-2.5">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-700">{selectedRegionLabel} seller distribution</span>
                 <span className="text-[10px] font-bold text-emerald-700">{data?.kpiStats.approvedSellers ?? 0} approved</span>
               </div>
-              <div className="h-56"><ClusterMap clusters={clusters} onExpand={() => setIsMapModalOpen(true)} /></div>
+              <div className="h-56"><ClusterMap clusters={clusters} onSelect={selectMapRegion} onExpand={() => setIsMapModalOpen(true)} /></div>
               <div className="flex items-center justify-between border-t border-slate-100 p-2.5 text-[9px] font-bold text-slate-600">
                 <span>Seller totals come from active regional assignments.</span>
                 <span>{clusters.length} regions</span>
@@ -905,7 +972,7 @@ export function AgriCategoriesManagement({
             <DialogTitle>{selectedRegionLabel} seller distribution</DialogTitle>
             <DialogDescription>Live cluster totals from configured marketplace regions and active assignments.</DialogDescription>
           </DialogHeader>
-          <div className="h-[480px] overflow-hidden rounded-xl border border-slate-200"><ClusterMap clusters={clusters} /></div>
+          <div className="h-[480px] overflow-hidden rounded-xl border border-slate-200"><ClusterMap clusters={clusters} onSelect={selectMapRegion} /></div>
           <DialogFooter><Button onClick={() => setIsMapModalOpen(false)}>Close map</Button></DialogFooter>
         </DialogContent>
       </Dialog>
