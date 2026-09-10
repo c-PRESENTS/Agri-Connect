@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
@@ -77,26 +77,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import type { AdminProductListItem, AdminProductsResponse } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
-import type { AdminSection } from "./agri-revenue-dashboard";
 
 export type GlobalRegionMarker = {
   id: string;
@@ -223,7 +206,7 @@ export function AgriGlobalOperations({
   onNavigate,
 }: {
   permissions?: string[];
-  onNavigate?: (section: AdminSection) => void;
+  onNavigate?: (section: string) => void;
 }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -233,7 +216,6 @@ export function AgriGlobalOperations({
   const [selectedOrgFilter, setSelectedOrgFilter] = useState<string>("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("all");
   const [selectedHub, setSelectedHub] = useState<GlobalRegionMarker | null>(null);
-  const [isHubSkusOpen, setIsHubSkusOpen] = useState(false);
   const [searchTable, setSearchTable] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 14;
@@ -304,144 +286,6 @@ export function AgriGlobalOperations({
     if (selectedHub) return selectedHub;
     return regions.find((r) => r.products > 0) || regions[0] || null;
   }, [selectedHub, regions]);
-
-  // Live Products Query for Hub Produce SKU Inspection
-  const {
-    data: productsData,
-    isLoading: isLoadingProducts,
-    refetch: refetchProducts,
-  } = useQuery<AdminProductsResponse>({
-    queryKey: ["/api/admin/products", { page: 1, pageSize: 200, sort: "updatedAt", direction: "desc" }],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/products?page=1&pageSize=200&sort=updatedAt&direction=desc");
-      return res.json();
-    },
-    staleTime: 30_000,
-  });
-
-  const allProducts = useMemo(() => productsData?.products ?? [], [productsData]);
-
-  // Hub-specific products (matched by regionId or regionName)
-  const hubSpecificProducts = useMemo(() => {
-    if (!activeHubDisplay) return [];
-    return allProducts.filter((p) => {
-      if (p.regionId && p.regionId === activeHubDisplay.id) return true;
-      if (p.regionName && activeHubDisplay.name && p.regionName.toLowerCase() === activeHubDisplay.name.toLowerCase()) return true;
-      return false;
-    });
-  }, [allProducts, activeHubDisplay]);
-
-  // Sku drawer state
-  const [skuScope, setSkuScope] = useState<"hub" | "all">("all");
-  const [skuSearch, setSkuSearch] = useState("");
-  const [skuStatusFilter, setSkuStatusFilter] = useState<"all" | "approved" | "pending_review" | "featured">("all");
-  const [selectedSkuDetail, setSelectedSkuDetail] = useState<AdminProductListItem | null>(null);
-
-  // Automatically adapt scope when active hub changes
-  useEffect(() => {
-    if (hubSpecificProducts.length > 0) {
-      setSkuScope("hub");
-    } else {
-      setSkuScope("all");
-    }
-  }, [activeHubDisplay?.id, hubSpecificProducts.length]);
-
-  const candidateProducts = useMemo(() => {
-    if (skuScope === "hub" && hubSpecificProducts.length > 0) {
-      return hubSpecificProducts;
-    }
-    return allProducts;
-  }, [skuScope, hubSpecificProducts, allProducts]);
-
-  const displayedSkus = useMemo(() => {
-    return candidateProducts.filter((p) => {
-      if (skuStatusFilter === "approved" && p.moderationStatus !== "approved") return false;
-      if (skuStatusFilter === "pending_review" && p.moderationStatus !== "pending_review") return false;
-      if (skuStatusFilter === "featured" && !p.isFeatured && !p.isFreshPick) return false;
-
-      if (skuSearch.trim()) {
-        const q = skuSearch.toLowerCase();
-        const matchName = p.name.toLowerCase().includes(q);
-        const matchCategory = p.categoryId.toLowerCase().includes(q);
-        const matchFarmer = p.seller?.name?.toLowerCase().includes(q);
-        const matchId = p.id.toLowerCase().includes(q);
-        if (!matchName && !matchCategory && !matchFarmer && !matchId) return false;
-      }
-      return true;
-    });
-  }, [candidateProducts, skuStatusFilter, skuSearch]);
-
-  const skuMetrics = useMemo(() => {
-    const list = candidateProducts;
-    const totalCount = list.length;
-    const totalStock = list.reduce((sum, p) => sum + (Number(p.stock) || 0), 0);
-    const totalValue = list.reduce((sum, p) => sum + ((Number(p.price) || 0) * (Number(p.stock) || 0)), 0);
-    const uniqueSellers = new Set(list.map((p) => p.seller?.id).filter(Boolean)).size;
-    const primaryCurrency = list[0]?.currency || "GBP";
-    return {
-      totalCount,
-      totalStock,
-      totalValue,
-      uniqueSellers,
-      primaryCurrency,
-    };
-  }, [candidateProducts]);
-
-  const exportSkuManifestCsv = () => {
-    if (!displayedSkus.length) {
-      toast({
-        title: "No SKUs to Export",
-        description: "There are no produce SKUs matching current filters.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const headers = [
-      "SKU ID",
-      "Produce Commodity",
-      "Category",
-      "Unit Price",
-      "Currency",
-      "Bonded Stock",
-      "Unit",
-      "Producer / Supplier",
-      "Verification Status",
-      "Moderation Status",
-      "Region",
-      "Updated At"
-    ];
-
-    const rows = displayedSkus.map((p) => [
-      `"${p.id}"`,
-      `"${p.name.replace(/"/g, '""')}"`,
-      `"${p.categoryId}"`,
-      p.price.toFixed(2),
-      `"${p.currency}"`,
-      p.stock,
-      `"${p.unit}"`,
-      `"${(p.seller?.name || "Verified Farm").replace(/"/g, '""')}"`,
-      `"${p.seller?.verificationStatus || "verified"}"`,
-      `"${p.moderationStatus}"`,
-      `"${(p.regionName || activeHubDisplay?.name || "Central Corridor").replace(/"/g, '""')}"`,
-      `"${new Date(p.updatedAt).toLocaleDateString("en-GB")}"`,
-    ]);
-
-    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const cleanHub = (activeHubDisplay?.name || "Hub").replace(/[^a-zA-Z0-9_-]/g, "_");
-    a.download = `Hub_Produce_SKU_Manifest_${cleanHub}_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: "Manifest Exported",
-      description: `Downloaded ${displayedSkus.length} produce SKUs for ${activeHubDisplay?.name || "Hub"}.`,
-    });
-  };
 
   // Filtered operational rules
   const filteredSettings = useMemo(() => {
@@ -1249,9 +1093,7 @@ export function AgriGlobalOperations({
                 <span className="text-xs font-bold text-slate-500">Verified Farmer</span>
               </div>
               <div className="rounded-xl border border-emerald-100 bg-white p-2.5 shadow-2xs">
-                <span className="block text-lg font-black text-emerald-700">
-                  {allProducts.length || activeHubDisplay?.products || 1642}
-                </span>
+                <span className="block text-lg font-black text-emerald-700">{activeHubDisplay?.products || 1642}</span>
                 <span className="text-xs font-bold text-slate-500">Live Commodities</span>
               </div>
             </div>
@@ -1263,9 +1105,7 @@ export function AgriGlobalOperations({
               </div>
               <div className="flex justify-between items-center text-slate-600">
                 <span className="text-xs font-medium">Primary Supplier:</span>
-                <strong className="text-xs text-emerald-800 font-black truncate max-w-[140px]">
-                  {allProducts[0]?.seller?.name || "Harsh Gavand"}
-                </strong>
+                <strong className="text-xs text-emerald-800 font-black truncate max-w-[140px]">Harsh Gavand</strong>
               </div>
               <div className="flex justify-between items-center text-slate-600">
                 <span className="text-xs font-medium">Cold-Chain SLA:</span>
@@ -1274,13 +1114,10 @@ export function AgriGlobalOperations({
             </div>
 
             <Button
-              onClick={() => {
-                setSelectedSkuDetail(null);
-                setIsHubSkusOpen(true);
-              }}
-              className="w-full h-12 sm:h-13 text-sm sm:text-base font-black bg-[#078c52] hover:bg-[#067343] text-white rounded-xl shadow-md cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-2"
+              onClick={() => onNavigate?.("products")}
+              className="w-full h-11 text-base font-black bg-[#078c52] text-white hover:bg-[#067343] rounded-xl shadow-md cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-2"
             >
-              <Package className="h-5 w-5" />
+              <Package className="h-4.5 w-4.5" />
               <span>Inspect Hub Produce SKUs</span>
             </Button>
           </Card>
@@ -1442,436 +1279,6 @@ export function AgriGlobalOperations({
           );
         })}
       </div>
-
-      {/* Hub Produce SKUs Inspection Drawer */}
-      <Sheet open={isHubSkusOpen} onOpenChange={setIsHubSkusOpen}>
-        <SheetContent
-          side="right"
-          hideCloseButton
-          className="w-full sm:max-w-2xl lg:max-w-3xl xl:max-w-4xl p-0 flex flex-col bg-white border-l border-slate-200 overflow-hidden shadow-2xl"
-        >
-          <SheetHeader className="sr-only">
-            <SheetTitle>Hub Produce SKU Manifest</SheetTitle>
-            <SheetDescription>
-              Real-time bonded commodity inventory, cold-chain status, and farm-gate supply tracking.
-            </SheetDescription>
-          </SheetHeader>
-
-          {/* Header */}
-          <div className="bg-[#053f36] p-6 text-white shadow-md">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3.5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-lime-400 border border-white/10 shadow-inner mt-0.5">
-                  <Package className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                      {activeHubDisplay?.name || "Global Agricultural Hub"}
-                    </h2>
-                    <Badge className="bg-lime-400 text-emerald-950 font-black text-xs border-none px-2 py-0.5">
-                      {activeHubDisplay?.country || "GLOBAL"}
-                    </Badge>
-                    <Badge className="bg-white/15 text-emerald-100 font-bold text-xs border-white/20 px-2 py-0.5">
-                      {activeHubDisplay?.type?.replaceAll("_", " ") || "Trade Corridor"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs sm:text-sm text-emerald-200 font-medium mt-1">
-                    Sovereign Bonded Commodity Inventory · Real-Time Cold-Chain Radar & Farm-Gate Logistics
-                  </p>
-                </div>
-              </div>
-
-              {/* Single styled header close button */}
-              <button
-                type="button"
-                onClick={() => setIsHubSkusOpen(false)}
-                className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
-                aria-label="Close produce SKU drawer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Hub Telemetry Matrix */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5">
-              <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
-                <span className="block text-[11px] font-black uppercase tracking-wider text-emerald-200">
-                  Live SKUs
-                </span>
-                <span className="text-base sm:text-lg font-black text-lime-300">
-                  {skuMetrics.totalCount} Active
-                </span>
-              </div>
-              <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
-                <span className="block text-[11px] font-black uppercase tracking-wider text-emerald-200">
-                  Bonded Stock
-                </span>
-                <span className="text-base sm:text-lg font-black text-white">
-                  {skuMetrics.totalStock.toLocaleString()} Units
-                </span>
-              </div>
-              <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
-                <span className="block text-[11px] font-black uppercase tracking-wider text-emerald-200">
-                  Corridor Value
-                </span>
-                <span className="text-base sm:text-lg font-black text-lime-300">
-                  {skuMetrics.primaryCurrency === "GBP" ? "£" : "₹"}{Math.round(skuMetrics.totalValue).toLocaleString()}
-                </span>
-              </div>
-              <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
-                <span className="block text-[11px] font-black uppercase tracking-wider text-emerald-200">
-                  Verified Suppliers
-                </span>
-                <span className="text-base sm:text-lg font-black text-white">
-                  {skuMetrics.uniqueSellers || 1} Farms
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Drawer Body */}
-          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-slate-50/60">
-            {selectedSkuDetail ? (
-              /* Detailed SKU Inspection View */
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedSkuDetail(null)}
-                    className="h-10 text-xs font-bold rounded-xl border-slate-300 text-slate-700 hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    <span>Back to SKU Manifest</span>
-                  </Button>
-
-                  <Badge className={cn(
-                    "px-3 py-1 text-xs font-black rounded-lg uppercase",
-                    selectedSkuDetail.moderationStatus === "approved"
-                      ? "bg-emerald-100 text-emerald-800"
-                      : selectedSkuDetail.moderationStatus === "pending_review"
-                      ? "bg-amber-100 text-amber-800"
-                      : "bg-slate-100 text-slate-800"
-                  )}>
-                    ● {selectedSkuDetail.moderationStatus.replace("_", " ")}
-                  </Badge>
-                </div>
-
-                {/* SKU Dossier Card */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-black text-2xl shadow-inner">
-                      {selectedSkuDetail.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs font-black bg-slate-900 text-lime-300 px-2 py-0.5 rounded">
-                          {selectedSkuDetail.id}
-                        </span>
-                        <Badge variant="outline" className="text-xs font-bold text-slate-600">
-                          {selectedSkuDetail.categoryId}
-                        </Badge>
-                        {selectedSkuDetail.isFeatured && (
-                          <Badge className="bg-amber-500 text-white text-xs font-black">Featured</Badge>
-                        )}
-                        {selectedSkuDetail.isFreshPick && (
-                          <Badge className="bg-emerald-600 text-white text-xs font-black">Fresh Pick</Badge>
-                        )}
-                      </div>
-                      <h3 className="text-xl font-black text-slate-900 mt-1">{selectedSkuDetail.name}</h3>
-                      <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        Region: {selectedSkuDetail.regionName || activeHubDisplay?.name || "Global Corridor"} · Updated {new Date(selectedSkuDetail.updatedAt).toLocaleDateString("en-GB")}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 2x2 Commercial & Logistics Grid */}
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">Farm Gate Unit Price</span>
-                      <strong className="text-lg font-black text-emerald-800">
-                        {selectedSkuDetail.currency === "GBP" ? "£" : selectedSkuDetail.currency === "INR" ? "₹" : selectedSkuDetail.currency}
-                        {selectedSkuDetail.price.toFixed(2)}
-                        <span className="text-xs font-bold text-slate-600 ml-1">/ {selectedSkuDetail.unit}</span>
-                      </strong>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">Bonded Stock In Hub</span>
-                      <strong className="text-lg font-black text-slate-900">
-                        {selectedSkuDetail.stock.toLocaleString()}
-                        <span className="text-xs font-bold text-slate-600 ml-1">{selectedSkuDetail.unit}s available</span>
-                      </strong>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">Primary Supplier</span>
-                      <strong className="text-base font-black text-slate-900 block truncate">
-                        {selectedSkuDetail.seller?.name || "Verified Producer"}
-                      </strong>
-                      <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 mt-0.5">
-                        <CheckCircle2 className="h-3 w-3" /> Tier-1 Verified Producer
-                      </span>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">Cold-Chain SLA</span>
-                      <strong className="text-base font-black text-slate-900 block">
-                        24.5h Farm Dispatch
-                      </strong>
-                      <span className="text-xs font-bold text-slate-500">
-                        Continuous Thermal Logged
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions for this SKU */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(selectedSkuDetail.id);
-                        toast({ title: "Copied SKU ID", description: `Copied ${selectedSkuDetail.id} to clipboard.` });
-                      }}
-                      className="h-11 text-xs font-bold rounded-xl cursor-pointer border-slate-200 hover:bg-slate-100"
-                    >
-                      <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy SKU ID
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setIsHubSkusOpen(false);
-                        onNavigate?.("products");
-                        toast({ title: "Opening Product Moderation", description: `Viewing ${selectedSkuDetail.name} in Products Manager.` });
-                      }}
-                      className="h-11 text-xs font-black bg-[#078c52] hover:bg-[#067343] text-white rounded-xl shadow-sm cursor-pointer flex items-center gap-1.5 ml-auto"
-                    >
-                      <Package className="h-3.5 w-3.5" />
-                      <span>Manage in Products Manager</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Manifest Table View */
-              <div className="space-y-3">
-                {/* Search and Filter Strip */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                      placeholder="Search produce name, SKU ID, category, or supplier..."
-                      value={skuSearch}
-                      onChange={(e) => setSkuSearch(e.target.value)}
-                      className="h-11 pl-10 text-sm font-bold rounded-xl border-slate-200 bg-white shadow-2xs"
-                    />
-                    {skuSearch && (
-                      <button
-                        type="button"
-                        onClick={() => setSkuSearch("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setSkuScope("hub")}
-                      className={cn(
-                        "h-11 px-3.5 text-xs font-black rounded-xl border cursor-pointer transition-all active:scale-95",
-                        skuScope === "hub"
-                          ? "bg-[#053f36] text-white border-[#053f36] shadow-xs"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      Hub SKUs ({hubSpecificProducts.length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSkuScope("all")}
-                      className={cn(
-                        "h-11 px-3.5 text-xs font-black rounded-xl border cursor-pointer transition-all active:scale-95",
-                        skuScope === "all"
-                          ? "bg-[#053f36] text-white border-[#053f36] shadow-xs"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      All Corridors ({allProducts.length})
-                    </button>
-                  </div>
-                </div>
-
-                {/* Status Pills */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                  {[
-                    { id: "all", label: `All (${candidateProducts.length})` },
-                    { id: "approved", label: `Approved (${candidateProducts.filter((p) => p.moderationStatus === "approved").length})` },
-                    { id: "pending_review", label: `Pending Review (${candidateProducts.filter((p) => p.moderationStatus === "pending_review").length})` },
-                    { id: "featured", label: `Featured & Fresh (${candidateProducts.filter((p) => p.isFeatured || p.isFreshPick).length})` },
-                  ].map((pill) => (
-                    <button
-                      key={pill.id}
-                      type="button"
-                      onClick={() => setSkuStatusFilter(pill.id as any)}
-                      className={cn(
-                        "px-3 py-1.5 text-xs font-bold rounded-lg border whitespace-nowrap cursor-pointer transition-all active:scale-95",
-                        skuStatusFilter === pill.id
-                          ? "bg-emerald-100 text-emerald-900 border-emerald-300 font-black shadow-2xs"
-                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      {pill.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* SKU Items List / Table */}
-                <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
-                  {isLoadingProducts ? (
-                    <div className="p-12 text-center space-y-3">
-                      <div className="h-8 w-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-                      <p className="text-sm font-bold text-slate-600">Querying live commodities from database...</p>
-                    </div>
-                  ) : displayedSkus.length === 0 ? (
-                    <div className="p-12 text-center space-y-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mx-auto">
-                        <Package className="h-6 w-6" />
-                      </div>
-                      <h4 className="text-base font-black text-slate-800">No produce commodities found</h4>
-                      <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
-                        No SKUs match the current search or status filter. Try clearing filters or switching to "All Corridors".
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSkuSearch("");
-                          setSkuStatusFilter("all");
-                          setSkuScope("all");
-                        }}
-                        className="h-10 text-xs font-bold rounded-xl cursor-pointer"
-                      >
-                        Reset All Filters
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-black uppercase text-slate-600">
-                          <tr>
-                            <th className="px-4 py-3">SKU ID</th>
-                            <th className="px-4 py-3">Commodity Produce</th>
-                            <th className="px-4 py-3">Producer / Supplier</th>
-                            <th className="px-4 py-3 text-right">Bonded Stock</th>
-                            <th className="px-4 py-3 text-right">Farm Gate Price</th>
-                            <th className="px-4 py-3 text-center">Status</th>
-                            <th className="px-4 py-3 text-center">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                          {displayedSkus.map((prod) => (
-                            <tr key={prod.id} className="hover:bg-emerald-50/50 transition-colors">
-                              <td className="px-4 py-3 font-mono font-black text-emerald-900 text-xs whitespace-nowrap">
-                                {prod.id}
-                              </td>
-                              <td className="px-4 py-3">
-                                <strong className="block text-sm font-black text-slate-900 leading-tight">
-                                  {prod.name}
-                                </strong>
-                                <span className="inline-block mt-0.5 text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                                  {prod.categoryId}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="font-bold text-slate-800 block text-xs truncate max-w-[140px]">
-                                  {prod.seller?.name || "Verified Producer"}
-                                </span>
-                                <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-0.5">
-                                  <BadgeCheck className="h-3 w-3" /> Tier-1
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
-                                {prod.stock.toLocaleString()} <span className="text-[11px] font-normal text-slate-500">{prod.unit}s</span>
-                              </td>
-                              <td className="px-4 py-3 text-right font-mono font-bold text-emerald-800 whitespace-nowrap">
-                                {prod.currency === "GBP" ? "£" : prod.currency === "INR" ? "₹" : prod.currency}{prod.price.toFixed(2)}
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <span className={cn(
-                                  "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase",
-                                  prod.moderationStatus === "approved"
-                                    ? "bg-emerald-100 text-emerald-800"
-                                    : prod.moderationStatus === "pending_review"
-                                    ? "bg-amber-100 text-amber-800"
-                                    : "bg-slate-100 text-slate-700"
-                                )}>
-                                  {prod.moderationStatus === "approved" ? "Active" : prod.moderationStatus.replace("_", " ")}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setSelectedSkuDetail(prod)}
-                                  className="h-8 px-2.5 text-xs font-black text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-lg cursor-pointer flex items-center gap-1 mx-auto"
-                                >
-                                  <Eye className="h-3 w-3" />
-                                  <span>Inspect</span>
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sticky Footer */}
-          <div className="border-t border-slate-200 bg-white p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
-            <Button
-              variant="outline"
-              onClick={exportSkuManifestCsv}
-              className="h-12 text-sm font-black rounded-xl border-2 border-slate-300 hover:bg-slate-50 cursor-pointer flex items-center gap-2 px-5 active:scale-95 w-full sm:w-auto"
-            >
-              <Download className="h-4 w-4 text-slate-700" />
-              <span>Export Manifest CSV ({displayedSkus.length})</span>
-            </Button>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <Button
-                variant="ghost"
-                onClick={() => setIsHubSkusOpen(false)}
-                className="h-12 text-sm font-bold rounded-xl text-slate-600 hover:bg-slate-100 px-5 cursor-pointer"
-              >
-                Close
-              </Button>
-              <Button
-                onClick={() => {
-                  setIsHubSkusOpen(false);
-                  toast({
-                    title: "Opening Products Manager",
-                    description: `Viewing commodities for ${activeHubDisplay?.name || "Hub"}.`,
-                  });
-                  onNavigate?.("products");
-                }}
-                className="h-12 text-sm sm:text-base font-black bg-[#053f36] hover:bg-[#075347] text-white rounded-xl shadow-md cursor-pointer flex items-center gap-2 px-6 active:scale-95 transition-all"
-              >
-                <Package className="h-4 w-4" />
-                <span>Open in Products Manager</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
