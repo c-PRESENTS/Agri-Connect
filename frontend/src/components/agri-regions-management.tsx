@@ -796,30 +796,30 @@ export function AgriRegionsManagement({
 
       {/* Region Detail Drawer */}
       <Sheet open={Boolean(selectedRegionId)} onOpenChange={(open) => !open && setSelectedRegionId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
+        <SheetContent side="right" className="w-full sm:max-w-2xl p-0 overflow-y-auto bg-slate-50" hideCloseButton>
           {isLoadingDetail ? (
-            <div className="flex h-full items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+            <div className="flex h-full items-center justify-center p-12">
+              <RefreshCw className="h-8 w-8 animate-spin text-emerald-600" />
             </div>
           ) : detailData ? (
             <div className="flex flex-col min-h-full">
               {/* Header */}
-              <div className="bg-[#053f36] p-6 text-white">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-400 font-bold text-[#053f36]">
-                      <MapPinned className="h-6 w-6" />
+              <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lime-400 font-bold text-[#053f36] shadow-md shrink-0">
+                      <MapPinned className="h-7 w-7" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-black">{detailData.region.name}</h2>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-white/60">Code: {detailData.region.code}</span>
+                      <h2 className="text-xl sm:text-2xl font-black tracking-tight">{detailData.region.name}</h2>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+                        <span className="font-mono text-xs font-bold text-white/75 bg-white/10 px-2.5 py-0.5 rounded-md">Code: {detailData.region.code}</span>
                         <Badge
                           variant="outline"
                           className={
                             detailData.region.active
-                              ? "border-emerald-400/30 bg-emerald-500/20 text-emerald-200"
-                              : "border-slate-400/30 bg-slate-500/20 text-slate-200"
+                              ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-200 text-xs font-black uppercase px-2.5 py-0.5"
+                              : "border-slate-400/40 bg-slate-500/20 text-slate-200 text-xs font-black uppercase px-2.5 py-0.5"
                           }
                         >
                           {detailData.region.active ? "Active Hub" : "Inactive"}
@@ -829,29 +829,30 @@ export function AgriRegionsManagement({
                   </div>
                   <button
                     onClick={() => setSelectedRegionId(null)}
-                    className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                    aria-label="Close region drawer"
+                    className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
                 {/* 4 Stat Boxes */}
-                <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Producers</p>
-                    <p className="text-sm font-black text-lime-300">{detailData.region.activeSellers || 0}</p>
+                <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Producers</p>
+                    <p className="text-base sm:text-lg font-black text-lime-300 mt-0.5">{detailData.region.activeSellers || 0}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Products</p>
-                    <p className="text-xs font-bold text-white">{detailData.region.productsCount || 0}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Products</p>
+                    <p className="text-base sm:text-lg font-black text-white mt-0.5">{detailData.region.productsCount || 0}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Partners</p>
-                    <p className="text-xs font-bold text-emerald-300">{detailData.region.organisationCount || 0}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Partners</p>
+                    <p className="text-base sm:text-lg font-black text-emerald-300 mt-0.5">{detailData.region.organisationCount || 0}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Coordinates</p>
-                    <p className="text-[10px] font-mono text-white/80">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Coordinates</p>
+                    <p className="text-xs font-mono font-bold text-white/90 truncate mt-0.5">
                       {detailData.region.latitude ? `${detailData.region.latitude.toFixed(2)}°, ${detailData.region.longitude?.toFixed(2)}°` : "N/A"}
                     </p>
                   </div>
@@ -859,34 +860,34 @@ export function AgriRegionsManagement({
               </div>
 
               {/* Sub-Tabs */}
-              <Tabs defaultValue="sellers" className="flex-1 p-6">
-                <TabsList className="grid w-full grid-cols-3 bg-slate-200">
-                  <TabsTrigger value="sellers" className="text-xs font-bold">
+              <Tabs defaultValue="sellers" className="flex-1 p-6 sm:p-7 space-y-6">
+                <TabsList className="grid w-full grid-cols-3 bg-slate-200 h-12 p-1.5 rounded-xl">
+                  <TabsTrigger value="sellers" className="text-sm font-black rounded-lg">
                     Producers ({detailData.sellers?.length || 0})
                   </TabsTrigger>
-                  <TabsTrigger value="organisations" className="text-xs font-bold">
+                  <TabsTrigger value="organisations" className="text-sm font-black rounded-lg">
                     Partners ({detailData.organisations?.length || 0})
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="text-xs font-bold">
+                  <TabsTrigger value="history" className="text-sm font-black rounded-lg">
                     Audit Trail
                   </TabsTrigger>
                 </TabsList>
 
                 {/* Sellers Tab */}
-                <TabsContent value="sellers" className="mt-4 space-y-2">
+                <TabsContent value="sellers" className="space-y-3">
                   {detailData.sellers?.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400">
-                      <Users className="mx-auto mb-2 h-7 w-7 text-slate-300" />
-                      <p className="font-semibold">No assigned producers</p>
+                    <div className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                      <Users className="mx-auto mb-3 h-8 w-8 text-slate-300" />
+                      <p className="text-sm font-bold text-slate-700">No assigned producers</p>
                     </div>
                   ) : (
                     detailData.sellers.map((s) => (
-                      <div key={s.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 text-xs">
+                      <div key={s.id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
                         <div>
-                          <p className="font-bold text-slate-900">{s.name}</p>
-                          <p className="text-[10px] text-slate-400">{s.email}</p>
+                          <p className="text-sm font-black text-slate-900">{s.name}</p>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5">{s.email}</p>
                         </div>
-                        <Badge variant="outline" className="bg-emerald-50 text-emerald-800 text-[10px]">
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-xs font-black uppercase px-2.5 py-0.5">
                           {s.status}
                         </Badge>
                       </div>
@@ -895,45 +896,65 @@ export function AgriRegionsManagement({
                 </TabsContent>
 
                 {/* Organisations Tab */}
-                <TabsContent value="organisations" className="mt-4 space-y-2">
+                <TabsContent value="organisations" className="space-y-3">
                   {detailData.organisations?.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400">
-                      <Building2 className="mx-auto mb-2 h-7 w-7 text-slate-300" />
-                      <p className="font-semibold">No assigned organisations</p>
+                    <div className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                      <Building2 className="mx-auto mb-3 h-8 w-8 text-slate-300" />
+                      <p className="text-sm font-bold text-slate-700">No assigned organisations</p>
                     </div>
                   ) : (
                     detailData.organisations.map((org) => (
-                      <div key={org.id} className="rounded-lg border border-slate-200 bg-white p-3 text-xs">
+                      <div key={org.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
                         <div className="flex items-center justify-between">
-                          <p className="font-bold text-slate-900">{org.name}</p>
-                          <Badge variant="outline" className="text-[10px]">{org.status}</Badge>
+                          <p className="text-sm font-black text-slate-900">{org.name}</p>
+                          <Badge variant="outline" className="text-xs font-black uppercase px-2 py-0.5">{org.status}</Badge>
                         </div>
-                        <p className="mt-1 text-[10px] text-slate-500">{org.officialEmail}</p>
+                        <p className="mt-1 text-xs text-slate-600 font-medium">{org.officialEmail}</p>
                       </div>
                     ))
                   )}
                 </TabsContent>
 
                 {/* History Tab */}
-                <TabsContent value="history" className="mt-4 space-y-2">
+                <TabsContent value="history" className="space-y-3">
                   {detailData.activity?.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400">
-                      <Clock className="mx-auto mb-2 h-7 w-7 text-slate-300" />
-                      <p className="font-semibold">No audit events</p>
+                    <div className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                      <Clock className="mx-auto mb-3 h-8 w-8 text-slate-300" />
+                      <p className="text-sm font-bold text-slate-700">No audit events</p>
                     </div>
                   ) : (
                     detailData.activity.map((event) => (
-                      <div key={event.id} className="rounded-lg border border-slate-200 bg-white p-3 text-xs">
+                      <div key={event.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800 capitalize">{event.action}</span>
-                          <span className="text-[10px] text-slate-400">{timeAgo(event.occurredAt)}</span>
+                          <span className="text-sm font-black text-slate-800 capitalize">{event.action}</span>
+                          <span className="text-xs font-bold text-slate-400">{timeAgo(event.occurredAt)}</span>
                         </div>
-                        <p className="mt-1 text-[11px] text-slate-600">Outcome: {event.outcome}</p>
+                        <p className="mt-1 text-xs text-slate-600 font-medium">Outcome: <span className="font-bold text-emerald-700">{event.outcome}</span></p>
                       </div>
                     ))
                   )}
                 </TabsContent>
               </Tabs>
+
+              {/* Drawer Action Bar */}
+              <div className="p-6 border-t border-slate-200 bg-white mt-auto">
+                <Button
+                  variant="outline"
+                  className="w-full h-12 sm:h-13 text-sm sm:text-base font-black rounded-xl border-slate-300 hover:bg-slate-100 text-slate-800 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                  onClick={() => {
+                    const region = detailData.region;
+                    setEditTarget(region);
+                    setEditName(region.name);
+                    setEditCode(region.code);
+                    setEditType(region.type);
+                    setEditActive(region.active);
+                    setEditLat(region.latitude !== null && region.latitude !== undefined ? String(region.latitude) : "");
+                    setEditLng(region.longitude !== null && region.longitude !== undefined ? String(region.longitude) : "");
+                  }}
+                >
+                  <Pencil className="mr-2 h-4 w-4 text-slate-600" /> Edit Region Attributes
+                </Button>
+              </div>
             </div>
           ) : null}
         </SheetContent>
@@ -941,51 +962,51 @@ export function AgriRegionsManagement({
 
       {/* Create Modal */}
       <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl rounded-2xl p-6 sm:p-7">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Register Market Region</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900">Register Market Region</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 font-medium">
               Establish a new agricultural territory or logistics distribution hub.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3.5 py-2 text-xs">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Region Name *</Label>
+          <div className="space-y-4 py-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Region Name *</Label>
               <Input
                 placeholder="e.g. East Anglia & Fens Arable Corridor"
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm font-bold rounded-xl"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Territory Code *</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Territory Code *</Label>
                 <Input
                   placeholder="UK-ENG-EA"
                   value={createCode}
                   onChange={(e) => setCreateCode(e.target.value.toUpperCase())}
-                  className="h-9 text-xs font-mono"
+                  className="h-11 sm:h-12 text-sm font-mono font-bold rounded-xl"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Country Code *</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Country Code *</Label>
                 <Input
                   placeholder="GB"
                   value={createCountryCode}
                   onChange={(e) => setCreateCountryCode(e.target.value.toUpperCase())}
-                  className="h-9 text-xs font-mono"
+                  className="h-11 sm:h-12 text-sm font-mono font-bold rounded-xl"
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Territory Type</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Territory Type</Label>
               <Select value={createType} onValueChange={setCreateType}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-11 sm:h-12 text-sm font-bold rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -996,35 +1017,34 @@ export function AgriRegionsManagement({
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Latitude (GPS)</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Latitude (GPS)</Label>
                 <Input
                   placeholder="e.g. 52.400"
                   value={createLat}
                   onChange={(e) => setCreateLat(e.target.value)}
-                  className="h-9 text-xs font-mono"
+                  className="h-11 sm:h-12 text-sm font-mono font-bold rounded-xl"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Longitude (GPS)</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Longitude (GPS)</Label>
                 <Input
                   placeholder="e.g. 0.500"
                   value={createLng}
                   onChange={(e) => setCreateLng(e.target.value)}
-                  className="h-9 text-xs font-mono"
+                  className="h-11 sm:h-12 text-sm font-mono font-bold rounded-xl"
                 />
               </div>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setCreateModalOpen(false)}>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+            <Button variant="outline" className="h-12 px-6 text-sm font-black rounded-xl cursor-pointer" onClick={() => setCreateModalOpen(false)}>
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={!createName.trim() || !createCode.trim() || createRegionMutation.isPending}
               onClick={() =>
                 createRegionMutation.mutate({
@@ -1036,7 +1056,7 @@ export function AgriRegionsManagement({
                   longitude: createLng ? parseFloat(createLng) : undefined,
                 })
               }
-              className="bg-[#078c52] text-white hover:bg-[#067343]"
+              className="h-12 px-6 text-sm sm:text-base font-black rounded-xl bg-[#053f36] hover:bg-[#075347] text-white active:scale-[0.98] transition-all cursor-pointer"
             >
               {createRegionMutation.isPending ? "Registering..." : "Register Region"}
             </Button>
@@ -1046,38 +1066,38 @@ export function AgriRegionsManagement({
 
       {/* Edit Modal */}
       <Dialog open={Boolean(editTarget)} onOpenChange={(open) => !open && setEditTarget(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl rounded-2xl p-6 sm:p-7">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Edit Region Attributes</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900">Edit Region Attributes</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 font-medium">
               Update {editTarget?.name} territory specifications.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3.5 py-2 text-xs">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Region Name *</Label>
+          <div className="space-y-4 py-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Region Name *</Label>
               <Input
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm font-bold rounded-xl"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Territory Code</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Territory Code</Label>
                 <Input
                   value={editCode}
                   onChange={(e) => setEditCode(e.target.value.toUpperCase())}
-                  className="h-9 text-xs font-mono"
+                  className="h-11 sm:h-12 text-sm font-mono font-bold rounded-xl"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Type</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Type</Label>
                 <Select value={editType} onValueChange={setEditType}>
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-11 sm:h-12 text-sm font-bold rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1089,41 +1109,40 @@ export function AgriRegionsManagement({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Latitude (GPS)</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Latitude (GPS)</Label>
                 <Input
                   value={editLat}
                   onChange={(e) => setEditLat(e.target.value)}
-                  className="h-9 text-xs font-mono"
+                  className="h-11 sm:h-12 text-sm font-mono font-bold rounded-xl"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Longitude (GPS)</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Longitude (GPS)</Label>
                 <Input
                   value={editLng}
                   onChange={(e) => setEditLng(e.target.value)}
-                  className="h-9 text-xs font-mono"
+                  className="h-11 sm:h-12 text-sm font-mono font-bold rounded-xl"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 p-2.5">
+            <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4 bg-slate-50">
               <div>
-                <Label className="text-xs font-bold text-slate-800">Operating Status</Label>
-                <p className="text-[10px] text-slate-500">Allow sellers and orders in this territory</p>
+                <Label className="text-sm font-black text-slate-800">Operating Status</Label>
+                <p className="text-xs text-slate-500 mt-0.5">Allow sellers and orders in this territory</p>
               </div>
               <Switch checked={editActive} onCheckedChange={setEditActive} />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setEditTarget(null)}>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+            <Button variant="outline" className="h-12 px-6 text-sm font-black rounded-xl cursor-pointer" onClick={() => setEditTarget(null)}>
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={!editName.trim() || updateRegionMutation.isPending}
               onClick={() => {
                 if (editTarget) {
@@ -1140,7 +1159,7 @@ export function AgriRegionsManagement({
                   });
                 }
               }}
-              className="bg-[#078c52] text-white hover:bg-[#067343]"
+              className="h-12 px-6 text-sm sm:text-base font-black rounded-xl bg-[#053f36] hover:bg-[#075347] text-white active:scale-[0.98] transition-all cursor-pointer"
             >
               {updateRegionMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>

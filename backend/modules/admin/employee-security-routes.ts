@@ -29,6 +29,7 @@ import {
   revokeEmployeeInvitation,
   revokeEmployeeSessions,
   revokeSessionById,
+  revokeAllOtherSessions,
   setEmployeeOverride,
   updateRolePermissionMatrix,
   getMfaState,
@@ -149,6 +150,11 @@ export function registerEmployeeSecurityRoutes(app: Express) {
   app.delete("/api/admin/security/sessions/:sessionId", isAuthenticated, requireAdminPermission("security.manage"), requireRecentAuthentication, async (req, res) => {
     if (req.params.sessionId === req.sessionID) return res.status(409).json({ error: "Use Sign out for the current session", code: "CURRENT_SESSION_REQUIRES_LOGOUT" });
     try { return res.json(await revokeSessionById(req.session.userId!, req.params.sessionId)); }
+    catch (error) { return sendError(error, res); }
+  });
+
+  app.post("/api/admin/security/sessions/revoke-all-remote", isAuthenticated, requireAdminPermission("security.manage"), requireRecentAuthentication, async (req, res) => {
+    try { return res.json(await revokeAllOtherSessions(req.session.userId!, req.sessionID)); }
     catch (error) { return sendError(error, res); }
   });
 }

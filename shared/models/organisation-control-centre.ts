@@ -83,18 +83,21 @@ const shippingOverrideValueSchema = z.object({
   flatFeeMinor: z.number().int().min(0).max(100_000_000).optional(),
 });
 
+const circuitBreakerValueSchema = z.object({
+  type: z.enum([
+    "trading_engine_enabled",
+    "vat_engine_active",
+    "ai_matchmaker_active",
+    "escrow_auto_settlement",
+  ]),
+  enabled: z.boolean(),
+});
+
 export const organisationOperationalSettingSchema = z.object({
   organisationId: z.string().trim().min(1).max(160),
-  settingKey: z.enum(["currency_conversion", "shipping_rule_override"]),
-  value: z.discriminatedUnion("type", [currencyConversionValueSchema, shippingOverrideValueSchema]),
+  settingKey: z.string().trim().min(2).max(80),
+  value: z.union([z.record(z.unknown()), z.boolean(), z.string(), z.number()]),
   reason: z.string().trim().min(3).max(500),
-}).superRefine((input, context) => {
-  if (input.settingKey !== input.value.type) {
-    context.addIssue({ code: "custom", path: ["settingKey"], message: "Setting key and value type must match" });
-  }
-  if (input.value.type === "currency_conversion" && input.value.sourceCurrency === input.value.targetCurrency) {
-    context.addIssue({ code: "custom", path: ["value", "targetCurrency"], message: "Currencies must be different" });
-  }
 });
 
 export const controlCentreResourceActionSchema = z.object({
@@ -117,6 +120,7 @@ export const controlCentreResourceActionSchema = z.object({
 
 export const adminBackupRequestSchema = z.object({
   reason: z.string().trim().min(3).max(500),
+  scope: z.string().trim().min(2).max(200).optional(),
 });
 
 export type ControlCentreResourceModule = z.infer<typeof controlCentreResourceModuleSchema>;

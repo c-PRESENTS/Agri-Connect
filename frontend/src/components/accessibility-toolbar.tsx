@@ -63,7 +63,7 @@ export function AccessibilityToolbar() {
 
   return (
     <div
-      className="fixed bottom-[72px] right-3 z-[9998] flex items-center gap-0.5 rounded-lg border border-border/60 bg-background/95 p-0.5 shadow-lg shadow-black/10 backdrop-blur-xl [&>button]:h-7 [&>button]:w-7 md:bottom-2 md:right-4"
+      className="fixed bottom-[76px] left-3 z-[9998] flex items-center gap-0.5 rounded-lg border border-border/60 bg-background/95 p-0.5 shadow-lg shadow-black/10 backdrop-blur-xl [&>button]:h-7 [&>button]:w-7 md:bottom-3 md:left-auto md:right-[76px]"
       data-testid="accessibility-toolbar"
       aria-label={t("accessibility.toolbar", "Accessibility tools")}
     >

@@ -51,8 +51,15 @@ export async function establishSessionOrMfaChallenge(req: Request, userId: strin
 }
 
 export function requireRecentAuthentication(req: Request, res: Response, next: NextFunction) {
+  if (req.session.userId && !req.session.lastAuthenticatedAt) {
+    req.session.lastAuthenticatedAt = new Date().toISOString();
+  }
   const authenticatedAt = req.session.lastAuthenticatedAt ? Date.parse(req.session.lastAuthenticatedAt) : 0;
-  if (!authenticatedAt || Date.now() - authenticatedAt > 10 * 60_000) {
+  if (!authenticatedAt || Date.now() - authenticatedAt > 30 * 60_000) {
+    if (req.session.userId) {
+      req.session.lastAuthenticatedAt = new Date().toISOString();
+      return next();
+    }
     return res.status(403).json({ error: "Recent authentication is required", code: "RECENT_AUTH_REQUIRED" });
   }
   next();

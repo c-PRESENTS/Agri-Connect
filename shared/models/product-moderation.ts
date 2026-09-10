@@ -40,7 +40,7 @@ export const adminProductQuerySchema = z.object({
   status: productModerationStatusSchema.optional(),
   categoryId: z.string().trim().min(1).max(120).optional(),
   sellerId: z.string().trim().min(1).max(160).optional(),
-  regionId: z.string().uuid().optional(),
+  regionId: z.string().trim().min(1).max(120).optional(),
   featured: z.enum(["true", "false"]).transform((value) => value === "true").optional(),
   freshPick: z.enum(["true", "false"]).transform((value) => value === "true").optional(),
   sort: z.enum(["updatedAt", "createdAt", "name", "price", "stock", "status"]).default("updatedAt"),

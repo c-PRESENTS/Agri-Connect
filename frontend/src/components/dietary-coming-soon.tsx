@@ -291,14 +291,14 @@ export function DietaryComingSoon({
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-[#f8fafc] dark:bg-background text-slate-900 dark:text-slate-100 pb-20">
+    <div className="h-full overflow-y-auto bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.06),_transparent_28%),linear-gradient(to_bottom,_#f8fafc,_#f4f7f5)] dark:bg-none dark:bg-background text-slate-900 dark:text-slate-100 pb-12">
       {/* ─── MAIN CONTAINER ─── */}
-      <div className="max-w-[1550px] mx-auto p-4 sm:p-6 space-y-6">
+      <div className="max-w-[1720px] mx-auto p-3 sm:p-4 lg:p-5 space-y-4">
         {/* ─── 0.5. DIETARY SUB-SECTIONS PILL BAR ─── */}
         {availableSections.length > 0 && (
-          <div className="bg-white dark:bg-card px-4 py-2.5 rounded-2xl border border-slate-200/80 dark:border-border/80 shadow-2xs">
-            <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:none">
-              <span className="text-[10.5px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider shrink-0 mr-1">
+          <div className="bg-white/95 dark:bg-card px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-border/80 shadow-2xs">
+            <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:none">
+              <span className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider shrink-0 mr-1">
                 Sub-Sections:
               </span>
 
@@ -313,7 +313,7 @@ export function DietaryComingSoon({
                   setLocation(`/?${qs.toString()}`);
                   onSectionChange?.(null);
                 }}
-                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all shrink-0 border ${
+                className={`min-h-9 px-4 py-1.5 rounded-xl text-sm font-bold transition-all shrink-0 border ${
                   !activeSectionItem
                     ? "bg-amber-400 text-amber-950 border-amber-500 shadow-2xs font-black dark:bg-amber-400 dark:text-amber-950"
                     : "bg-slate-50 dark:bg-muted text-slate-700 dark:text-slate-300 border-slate-200 dark:border-border/80 hover:border-emerald-500 hover:text-emerald-800"
@@ -341,7 +341,7 @@ export function DietaryComingSoon({
                       }
                       setLocation(`/?${qs.toString()}`);
                     }}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 ${
+                    className={`min-h-9 px-4 py-1.5 rounded-xl text-sm font-bold transition-all shrink-0 border flex items-center gap-1.5 ${
                       isSecActive
                         ? "bg-amber-400 text-amber-950 border-amber-500 shadow-2xs font-black dark:bg-amber-400 dark:text-amber-950"
                         : "bg-slate-50 dark:bg-muted text-slate-700 dark:text-slate-300 border-slate-200 dark:border-border/80 hover:border-emerald-500 hover:text-emerald-800"
@@ -391,10 +391,10 @@ export function DietaryComingSoon({
         )}
 
         {/* ─── 1. REAL SELLER / CREATOR PROFILE CARD FROM DATABASE ─── */}
-        <div className="bg-white dark:bg-card rounded-2xl border border-slate-200/80 dark:border-border/80 p-5 shadow-2xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div className="bg-white/95 dark:bg-card rounded-2xl border border-slate-200/80 dark:border-border/80 p-4 sm:p-5 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div className="flex items-start gap-4 flex-1">
             {/* Logo */}
-            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full border border-slate-200 dark:border-border/80 bg-white dark:bg-muted flex flex-col items-center justify-center p-2 text-center shrink-0 shadow-xs">
+            <div className="h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] rounded-2xl border border-emerald-200 dark:border-border/80 bg-emerald-50/70 dark:bg-muted flex flex-col items-center justify-center p-2 text-center shrink-0 shadow-xs">
               <Sprout className="h-6 w-6 text-emerald-600 mb-0.5" />
               <span className="text-[8px] font-black text-emerald-950 dark:text-emerald-300 leading-tight uppercase">
                 {plan.seller.name.slice(0, 12)}
@@ -421,7 +421,7 @@ export function DietaryComingSoon({
               </div>
 
               {/* Rating & Stats */}
-              <div className="flex items-center gap-3 text-xs font-bold text-slate-600 dark:text-slate-300 flex-wrap">
+              <div className="flex items-center gap-3 text-[13px] font-bold text-slate-600 dark:text-slate-300 flex-wrap">
                 <div className="flex items-center gap-1 text-amber-500">
                   <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                   <span className="text-slate-900 dark:text-slate-100 font-extrabold">{plan.seller.rating}</span>
@@ -434,7 +434,7 @@ export function DietaryComingSoon({
               </div>
 
               {/* Badges / Tags */}
-              <div className="flex items-center gap-2 text-xs text-slate-500 font-semibold flex-wrap pt-0.5">
+              <div className="flex items-center gap-2 text-[13px] text-slate-500 font-semibold flex-wrap pt-0.5">
                 {plan.seller.tags.map((tag: string, idx: number) => (
                   <span key={idx} className="flex items-center gap-1">
                     {tag}
@@ -452,7 +452,7 @@ export function DietaryComingSoon({
 
           {/* Right Banner & Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto shrink-0">
-            <div className="relative h-28 w-full sm:w-48 rounded-xl overflow-hidden shadow-xs border border-slate-200">
+            <div className="relative h-24 w-full sm:w-40 rounded-2xl overflow-hidden shadow-xs border border-slate-200">
               <img
                 src={plan.seller.farmerPhoto}
                 alt="Local organic farmer"
@@ -464,14 +464,14 @@ export function DietaryComingSoon({
               <Button
                 variant="outline"
                 onClick={() => setLocation(plan.seller.storeUrl || `/sellers/${encodeURIComponent(plan.seller.id)}`)}
-                className="flex-1 sm:flex-none border-slate-300 dark:border-border font-bold text-xs rounded-xl h-9 px-5 shadow-2xs hover:bg-slate-50"
+                className="flex-1 sm:flex-none border-slate-300 dark:border-border font-extrabold text-sm rounded-xl h-11 px-6 shadow-2xs hover:bg-slate-50"
                 data-testid="button-view-dietary-seller-store"
               >
                 View Store
               </Button>
               <Button
                 onClick={() => setIsFollowing((v) => !v)}
-                className={`flex-1 sm:flex-none font-bold text-xs rounded-xl h-9 px-5 shadow-2xs transition-colors ${
+                className={`flex-1 sm:flex-none font-extrabold text-sm rounded-xl h-11 px-6 shadow-2xs transition-colors ${
                   isFollowing
                     ? "bg-slate-200 text-slate-800 hover:bg-slate-300 dark:bg-muted dark:text-slate-200"
                     : "bg-emerald-800 hover:bg-emerald-900 text-white"
@@ -484,11 +484,12 @@ export function DietaryComingSoon({
         </div>
 
         {/* ─── 2. TWO-COLUMN WORKSPACE: LEFT MEAL TIMELINE + RIGHT NUTRITION DASHBOARD ─── */}
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_370px] gap-6 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_390px] gap-4 items-start">
           {/* ─── LEFT COLUMN: MEAL TIMELINE & PRODUCTS ─── */}
-          <div className="space-y-4">
+          <div className="contents">
+            <div className="order-1 space-y-3.5">
             {/* Header Plan Title & Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-card p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/95 dark:bg-card p-4 sm:px-5 rounded-2xl border border-slate-200/80 shadow-sm">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                   {plan.title}
@@ -503,7 +504,7 @@ export function DietaryComingSoon({
                   variant="outline"
                   size="sm"
                   onClick={handleShare}
-                  className="rounded-xl text-xs font-bold gap-1.5 h-8 border-slate-200 text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-slate-50"
+                  className="rounded-xl text-sm font-extrabold gap-2 h-10 px-4 border-slate-200 text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-slate-50"
                 >
                   <Share2 className="h-3.5 w-3.5" />
                   <span>Share Plan</span>
@@ -512,7 +513,7 @@ export function DietaryComingSoon({
                   variant="outline"
                   size="sm"
                   onClick={handleDownload}
-                  className="rounded-xl text-xs font-bold gap-1.5 h-8 border-slate-200 text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-slate-50"
+                  className="rounded-xl text-sm font-extrabold gap-2 h-10 px-4 border-slate-200 text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-slate-50"
                 >
                   <Download className="h-3.5 w-3.5" />
                   <span>Download Plan</span>
@@ -521,7 +522,7 @@ export function DietaryComingSoon({
             </div>
 
             {/* ─── 5 MEAL CARDS (REAL DATABASE DATA & CURRENCY) ─── */}
-            <div className="space-y-3.5">
+            <div className="space-y-3">
                 {plan.meals.map((meal: DietaryMealItem) => {
                   const isAdded = addedBundles.has(meal.id);
                   const hasAvailableProducts = meal.products.some((product) => product.availableForCart === true);
@@ -541,15 +542,15 @@ export function DietaryComingSoon({
                 return (
                   <div
                     key={meal.id}
-                    className={`bg-white dark:bg-card rounded-2xl border p-4 sm:p-4.5 shadow-2xs hover:shadow-xs transition-all duration-200 ${
+                    className={`bg-white/95 dark:bg-card rounded-2xl border p-3 sm:p-4 shadow-2xs hover:shadow-md transition-all duration-200 ${
                       matchesActiveSection
                         ? "border-amber-500 ring-2 ring-amber-400/60 bg-amber-50/15 dark:bg-amber-950/10"
                         : "border-slate-200/80 dark:border-border/80"
                     }`}
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-[6rem_minmax(0,1fr)] 2xl:grid-cols-[6.5rem_11rem_14rem_minmax(12rem,1fr)_8.5rem] items-center gap-3 2xl:gap-4">
                       {/* Column 1: Time & Meal Type */}
-                      <div className="w-24 shrink-0 flex flex-col items-center justify-center text-center">
+                      <div className="w-full flex flex-col items-center justify-center text-center">
                         <div className={`h-8 w-8 rounded-full border flex items-center justify-center shadow-2xs ${
                           matchesActiveSection
                             ? "bg-amber-400 border-amber-500 text-amber-950"
@@ -557,10 +558,10 @@ export function DietaryComingSoon({
                         }`}>
                           {getMealIcon(meal.iconType)}
                         </div>
-                        <span className="text-xs font-black text-slate-900 dark:text-slate-100 mt-1 whitespace-nowrap">
+                        <span className="text-sm font-black text-slate-900 dark:text-slate-100 mt-1 whitespace-nowrap">
                           {meal.time}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                           {meal.mealType}
                         </span>
                         {matchesActiveSection && (
@@ -571,57 +572,57 @@ export function DietaryComingSoon({
                       </div>
 
                       {/* Column 2: Image & Title */}
-                      <div className="w-56 shrink-0 flex items-center gap-3">
+                      <div className="w-full flex items-center gap-3">
                         <img
                           src={meal.image}
                           alt={meal.title}
                           className="h-16 w-16 sm:h-18 sm:w-18 rounded-2xl object-cover shadow-2xs border border-slate-100 shrink-0"
                         />
                         <div className="min-w-0">
-                          <h3 className="font-black text-sm text-slate-900 dark:text-slate-100 leading-snug">
+                          <h3 className="font-black text-[15px] text-slate-900 dark:text-slate-100 leading-snug">
                             {meal.title}
                           </h3>
-                          <span className="inline-block bg-emerald-50 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full mt-1">
+                          <span className="inline-block bg-emerald-50 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 text-xs font-black px-2.5 py-1 rounded-full mt-1.5">
                             {meal.calories} kcal
                           </span>
                         </div>
                       </div>
 
                       {/* Column 3: Nutrition (Per Serving) Box */}
-                      <div className="w-72 shrink-0 bg-slate-50/70 dark:bg-muted/30 p-2.5 rounded-2xl border border-slate-100 dark:border-border/40">
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
+                      <div className="sm:col-span-2 2xl:col-span-1 w-full bg-slate-50/80 dark:bg-muted/30 p-3 rounded-2xl border border-slate-100 dark:border-border/40">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
                           NUTRITION <span className="font-medium text-[9px]">(PER SERVING)</span>
                         </span>
-                        <div className="grid grid-cols-5 gap-1 text-center text-xs">
+                        <div className="grid grid-cols-5 gap-1 text-center text-sm">
                           <div>
-                            <span className="text-[10px] text-slate-400 block font-semibold">Protein</span>
+                            <span className="text-[11px] text-slate-500 block font-semibold">Protein</span>
                             <span className="font-black text-slate-800 dark:text-slate-200">{meal.nutrition.protein}g</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block font-semibold">Fat</span>
+                            <span className="text-[11px] text-slate-500 block font-semibold">Fat</span>
                             <span className="font-black text-slate-800 dark:text-slate-200">{meal.nutrition.fat}g</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block font-semibold">Carbs</span>
+                            <span className="text-[11px] text-slate-500 block font-semibold">Carbs</span>
                             <span className="font-black text-slate-800 dark:text-slate-200">{meal.nutrition.carbs}g</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block font-semibold">Fibre</span>
+                            <span className="text-[11px] text-slate-500 block font-semibold">Fibre</span>
                             <span className="font-black text-slate-800 dark:text-slate-200">{meal.nutrition.fibre}g</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-400 block font-semibold">Net Carbs</span>
+                            <span className="text-[11px] text-slate-500 block font-semibold">Net Carbs</span>
                             <span className="font-black text-slate-800 dark:text-slate-200">{meal.nutrition.netCarbs}g</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Column 4: Products Included List (Real DB Products) */}
-                      <div className="flex-1 min-w-[200px]">
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
+                      <div className="sm:col-span-2 2xl:col-span-1 w-full min-w-0">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
                           PRODUCTS INCLUDED
                         </span>
-                        <div className="space-y-0.5 text-xs">
+                        <div className="space-y-1 text-[13px]">
                           {meal.products.map((prod) => (
                             <div key={prod.id} className="flex items-center justify-between gap-2">
                               <span className="font-semibold text-slate-700 dark:text-slate-300 truncate" title={prod.name}>
@@ -639,23 +640,23 @@ export function DietaryComingSoon({
                       </div>
 
                       {/* Column 5: Add Bundle Button */}
-                      <div className="w-32 shrink-0 flex items-center justify-center">
+                      <div className="sm:col-span-2 2xl:col-span-1 w-full flex items-stretch justify-center">
                         <button
                           type="button"
                           onClick={() => addBundleMutation.mutate(meal)}
                           disabled={addBundleMutation.isPending || isAdded || !hasAvailableProducts}
                           title={hasAvailableProducts ? undefined : "This bundle is currently unavailable"}
-                          className="w-full h-24 rounded-2xl border-2 border-emerald-500/70 bg-emerald-50/40 hover:bg-emerald-100/70 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/60 p-2 flex flex-col items-center justify-center text-center transition-all group shadow-2xs cursor-pointer"
+                          className="w-full min-h-24 rounded-2xl border-2 border-emerald-500/70 bg-gradient-to-b from-emerald-50 to-emerald-100/70 hover:from-emerald-100 hover:to-emerald-200/70 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/60 p-3 flex flex-col items-center justify-center text-center transition-all group shadow-2xs hover:shadow-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          <ShoppingCart className="h-4 w-4 text-emerald-800 dark:text-emerald-400 mb-1 group-hover:scale-105 transition-transform" />
-                          <span className="text-[11px] font-black text-emerald-900 dark:text-emerald-200 leading-tight">
+                          <ShoppingCart className="h-4.5 w-4.5 text-emerald-800 dark:text-emerald-400 mb-1 group-hover:scale-105 transition-transform" />
+                          <span className="text-xs sm:text-sm font-black text-emerald-900 dark:text-emerald-200 leading-tight">
                             {isAdded
                               ? "Added to Cart"
                               : !hasAvailableProducts
                                 ? "Currently Unavailable"
                                 : `Add ${meal.mealType === "BREAKFAST" ? "Breakfast" : meal.mealType === "LUNCH" ? "Lunch" : meal.mealType === "DINNER" ? "Dinner" : "Snack"} Bundle`}
                           </span>
-                          <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 mt-1">
+                          <span className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-400 mt-1.5">
                             {format(meal.bundlePrice, { sourceCurrency: "GBP" })}
                           </span>
                         </button>
@@ -665,139 +666,151 @@ export function DietaryComingSoon({
                 );
               })}
             </div>
+            </div>
 
             {/* ─── 3. BOTTOM SUMMARY CARDS ─── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div className="order-3 xl:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Complete Day Meal Summary Donut */}
-              <div className="bg-white dark:bg-card p-4.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider block mb-2">
-                  COMPLETE DAY MEAL SUMMARY
+              <div className="bg-white/95 dark:bg-card p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between min-h-36">
+                <span className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-border/60 mb-3">
+                  <span>COMPLETE DAY MEAL SUMMARY</span>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/60">Daily Target</span>
                 </span>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 sm:gap-5 pt-1">
                   {/* Circular Gauge */}
-                  <div className="relative h-20 w-20 rounded-full border-4 border-emerald-600 flex items-center justify-center shrink-0">
+                  <div className="relative h-26 w-26 sm:h-28 sm:w-28 rounded-full border-[6px] border-emerald-600 flex items-center justify-center shrink-0 shadow-[inset_0_0_0_6px_rgba(16,185,129,0.08)] bg-white dark:bg-card">
                     <div className="text-center">
-                      <span className="text-sm font-black text-slate-900 dark:text-slate-100 block leading-tight">
+                      <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 block leading-tight">
                         {plan.totalCalories.toLocaleString()}
                       </span>
-                      <span className="text-[10px] font-bold text-slate-400">kcal</span>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-500">kcal</span>
                     </div>
                   </div>
 
-                  {/* Legend */}
-                  <div className="space-y-1 text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-emerald-600" />
-                      <span className="font-bold text-slate-700 dark:text-slate-200">
-                        Protein {plan.macronutrientBreakdown.protein.grams}g
-                      </span>
-                      <span className="text-slate-400 font-semibold">({plan.macronutrientBreakdown.protein.percentage}%)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-purple-600" />
-                      <span className="font-bold text-slate-700 dark:text-slate-200">
-                        Fat {plan.macronutrientBreakdown.fat.grams}g
-                      </span>
-                      <span className="text-slate-400 font-semibold">({plan.macronutrientBreakdown.fat.percentage}%)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-amber-500" />
-                      <span className="font-bold text-slate-700 dark:text-slate-200">
-                        Carbs {plan.macronutrientBreakdown.carbs.grams}g
-                      </span>
-                      <span className="text-slate-400 font-semibold">({plan.macronutrientBreakdown.carbs.percentage}%)</span>
-                    </div>
+                  {/* Legend / Metrics Buttons */}
+                  <div className="flex-1 space-y-2">
+                    {[
+                      { label: "Protein", grams: plan.macronutrientBreakdown.protein.grams, pct: plan.macronutrientBreakdown.protein.percentage, dotColor: "bg-emerald-600", tone: "hover:bg-emerald-50/60" },
+                      { label: "Fat", grams: plan.macronutrientBreakdown.fat.grams, pct: plan.macronutrientBreakdown.fat.percentage, dotColor: "bg-purple-600", tone: "hover:bg-purple-50/60" },
+                      { label: "Carbs", grams: plan.macronutrientBreakdown.carbs.grams, pct: plan.macronutrientBreakdown.carbs.percentage, dotColor: "bg-amber-500", tone: "hover:bg-amber-50/60" },
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        onClick={() =>
+                          toast({
+                            title: `${item.label}: ${item.grams}g (${item.pct}%)`,
+                            description: `Daily calorie contribution from ${item.label.toLowerCase()} macronutrients.`,
+                          })
+                        }
+                        className={`flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-xl border border-slate-100 dark:border-border/50 bg-slate-50/50 hover:bg-white hover:border-slate-300 hover:shadow-2xs transition-all cursor-pointer select-none active:scale-[0.98] ${item.tone}`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={`h-3 w-3 rounded-full ${item.dotColor} shrink-0 ring-2 ring-white dark:ring-card shadow-xs`} />
+                          <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 truncate">
+                            {item.label} {item.grams}g
+                          </span>
+                        </div>
+                        <span className="text-xs sm:text-sm font-black text-slate-500 shrink-0">
+                          ({item.pct}%)
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
               {/* Macronutrient Breakdown */}
-              <div className="bg-white dark:bg-card p-4.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider block mb-2">
-                  MACRONUTRIENT BREAKDOWN
+              <div className="bg-white/95 dark:bg-card p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between min-h-36">
+                <span className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-border/60 mb-3">
+                  <span>MACRONUTRIENT BREAKDOWN</span>
+                  <span className="text-[11px] font-bold text-slate-500">100% Macro Ratio</span>
                 </span>
-                <div className="space-y-2.5">
-                  <div>
-                    <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-slate-600">Protein {plan.macronutrientBreakdown.protein.grams}g</span>
-                      <span className="text-emerald-700 font-black">{plan.macronutrientBreakdown.protein.percentage}%</span>
+                <div className="space-y-2.5 pt-0.5">
+                  {[
+                    { label: "Protein", grams: plan.macronutrientBreakdown.protein.grams, pct: plan.macronutrientBreakdown.protein.percentage, barColor: "bg-emerald-600", textTone: "text-emerald-800 bg-emerald-100/90 border-emerald-300" },
+                    { label: "Fat", grams: plan.macronutrientBreakdown.fat.grams, pct: plan.macronutrientBreakdown.fat.percentage, barColor: "bg-purple-600", textTone: "text-purple-800 bg-purple-100/90 border-purple-300" },
+                    { label: "Carbs", grams: plan.macronutrientBreakdown.carbs.grams, pct: plan.macronutrientBreakdown.carbs.percentage, barColor: "bg-amber-500", textTone: "text-amber-800 bg-amber-100/90 border-amber-300" },
+                  ].map((macro) => (
+                    <div
+                      key={macro.label}
+                      onClick={() =>
+                        toast({
+                          title: `${macro.label} Intake: ${macro.grams}g (${macro.pct}%)`,
+                          description: `Optimal dietary ratio calculated based on your daily farm-fresh menu.`,
+                        })
+                      }
+                      className="group rounded-2xl border border-slate-100 dark:border-border/60 bg-slate-50/50 hover:bg-white hover:border-slate-300 hover:shadow-2xs p-2.5 sm:p-3 transition-all cursor-pointer select-none active:scale-[0.98]"
+                    >
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100">
+                          {macro.label} <span className="font-extrabold text-slate-500">{macro.grams}g</span>
+                        </span>
+                        <span className={`text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-lg border shadow-2xs ${macro.textTone}`}>
+                          {macro.pct}%
+                        </span>
+                      </div>
+                      <div className="h-3 sm:h-3.5 bg-slate-200/70 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                        <div
+                          className={`h-full ${macro.barColor} rounded-full transition-all duration-500`}
+                          style={{ width: `${macro.pct}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-emerald-600 rounded-full"
-                        style={{ width: `${plan.macronutrientBreakdown.protein.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-slate-600">Fat {plan.macronutrientBreakdown.fat.grams}g</span>
-                      <span className="text-purple-700 font-black">{plan.macronutrientBreakdown.fat.percentage}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-purple-600 rounded-full"
-                        style={{ width: `${plan.macronutrientBreakdown.fat.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-slate-600">Carbs {plan.macronutrientBreakdown.carbs.grams}g</span>
-                      <span className="text-amber-700 font-black">{plan.macronutrientBreakdown.carbs.percentage}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-500 rounded-full"
-                        style={{ width: `${plan.macronutrientBreakdown.carbs.percentage}%` }}
-                      />
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
               {/* Additional Nutrients */}
-              <div className="bg-white dark:bg-card p-4.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider block mb-2">
-                  ADDITIONAL NUTRIENTS
+              <div className="bg-white/95 dark:bg-card p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between min-h-36">
+                <span className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-border/60 mb-3">
+                  <span>ADDITIONAL NUTRIENTS</span>
+                  <span className="text-[11px] font-bold text-slate-500">Daily Totals</span>
                 </span>
-                <div className="grid grid-cols-4 gap-2 text-center pt-2">
-                  <div>
-                    <Sprout className="h-4 w-4 text-emerald-600 mx-auto mb-1" />
-                    <span className="text-[10px] text-slate-400 block font-semibold">Fibre</span>
-                    <span className="font-black text-xs text-slate-800 dark:text-slate-200">{plan.additionalNutrients.fibre}</span>
-                  </div>
-                  <div>
-                    <Sun className="h-4 w-4 text-amber-500 mx-auto mb-1" />
-                    <span className="text-[10px] text-slate-400 block font-semibold">Sugar</span>
-                    <span className="font-black text-xs text-slate-800 dark:text-slate-200">{plan.additionalNutrients.sugar}</span>
-                  </div>
-                  <div>
-                    <Sparkles className="h-4 w-4 text-cyan-600 mx-auto mb-1" />
-                    <span className="text-[10px] text-slate-400 block font-semibold">Sodium</span>
-                    <span className="font-black text-xs text-slate-800 dark:text-slate-200">{plan.additionalNutrients.sodium}</span>
-                  </div>
-                  <div>
-                    <Droplets className="h-4 w-4 text-blue-500 mx-auto mb-1" />
-                    <span className="text-[10px] text-slate-400 block font-semibold">Cholesterol</span>
-                    <span className="font-black text-xs text-slate-800 dark:text-slate-200">{plan.additionalNutrients.cholesterol}</span>
-                  </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                  {[
+                    { label: "Fibre", value: plan.additionalNutrients.fibre, icon: Sprout, tone: "text-emerald-700 bg-emerald-100/90 border-emerald-300", cardBg: "bg-emerald-50/30 border-emerald-200/80 hover:border-emerald-400" },
+                    { label: "Sugar", value: plan.additionalNutrients.sugar, icon: Sun, tone: "text-amber-700 bg-amber-100/90 border-amber-300", cardBg: "bg-amber-50/30 border-amber-200/80 hover:border-amber-400" },
+                    { label: "Sodium", value: plan.additionalNutrients.sodium, icon: Sparkles, tone: "text-cyan-700 bg-cyan-100/90 border-cyan-300", cardBg: "bg-cyan-50/30 border-cyan-200/80 hover:border-cyan-400" },
+                    { label: "Cholesterol", value: plan.additionalNutrients.cholesterol, icon: Droplets, tone: "text-blue-700 bg-blue-100/90 border-blue-300", cardBg: "bg-blue-50/30 border-blue-200/80 hover:border-blue-400" },
+                  ].map((nut) => {
+                    const NIcon = nut.icon;
+                    return (
+                      <div
+                        key={nut.label}
+                        onClick={() =>
+                          toast({
+                            title: `${nut.label}: ${nut.value}`,
+                            description: `Complete day aggregate nutrient analysis from verified farm ingredients.`,
+                          })
+                        }
+                        className={`group flex flex-col items-center justify-center text-center p-2.5 sm:p-3 rounded-2xl border transition-all cursor-pointer select-none active:scale-[0.97] shadow-2xs hover:shadow-xs hover:bg-white ${nut.cardBg}`}
+                      >
+                        <div className={`flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border shadow-2xs mb-2 group-hover:scale-110 transition-transform ${nut.tone}`}>
+                          <NIcon className="h-5 w-5 stroke-[2.2]" />
+                        </div>
+                        <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-0.5 group-hover:text-slate-800 transition-colors">
+                          {nut.label}
+                        </span>
+                        <span className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 leading-snug group-hover:text-emerald-950 transition-colors">
+                          {nut.value}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           </div>
 
           {/* ─── RIGHT COLUMN: DASHBOARD & CHECKOUT ─── */}
-          <div className="space-y-6">
+          <div className="order-2 space-y-4 xl:sticky xl:top-4">
             {/* 1. DAILY NUTRITION DASHBOARD */}
-            <div className="bg-white dark:bg-card p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
-              <h3 className="font-black text-sm text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
+            <div className="bg-white/95 dark:bg-card p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+              <h3 className="font-black text-base text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
                 DAILY NUTRITION DASHBOARD
               </h3>
 
-              <div className="space-y-3 text-xs">
+              <div className="space-y-3 text-sm">
                 {/* Calories */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -810,13 +823,13 @@ export function DietaryComingSoon({
                       <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.calories.target.toLocaleString()} kcal</span>
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full"
                       style={{ width: `${Math.min(100, plan.nutritionDashboard.calories.percentage)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-slate-400 font-bold float-right mt-0.5">
+                  <span className="text-xs text-slate-500 font-bold float-right mt-0.5">
                     {plan.nutritionDashboard.calories.percentage}%
                   </span>
                 </div>
@@ -833,13 +846,13 @@ export function DietaryComingSoon({
                       <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.protein.target} g</span>
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-emerald-600 rounded-full"
                       style={{ width: `${Math.min(100, plan.nutritionDashboard.protein.percentage)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-emerald-600 font-black float-right mt-0.5">
+                  <span className="text-xs text-emerald-600 font-black float-right mt-0.5">
                     {plan.nutritionDashboard.protein.percentage}%
                   </span>
                 </div>
@@ -856,13 +869,13 @@ export function DietaryComingSoon({
                       <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.totalCarbs.target} g</span>
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-amber-500 rounded-full"
                       style={{ width: `${Math.min(100, plan.nutritionDashboard.totalCarbs.percentage)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-slate-400 font-bold float-right mt-0.5">
+                  <span className="text-xs text-slate-500 font-bold float-right mt-0.5">
                     {plan.nutritionDashboard.totalCarbs.percentage}%
                   </span>
                 </div>
@@ -879,13 +892,13 @@ export function DietaryComingSoon({
                       <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.netCarbs.target} g</span>
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-emerald-600 rounded-full"
                       style={{ width: `${Math.min(100, plan.nutritionDashboard.netCarbs.percentage)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-slate-400 font-bold float-right mt-0.5">
+                  <span className="text-xs text-slate-500 font-bold float-right mt-0.5">
                     {plan.nutritionDashboard.netCarbs.percentage}%
                   </span>
                 </div>
@@ -902,13 +915,13 @@ export function DietaryComingSoon({
                       <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.totalFat.target} g</span>
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-purple-600 rounded-full"
                       style={{ width: `${Math.min(100, plan.nutritionDashboard.totalFat.percentage)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-purple-600 font-black float-right mt-0.5">
+                  <span className="text-xs text-purple-600 font-black float-right mt-0.5">
                     {plan.nutritionDashboard.totalFat.percentage}%
                   </span>
                 </div>
@@ -925,13 +938,13 @@ export function DietaryComingSoon({
                       <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.fibre.target} g</span>
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-emerald-600 rounded-full"
                       style={{ width: `${Math.min(100, plan.nutritionDashboard.fibre.percentage)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-emerald-600 font-black float-right mt-0.5">
+                  <span className="text-xs text-emerald-600 font-black float-right mt-0.5">
                     {plan.nutritionDashboard.fibre.percentage}%
                   </span>
                 </div>
@@ -948,13 +961,13 @@ export function DietaryComingSoon({
                       <span className="text-slate-400 font-normal">/ {plan.nutritionDashboard.waterIntake.target} L</span>
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-cyan-500 rounded-full"
                       style={{ width: `${Math.min(100, plan.nutritionDashboard.waterIntake.percentage)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-cyan-600 font-black float-right mt-0.5">
+                  <span className="text-xs text-cyan-600 font-black float-right mt-0.5">
                     {plan.nutritionDashboard.waterIntake.percentage}%
                   </span>
                 </div>
@@ -962,27 +975,27 @@ export function DietaryComingSoon({
             </div>
 
             {/* 2. COMPLETE DAY PLAN CHECKOUT CARD (REAL DB PRICING) */}
-            <div className="bg-white dark:bg-card p-5 rounded-2xl border-2 border-emerald-500/60 shadow-md space-y-4">
+            <div className="bg-gradient-to-br from-white via-white to-emerald-50/60 dark:bg-none dark:bg-card p-5 rounded-2xl border-2 border-emerald-500/60 shadow-md space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-black text-sm text-slate-900 dark:text-slate-100 uppercase tracking-tight">
+                <h3 className="font-black text-base text-slate-900 dark:text-slate-100 uppercase tracking-tight">
                   COMPLETE {plan.subcategory.toUpperCase()} PLAN
                 </h3>
-                <span className="bg-emerald-800 text-white text-[10px] font-black px-2 py-0.5 rounded-md">
+                <span className="bg-emerald-800 text-white text-xs font-black px-2.5 py-1 rounded-lg">
                   Best Value
                 </span>
               </div>
 
               {/* Tag Strip */}
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 bg-slate-50 dark:bg-muted/40 p-2.5 rounded-xl border border-slate-100">
-                <span className="flex items-center gap-1">🍽 {plan.meals.length} Meals</span>
-                <span className="flex items-center gap-1">
+              <div className="grid grid-cols-3 gap-2 text-center text-[13px] font-bold text-slate-600 bg-white/80 dark:bg-muted/40 p-3 rounded-xl border border-slate-100">
+                <span className="flex items-center justify-center gap-1">🍽 {plan.meals.length} Meals</span>
+                <span className="flex items-center justify-center gap-1">
                   📦 {plan.meals.reduce((acc, m) => acc + m.products.length, 0)} Products
                 </span>
-                <span className="flex items-center gap-1">🛡 100% Farm Fresh</span>
+                <span className="flex items-center justify-center gap-1">🛡 100% Farm Fresh</span>
               </div>
 
               {/* Price Calculation with Global Currency Context */}
-              <div className="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+              <div className="space-y-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
                 <div className="flex justify-between">
                   <span>Total Products Cost</span>
                   <span className="font-black text-slate-900 dark:text-slate-100">
@@ -1012,14 +1025,14 @@ export function DietaryComingSoon({
               <Button
                 onClick={() => buyCompletePlanMutation.mutate()}
                 disabled={buyCompletePlanMutation.isPending}
-                className="w-full h-11 bg-emerald-800 hover:bg-emerald-900 text-white font-black text-xs sm:text-sm rounded-xl shadow-md gap-2 transition-all uppercase tracking-wide cursor-pointer"
+                className="w-full h-[52px] bg-emerald-800 hover:bg-emerald-900 text-white font-black text-sm sm:text-base rounded-xl shadow-md hover:shadow-lg gap-2.5 transition-all uppercase tracking-wide cursor-pointer"
               >
-                <ShoppingCart className="h-4 w-4" />
+                <ShoppingCart className="h-5 w-5" />
                 <span>{buyCompletePlanMutation.isPending ? "ADDING PLAN…" : "BUY COMPLETE DAY PLAN"}</span>
               </Button>
 
               {/* Trust badges */}
-              <p className="text-[11px] text-slate-400 text-center font-bold flex items-center justify-center gap-1.5 pt-1">
+              <p className="text-xs text-slate-500 text-center font-bold flex items-center justify-center gap-1.5 pt-1">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                 <span>Secure Payment • 7-Day Money Back Guarantee</span>
               </p>

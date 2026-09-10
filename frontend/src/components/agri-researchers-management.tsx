@@ -861,33 +861,33 @@ export function AgriResearchersManagement({
 
       {/* Right-Side Researcher Detail Drawer */}
       <Sheet open={Boolean(selectedResearcherId)} onOpenChange={(open) => !open && setSelectedResearcherId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
+        <SheetContent side="right" className="w-full sm:max-w-2xl p-0 overflow-y-auto bg-slate-50" hideCloseButton>
           {isLoadingDetail ? (
-            <div className="flex h-full items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+            <div className="flex h-full items-center justify-center p-12">
+              <RefreshCw className="h-8 w-8 animate-spin text-emerald-600" />
             </div>
           ) : researcherDetail ? (
             <div className="flex flex-col min-h-full">
               {/* Drawer Header */}
-              <div className="bg-[#053f36] p-6 text-white">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border-2 border-white/20">
+              <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-14 w-14 border-2 border-white/20 shadow-md">
                       {researcherDetail.avatar && <AvatarImage src={researcherDetail.avatar} alt={researcherDetail.name} />}
-                      <AvatarFallback className="bg-lime-400 font-bold text-[#053f36]">
+                      <AvatarFallback className="bg-lime-400 font-black text-[#053f36] text-lg">
                         {researcherDetail.name ? researcherDetail.name.slice(0, 2).toUpperCase() : "RS"}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h2 className="text-lg font-black">{researcherDetail.name}</h2>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-white/60">ID: {researcherDetail.researcherId}</span>
+                      <h2 className="text-xl sm:text-2xl font-black tracking-tight">{researcherDetail.name}</h2>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+                        <span className="font-mono text-xs font-bold text-white/75 bg-white/10 px-2.5 py-0.5 rounded-md">ID: {researcherDetail.researcherId}</span>
                         <Badge
                           variant="outline"
                           className={
                             researcherDetail.status === "active"
-                              ? "border-emerald-400/30 bg-emerald-500/20 text-emerald-200"
-                              : "border-rose-400/30 bg-rose-500/20 text-rose-200"
+                              ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-200 text-xs font-black uppercase px-2.5 py-0.5"
+                              : "border-rose-400/40 bg-rose-500/20 text-rose-200 text-xs font-black uppercase px-2.5 py-0.5"
                           }
                         >
                           {researcherDetail.status}
@@ -897,29 +897,30 @@ export function AgriResearchersManagement({
                   </div>
                   <button
                     onClick={() => setSelectedResearcherId(null)}
-                    className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                    aria-label="Close researcher drawer"
+                    className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
                 {/* 4 Stat Boxes */}
-                <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Level</p>
-                    <p className="text-base font-black text-lime-300">{researcherDetail.roleLevel}</p>
+                <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Level</p>
+                    <p className="text-base sm:text-lg font-black text-lime-300 mt-0.5">{researcherDetail.roleLevel}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Researcher ID</p>
-                    <p className="text-xs font-mono font-bold text-white truncate">{researcherDetail.researcherId}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Researcher ID</p>
+                    <p className="text-xs sm:text-sm font-mono font-black text-white truncate mt-0.5">{researcherDetail.researcherId}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Status</p>
-                    <p className="text-xs font-bold capitalize text-white truncate">{researcherDetail.status}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Status</p>
+                    <p className="text-xs sm:text-sm font-black capitalize text-white truncate mt-0.5">{researcherDetail.status}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Appointment Expiry</p>
-                    <p className="text-[11px] font-medium text-white/80">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Expiry</p>
+                    <p className="text-xs sm:text-sm font-bold text-white/90 truncate mt-0.5">
                       {researcherDetail.accessExpiresAt
                         ? new Date(researcherDetail.accessExpiresAt).toLocaleDateString("en-GB")
                         : "Permanent"}
@@ -929,83 +930,82 @@ export function AgriResearchersManagement({
               </div>
 
               {/* Drawer Tabs */}
-              <Tabs defaultValue="focus" className="flex-1 p-6">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-200">
-                  <TabsTrigger value="focus" className="text-xs font-bold">
+              <Tabs defaultValue="focus" className="flex-1 p-6 sm:p-7 space-y-6">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-200 h-12 p-1.5 rounded-xl">
+                  <TabsTrigger value="focus" className="text-sm font-black rounded-lg">
                     Research Focus
                   </TabsTrigger>
-                  <TabsTrigger value="activity" className="text-xs font-bold">
+                  <TabsTrigger value="activity" className="text-sm font-black rounded-lg">
                     Activity & Audit
                   </TabsTrigger>
                 </TabsList>
 
                 {/* Focus Tab */}
-                <TabsContent value="focus" className="mt-4 space-y-4">
-                  <Card className="border-slate-200">
-                    <CardContent className="p-4 space-y-3 text-xs">
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Institutional Email</span>
-                        <span className="font-semibold text-slate-900">{researcherDetail.email}</span>
+                <TabsContent value="focus" className="space-y-6">
+                  <Card className="border-slate-200 shadow-xs rounded-2xl">
+                    <CardContent className="p-5 sm:p-6 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 gap-1">
+                        <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Institutional Email</span>
+                        <span className="text-sm sm:text-base font-bold text-slate-900">{researcherDetail.email}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Research Focus / Domain</span>
-                        <span className="font-semibold text-slate-900 max-w-[220px] text-right">{researcherDetail.researchDomain}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 gap-1">
+                        <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Research Focus / Domain</span>
+                        <span className="text-sm sm:text-base font-bold text-slate-900 max-w-[280px] sm:text-right">{researcherDetail.researchDomain}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Department / Institute</span>
-                        <span className="font-semibold text-slate-900 max-w-[220px] text-right">{researcherDetail.department}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 gap-1">
+                        <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Department / Institute</span>
+                        <span className="text-sm sm:text-base font-bold text-slate-900 max-w-[280px] sm:text-right">{researcherDetail.department || "Independent Agritech"}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Fellowship Level</span>
-                        <span className="font-bold text-slate-900">{researcherDetail.roleLevel}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-slate-100 gap-1">
+                        <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Fellowship Level</span>
+                        <span className="text-sm sm:text-base font-black text-slate-900">{researcherDetail.roleLevel}</span>
                       </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-slate-500">Appointment Status</span>
-                        <span className="font-bold capitalize text-slate-900">{researcherDetail.status}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1">
+                        <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Appointment Status</span>
+                        <span className="text-sm sm:text-base font-black capitalize text-slate-900">{researcherDetail.status}</span>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     <Button
                       variant="outline"
-                      className="flex-1 h-9 text-xs"
+                      className="h-12 sm:h-13 text-sm sm:text-base font-black rounded-xl border-slate-300 hover:bg-slate-100 text-slate-800 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
                       onClick={() => {
                         const target = researchers.find((r) => r.id === researcherDetail.id);
                         if (target) setEditResearcher(target);
                       }}
                     >
-                      <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit Record
+                      <Pencil className="mr-2 h-4 w-4 text-slate-600" /> Edit Record
                     </Button>
                     <Button
-                      variant="outline"
-                      className="flex-1 h-9 text-xs"
+                      className="h-12 sm:h-13 text-sm sm:text-base font-black rounded-xl bg-[#053f36] hover:bg-[#075347] text-white active:scale-[0.98] transition-all shadow-xs cursor-pointer"
                       onClick={() => {
                         const target = researchers.find((r) => r.id === researcherDetail.id);
                         if (target) setMessageTarget(target);
                       }}
                     >
-                      <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message
+                      <MessageSquare className="mr-2 h-4 w-4 text-lime-300" /> Message Researcher
                     </Button>
                   </div>
                 </TabsContent>
 
                 {/* Activity Tab */}
-                <TabsContent value="activity" className="mt-4 space-y-2">
+                <TabsContent value="activity" className="space-y-3">
                   {researcherDetail.activity?.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400">
-                      <Clock className="mx-auto mb-2 h-7 w-7 text-slate-300" />
-                      <p className="font-semibold">No recorded activity</p>
+                    <div className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                      <Clock className="mx-auto mb-3 h-8 w-8 text-slate-300" />
+                      <p className="text-sm font-bold">No recorded activity</p>
                     </div>
                   ) : (
                     researcherDetail.activity.map((item, idx) => (
-                      <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 text-xs">
+                      <div key={idx} className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800">{item.action}</span>
-                          <span className="text-[10px] text-slate-400">{timeAgo(item.occurredAt)}</span>
+                          <span className="text-sm font-black text-slate-800">{item.action}</span>
+                          <span className="text-xs font-bold text-slate-400">{timeAgo(item.occurredAt)}</span>
                         </div>
-                        <p className="mt-1 text-[11px] text-slate-600">
-                          Target: {item.targetType} · Outcome: {item.outcome}
+                        <p className="mt-1.5 text-xs font-medium text-slate-600">
+                          Target: <span className="font-bold text-slate-700">{item.targetType}</span> · Outcome: <span className="font-bold text-emerald-700">{item.outcome}</span>
                         </p>
                       </div>
                     ))
@@ -1019,40 +1019,40 @@ export function AgriResearchersManagement({
 
       {/* Onboard Researcher Modal */}
       <Dialog open={onboardOpen} onOpenChange={setOnboardOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl rounded-2xl p-6 sm:p-7">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Onboard Academic Researcher</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900">Onboard Academic Researcher</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 font-medium">
               Register a scientific investigator or research fellow in the AgriConnect research network.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3.5 py-2 text-xs">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Institutional Email (.ac.uk / .edu / .nl) *</Label>
+          <div className="space-y-4 py-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Institutional Email (.ac.uk / .edu / .nl) *</Label>
               <Input
                 type="email"
                 placeholder="researcher@rothamsted.ac.uk"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm font-bold rounded-xl"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Researcher ID / Fellowship Code *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Researcher ID / Fellowship Code *</Label>
               <Input
                 placeholder="e.g. RES-ROTH-2024"
                 value={newResearcherId}
                 onChange={(e) => setNewResearcherId(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm font-bold rounded-xl"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Fellowship / Appointment Level *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Fellowship / Appointment Level *</Label>
               <Select value={newRoleLevel} onValueChange={(val: "PhD" | "Postdoc" | "PI" | "Fellow") => setNewRoleLevel(val)}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-11 sm:h-12 text-sm font-bold rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1064,33 +1064,32 @@ export function AgriResearchersManagement({
               </Select>
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Research Focus / Domain *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Research Focus / Domain *</Label>
               <Input
                 placeholder="e.g. Precision Soil Carbon & Satellite Diagnostics"
                 value={newResearchDomain}
                 onChange={(e) => setNewResearchDomain(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm font-bold rounded-xl"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Department / Research Institute</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Department / Research Institute</Label>
               <Input
                 placeholder="e.g. Rothamsted Research / Reading Agritech"
                 value={newDepartment}
                 onChange={(e) => setNewDepartment(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm font-bold rounded-xl"
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setOnboardOpen(false)}>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+            <Button variant="outline" className="h-12 px-6 text-sm font-black rounded-xl cursor-pointer" onClick={() => setOnboardOpen(false)}>
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={!newEmail.trim() || !newResearcherId.trim() || !newResearchDomain.trim() || onboardMutation.isPending}
               onClick={() =>
                 onboardMutation.mutate({
@@ -1101,7 +1100,7 @@ export function AgriResearchersManagement({
                   department: newDepartment || undefined,
                 })
               }
-              className="bg-[#078c52] text-white hover:bg-[#067343]"
+              className="h-12 px-6 text-sm sm:text-base font-black rounded-xl bg-[#053f36] hover:bg-[#075347] text-white active:scale-[0.98] transition-all cursor-pointer"
             >
               {onboardMutation.isPending ? "Registering..." : "Register Researcher"}
             </Button>
@@ -1111,41 +1110,41 @@ export function AgriResearchersManagement({
 
       {/* Edit Researcher Modal */}
       <Dialog open={Boolean(editResearcher)} onOpenChange={(open) => !open && setEditResearcher(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl rounded-2xl p-6 sm:p-7">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Edit Researcher Record</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900">Edit Researcher Record</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 font-medium">
               Update research domain and appointment for {editResearcher?.email}.
             </DialogDescription>
           </DialogHeader>
 
           {editResearcher && (
-            <div className="space-y-3.5 py-2 text-xs">
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Research Focus / Domain</Label>
+            <div className="space-y-4 py-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Research Focus / Domain</Label>
                 <Input
                   value={editResearcher.researchDomain}
                   onChange={(e) => setEditResearcher({ ...editResearcher, researchDomain: e.target.value })}
-                  className="h-9 text-xs"
+                  className="h-11 sm:h-12 text-sm font-bold rounded-xl"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Department / Institute</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Department / Institute</Label>
                 <Input
                   value={editResearcher.department || ""}
                   onChange={(e) => setEditResearcher({ ...editResearcher, department: e.target.value })}
-                  className="h-9 text-xs"
+                  className="h-11 sm:h-12 text-sm font-bold rounded-xl"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Fellowship Level</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Fellowship Level</Label>
                 <Select
                   value={editResearcher.roleLevel}
                   onValueChange={(val: "PhD" | "Postdoc" | "PI" | "Fellow") => setEditResearcher({ ...editResearcher, roleLevel: val })}
                 >
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-11 sm:h-12 text-sm font-bold rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1157,13 +1156,13 @@ export function AgriResearchersManagement({
                 </Select>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Appointment Status</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Appointment Status</Label>
                 <Select
                   value={editResearcher.status}
                   onValueChange={(val) => setEditResearcher({ ...editResearcher, status: val })}
                 >
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-11 sm:h-12 text-sm font-bold rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1178,12 +1177,11 @@ export function AgriResearchersManagement({
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setEditResearcher(null)}>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+            <Button variant="outline" className="h-12 px-6 text-sm font-black rounded-xl cursor-pointer" onClick={() => setEditResearcher(null)}>
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={editMutation.isPending || !editResearcher}
               onClick={() => {
                 if (editResearcher) {
@@ -1198,7 +1196,7 @@ export function AgriResearchersManagement({
                   });
                 }
               }}
-              className="bg-[#078c52] text-white hover:bg-[#067343]"
+              className="h-12 px-6 text-sm sm:text-base font-black rounded-xl bg-[#053f36] hover:bg-[#075347] text-white active:scale-[0.98] transition-all cursor-pointer"
             >
               {editMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
@@ -1208,12 +1206,12 @@ export function AgriResearchersManagement({
 
       {/* Suspend / Reactivate Confirmation Dialog */}
       <Dialog open={Boolean(suspendTarget)} onOpenChange={(open) => !open && setSuspendTarget(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg rounded-2xl p-6 sm:p-7">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">
+            <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900">
               {suspendTarget?.status === "suspended" ? "Reactivate Researcher Appointment" : "Suspend Researcher Appointment"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogDescription className="text-sm text-slate-500 font-medium">
               {suspendTarget?.status === "suspended"
                 ? `Restore laboratory research access and platform entitlements for ${suspendTarget?.email}.`
                 : `Temporarily restrict research privileges and data exports for ${suspendTarget?.email}.`}
@@ -1221,23 +1219,22 @@ export function AgriResearchersManagement({
           </DialogHeader>
 
           {suspendTarget?.status !== "suspended" && (
-            <div className="space-y-2 py-2">
-              <Label className="text-xs font-bold text-slate-700">Reason for Suspension (Audit Log)</Label>
+            <div className="space-y-2 py-3">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Reason for Suspension (Audit Log)</Label>
               <Input
                 placeholder="e.g. Grant conclusion, compliance review..."
                 value={suspendReason}
                 onChange={(e) => setSuspendReason(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm font-bold rounded-xl"
               />
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setSuspendTarget(null)}>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+            <Button variant="outline" className="h-12 px-6 text-sm font-black rounded-xl cursor-pointer" onClick={() => setSuspendTarget(null)}>
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={toggleStatusMutation.isPending}
               onClick={() => {
                 if (suspendTarget) {
@@ -1251,8 +1248,8 @@ export function AgriResearchersManagement({
               }}
               className={
                 suspendTarget?.status === "suspended"
-                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                  : "bg-rose-600 text-white hover:bg-rose-700"
+                  ? "h-12 px-6 text-sm sm:text-base font-black rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.98] transition-all cursor-pointer"
+                  : "h-12 px-6 text-sm sm:text-base font-black rounded-xl bg-rose-600 hover:bg-rose-700 text-white active:scale-[0.98] transition-all cursor-pointer"
               }
             >
               {toggleStatusMutation.isPending
@@ -1267,42 +1264,41 @@ export function AgriResearchersManagement({
 
       {/* Send Message Modal */}
       <Dialog open={Boolean(messageTarget)} onOpenChange={(open) => !open && setMessageTarget(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl rounded-2xl p-6 sm:p-7">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Send Academic Notice</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900">Send Academic Notice</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 font-medium">
               Dispatch an official notice to {messageTarget?.email}.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 py-2 text-xs">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Subject</Label>
+          <div className="space-y-4 py-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Subject</Label>
               <Input
                 placeholder="e.g. Grant update, Research network advisory..."
                 value={messageSubject}
                 onChange={(e) => setMessageSubject(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm font-bold rounded-xl"
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Message Body</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Message Body</Label>
               <textarea
-                rows={4}
+                rows={5}
                 placeholder="Write notice here..."
                 value={messageBody}
                 onChange={(e) => setMessageBody(e.target.value)}
-                className="w-full rounded-md border border-slate-300 p-2 text-xs focus:border-[#078c52] focus:outline-none"
+                className="w-full rounded-xl border border-slate-300 p-3 text-sm font-medium focus:border-[#078c52] focus:ring-1 focus:ring-[#078c52] focus:outline-none"
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setMessageTarget(null)}>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+            <Button variant="outline" className="h-12 px-6 text-sm font-black rounded-xl cursor-pointer" onClick={() => setMessageTarget(null)}>
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={!messageSubject.trim() || !messageBody.trim()}
               onClick={() => {
                 toast({
@@ -1313,7 +1309,7 @@ export function AgriResearchersManagement({
                 setMessageSubject("");
                 setMessageBody("");
               }}
-              className="bg-[#078c52] text-white hover:bg-[#067343]"
+              className="h-12 px-6 text-sm sm:text-base font-black rounded-xl bg-[#053f36] hover:bg-[#075347] text-white active:scale-[0.98] transition-all cursor-pointer"
             >
               Dispatch Notice
             </Button>

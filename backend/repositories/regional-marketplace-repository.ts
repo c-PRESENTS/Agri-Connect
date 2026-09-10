@@ -405,10 +405,10 @@ export class RegionalMarketplaceRepository {
         `INSERT INTO marketplace_notifications (user_id,type,title,message,action_url,data)
          SELECT DISTINCT sra.seller_id,'regional_opportunity','Opportunity Available',
            $2 || ' is not currently listed in the ' || $3 || ' marketplace. Be the first approved seller to list this product.',
-           '/seller',jsonb_build_object('opportunityId',$1,'regionId',$4)
+           '/seller',jsonb_build_object('opportunityId',$1::text,'regionId',$4::text)
          FROM seller_region_assignments sra
          JOIN market_regions r ON r.id=sra.region_id
-         WHERE sra.region_id=$4 AND sra.status='active' AND sra.can_publish=true`,
+         WHERE sra.region_id=$4::varchar AND sra.status='active' AND sra.can_publish=true`,
         [row.id, row.product_name, await this.regionName(row.region_id), row.region_id],
       );
     }
