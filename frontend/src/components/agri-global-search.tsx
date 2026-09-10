@@ -216,7 +216,7 @@ export function AgriGlobalSearch({
           }}
           onKeyDown={handleInputKeyDown}
           placeholder="Search users, products, orders, sellers, farmers..."
-          className="h-10 w-full rounded-lg border-slate-200 bg-white pl-10 pr-20 text-xs shadow-sm transition-all focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+          className="h-10 w-full rounded-lg border-slate-200 bg-white pl-10 pr-20 text-sm font-medium shadow-sm transition-all focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
           aria-label="Omnisearch across AgriConnect organisation database"
         />
 
@@ -231,9 +231,9 @@ export function AgriGlobalSearch({
                 setDebouncedQuery("");
                 inputRef.current?.focus();
               }}
-              className="rounded p-0.5 hover:bg-slate-100 hover:text-slate-600"
+              className="rounded p-0.5 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4" />
             </button>
           ) : (
             <div className="hidden sm:flex items-center gap-0.5 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-bold text-slate-500">
@@ -255,7 +255,7 @@ export function AgriGlobalSearch({
                   setActiveCategory("all");
                   setSelectedIndex(0);
                 }}
-                className={`rounded-md px-2 py-1 text-[10px] font-bold transition shrink-0 ${
+                className={`rounded-md px-2.5 py-1 text-xs font-bold transition shrink-0 cursor-pointer ${
                   activeCategory === "all"
                     ? "bg-[#053f36] text-white shadow-xs"
                     : "text-slate-600 hover:bg-slate-200"
@@ -270,7 +270,7 @@ export function AgriGlobalSearch({
                     setActiveCategory(cat.category);
                     setSelectedIndex(0);
                   }}
-                  className={`rounded-md px-2 py-1 text-[10px] font-bold transition shrink-0 ${
+                  className={`rounded-md px-2.5 py-1 text-xs font-bold transition shrink-0 cursor-pointer ${
                     activeCategory === cat.category
                       ? "bg-[#053f36] text-white shadow-xs"
                       : "text-slate-600 hover:bg-slate-200"

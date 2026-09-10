@@ -74,6 +74,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
 
 export type AdminEmployee = {
   membershipId: string;
@@ -1014,19 +1015,19 @@ export function AgriEmployeesManagement({
 
       {/* Drawer Inspector */}
       <Sheet open={Boolean(selectedMembershipId)} onOpenChange={(open) => !open && setSelectedMembershipId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
+        <SheetContent side="right" hideCloseButton className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50 border-l border-slate-200 shadow-2xl">
           {isLoadingDetail ? (
             <div className="flex h-full items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+              <RefreshCw className="h-8 w-8 animate-spin text-emerald-600" />
             </div>
           ) : employeeDetail ? (
             <div className="flex flex-col min-h-full">
               {/* Header */}
-              <div className="bg-[#053f36] p-6 text-white">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 rounded-xl border border-white/20">
-                      <AvatarFallback className="bg-lime-400 text-lg font-black text-[#053f36]">
+              <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <Avatar className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl border-2 border-white/20 shadow-md shrink-0">
+                      <AvatarFallback className="bg-lime-400 text-xl font-black text-[#053f36]">
                         {employeeDetail.displayName
                           ?.split(/\s+/)
                           .slice(0, 2)
@@ -1035,16 +1036,16 @@ export function AgriEmployeesManagement({
                           .toUpperCase() || "OP"}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <h2 className="text-lg font-black">{employeeDetail.displayName}</h2>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-white/60">ID: {employeeDetail.membershipId}</span>
+                    <div className="min-w-0">
+                      <h2 className="text-xl sm:text-2xl font-black text-white leading-tight truncate">{employeeDetail.displayName}</h2>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-white/90 bg-black/25 px-2.5 py-1 rounded-lg border border-white/10">ID: {employeeDetail.membershipId}</span>
                         <Badge
                           variant="outline"
                           className={
                             employeeDetail.status === "active"
-                              ? "border-emerald-400/30 bg-emerald-500/20 text-emerald-200"
-                              : "border-rose-400/30 bg-rose-500/20 text-rose-200"
+                              ? "border-emerald-400/40 bg-emerald-500/25 text-emerald-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg"
+                              : "border-rose-400/40 bg-rose-500/25 text-rose-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg"
                           }
                         >
                           {employeeDetail.status}
@@ -1054,54 +1055,55 @@ export function AgriEmployeesManagement({
                   </div>
                   <button
                     onClick={() => setSelectedMembershipId(null)}
-                    className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                    aria-label="Close dossier"
+                    className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
                 {/* 4 Stat Boxes */}
-                <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Role</p>
-                    <p className="text-xs font-black text-lime-300 truncate">{employeeDetail.role.name}</p>
+                <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Role</p>
+                    <p className="text-sm sm:text-base font-black text-lime-300 truncate mt-0.5">{employeeDetail.role.name}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">MFA 2FA</p>
-                    <p className="text-xs font-bold text-white">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">MFA 2FA</p>
+                    <p className="text-sm sm:text-base font-black text-white mt-0.5">
                       {employeeDetail.mfaEnabled ? "Protected" : "Optional"}
                     </p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Sessions</p>
-                    <p className="text-xs font-bold text-white">{employeeDetail.activeSessionCount || 0} active</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Sessions</p>
+                    <p className="text-sm sm:text-base font-black text-white mt-0.5">{employeeDetail.activeSessionCount || 0} active</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Last Active</p>
-                    <p className="text-[11px] font-medium text-white/80">{timeAgo(employeeDetail.lastLoginAt)}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Last Active</p>
+                    <p className="text-sm sm:text-base font-bold text-white/90 truncate mt-0.5">{timeAgo(employeeDetail.lastLoginAt)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Sub-Tabs */}
-              <Tabs defaultValue="permissions" className="flex-1 p-6">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-200">
-                  <TabsTrigger value="permissions" className="text-xs font-bold">
+              <Tabs defaultValue="permissions" className="flex-1 p-6 sm:p-7">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-200 h-12 p-1.5 rounded-xl">
+                  <TabsTrigger value="permissions" className="text-sm sm:text-base font-black rounded-lg">
                     Effective Capabilities
                   </TabsTrigger>
-                  <TabsTrigger value="activity" className="text-xs font-bold">
+                  <TabsTrigger value="activity" className="text-sm sm:text-base font-black rounded-lg">
                     Audit & Sessions
                   </TabsTrigger>
                 </TabsList>
 
                 {/* Permissions Tab */}
-                <TabsContent value="permissions" className="mt-4 space-y-4">
-                  <Card className="border-slate-200">
-                    <CardContent className="p-4 space-y-2 text-xs">
-                      <p className="font-bold text-slate-900 mb-2">Assigned Permissions ({employeeDetail.effectivePermissions?.length || 0})</p>
-                      <div className="flex flex-wrap gap-1.5">
+                <TabsContent value="permissions" className="mt-5 space-y-5">
+                  <Card className="border-slate-200 rounded-2xl shadow-xs">
+                    <CardContent className="p-5 sm:p-6 space-y-3">
+                      <p className="font-black text-slate-900 text-sm sm:text-base mb-2">Assigned Permissions ({employeeDetail.effectivePermissions?.length || 0})</p>
+                      <div className="flex flex-wrap gap-2">
                         {employeeDetail.effectivePermissions?.map((perm) => (
-                          <Badge key={perm} variant="secondary" className="bg-emerald-50 text-emerald-800 text-[10px]">
+                          <Badge key={perm} variant="secondary" className="bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg">
                             {perm}
                           </Badge>
                         ))}
@@ -1109,10 +1111,10 @@ export function AgriEmployeesManagement({
                     </CardContent>
                   </Card>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <Button
                       variant="outline"
-                      className="flex-1 h-9 text-xs"
+                      className="flex-1 h-12 sm:h-13 text-sm sm:text-base font-black rounded-xl cursor-pointer active:scale-[0.98] transition-all"
                       onClick={() => {
                         const target = employees.find((e) => e.membershipId === employeeDetail.membershipId);
                         if (target) {
@@ -1121,36 +1123,36 @@ export function AgriEmployeesManagement({
                         }
                       }}
                     >
-                      <UserCog className="mr-1.5 h-3.5 w-3.5" /> Reassign Role
+                      <UserCog className="mr-2 !h-5 !w-5" /> Reassign Role
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex-1 h-9 text-xs text-amber-700"
+                      className="flex-1 h-12 sm:h-13 text-sm sm:text-base font-black text-amber-800 border-amber-300 bg-amber-50/60 hover:bg-amber-100 rounded-xl cursor-pointer active:scale-[0.98] transition-all"
                       onClick={() => {
                         const target = employees.find((e) => e.membershipId === employeeDetail.membershipId);
                         if (target) setRevokeSessionsTarget(target);
                       }}
                     >
-                      <KeyRound className="mr-1.5 h-3.5 w-3.5" /> Revoke Sessions
+                      <KeyRound className="mr-2 !h-5 !w-5" /> Revoke Sessions
                     </Button>
                   </div>
                 </TabsContent>
 
                 {/* Activity Tab */}
-                <TabsContent value="activity" className="mt-4 space-y-2">
+                <TabsContent value="activity" className="mt-5 space-y-3">
                   {employeeDetail.activity?.length === 0 ? (
                     <div className="p-8 text-center text-slate-400">
-                      <Clock className="mx-auto mb-2 h-7 w-7 text-slate-300" />
-                      <p className="font-semibold">No recent security events</p>
+                      <Clock className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                      <p className="font-bold text-slate-700 text-base">No recent security events</p>
                     </div>
                   ) : (
                     employeeDetail.activity.map((item) => (
-                      <div key={item.id} className="rounded-lg border border-slate-200 bg-white p-3 text-xs">
+                      <div key={item.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800">{item.action}</span>
-                          <span className="text-[10px] text-slate-400">{timeAgo(item.occurredAt)}</span>
+                          <span className="font-black text-slate-900 text-sm sm:text-base">{item.action}</span>
+                          <span className="text-xs font-bold text-slate-400">{timeAgo(item.occurredAt)}</span>
                         </div>
-                        <p className="mt-1 text-[11px] text-slate-600">Outcome: {item.outcome}</p>
+                        <p className="text-xs sm:text-sm text-slate-700 font-medium">Outcome: <strong className="font-bold text-slate-900">{item.outcome}</strong></p>
                       </div>
                     ))
                   )}
@@ -1163,24 +1165,25 @@ export function AgriEmployeesManagement({
 
       {/* Invite Modal */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Invite Employee to AgriConnect</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl font-black text-slate-900">Invite Employee to AgriConnect</DialogTitle>
+            <DialogDescription className="text-sm font-semibold text-slate-600 mt-1">
               Send an onboarding invitation with designated operational role access.
             </DialogDescription>
           </DialogHeader>
 
           {inviteToken ? (
-            <div className="space-y-3 py-2 text-xs">
-              <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-emerald-950">
-                <p className="font-bold">One-Time Secure Invitation Code Generated</p>
-                <p className="mt-1 text-slate-600">Share this token with the colleague to accept their invitation:</p>
-                <div className="mt-2 flex gap-2">
-                  <Input readOnly value={inviteToken} className="bg-white font-mono text-xs" />
+            <div className="space-y-4 py-3 text-sm">
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-950">
+                <p className="font-black text-base">One-Time Secure Invitation Code Generated</p>
+                <p className="mt-1 text-slate-600 text-xs sm:text-sm">Share this token with the colleague to accept their invitation:</p>
+                <div className="mt-3 flex gap-2">
+                  <Input readOnly value={inviteToken} className="bg-white font-mono text-sm h-11 rounded-xl" />
                   <Button
                     type="button"
                     variant="outline"
+                    className="h-11 px-4 font-black rounded-xl cursor-pointer"
                     onClick={() => {
                       navigator.clipboard?.writeText(inviteToken);
                       toast({ title: "Copied", description: "Invitation code copied to clipboard." });
@@ -1192,25 +1195,25 @@ export function AgriEmployeesManagement({
               </div>
             </div>
           ) : (
-            <div className="space-y-3.5 py-2 text-xs">
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Official Work Email Address *</Label>
+            <div className="space-y-4 py-3 text-sm">
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Official Work Email Address *</Label>
                 <Input
                   type="email"
                   placeholder="colleague@agriconnect.org"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="h-9 text-xs"
+                  className="h-11 sm:h-12 text-sm sm:text-base rounded-xl"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Assigned Operational Role *</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Assigned Operational Role *</Label>
                 <Select value={inviteRoleId} onValueChange={setInviteRoleId}>
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-11 sm:h-12 text-sm sm:text-base rounded-xl">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {roles.map((r) => (
                       <SelectItem key={r.id} value={r.id}>
                         {r.name}
@@ -1222,13 +1225,12 @@ export function AgriEmployeesManagement({
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setInviteOpen(false)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2.5 pt-2">
+            <Button variant="outline" onClick={() => setInviteOpen(false)} className="h-12 px-5 text-sm sm:text-base font-black rounded-xl cursor-pointer">
               {inviteToken ? "Close" : "Cancel"}
             </Button>
             {!inviteToken && (
               <Button
-                size="sm"
                 disabled={!inviteEmail.trim() || !inviteRoleId || inviteMutation.isPending}
                 onClick={() =>
                   inviteMutation.mutate({
@@ -1236,7 +1238,7 @@ export function AgriEmployeesManagement({
                     roleId: inviteRoleId,
                   })
                 }
-                className="bg-[#078c52] text-white hover:bg-[#067343]"
+                className="h-12 px-6 text-sm sm:text-base font-black bg-[#078c52] text-white hover:bg-[#067343] rounded-xl active:scale-95 transition-all shadow-xs cursor-pointer"
               >
                 {inviteMutation.isPending ? "Generating..." : "Send Invitation"}
               </Button>
@@ -1247,21 +1249,21 @@ export function AgriEmployeesManagement({
 
       {/* Change Role Modal */}
       <Dialog open={Boolean(changeRoleTarget)} onOpenChange={(open) => !open && setChangeRoleTarget(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Change Staff Role</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl font-black text-slate-900">Change Staff Role</DialogTitle>
+            <DialogDescription className="text-sm font-semibold text-slate-600 mt-1">
               Reassign permissions for {changeRoleTarget?.displayName}.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 py-2 text-xs">
-            <Label className="text-xs font-bold text-slate-700">Select Role</Label>
+          <div className="space-y-4 py-3 text-sm">
+            <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Select Role</Label>
             <Select value={newRoleId} onValueChange={setNewRoleId}>
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className="h-11 sm:h-12 text-sm sm:text-base rounded-xl">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl">
                 {roles.map((r) => (
                   <SelectItem key={r.id} value={r.id}>
                     {r.name}
@@ -1271,12 +1273,11 @@ export function AgriEmployeesManagement({
             </Select>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setChangeRoleTarget(null)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2.5 pt-2">
+            <Button variant="outline" onClick={() => setChangeRoleTarget(null)} className="h-12 px-5 text-sm sm:text-base font-black rounded-xl cursor-pointer">
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={changeRoleMutation.isPending || !newRoleId}
               onClick={() => {
                 if (changeRoleTarget) {
@@ -1286,7 +1287,7 @@ export function AgriEmployeesManagement({
                   });
                 }
               }}
-              className="bg-[#078c52] text-white hover:bg-[#067343]"
+              className="h-12 px-6 text-sm sm:text-base font-black bg-[#078c52] text-white hover:bg-[#067343] rounded-xl active:scale-95 transition-all shadow-xs cursor-pointer"
             >
               {changeRoleMutation.isPending ? "Saving..." : "Update Role"}
             </Button>
@@ -1296,12 +1297,12 @@ export function AgriEmployeesManagement({
 
       {/* Deactivate/Reactivate Dialog */}
       <Dialog open={Boolean(statusChangeTarget)} onOpenChange={(open) => !open && setStatusChangeTarget(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">
+            <DialogTitle className="text-xl font-black text-slate-900">
               {statusChangeTarget?.status === "deactivated" ? "Reactivate Staff Account" : "Deactivate Staff Account"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogDescription className="text-sm font-semibold text-slate-600 mt-1">
               {statusChangeTarget?.status === "deactivated"
                 ? `Restore administrative portal access for ${statusChangeTarget?.displayName}.`
                 : `Suspend portal access and terminate sessions for ${statusChangeTarget?.displayName}.`}
@@ -1309,23 +1310,22 @@ export function AgriEmployeesManagement({
           </DialogHeader>
 
           {statusChangeTarget?.status !== "deactivated" && (
-            <div className="space-y-2 py-2">
-              <Label className="text-xs font-bold text-slate-700">Reason for Deactivation</Label>
+            <div className="space-y-4 py-3 text-sm">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Reason for Deactivation</Label>
               <Input
                 placeholder="e.g. End of contract, Security review..."
                 value={statusReason}
                 onChange={(e) => setStatusReason(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm sm:text-base rounded-xl"
               />
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setStatusChangeTarget(null)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2.5 pt-2">
+            <Button variant="outline" onClick={() => setStatusChangeTarget(null)} className="h-12 px-5 text-sm sm:text-base font-black rounded-xl cursor-pointer">
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={toggleStatusMutation.isPending}
               onClick={() => {
                 if (statusChangeTarget) {
@@ -1337,11 +1337,12 @@ export function AgriEmployeesManagement({
                   });
                 }
               }}
-              className={
+              className={cn(
+                "h-12 px-6 text-sm sm:text-base font-black rounded-xl text-white active:scale-95 transition-all shadow-xs cursor-pointer",
                 statusChangeTarget?.status === "deactivated"
-                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                  : "bg-rose-600 text-white hover:bg-rose-700"
-              }
+                  ? "bg-emerald-600 hover:bg-emerald-700"
+                  : "bg-rose-600 hover:bg-rose-700"
+              )}
             >
               {toggleStatusMutation.isPending ? "Updating..." : statusChangeTarget?.status === "deactivated" ? "Reactivate" : "Deactivate"}
             </Button>
@@ -1351,27 +1352,26 @@ export function AgriEmployeesManagement({
 
       {/* Revoke Sessions Dialog */}
       <Dialog open={Boolean(revokeSessionsTarget)} onOpenChange={(open) => !open && setRevokeSessionsTarget(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Revoke Active Sessions</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl font-black text-slate-900">Revoke Active Sessions</DialogTitle>
+            <DialogDescription className="text-sm font-semibold text-slate-600 mt-1">
               Force sign out all active sessions across devices for {revokeSessionsTarget?.displayName}.
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setRevokeSessionsTarget(null)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2.5 pt-2">
+            <Button variant="outline" onClick={() => setRevokeSessionsTarget(null)} className="h-12 px-5 text-sm sm:text-base font-black rounded-xl cursor-pointer">
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={revokeSessionsMutation.isPending}
               onClick={() => {
                 if (revokeSessionsTarget) {
                   revokeSessionsMutation.mutate(revokeSessionsTarget.membershipId);
                 }
               }}
-              className="bg-rose-600 text-white hover:bg-rose-700"
+              className="h-12 px-6 text-sm sm:text-base font-black bg-rose-600 text-white hover:bg-rose-700 rounded-xl active:scale-95 transition-all shadow-xs cursor-pointer"
             >
               {revokeSessionsMutation.isPending ? "Revoking..." : "Revoke All Sessions"}
             </Button>
