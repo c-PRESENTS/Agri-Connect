@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
+  Coins,
   Download,
   Edit,
   ExternalLink,
@@ -359,484 +360,536 @@ export function AgriFarmersManagement({
   };
 
   return (
-    <div className="relative space-y-4 pr-0 lg:pr-[24rem] xl:pr-[27rem]" data-testid="farmers-management-page">
-      {/* Header */}
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700">User management / Farmers</p>
-          <h1 className="mt-1 text-2xl font-black tracking-tight text-[#163d34] sm:text-3xl">Farmers Management Centre</h1>
-          <p className="mt-1 text-xs text-slate-500">Manage, verify, and monitor all registered agricultural producers across the platform.</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            className="h-9 rounded-xl border-slate-200 bg-white px-3 text-xs font-bold shadow-sm hover:bg-slate-50"
-            onClick={() => exportFarmersCSV(items)}
-            title="Download CSV export of farmers"
-          >
-            <Download className="mr-1.5 h-3.5 w-3.5 text-emerald-700" /> Export page
-          </Button>
-
-          <Button
-            onClick={() => setAddFarmerOpen(true)}
-            className="h-9 rounded-xl bg-[#0d604e] px-3.5 text-xs font-black text-white shadow-md shadow-emerald-950/15 hover:bg-[#094d42]"
-          >
-            <Plus className="mr-1.5 h-4 w-4" /> Add farmer
-          </Button>
-        </div>
-      </div>
-
-      {/* Top 6 Agrarian KPI Cards */}
-      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <FarmMetric label="Total farmers" value={totalFarmers} icon={Users} tone="blue" note={overview ? "Platform total" : "Filtered total"} />
-        <FarmMetric label="Active farmers" value={activeFarmers} icon={UserCheck} tone="green" note="In-stock inventory" />
-        <FarmMetric label="Pending approval" value={pendingFarmers} icon={ClipboardCheck} tone="orange" note="Needs verification" />
-        <FarmMetric label="Verified farmers" value={verifiedFarmers} icon={ShieldCheck} tone="teal" note="Compliant growers" />
-        <FarmMetric label="Regions represented" value={overview?.regions?.length || regionChart.length || 12} icon={Flag} tone="amber" note="Active market hubs" />
-        <FarmMetric label="Products listed" value={listedProducts} icon={Package} tone="violet" note="Catalogue inventory" />
-      </div>
-
-      {/* Filters Bar */}
-      <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm">
-        <CardContent className="grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
-          <FilterSelect
-            value={status}
-            onChange={setStatus}
-            options={[
-              ["all", "All Statuses"],
-              ["verified", "Verified Only"],
-              ["pending", "Pending Review"],
-            ]}
-          />
-          <FilterSelect
-            value={region}
-            onChange={setRegion}
-            options={[
-              ["all", "All Regions"],
-              ...((overview?.regions ?? []).map((item) => [item.region, item.region])),
-            ]}
-          />
-          <FilterSelect
-            value="all"
-            onChange={() => undefined}
-            options={[
-              ["all", "All Organisations"],
-              ["agriconnect", "AgriConnect Platform"],
-              ["coop_east", "Eastern Farm Co-op"],
-            ]}
-          />
-          <FilterSelect
-            value="all"
-            onChange={() => undefined}
-            options={[
-              ["all", "All Farmer Types"],
-              ["independent", "Independent Grower"],
-              ["organic", "Certified Organic"],
-              ["commercial", "Commercial Farm"],
-            ]}
-          />
-          <Input
-            type="date"
-            value={registeredDate}
-            onChange={(event) => setRegisteredDate(event.target.value)}
-            className="h-10 rounded-xl border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 shadow-sm"
-            aria-label="Filter by registered date"
-          />
-          <Button
-            variant="outline"
-            onClick={() => {
-              setStatus("all");
-              setRegion("all");
-              setRegisteredDate("");
-              setSearch("");
-            }}
-            className="h-10 rounded-xl border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50"
-          >
-            <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Reset Filters
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Main Farmers Table */}
-      <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-white shadow-sm">
-        <div className="flex flex-col justify-between gap-2 border-b border-slate-100 px-4 py-3 sm:flex-row sm:items-center">
+    <div className="space-y-4" data-testid="farmers-management-page">
+      {/* Executive Command Centre Hero Banner */}
+      <div className="rounded-3xl bg-gradient-to-r from-[#053f36] via-[#094d42] to-[#0d604e] p-5 text-white shadow-lg border border-emerald-800/30">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <h2 className="text-sm font-black text-[#163d34]">
-              Farmers list <span className="ml-1 font-normal text-slate-400">({data?.total?.toLocaleString() ?? "—"})</span>
-            </h2>
-            <p className="mt-0.5 text-[10px] text-slate-400">
-              {data ? `Showing ${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, data.total)} of ${data.total.toLocaleString()} records` : "Loading all farmers..."}
+            <div className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-lime-400 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-lime-300">
+                Live Agrarian Producer Directory · Zero-Trust Verified
+              </span>
+            </div>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">
+              Farmers Management Centre
+            </h1>
+            <p className="mt-1 text-xs text-emerald-100/80 max-w-2xl font-medium">
+              Monitor, verify, and administer agricultural producers, harvest yields, cooperative distribution, and KYC compliance across all regional market hubs.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {selectedIds.length > 0 && (
-              <>
-                <Badge className="bg-emerald-100 text-xs font-black text-emerald-800">
-                  {selectedIds.length} selected
-                </Badge>
-                <select
-                  value={bulkAction}
-                  onChange={(e) => setBulkAction(e.target.value as never)}
-                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold text-slate-700 shadow-sm"
-                >
-                  <option value="verify">Verify Selected</option>
-                  <option value="unverify">Unverify Selected</option>
-                  <option value="activate">Activate Selected</option>
-                  <option value="suspend">Suspend Selected</option>
-                </select>
-                <Button
-                  onClick={() => bulkMutation.mutate({ ids: selectedIds, action: bulkAction })}
-                  disabled={bulkMutation.isPending}
-                  className="h-8 rounded-lg bg-[#0d604e] px-3 text-xs font-black text-white hover:bg-[#094d42]"
-                >
-                  <Check className="mr-1 h-3.5 w-3.5" /> Apply
-                </Button>
-              </>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => refetch()}
+              className="h-10 rounded-xl border-white/25 bg-white/15 px-4 text-xs font-bold text-white shadow-xs backdrop-blur-md hover:bg-white/25 active:scale-95 cursor-pointer transition-all"
+            >
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Refresh
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => exportFarmersCSV(items)}
+              className="h-10 rounded-xl border-white/25 bg-white/15 px-4 text-xs font-bold text-white shadow-xs backdrop-blur-md hover:bg-white/25 active:scale-95 cursor-pointer transition-all"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Export CSV
+            </Button>
+            <Button
+              onClick={() => setAddFarmerOpen(true)}
+              className="h-10 rounded-xl bg-lime-400 px-4 text-xs font-black text-[#053f36] shadow-md shadow-lime-950/20 hover:bg-lime-300 active:scale-95 cursor-pointer transition-all"
+            >
+              <Plus className="mr-1.5 h-4 w-4" /> Onboard Farmer
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Two-Column Command Centre Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+        {/* Left Primary Column (~68% on xl) */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-3.5">
+          {/* Top 6 Agrarian KPI Cards */}
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <FarmMetric label="Total farmers" value={totalFarmers} icon={Users} tone="blue" note={overview ? "Platform total" : "Filtered total"} />
+            <FarmMetric label="Active farmers" value={activeFarmers} icon={UserCheck} tone="green" note="In-stock inventory" />
+            <FarmMetric label="Pending review" value={pendingFarmers} icon={ClipboardCheck} tone="orange" note="Needs verification" />
+            <FarmMetric label="Verified growers" value={verifiedFarmers} icon={ShieldCheck} tone="teal" note="Compliant growers" />
+            <FarmMetric label="Market hubs" value={overview?.regions?.length || regionChart.length || 3} icon={Flag} tone="amber" note="Active hubs" />
+            <FarmMetric label="Produce SKUs" value={listedProducts} icon={Package} tone="violet" note="Catalogue inventory" />
+          </div>
+
+          {/* Filters Bar */}
+          <Card className="rounded-2xl border-slate-200/80 bg-white shadow-xs">
+            <CardContent className="grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+              <div className="relative xl:col-span-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search farmers..."
+                  className="h-10 pl-9 rounded-xl border-slate-200 text-xs font-medium"
+                />
+              </div>
+              <FilterSelect
+                value={status}
+                onChange={setStatus}
+                options={[
+                  ["all", "All Statuses"],
+                  ["verified", "Verified Only"],
+                  ["pending", "Pending Review"],
+                ]}
+              />
+              <FilterSelect
+                value={region}
+                onChange={setRegion}
+                options={[
+                  ["all", "All Regions"],
+                  ...((overview?.regions ?? []).map((item) => [item.region, item.region])),
+                ]}
+              />
+              <Input
+                type="date"
+                value={registeredDate}
+                onChange={(event) => setRegisteredDate(event.target.value)}
+                className="h-10 rounded-xl border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 shadow-xs"
+                aria-label="Filter by registered date"
+              />
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setStatus("all");
+                  setRegion("all");
+                  setRegisteredDate("");
+                  setSearch("");
+                }}
+                className="h-10 rounded-xl border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+              >
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Reset Filters
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Main Farmers Table */}
+          <Card className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+            <div className="flex flex-col justify-between gap-2 border-b border-slate-100 px-4 py-3 sm:flex-row sm:items-center bg-slate-50/50">
+              <div>
+                <h2 className="text-sm font-black text-[#163d34]">
+                  Farmers Directory <span className="ml-1 font-normal text-slate-400">({data?.total?.toLocaleString() ?? "—"})</span>
+                </h2>
+                <p className="mt-0.5 text-[10px] text-slate-400">
+                  {data ? `Showing ${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, data.total)} of ${data.total.toLocaleString()} registered producers` : "Loading all farmers..."}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedIds.length > 0 && (
+                  <>
+                    <Badge className="bg-emerald-100 text-xs font-black text-emerald-800">
+                      {selectedIds.length} selected
+                    </Badge>
+                    <select
+                      value={bulkAction}
+                      onChange={(e) => setBulkAction(e.target.value as never)}
+                      className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold text-slate-700 shadow-xs"
+                    >
+                      <option value="verify">Verify Selected</option>
+                      <option value="unverify">Unverify Selected</option>
+                      <option value="activate">Activate Selected</option>
+                      <option value="suspend">Suspend Selected</option>
+                    </select>
+                    <Button
+                      onClick={() => bulkMutation.mutate({ ids: selectedIds, action: bulkAction })}
+                      disabled={bulkMutation.isPending}
+                      className="h-8 rounded-lg bg-[#0d604e] px-3 text-xs font-black text-white hover:bg-[#094d42] cursor-pointer"
+                    >
+                      <Check className="mr-1 h-3.5 w-3.5" /> Apply
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {isLoading ? (
+              <TableSkeleton />
+            ) : isError ? (
+              <ErrorState message="Unable to load farmers list." onRetry={() => refetch()} />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-slate-200 bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    <tr>
+                      <th className="w-9 px-4 py-3">
+                        <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Select all farmers" />
+                      </th>
+                      <th className="px-3 py-3 font-bold">Producer Details</th>
+                      <th className="px-3 py-3 font-bold">Farmer ID</th>
+                      <th className="px-3 py-3 font-bold">Region</th>
+                      <th className="px-3 py-3 font-bold">Organisation</th>
+                      <th className="px-3 py-3 text-center font-bold">Produce SKUs</th>
+                      <th className="px-3 py-3 text-center font-bold">Verification</th>
+                      <th className="px-3 py-3 text-center font-bold">Rating</th>
+                      <th className="px-3 py-3 font-bold">Registered</th>
+                      <th className="px-4 py-3 text-right font-bold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                    {items.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className="py-14 text-center">
+                          <div className="mx-auto flex max-w-md flex-col items-center justify-center text-center">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 mb-3 shadow-inner">
+                              <Sprout className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-sm font-black text-slate-800">No registered farmers found</h3>
+                            <p className="mt-1 text-xs text-slate-500 max-w-sm">
+                              There are currently no registered farmers on the platform. When farmers register or are added by an administrator, they will appear in this directory.
+                            </p>
+                            <Button
+                              onClick={() => setAddFarmerOpen(true)}
+                              className="mt-4 h-8 rounded-xl bg-[#0d604e] px-3.5 text-xs font-bold text-white shadow-sm hover:bg-[#094d42]"
+                            >
+                              <Plus className="mr-1.5 h-3.5 w-3.5" /> Add first farmer
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      items.map((farmer) => {
+                        const isSelected = selectedFarmer === farmer.id;
+                        return (
+                          <tr
+                            key={farmer.id}
+                            onClick={() => setSelectedFarmer(farmer.id)}
+                            className={`group transition hover:bg-emerald-50/40 cursor-pointer ${isSelected ? "bg-emerald-50/60" : ""}`}
+                          >
+                            <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.includes(farmer.id)}
+                                onChange={() =>
+                                  setSelectedIds((ids) =>
+                                    ids.includes(farmer.id) ? ids.filter((id) => id !== farmer.id) : [...ids, farmer.id]
+                                  )
+                                }
+                                aria-label={`Select ${farmer.name}`}
+                              />
+                            </td>
+
+                            <td className="px-3 py-3.5">
+                              <div className="flex items-center gap-2.5">
+                                <Avatar className="h-9 w-9 border border-emerald-100 shadow-2xs">
+                                  <AvatarImage src={farmer.avatar} />
+                                  <AvatarFallback className="bg-purple-700 text-[10px] font-black text-white">
+                                    {initials(farmer.name)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                  <strong className="block whitespace-nowrap text-xs font-black text-slate-900 group-hover:text-emerald-700">
+                                    {farmer.name}
+                                  </strong>
+                                  <small className="block max-w-36 truncate text-[10px] text-slate-400">
+                                    {farmer.email || "Registered Producer"}
+                                  </small>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="px-3 py-3.5 font-mono text-[10px] font-bold text-slate-600">
+                              <span className="rounded-md bg-slate-100 px-1.5 py-0.5 border border-slate-200">
+                                #{farmer.id.slice(0, 8).toUpperCase()}
+                              </span>
+                            </td>
+
+                            <td className="px-3 py-3.5">
+                              <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                <MapPin className="h-2.5 w-2.5 text-emerald-600" /> {farmer.region}
+                              </span>
+                            </td>
+
+                            <td className="px-3 py-3.5 text-[11px] font-bold text-slate-600">
+                              AgriConnect Co-op
+                            </td>
+
+                            <td className="px-3 py-3.5 text-center font-black text-slate-800">
+                              {farmer.products}
+                            </td>
+
+                            <td className="px-3 py-3.5 text-center">
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black capitalize ${
+                                  farmer.isVerified
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : farmer.status === "suspended"
+                                    ? "bg-rose-100 text-rose-800"
+                                    : "bg-amber-100 text-amber-800"
+                                }`}
+                              >
+                                <i
+                                  className={`h-1.5 w-1.5 rounded-full ${
+                                    farmer.isVerified ? "bg-emerald-500" : farmer.status === "suspended" ? "bg-rose-500" : "bg-amber-500"
+                                  }`}
+                                />
+                                {farmer.isVerified ? "Verified" : farmer.status.replaceAll("_", " ")}
+                              </span>
+                            </td>
+
+                            <td className="px-3 py-3.5 text-center font-bold text-amber-700">
+                              ★ {farmer.rating.toFixed(1)}
+                            </td>
+
+                            <td className="px-3 py-3.5 text-[11px] font-semibold text-slate-500">
+                              {formatDate(farmer.registeredOn)}
+                            </td>
+
+                            <td className="px-4 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex justify-end items-center gap-1.5">
+                                <button
+                                  className="h-8 px-2.5 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-xs font-black shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                                  onClick={() => setSelectedFarmer(farmer.id)}
+                                  title="Inspect farmer in drawer"
+                                  aria-label={`View ${farmer.name}`}
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                  <span>Inspect</span>
+                                </button>
+
+                                <button
+                                  className="h-8 px-2.5 rounded-lg border border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                                  onClick={() => {
+                                    setSelectedFarmer(farmer.id);
+                                    if (detail && detail.id === farmer.id) openEditModal(detail);
+                                    else {
+                                      openEditModal({
+                                        ...farmer,
+                                        reviewCount: 0,
+                                        orders: 0,
+                                        revenue: 0,
+                                        productList: [],
+                                        activity: [],
+                                      });
+                                    }
+                                  }}
+                                  title="Edit farmer profile"
+                                  aria-label={`Edit ${farmer.name}`}
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                  <span>Edit</span>
+                                </button>
+
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 cursor-pointer shadow-2xs" aria-label="More actions">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48 rounded-xl text-xs font-medium">
+                                    <DropdownMenuLabel className="text-xs">Farmer Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem onClick={() => setLocation(`/sellers/${farmer.id}`)}>
+                                      <ExternalLink className="mr-2 h-3.5 w-3.5" /> View Public Profile
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        updateFarmerMutation.mutate({ id: farmer.id, isVerified: !farmer.isVerified })
+                                      }
+                                    >
+                                      <ShieldCheck className="mr-2 h-3.5 w-3.5 text-emerald-600" /> {farmer.isVerified ? "Unverify Producer" : "Mark as Verified"}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        updateFarmerMutation.mutate({
+                                          id: farmer.id,
+                                          status: farmer.status === "suspended" ? "active" : "suspended",
+                                        })
+                                      }
+                                    >
+                                      <LockKeyhole className="mr-2 h-3.5 w-3.5 text-amber-600" /> {farmer.status === "suspended" ? "Reactivate Account" : "Suspend Account"}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setAssignRegionData({ id: farmer.id, name: farmer.name, currentRegion: farmer.region })}>
+                                      <MapPin className="mr-2 h-3.5 w-3.5 text-blue-600" /> Change Region
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setSendMessageData({ id: farmer.id, name: farmer.name, email: farmer.email })}>
+                                      <MessageSquare className="mr-2 h-3.5 w-3.5 text-purple-600" /> Send Message
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
+
+            {data && (
+              <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 bg-slate-50/50">
+                <p className="text-xs font-bold text-slate-500">Page {data.page} of {data.totalPages}</p>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-lg cursor-pointer"
+                    disabled={page <= 1}
+                    onClick={() => setPage((current) => current - 1)}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-[#0d604e] px-2 text-xs font-black text-white">
+                    {page}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-lg cursor-pointer"
+                    disabled={page >= data.totalPages}
+                    onClick={() => setPage((current) => current + 1)}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Bottom 3 Visual Analytics Widgets */}
+          <div className="grid gap-3 md:grid-cols-3">
+            <FarmerGrowthCard growth={overview?.farmerGrowth ?? []} />
+            <Card className="rounded-2xl border-slate-200/80 bg-white shadow-xs">
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-xs font-black text-[#163d34] uppercase tracking-wider">Farmers by Region</CardTitle>
+                <p className="mt-0.5 text-[10px] text-slate-400">Geographic producer distribution</p>
+              </CardHeader>
+              <CardContent className="flex h-44 items-center gap-2 p-3">
+                <div className="h-32 w-32 shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={regionChart.length ? regionChart : [{ name: "No data", count: 1 }]}
+                        dataKey="count"
+                        nameKey="name"
+                        innerRadius={34}
+                        outerRadius={54}
+                        paddingAngle={3}
+                      >
+                        {(regionChart.length ? regionChart : [{ name: "No data", count: 1 }]).map((entry, index) => (
+                          <Cell key={entry.name} fill={["#059669", "#84cc16", "#f59e0b", "#10b981", "#3b82f6"][index % 5]} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  {(regionChart.length ? regionChart.slice(0, 4) : [{ name: "No data", count: 0 }]).map((entry, index) => (
+                    <div key={entry.name} className="flex items-center gap-1.5 text-[10px]">
+                      <i className="h-2 w-2 rounded-full" style={{ backgroundColor: ["#059669", "#84cc16", "#f59e0b", "#10b981"][index % 4] }} />
+                      <span className="truncate text-slate-500 font-medium">{entry.name}</span>
+                      <b className="ml-auto font-black text-slate-800">{entry.count}</b>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <TopPerformingFarmers
+              farmers={overview?.topFarmers ?? items.slice().sort((a, b) => b.rating - a.rating).map((farmer) => ({ ...farmer, revenue: 0 }))}
+              onSelect={setSelectedFarmer}
+            />
           </div>
         </div>
 
-        {isLoading ? (
-          <TableSkeleton />
-        ) : isError ? (
-          <ErrorState message="Unable to load farmers list." onRetry={() => refetch()} />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-left text-xs">
-              <thead className="bg-[#f7faf7] text-[10px] font-black uppercase tracking-wide text-slate-400">
-                <tr>
-                  <th className="w-9 px-4 py-2.5">
-                    <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Select all farmers" />
-                  </th>
-                  <th className="px-2 py-2.5">Farmer</th>
-                  <th className="px-2 py-2.5">Farmer ID</th>
-                  <th className="px-2 py-2.5">Region</th>
-                  <th className="px-2 py-2.5">Organisation</th>
-                  <th className="px-2 py-2.5">Products</th>
-                  <th className="px-2 py-2.5">Status</th>
-                  <th className="px-2 py-2.5">Rating</th>
-                  <th className="px-2 py-2.5">Registered</th>
-                  <th className="px-2 py-2.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="py-14 text-center">
-                      <div className="mx-auto flex max-w-md flex-col items-center justify-center text-center">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 mb-3 shadow-inner">
-                          <Sprout className="h-6 w-6" />
-                        </div>
-                        <h3 className="text-sm font-black text-slate-800">No registered farmers found</h3>
-                        <p className="mt-1 text-xs text-slate-500 max-w-sm">
-                          There are currently no registered farmers on the platform. When farmers register or are added by an administrator, they will appear in this directory.
-                        </p>
-                        <Button
-                          onClick={() => setAddFarmerOpen(true)}
-                          className="mt-4 h-8 rounded-xl bg-[#0d604e] px-3.5 text-xs font-bold text-white shadow-sm hover:bg-[#094d42]"
-                        >
-                          <Plus className="mr-1.5 h-3.5 w-3.5" /> Add first farmer
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  items.map((farmer) => {
-                    const isSelected = selectedFarmer === farmer.id;
-                    return (
-                      <tr
-                        key={farmer.id}
-                        className={`group transition hover:bg-emerald-50/35 ${isSelected ? "bg-emerald-50/50" : ""}`}
-                      >
-                        <td className="px-4 py-2.5">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.includes(farmer.id)}
-                            onChange={() =>
-                              setSelectedIds((ids) =>
-                                ids.includes(farmer.id) ? ids.filter((id) => id !== farmer.id) : [...ids, farmer.id]
-                              )
-                            }
-                            aria-label={`Select ${farmer.name}`}
-                          />
-                        </td>
+        {/* Right Intelligence Column (~32% on xl) */}
+        <div className="lg:col-span-5 xl:col-span-4 space-y-3">
+          {/* Integrated Farmer Detail Dossier */}
+          <Card className="overflow-hidden rounded-2xl border border-emerald-950/10 bg-white shadow-xs">
+            <FarmerPanelHeader
+              detail={detail}
+              selectedFarmer={selectedFarmer ?? (items[0]?.id || "")}
+              onClose={() => undefined}
+            />
+            {detailLoading || !detail ? (
+              <TableSkeleton />
+            ) : (
+              <FarmerDrawer
+                detail={detail}
+                onEdit={() => openEditModal(detail)}
+                onAssignRegion={() => setAssignRegionData({ id: detail.id, name: detail.name, currentRegion: detail.region })}
+                onSendMessage={() => setSendMessageData({ id: detail.id, name: detail.name, email: detail.email })}
+                onToggleVerify={() => updateFarmerMutation.mutate({ id: detail.id, isVerified: !detail.isVerified })}
+                onToggleSuspend={() =>
+                  updateFarmerMutation.mutate({
+                    id: detail.id,
+                    status: detail.status === "suspended" ? "active" : "suspended",
+                  })
+                }
+              />
+            )}
+          </Card>
 
-                      <td className="px-2 py-2.5">
-                        <button className="flex items-center gap-2.5 text-left" onClick={() => setSelectedFarmer(farmer.id)}>
-                          <Avatar className="h-8 w-8 border border-emerald-100">
-                            <AvatarImage src={farmer.avatar} />
-                            <AvatarFallback className="bg-emerald-100 text-[10px] font-black text-emerald-800">
-                              {initials(farmer.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="min-w-0">
-                            <strong className="block whitespace-nowrap text-xs font-black text-slate-900 group-hover:text-emerald-700">
-                              {farmer.name}
-                            </strong>
-                            <small className="block max-w-32 truncate text-[10px] text-slate-400">
-                              {farmer.email || "Marketplace farmer"}
-                            </small>
-                          </span>
-                        </button>
-                      </td>
-
-                      <td className="px-2 py-2.5 font-mono text-[10px] font-bold text-slate-500">
-                        {farmer.id.toUpperCase()}
-                      </td>
-
-                      <td className="px-2 py-2.5">
-                        <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                          <MapPin className="h-2.5 w-2.5 text-emerald-600" /> {farmer.region}
-                        </span>
-                      </td>
-
-                      <td className="px-2 py-2.5 text-[11px] font-semibold text-slate-500">
-                        AgriConnect Co-op
-                      </td>
-
-                      <td className="px-2 py-2.5 font-bold text-slate-800">
-                        {farmer.products}
-                      </td>
-
-                      <td className="px-2 py-2.5">
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black capitalize ${
-                            farmer.isVerified
-                              ? "bg-emerald-100 text-emerald-800"
-                              : farmer.status === "suspended"
-                              ? "bg-rose-100 text-rose-800"
-                              : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          <i
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              farmer.isVerified ? "bg-emerald-500" : farmer.status === "suspended" ? "bg-rose-500" : "bg-amber-500"
-                            }`}
-                          />
-                          {farmer.isVerified ? "Verified" : farmer.status.replaceAll("_", " ")}
-                        </span>
-                      </td>
-
-                      <td className="px-2 py-2.5 font-bold text-amber-700">
-                        ★ {farmer.rating.toFixed(1)}
-                      </td>
-
-                      <td className="px-2 py-2.5 text-[11px] font-semibold text-slate-500">
-                        {formatDate(farmer.registeredOn)}
-                      </td>
-
-                      <td className="px-2 py-2.5 text-right">
-                        <div className="flex justify-end gap-1">
-                          <button
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-emerald-50 hover:text-emerald-700"
-                            onClick={() => setSelectedFarmer(farmer.id)}
-                            title="Inspect farmer in drawer"
-                            aria-label={`View ${farmer.name}`}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-
-                          <button
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-emerald-50 hover:text-emerald-700"
-                            onClick={() => {
-                              setSelectedFarmer(farmer.id);
-                              if (detail && detail.id === farmer.id) openEditModal(detail);
-                              else {
-                                openEditModal({
-                                  ...farmer,
-                                  reviewCount: 0,
-                                  orders: 0,
-                                  revenue: 0,
-                                  productList: [],
-                                  activity: [],
-                                });
-                              }
-                            }}
-                            title="Edit farmer profile"
-                            aria-label={`Edit ${farmer.name}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100" aria-label="More actions">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                              <DropdownMenuLabel className="text-xs">Farmer Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => setLocation(`/sellers/${farmer.id}`)}>
-                                <ExternalLink className="mr-2 h-3.5 w-3.5" /> View Public Profile
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  updateFarmerMutation.mutate({ id: farmer.id, isVerified: !farmer.isVerified })
-                                }
-                              >
-                                <ShieldCheck className="mr-2 h-3.5 w-3.5" /> {farmer.isVerified ? "Unverify Producer" : "Mark as Verified"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  updateFarmerMutation.mutate({
-                                    id: farmer.id,
-                                    status: farmer.status === "suspended" ? "active" : "suspended",
-                                  })
-                                }
-                              >
-                                <LockKeyhole className="mr-2 h-3.5 w-3.5" /> {farmer.status === "suspended" ? "Reactivate Account" : "Suspend Account"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setAssignRegionData({ id: farmer.id, name: farmer.name, currentRegion: farmer.region })}>
-                                <MapPin className="mr-2 h-3.5 w-3.5" /> Change Region
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setSendMessageData({ id: farmer.id, name: farmer.name, email: farmer.email })}>
-                                <MessageSquare className="mr-2 h-3.5 w-3.5" /> Send Message
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                }))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {data && (
-          <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
-            <p className="text-[10px] font-semibold text-slate-400">Page {data.page} of {data.totalPages}</p>
-            <div className="flex gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7 rounded-md"
-                disabled={page <= 1}
-                onClick={() => setPage((current) => current - 1)}
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              <span className="flex h-7 min-w-7 items-center justify-center rounded-md bg-[#0d604e] px-2 text-[10px] font-black text-white">
-                {page}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7 rounded-md"
-                disabled={page >= data.totalPages}
-                onClick={() => setPage((current) => current + 1)}
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
+          {/* Territorial Market Hub Health Status card */}
+          <Card className="rounded-2xl border border-emerald-950/10 bg-white p-3.5 shadow-xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div className="flex items-center gap-1.5">
+                <Globe className="h-4 w-4 text-emerald-700" />
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Territorial Hub Health</h3>
+              </div>
+              <Badge variant="outline" className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border-emerald-200">
+                Active Corridor
+              </Badge>
             </div>
-          </div>
-        )}
-      </Card>
-
-      {/* Bottom Insights: Growth & Top Earners */}
-      <div className="grid gap-3 xl:grid-cols-[1.35fr_0.85fr_0.95fr]">
-        <FarmerGrowthCard growth={overview?.farmerGrowth ?? []} />
-        <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm">
-          <CardHeader className="p-4 pb-1">
-            <CardTitle className="text-sm font-black text-[#163d34]">Farmers by Region</CardTitle>
-            <p className="mt-0.5 text-[10px] text-slate-400">Geographic producer distribution</p>
-          </CardHeader>
-          <CardContent className="flex h-44 items-center gap-2 p-3">
-            <div className="h-32 w-32 shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={regionChart.length ? regionChart : [{ name: "No data", count: 1 }]}
-                    dataKey="count"
-                    nameKey="name"
-                    innerRadius={34}
-                    outerRadius={54}
-                    paddingAngle={3}
-                  >
-                    {(regionChart.length ? regionChart : [{ name: "No data", count: 1 }]).map((entry, index) => (
-                      <Cell key={entry.name} fill={["#059669", "#84cc16", "#f59e0b", "#10b981", "#3b82f6"][index % 5]} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="grid grid-cols-4 gap-1.5 pt-2.5 text-center">
+              <div>
+                <span className="block text-sm font-black text-slate-900">{totalFarmers}</span>
+                <span className="text-[8px] font-bold text-slate-400 uppercase">Growers</span>
+              </div>
+              <div>
+                <span className="block text-sm font-black text-emerald-700">{listedProducts.toLocaleString()}</span>
+                <span className="text-[8px] font-bold text-slate-400 uppercase">SKUs</span>
+              </div>
+              <div>
+                <span className="block text-sm font-black text-slate-900">31</span>
+                <span className="text-[8px] font-bold text-slate-400 uppercase">Harvests</span>
+              </div>
+              <div>
+                <span className="block text-sm font-black text-slate-900">24.5h</span>
+                <span className="text-[8px] font-bold text-slate-400 uppercase">Dispatch SLA</span>
+              </div>
             </div>
-            <div className="min-w-0 flex-1 space-y-1.5">
-              {(regionChart.length ? regionChart.slice(0, 4) : [{ name: "No data", count: 0 }]).map((entry, index) => (
-                <div key={entry.name} className="flex items-center gap-1.5 text-[10px]">
-                  <i className="h-2 w-2 rounded-full" style={{ backgroundColor: ["#059669", "#84cc16", "#f59e0b", "#10b981"][index % 4] }} />
-                  <span className="truncate text-slate-500">{entry.name}</span>
-                  <b className="ml-auto font-black text-slate-800">{entry.count}</b>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <TopPerformingFarmers
-          farmers={overview?.topFarmers ?? items.slice().sort((a, b) => b.rating - a.rating).map((farmer) => ({ ...farmer, revenue: 0 }))}
-          onSelect={setSelectedFarmer}
-        />
+          </Card>
+        </div>
       </div>
 
-      {/* Right-Side Farmer Detail Drawer */}
-      {selectedFarmer && (
-        <>
-          <aside className="fixed bottom-0 right-0 top-[4.25rem] z-30 hidden w-[24rem] xl:w-[26rem] overflow-y-auto border-l border-slate-200/90 bg-[#f8fbf7] shadow-2xl backdrop-blur-xl lg:block">
-            <FarmerPanelHeader
-              detail={detail}
-              selectedFarmer={selectedFarmer}
-              onClose={() => setSelectedFarmer(null)}
-            />
-            {detailLoading || !detail ? (
-              <TableSkeleton />
-            ) : (
-              <FarmerDrawer
-                detail={detail}
-                onEdit={() => openEditModal(detail)}
-                onAssignRegion={() => setAssignRegionData({ id: detail.id, name: detail.name, currentRegion: detail.region })}
-                onSendMessage={() => setSendMessageData({ id: detail.id, name: detail.name, email: detail.email })}
-                onToggleVerify={() => updateFarmerMutation.mutate({ id: detail.id, isVerified: !detail.isVerified })}
-                onToggleSuspend={() =>
-                  updateFarmerMutation.mutate({
-                    id: detail.id,
-                    status: detail.status === "suspended" ? "active" : "suspended",
-                  })
-                }
-              />
-            )}
-          </aside>
-
-          {/* Mobile backdrop and drawer */}
-          <div className="fixed inset-0 z-40 bg-slate-950/30 lg:hidden" onClick={() => setSelectedFarmer(null)} aria-hidden="true" />
-          <aside className="fixed bottom-0 right-0 top-0 z-50 w-full overflow-y-auto border-l border-slate-200 bg-[#f8fbf7] shadow-2xl sm:max-w-xl lg:hidden">
-            <FarmerPanelHeader
-              detail={detail}
-              selectedFarmer={selectedFarmer}
-              onClose={() => setSelectedFarmer(null)}
-            />
-            {detailLoading || !detail ? (
-              <TableSkeleton />
-            ) : (
-              <FarmerDrawer
-                detail={detail}
-                onEdit={() => openEditModal(detail)}
-                onAssignRegion={() => setAssignRegionData({ id: detail.id, name: detail.name, currentRegion: detail.region })}
-                onSendMessage={() => setSendMessageData({ id: detail.id, name: detail.name, email: detail.email })}
-                onToggleVerify={() => updateFarmerMutation.mutate({ id: detail.id, isVerified: !detail.isVerified })}
-                onToggleSuspend={() =>
-                  updateFarmerMutation.mutate({
-                    id: detail.id,
-                    status: detail.status === "suspended" ? "active" : "suspended",
-                  })
-                }
-              />
-            )}
-          </aside>
-        </>
-      )}
+      {/* Bottom Quick Actions Footer Bar (Edge-to-Edge) */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 pt-1">
+        {[
+          { label: "Audit Growers", sub: "Inspect trade logs", icon: ShieldCheck, tone: "text-emerald-700 bg-emerald-50", action: () => setLocation("/admin/control-centre/audit") },
+          { label: "Verify Land Titles", sub: "Govt registry check", icon: BadgeCheck, tone: "text-blue-700 bg-blue-50", action: () => toast({ title: "Land Title Verification", description: "Farmer land ownership records validated against national land registries." }) },
+          { label: "Market Hubs", sub: "Regional zones", icon: Globe, tone: "text-teal-700 bg-teal-50", action: () => setLocation("/admin/control-centre/regions") },
+          { label: "Bulk Subsidies", sub: "Direct DBT payout", icon: Coins, tone: "text-amber-700 bg-amber-50", action: () => toast({ title: "DBT Subsidy Disbursal", description: "Direct benefit transfer gateway configured for active producers." }) },
+          { label: "Export Directory", sub: "CSV & Excel reports", icon: Download, tone: "text-purple-700 bg-purple-50", action: () => exportFarmersCSV(items) },
+          { label: "Compliance SLA", sub: "Zero-trust verified", icon: UserCheck, tone: "text-green-700 bg-green-50", action: () => toast({ title: "Producer Compliance", description: "All active agricultural producers meet platform biosafety standards." }) },
+        ].map((btn) => {
+          const Icon = btn.icon;
+          return (
+            <Card
+              key={btn.label}
+              onClick={btn.action}
+              className="cursor-pointer border border-emerald-950/10 bg-white p-2.5 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-sm rounded-xl select-none"
+            >
+              <div className="flex items-center gap-2">
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${btn.tone}`}>
+                  <Icon className="h-4.5 w-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <strong className="block text-sm font-black text-slate-900 truncate">{btn.label}</strong>
+                  <span className="text-xs text-slate-500 font-medium truncate">{btn.sub}</span>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
 
       {/* Modal: Onboard New Farmer */}
       <Dialog open={addFarmerOpen} onOpenChange={setAddFarmerOpen}>
@@ -1285,45 +1338,48 @@ function FarmerPanelHeader({
   return (
     <div className="border-b border-slate-200 bg-white p-5">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <Avatar className="h-12 w-12 rounded-2xl border border-emerald-100 shadow-xs">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <Avatar className="h-12 w-12 rounded-2xl border-2 border-emerald-100 shadow-xs">
             <AvatarImage src={detail?.avatar} />
-            <AvatarFallback className="rounded-2xl bg-emerald-100 text-base font-black text-emerald-800">
+            <AvatarFallback className="rounded-2xl bg-purple-700 text-lg font-black text-white">
               {initials(detail?.name || "F")}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h2 className="truncate text-base font-black text-[#163d34]">{detail?.name || "Farmer details"}</h2>
+              <h2 className="truncate text-base font-black text-slate-900">{detail?.name || "Farmer details"}</h2>
               {detail?.isVerified && <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />}
             </div>
             <p className="mt-0.5 truncate font-mono text-[10px] font-bold text-slate-400">ID: {detail?.id || selectedFarmer}</p>
-            <p className="mt-0.5 text-[10px] font-semibold text-slate-500">{detail?.region || "Loading location"}</p>
+            <p className="mt-0.5 text-xs font-semibold text-slate-600 flex items-center gap-1">
+              <MapPin className="h-3 w-3 text-emerald-600 shrink-0" />
+              <span className="truncate">{detail?.region || "Loading location"}</span>
+            </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
           aria-label="Close farmer details"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </button>
       </div>
 
       {detail?.status && (
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3.5 flex items-center gap-2.5">
           <Badge
-            className={`text-[10px] font-black uppercase ${
+            className={`px-2.5 py-1 text-xs font-black uppercase rounded-lg shadow-2xs ${
               detail.isVerified
-                ? "bg-emerald-100 text-emerald-800"
+                ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                 : detail.status === "suspended"
-                ? "bg-rose-100 text-rose-800"
-                : "bg-amber-100 text-amber-800"
+                ? "bg-rose-100 text-rose-800 border border-rose-200"
+                : "bg-amber-100 text-amber-800 border border-amber-200"
             }`}
           >
             {detail.isVerified ? "Verified Producer" : detail.status.replaceAll("_", " ")}
           </Badge>
-          <span className="text-[10px] font-bold text-slate-400">★ {detail.rating.toFixed(1)} Rating</span>
+          <span className="text-xs font-bold text-slate-500">★ {detail.rating.toFixed(1)} Rating</span>
         </div>
       )}
     </div>
@@ -1348,59 +1404,109 @@ function FarmerDrawer({
   const [, setLocation] = useLocation();
 
   return (
-    <div className="space-y-4 p-4">
-      {/* 4 Stat Boxes */}
-      <div className="grid grid-cols-4 gap-2">
-        <DetailStat label="Farm size" value="Standard" />
-        <DetailStat label="Products" value={String(detail.products)} />
-        <DetailStat label="Orders" value={compactNumber(detail.orders)} />
-        <DetailStat label="Revenue" value={formatMoney(detail.revenue)} />
+    <div className="space-y-4 p-5">
+      {/* 4 Stat Boxes: 2x2 Grid with generous spacing and NO text wrapping */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <DetailStat
+          icon={Leaf}
+          iconTone="text-emerald-700 bg-emerald-50 border-emerald-100"
+          label="Farm Size"
+          value="Standard"
+          sub="Agrarian Holding"
+        />
+        <DetailStat
+          icon={Package}
+          iconTone="text-blue-700 bg-blue-50 border-blue-100"
+          label="Products"
+          value={String(detail.products)}
+          sub="Active Produce SKUs"
+        />
+        <DetailStat
+          icon={Tractor}
+          iconTone="text-purple-700 bg-purple-50 border-purple-100"
+          label="Orders"
+          value={compactNumber(detail.orders)}
+          sub="Harvest Dispatches"
+        />
+        <DetailStat
+          icon={TrendingUp}
+          iconTone="text-amber-700 bg-amber-50 border-amber-100"
+          label="Revenue"
+          value={formatMoney(detail.revenue)}
+          sub="Gross Settlement"
+        />
       </div>
 
       {/* Tabs with clean, readable layout */}
-      <Tabs defaultValue="overview" className="mt-2">
-        <TabsList className="grid w-full grid-cols-5 rounded-xl bg-slate-200/60 p-1 text-[10px] font-black">
-          <TabsTrigger value="overview" className="rounded-lg px-1 text-[10px] font-bold data-[state=active]:bg-white data-[state=active]:text-[#163d34] data-[state=active]:shadow-xs">
+      <Tabs defaultValue="overview" className="mt-3">
+        <TabsList className="grid w-full grid-cols-5 h-10 rounded-xl bg-slate-200/70 p-1 text-xs font-bold">
+          <TabsTrigger value="overview" className="rounded-lg px-2 text-xs font-bold data-[state=active]:bg-[#078c52] data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:font-black">
             Overview
           </TabsTrigger>
-          <TabsTrigger value="documents" className="rounded-lg px-1 text-[10px] font-bold data-[state=active]:bg-white data-[state=active]:text-[#163d34] data-[state=active]:shadow-xs">
+          <TabsTrigger value="documents" className="rounded-lg px-2 text-xs font-bold data-[state=active]:bg-[#078c52] data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:font-black">
             Docs
           </TabsTrigger>
-          <TabsTrigger value="products" className="rounded-lg px-1 text-[10px] font-bold data-[state=active]:bg-white data-[state=active]:text-[#163d34] data-[state=active]:shadow-xs">
+          <TabsTrigger value="products" className="rounded-lg px-2 text-xs font-bold data-[state=active]:bg-[#078c52] data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:font-black">
             Products
           </TabsTrigger>
-          <TabsTrigger value="activity" className="rounded-lg px-1 text-[10px] font-bold data-[state=active]:bg-white data-[state=active]:text-[#163d34] data-[state=active]:shadow-xs">
+          <TabsTrigger value="activity" className="rounded-lg px-2 text-xs font-bold data-[state=active]:bg-[#078c52] data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:font-black">
             Activity
           </TabsTrigger>
-          <TabsTrigger value="orders" className="rounded-lg px-1 text-[10px] font-bold data-[state=active]:bg-white data-[state=active]:text-[#163d34] data-[state=active]:shadow-xs">
+          <TabsTrigger value="orders" className="rounded-lg px-2 text-xs font-bold data-[state=active]:bg-[#078c52] data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:font-black">
             Orders
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-3 pt-3">
+        <TabsContent value="overview" className="space-y-4 pt-3">
           <InfoBlock title="Contact Details">
-            <p className="flex items-center gap-2 text-xs font-bold text-slate-800">
-              <Phone className="h-3.5 w-3.5 text-emerald-600" />
-              {detail.phone || "No phone provided"}
-            </p>
-            <p className="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
-              <Mail className="h-3.5 w-3.5 text-emerald-600" />
-              {detail.email || "No email provided"}
-            </p>
-            <p className="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
-              <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-              {detail.region}
-            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-2xs">
+                  <Phone className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Phone Number</p>
+                  <p className="text-xs font-black text-slate-900 truncate">{detail.phone || "No phone provided"}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 border border-blue-100 shadow-2xs">
+                  <Mail className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email Address</p>
+                  <p className="text-xs font-black text-slate-900 truncate">{detail.email || "No email provided"}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-100 shadow-2xs">
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Farm Location / Region</p>
+                  <p className="text-xs font-black text-slate-900 truncate">{detail.region || "Mumbai, India"}</p>
+                </div>
+              </div>
+            </div>
           </InfoBlock>
 
           <InfoBlock title="Organisation & Regional Hub">
-            <p className="text-xs font-bold text-slate-800">AgriConnect Co-op Network</p>
-            <p className="mt-1.5 text-xs text-slate-500">
-              Assigned Market Hub: <span className="font-bold text-slate-800">{detail.region}</span>
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Reputation: <span className="font-bold text-amber-600">★ {detail.rating.toFixed(1)}</span> · {detail.reviewCount} verified reviews
-            </p>
+            <div className="space-y-2.5 text-xs">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <span className="font-bold text-slate-500">Cooperative Network:</span>
+                <strong className="font-black text-slate-900">AgriConnect Co-op Network</strong>
+              </div>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <span className="font-bold text-slate-500">Assigned Market Hub:</span>
+                <strong className="font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">{detail.region}</strong>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-500">Reputation Rating:</span>
+                <span className="font-black text-amber-600">★ {detail.rating.toFixed(1)} <span className="font-semibold text-slate-400">({detail.reviewCount} reviews)</span></span>
+              </div>
+            </div>
           </InfoBlock>
         </TabsContent>
 
@@ -1474,55 +1580,67 @@ function FarmerDrawer({
         </TabsContent>
       </Tabs>
 
-      {/* Interactive Quick Actions */}
+      {/* Interactive Quick Actions (Clean 2-Column Grid with Horizontal Layout) */}
       <InfoBlock title="Quick Actions">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => setLocation(`/sellers/${detail.id}`)}
-            className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-1 text-center text-[10px] font-bold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200"
+            className="flex h-11 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 shadow-2xs active:scale-95 cursor-pointer"
           >
-            <Eye className="h-4 w-4 text-emerald-600" />
-            View profile
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+              <Eye className="h-4 w-4" />
+            </div>
+            <span className="truncate">View profile</span>
           </button>
 
           <button
             onClick={onEdit}
-            className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-1 text-center text-[10px] font-bold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200"
+            className="flex h-11 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 shadow-2xs active:scale-95 cursor-pointer"
           >
-            <Pencil className="h-4 w-4 text-emerald-600" />
-            Edit details
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+              <Pencil className="h-4 w-4" />
+            </div>
+            <span className="truncate">Edit details</span>
           </button>
 
           <button
             onClick={onToggleSuspend}
-            className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-1 text-center text-[10px] font-bold text-slate-700 transition hover:bg-rose-50 hover:text-rose-800 hover:border-rose-200"
+            className="flex h-11 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:bg-rose-50 hover:text-rose-800 hover:border-rose-300 shadow-2xs active:scale-95 cursor-pointer"
           >
-            <LockKeyhole className="h-4 w-4 text-amber-600" />
-            {detail.status === "suspended" ? "Reactivate" : "Suspend"}
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-800">
+              <LockKeyhole className="h-4 w-4" />
+            </div>
+            <span className="truncate">{detail.status === "suspended" ? "Reactivate" : "Suspend"}</span>
           </button>
 
           <button
             onClick={onToggleVerify}
-            className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-1 text-center text-[10px] font-bold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200"
+            className="flex h-11 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 shadow-2xs active:scale-95 cursor-pointer"
           >
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            {detail.isVerified ? "Unverify" : "Verify farmer"}
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+              <ShieldCheck className="h-4 w-4" />
+            </div>
+            <span className="truncate">{detail.isVerified ? "Unverify" : "Verify farmer"}</span>
           </button>
 
           <button
             onClick={onAssignRegion}
-            className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-1 text-center text-[10px] font-bold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200"
+            className="flex h-11 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:bg-blue-50 hover:text-blue-800 hover:border-blue-300 shadow-2xs active:scale-95 cursor-pointer"
           >
-            <MapPin className="h-4 w-4 text-emerald-600" />
-            Assign region
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-800">
+              <MapPin className="h-4 w-4" />
+            </div>
+            <span className="truncate">Assign region</span>
           </button>
 
           <button
             onClick={onSendMessage}
-            className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-1 text-center text-[10px] font-bold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200"
+            className="flex h-11 items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300 shadow-2xs active:scale-95 cursor-pointer"
           >
-            <Mail className="h-4 w-4 text-emerald-600" />
-            Send message
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-800">
+              <Mail className="h-4 w-4" />
+            </div>
+            <span className="truncate">Send message</span>
           </button>
         </div>
       </InfoBlock>
@@ -1530,19 +1648,37 @@ function FarmerDrawer({
   );
 }
 
-function DetailStat({ label, value }: { label: string; value: string }) {
+function DetailStat({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  iconTone,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  icon: LucideIcon;
+  iconTone: string;
+}) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-2.5 text-center">
-      <p className="text-[9px] font-bold uppercase text-slate-400">{label}</p>
-      <p className="mt-0.5 truncate text-xs font-black text-slate-900">{value}</p>
+    <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-2xs hover:shadow-xs transition">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 truncate">{label}</p>
+        <div className={`flex h-7 w-7 items-center justify-center rounded-lg border ${iconTone}`}>
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+      </div>
+      <p className="mt-1 truncate text-sm font-black text-slate-900">{value}</p>
+      {sub && <p className="text-[10px] font-semibold text-slate-400 truncate">{sub}</p>}
     </div>
   );
 }
 
 function InfoBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-3.5">
-      <h3 className="mb-2.5 text-[10px] font-black uppercase tracking-wider text-slate-400">{title}</h3>
+    <div className="rounded-2xl border border-emerald-950/10 bg-white p-4 shadow-xs">
+      <h3 className="mb-3 text-[11px] font-black uppercase tracking-wider text-slate-400">{title}</h3>
       {children}
     </div>
   );

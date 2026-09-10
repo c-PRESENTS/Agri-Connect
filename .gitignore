@@ -4,7 +4,6 @@ dist
 backend/public
 vite.config.ts.*
 *.tar.gz
-.env
 log-query.db
 .local/state/
 .config/

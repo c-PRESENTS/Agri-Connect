@@ -79,6 +79,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
 
 export type AdminVerificationCase = {
   id: string;
@@ -737,32 +738,32 @@ export function AgriVerificationCentre({
 
       {/* Case Review Drawer */}
       <Sheet open={Boolean(selectedCaseId)} onOpenChange={(open) => !open && setSelectedCaseId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
+        <SheetContent side="right" hideCloseButton className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50 border-l border-slate-200 shadow-2xl">
           {isLoadingDetail ? (
             <div className="flex h-full items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+              <RefreshCw className="h-8 w-8 animate-spin text-emerald-600" />
             </div>
           ) : detailData ? (
             <div className="flex flex-col min-h-full">
               {/* Header */}
-              <div className="bg-[#053f36] p-6 text-white">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-400 font-bold text-[#053f36]">
+              <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-gradient-to-br from-lime-300 to-lime-400 font-bold text-[#053f36] shadow-md shrink-0 ring-4 ring-lime-400/20">
                       <ShieldCheck className="h-6 w-6" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-black">
+                    <div className="min-w-0">
+                      <h2 className="text-xl sm:text-2xl font-black text-white leading-tight truncate">
                         {detailData.businessProfile?.legalName || detailData.seller?.name}
                       </h2>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-white/60">ID: {detailData.case.id}</span>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-white/90 bg-black/25 px-2.5 py-1 rounded-lg border border-white/10">ID: {detailData.case.id}</span>
                         <Badge
                           variant="outline"
                           className={
                             detailData.case.status === "verified"
-                              ? "border-emerald-400/30 bg-emerald-500/20 text-emerald-200"
-                              : "border-amber-400/30 bg-amber-500/20 text-amber-200"
+                              ? "border-emerald-400/40 bg-emerald-500/25 text-emerald-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg"
+                              : "border-amber-400/40 bg-amber-500/25 text-amber-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg"
                           }
                         >
                           {detailData.case.status}
@@ -772,78 +773,79 @@ export function AgriVerificationCentre({
                   </div>
                   <button
                     onClick={() => setSelectedCaseId(null)}
-                    className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                    aria-label="Close dossier"
+                    className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
                 {/* 4 Stat Boxes */}
-                <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Entity</p>
-                    <p className="text-xs font-black text-lime-300 capitalize truncate">
+                <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Entity</p>
+                    <p className="text-sm sm:text-base font-black text-lime-300 capitalize truncate mt-0.5">
                       {detailData.case.entityType.replaceAll("_", " ")}
                     </p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Account</p>
-                    <p className="text-xs font-bold text-white capitalize">{detailData.seller?.accountStatus || "Active"}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Account</p>
+                    <p className="text-sm sm:text-base font-black text-white capitalize mt-0.5">{detailData.seller?.accountStatus || "Active"}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Country</p>
-                    <p className="text-xs font-bold text-white">🇬🇧 {detailData.case.country}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Country</p>
+                    <p className="text-sm sm:text-base font-black text-white mt-0.5">🇬🇧 {detailData.case.country}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Submitted</p>
-                    <p className="text-[11px] font-medium text-white/80">{timeAgo(detailData.case.submittedAt)}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Submitted</p>
+                    <p className="text-sm sm:text-base font-bold text-white/90 truncate mt-0.5">{timeAgo(detailData.case.submittedAt)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Tabs */}
-              <Tabs defaultValue="overview" className="flex-1 p-6">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-200">
-                  <TabsTrigger value="overview" className="text-xs font-bold">
+              <Tabs defaultValue="overview" className="flex-1 p-6 sm:p-7">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-200 h-12 p-1.5 rounded-xl">
+                  <TabsTrigger value="overview" className="text-sm sm:text-base font-black rounded-lg">
                     Entity & Documents
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="text-xs font-bold">
+                  <TabsTrigger value="history" className="text-sm sm:text-base font-black rounded-lg">
                     Audit & Review Trail
                   </TabsTrigger>
                 </TabsList>
 
                 {/* Overview Tab */}
-                <TabsContent value="overview" className="mt-4 space-y-4">
-                  <Card className="border-slate-200">
-                    <CardContent className="p-4 space-y-3 text-xs">
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Legal Company Name</span>
-                        <span className="font-bold text-slate-900">{detailData.businessProfile?.legalName || detailData.seller?.name}</span>
+                <TabsContent value="overview" className="mt-5 space-y-5">
+                  <Card className="border-slate-200 rounded-2xl shadow-xs">
+                    <CardContent className="p-5 sm:p-6 space-y-4 text-sm sm:text-base">
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Legal Company Name</span>
+                        <span className="font-black text-slate-900 text-sm sm:text-base">{detailData.businessProfile?.legalName || detailData.seller?.name}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Registered Email</span>
-                        <span className="font-mono text-slate-700">{detailData.seller?.email}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Registered Email</span>
+                        <span className="font-mono font-bold text-slate-800 text-sm">{detailData.seller?.email}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Requirements Spec</span>
-                        <span className="font-mono text-slate-700">{detailData.case.requirementsVersion}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Requirements Spec</span>
+                        <span className="font-mono font-bold text-slate-800 text-sm">{detailData.case.requirementsVersion}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Last Review Reason</span>
-                        <span className="font-medium text-slate-700 italic">{detailData.case.reviewReason || "None provided"}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Last Review Reason</span>
+                        <span className="font-semibold text-slate-700 italic text-sm sm:text-base">{detailData.case.reviewReason || "None provided"}</span>
                       </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-slate-500">Reviewed At</span>
-                        <span className="font-mono text-slate-600">{timeAgo(detailData.case.reviewedAt)}</span>
+                      <div className="flex justify-between items-center py-1.5">
+                        <span className="text-slate-600 font-bold text-sm">Reviewed At</span>
+                        <span className="font-mono font-bold text-slate-700 text-sm">{timeAgo(detailData.case.reviewedAt)}</span>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* Actions */}
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-3 pt-2">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Button
-                        className="bg-[#078c52] text-white hover:bg-[#067343] text-xs h-9"
+                        className="flex-1 bg-[#078c52] text-white hover:bg-[#067343] text-sm sm:text-base h-12 sm:h-13 font-black rounded-xl active:scale-[0.98] transition-all shadow-xs cursor-pointer"
                         onClick={() => {
                           const target = cases.find((c) => c.id === detailData.case.id);
                           if (target) {
@@ -853,11 +855,11 @@ export function AgriVerificationCentre({
                           }
                         }}
                       >
-                        <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Approve & Certify
+                        <CheckCircle2 className="mr-2 !h-5 !w-5" /> Approve & Certify
                       </Button>
                       <Button
                         variant="outline"
-                        className="text-xs h-9 text-amber-700 border-amber-300 hover:bg-amber-50"
+                        className="flex-1 text-sm sm:text-base h-12 sm:h-13 font-black text-amber-800 border-amber-300 bg-amber-50/60 hover:bg-amber-100 hover:border-amber-400 rounded-xl active:scale-[0.98] transition-all cursor-pointer"
                         onClick={() => {
                           const target = cases.find((c) => c.id === detailData.case.id);
                           if (target) {
@@ -867,13 +869,13 @@ export function AgriVerificationCentre({
                           }
                         }}
                       >
-                        <HelpCircle className="mr-1.5 h-3.5 w-3.5" /> Request Info
+                        <HelpCircle className="mr-2 !h-5 !w-5" /> Request Info
                       </Button>
                     </div>
 
                     <Button
                       variant="outline"
-                      className="w-full text-xs h-9 text-rose-700 border-rose-300 hover:bg-rose-50"
+                      className="w-full text-sm sm:text-base h-12 sm:h-13 font-black text-rose-700 border-rose-300 bg-rose-50/60 hover:bg-rose-100 hover:border-rose-400 rounded-xl active:scale-[0.98] transition-all cursor-pointer"
                       onClick={() => {
                         const target = cases.find((c) => c.id === detailData.case.id);
                         if (target) {
@@ -883,29 +885,29 @@ export function AgriVerificationCentre({
                         }
                       }}
                     >
-                      <XCircle className="mr-1.5 h-3.5 w-3.5" /> Reject Verification Case
+                      <XCircle className="mr-2 !h-5 !w-5" /> Reject Verification Case
                     </Button>
                   </div>
                 </TabsContent>
 
                 {/* History Tab */}
-                <TabsContent value="history" className="mt-4 space-y-2">
+                <TabsContent value="history" className="mt-5 space-y-3">
                   {detailData.events?.length === 0 ? (
                     <div className="p-8 text-center text-slate-400">
-                      <Clock className="mx-auto mb-2 h-7 w-7 text-slate-300" />
-                      <p className="font-semibold">No audit events recorded</p>
+                      <Clock className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                      <p className="font-bold text-slate-700 text-base">No audit events recorded</p>
                     </div>
                   ) : (
                     detailData.events.map((event) => (
-                      <div key={event.id} className="rounded-lg border border-slate-200 bg-white p-3 text-xs">
+                      <div key={event.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800 capitalize">
+                          <span className="font-black text-slate-900 capitalize text-sm sm:text-base">
                             {event.eventType.replaceAll("_", " ")}
                           </span>
-                          <span className="text-[10px] text-slate-400">{timeAgo(event.createdAt)}</span>
+                          <span className="text-xs font-bold text-slate-400">{timeAgo(event.createdAt)}</span>
                         </div>
-                        <p className="mt-1 text-[11px] text-slate-600">
-                          Auditor: {event.actorName} {event.reason ? `· Note: "${event.reason}"` : ""}
+                        <p className="text-xs sm:text-sm text-slate-700 font-medium">
+                          Auditor: <strong className="font-bold text-slate-900">{event.actorName}</strong> {event.reason ? `· Note: "${event.reason}"` : ""}
                         </p>
                       </div>
                     ))
@@ -919,39 +921,38 @@ export function AgriVerificationCentre({
 
       {/* Review Modal */}
       <Dialog open={Boolean(reviewTarget)} onOpenChange={(open) => !open && setReviewTarget(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">
+            <DialogTitle className="text-xl font-black text-slate-900">
               {reviewDecision === "verified"
                 ? "Approve Producer Verification"
                 : reviewDecision === "needs_information"
                 ? "Request Further Verification Evidence"
                 : "Reject Verification Application"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogDescription className="text-sm font-semibold text-slate-600 mt-1">
               {reviewTarget?.legalName || reviewTarget?.sellerName} (Case #{reviewTarget?.id.slice(0, 8)})
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 py-2 text-xs">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Audit Justification / Decision Reason *</Label>
+          <div className="space-y-4 py-3 text-sm">
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Audit Justification / Decision Reason *</Label>
               <textarea
-                rows={3}
+                rows={4}
                 placeholder="Explain the review decision (minimum 3 characters, permanently recorded in audit ledger)..."
                 value={reviewReason}
                 onChange={(e) => setReviewReason(e.target.value)}
-                className="w-full rounded-md border border-slate-300 p-2 text-xs focus:border-[#078c52] focus:outline-none"
+                className="w-full rounded-xl border border-slate-300 p-3 text-sm sm:text-base font-medium focus:border-[#078c52] focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all"
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setReviewTarget(null)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2.5 pt-2">
+            <Button variant="outline" onClick={() => setReviewTarget(null)} className="h-12 px-5 text-sm sm:text-base font-black rounded-xl cursor-pointer">
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={reviewReason.trim().length < 3 || reviewMutation.isPending}
               onClick={() => {
                 if (reviewTarget) {
@@ -963,13 +964,14 @@ export function AgriVerificationCentre({
                   });
                 }
               }}
-              className={
+              className={cn(
+                "h-12 px-6 text-sm sm:text-base font-black rounded-xl text-white shadow-xs cursor-pointer active:scale-95 transition-all",
                 reviewDecision === "verified"
-                  ? "bg-[#078c52] text-white hover:bg-[#067343]"
+                  ? "bg-[#078c52] hover:bg-[#067343]"
                   : reviewDecision === "needs_information"
-                  ? "bg-amber-600 text-white hover:bg-amber-700"
-                  : "bg-rose-600 text-white hover:bg-rose-700"
-              }
+                  ? "bg-amber-600 hover:bg-amber-700"
+                  : "bg-rose-600 hover:bg-rose-700"
+              )}
             >
               {reviewMutation.isPending
                 ? "Saving..."

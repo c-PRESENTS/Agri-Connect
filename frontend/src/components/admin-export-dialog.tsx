@@ -347,22 +347,22 @@ export function AdminExportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl rounded-2xl p-0 overflow-hidden border-slate-200 dark:border-border bg-white dark:bg-card shadow-2xl">
+      <DialogContent className="max-w-2xl rounded-2xl p-0 sm:p-0 gap-0 overflow-hidden border border-emerald-950/20 bg-white dark:bg-card shadow-2xl [&>button:last-child]:top-5 [&>button:last-child]:right-5 [&>button:last-child]:text-white [&>button:last-child]:opacity-90 [&>button:last-child]:hover:opacity-100 [&>button:last-child]:bg-white/15 [&>button:last-child]:hover:bg-white/25 [&>button:last-child]:border [&>button:last-child]:border-white/20 [&>button:last-child]:rounded-xl [&>button:last-child]:h-9 [&>button:last-child]:w-9 [&>button:last-child]:flex [&>button:last-child]:items-center [&>button:last-child]:justify-center [&>button:last-child]:transition-all [&>button:last-child]:cursor-pointer [&>button:last-child]:shadow-xs">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#042f28] via-[#084d41] to-[#0d604e] p-5 text-white">
+        <div className="bg-gradient-to-r from-[#064238] via-[#094d42] to-[#12584c] p-6 text-white pr-16">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="h-10 w-10 rounded-xl bg-lime-400/20 border border-lime-400/40 flex items-center justify-center text-lime-300 shadow-inner">
-                <Download className="h-5 w-5 stroke-[2.5]" />
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-lime-400/20 border border-lime-400/30 flex items-center justify-center text-lime-300 shadow-inner shrink-0">
+                <Download className="h-6 w-6 stroke-[2.5]" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-black tracking-tight text-white flex items-center gap-2">
+                <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
                   <span>Export Enterprise Datasets</span>
-                  <Badge className="bg-lime-400 text-emerald-950 font-black text-[10px] uppercase px-2 py-0">
+                  <Badge className="bg-lime-400 text-[#053f36] font-black text-xs uppercase px-2.5 py-0.5 rounded-full shadow-xs">
                     Live
                   </Badge>
                 </DialogTitle>
-                <DialogDescription className="text-xs text-emerald-100/80 mt-0.5">
+                <DialogDescription className="text-xs sm:text-sm text-emerald-100/90 font-medium mt-1">
                   Generate, preview, and download verified data records in CSV or JSON format.
                 </DialogDescription>
               </div>
@@ -371,57 +371,57 @@ export function AdminExportDialog({
         </div>
 
         {/* Format Selector Bar */}
-        <div className="px-5 py-3 bg-slate-50 dark:bg-muted/30 border-b border-slate-100 dark:border-border/60 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Format:</span>
-            <div className="flex items-center bg-slate-200/70 dark:bg-muted p-0.5 rounded-lg">
+        <div className="px-6 py-3.5 bg-slate-50 dark:bg-muted/30 border-b border-slate-200 dark:border-border/60 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-200">Format:</span>
+            <div className="flex items-center bg-slate-200/80 dark:bg-muted p-1 rounded-xl gap-1">
               <button
                 type="button"
                 onClick={() => setSelectedFormat("csv")}
-                className={`px-3 py-1 rounded-md text-xs font-black transition-all flex items-center gap-1.5 ${
+                className={`h-8.5 px-3.5 rounded-lg text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 cursor-pointer ${
                   selectedFormat === "csv"
-                    ? "bg-white dark:bg-card text-emerald-800 dark:text-emerald-400 shadow-2xs"
+                    ? "bg-white dark:bg-card text-emerald-800 dark:text-emerald-400 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 }`}
               >
-                <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
                 <span>CSV (Excel)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedFormat("json")}
-                className={`px-3 py-1 rounded-md text-xs font-black transition-all flex items-center gap-1.5 ${
+                className={`h-8.5 px-3.5 rounded-lg text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 cursor-pointer ${
                   selectedFormat === "json"
-                    ? "bg-white dark:bg-card text-emerald-800 dark:text-emerald-400 shadow-2xs"
+                    ? "bg-white dark:bg-card text-emerald-800 dark:text-emerald-400 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 }`}
               >
-                <FileCode className="h-3.5 w-3.5 text-cyan-600" />
+                <FileCode className="h-4 w-4 text-cyan-600" />
                 <span>JSON</span>
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
-            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-card px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-border shadow-2xs">
+            <Calendar className="h-4 w-4 text-emerald-600" />
             <span>Today: {today}</span>
           </div>
         </div>
 
         {/* Module Export Cards */}
-        <div className="p-5 space-y-3 max-h-[60vh] overflow-y-auto">
+        <div className="p-6 space-y-3.5 max-h-[60vh] overflow-y-auto">
           {/* 1. Products */}
-          <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-border/60 bg-white dark:bg-card hover:border-emerald-500/40 transition-colors shadow-2xs">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-700 dark:text-emerald-400 shrink-0">
-                <Package className="h-5 w-5" />
+          <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-slate-200/90 dark:border-border/60 bg-white dark:bg-card hover:border-emerald-500/50 hover:shadow-md transition-all shadow-xs">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="h-12 w-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/70 flex items-center justify-center shrink-0">
+                <Package className="h-6 w-6" />
               </div>
               <div className="min-w-0">
-                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <h4 className="font-black text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span>Products & Catalog</span>
-                  <Badge variant="outline" className="text-[10px] font-bold py-0">Catalog</Badge>
+                  <Badge variant="outline" className="text-xs font-black px-2.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">Catalog</Badge>
                 </h4>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
                   All active listings, categories, prices, units, stock quantities, and organic tags.
                 </p>
               </div>
@@ -431,29 +431,29 @@ export function AdminExportDialog({
               size="sm"
               disabled={loadingExport === "products"}
               onClick={() => handleExportProducts()}
-              className="h-8.5 px-3.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs shrink-0 gap-1.5 shadow-2xs"
+              className="h-10 px-4.5 rounded-xl bg-[#078c52] hover:bg-[#067343] text-white font-black text-xs sm:text-sm shrink-0 gap-2 shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               {loadingExport === "products" ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-4 w-4" />
               )}
               <span>Export {selectedFormat.toUpperCase()}</span>
             </Button>
           </div>
 
           {/* 2. Orders */}
-          <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-border/60 bg-white dark:bg-card hover:border-cyan-500/40 transition-colors shadow-2xs">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-cyan-50 dark:bg-cyan-950/50 flex items-center justify-center text-cyan-700 dark:text-cyan-400 shrink-0">
-                <ShoppingBag className="h-5 w-5" />
+          <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-slate-200/90 dark:border-border/60 bg-white dark:bg-card hover:border-cyan-500/50 hover:shadow-md transition-all shadow-xs">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="h-12 w-12 rounded-xl bg-cyan-50 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-400 border border-cyan-200/70 flex items-center justify-center shrink-0">
+                <ShoppingBag className="h-6 w-6" />
               </div>
               <div className="min-w-0">
-                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <h4 className="font-black text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span>Orders & Transactions</span>
-                  <Badge variant="outline" className="text-[10px] font-bold py-0">Commerce</Badge>
+                  <Badge variant="outline" className="text-xs font-black px-2.5 py-0.5 rounded-full border bg-cyan-50 text-cyan-800 border-cyan-200">Commerce</Badge>
                 </h4>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
                   Full buyer orders, shipment states, fulfillment tracking, totals, and escrow logs.
                 </p>
               </div>
@@ -463,29 +463,29 @@ export function AdminExportDialog({
               size="sm"
               disabled={loadingExport === "orders"}
               onClick={() => handleExportOrders()}
-              className="h-8.5 px-3.5 rounded-xl bg-cyan-800 hover:bg-cyan-900 text-white font-bold text-xs shrink-0 gap-1.5 shadow-2xs"
+              className="h-10 px-4.5 rounded-xl bg-cyan-800 hover:bg-cyan-900 text-white font-black text-xs sm:text-sm shrink-0 gap-2 shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               {loadingExport === "orders" ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-4 w-4" />
               )}
               <span>Export {selectedFormat.toUpperCase()}</span>
             </Button>
           </div>
 
           {/* 3. Farmers */}
-          <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-border/60 bg-white dark:bg-card hover:border-amber-500/40 transition-colors shadow-2xs">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
-                <Users className="h-5 w-5" />
+          <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-slate-200/90 dark:border-border/60 bg-white dark:bg-card hover:border-amber-500/50 hover:shadow-md transition-all shadow-xs">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="h-12 w-12 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/70 flex items-center justify-center shrink-0">
+                <Users className="h-6 w-6" />
               </div>
               <div className="min-w-0">
-                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <h4 className="font-black text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span>Farmers & Producers</span>
-                  <Badge variant="outline" className="text-[10px] font-bold py-0">Partners</Badge>
+                  <Badge variant="outline" className="text-xs font-black px-2.5 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-200">Partners</Badge>
                 </h4>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
                   Verified farmer registries, farm locations, contacts, and verification tiers.
                 </p>
               </div>
@@ -495,29 +495,29 @@ export function AdminExportDialog({
               size="sm"
               disabled={loadingExport === "farmers"}
               onClick={() => handleExportFarmers()}
-              className="h-8.5 px-3.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shrink-0 gap-1.5 shadow-2xs"
+              className="h-10 px-4.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-black text-xs sm:text-sm shrink-0 gap-2 shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               {loadingExport === "farmers" ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-4 w-4" />
               )}
               <span>Export {selectedFormat.toUpperCase()}</span>
             </Button>
           </div>
 
           {/* 4. Financials */}
-          <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-border/60 bg-white dark:bg-card hover:border-emerald-500/40 transition-colors shadow-2xs">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-700 dark:text-emerald-400 shrink-0">
-                <TrendingUp className="h-5 w-5" />
+          <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-slate-200/90 dark:border-border/60 bg-white dark:bg-card hover:border-emerald-500/50 hover:shadow-md transition-all shadow-xs">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="h-12 w-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/70 flex items-center justify-center shrink-0">
+                <TrendingUp className="h-6 w-6" />
               </div>
               <div className="min-w-0">
-                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <h4 className="font-black text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span>Revenue & Platform Metrics</span>
-                  <Badge variant="outline" className="text-[10px] font-bold py-0">Finance</Badge>
+                  <Badge variant="outline" className="text-xs font-black px-2.5 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">Finance</Badge>
                 </h4>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
                   Gross Merchandise Volume (GMV), platform fee metrics, escrow deposits, and trade volumes.
                 </p>
               </div>
@@ -527,12 +527,12 @@ export function AdminExportDialog({
               size="sm"
               disabled={loadingExport === "financials"}
               onClick={() => handleExportFinancials()}
-              className="h-8.5 px-3.5 rounded-xl bg-[#0d604e] hover:bg-[#084c3e] text-white font-bold text-xs shrink-0 gap-1.5 shadow-2xs"
+              className="h-10 px-4.5 rounded-xl bg-[#0d604e] hover:bg-[#084c3e] text-white font-black text-xs sm:text-sm shrink-0 gap-2 shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               {loadingExport === "financials" ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-4 w-4" />
               )}
               <span>Export {selectedFormat.toUpperCase()}</span>
             </Button>
@@ -540,7 +540,7 @@ export function AdminExportDialog({
         </div>
 
         {/* Footer with Full Backup and Data Centre Link */}
-        <div className="p-4 bg-slate-50 dark:bg-muted/20 border-t border-slate-200/80 dark:border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-5 bg-slate-50 dark:bg-muted/20 border-t border-slate-200 dark:border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <Button
             variant="outline"
             size="sm"
@@ -548,9 +548,9 @@ export function AdminExportDialog({
               onOpenChange(false);
               onNavigateToDataCentre?.();
             }}
-            className="h-8.5 px-3 rounded-xl border-slate-200 text-xs font-bold text-slate-700 dark:text-slate-300 gap-1.5 shadow-2xs"
+            className="h-11 px-5 rounded-xl border border-slate-200 bg-white hover:border-emerald-500 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-xs sm:text-sm font-black gap-2 shadow-xs active:scale-95 transition-all cursor-pointer"
           >
-            <Database className="h-3.5 w-3.5 text-emerald-600" />
+            <Database className="h-4.5 w-4.5 text-emerald-700" />
             <span>Open Advanced Data Centre</span>
           </Button>
 
@@ -558,12 +558,12 @@ export function AdminExportDialog({
             size="sm"
             disabled={loadingExport === "full_backup"}
             onClick={handleExportFullBackup}
-            className="h-8.5 px-4 rounded-xl bg-gradient-to-r from-[#042f28] to-[#0d604e] hover:from-[#03241f] hover:to-[#09483b] text-white font-black text-xs gap-1.5 shadow-sm"
+            className="h-11 px-5 rounded-xl bg-gradient-to-r from-[#064238] to-[#0d604e] hover:from-[#05352c] hover:to-[#09483b] text-white font-black text-xs sm:text-sm gap-2 shadow-md active:scale-95 transition-all cursor-pointer"
           >
             {loadingExport === "full_backup" ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-4.5 w-4.5 animate-spin" />
             ) : (
-              <ShieldCheck className="h-3.5 w-3.5 text-lime-400" />
+              <ShieldCheck className="h-4.5 w-4.5 text-lime-400" />
             )}
             <span>Download Complete System Backup (JSON)</span>
           </Button>

@@ -837,30 +837,30 @@ export function AgriLogisticsPartnersManagement({
 
       {/* Right-Side Partner Detail Drawer */}
       <Sheet open={Boolean(selectedPartnerId)} onOpenChange={(open) => !open && setSelectedPartnerId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
+        <SheetContent side="right" hideCloseButton className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50 border-l border-slate-200 shadow-2xl">
           {isLoadingDetail ? (
             <div className="flex h-full items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+              <RefreshCw className="h-8 w-8 animate-spin text-emerald-600" />
             </div>
           ) : partnerDetail ? (
             <div className="flex flex-col min-h-full">
               {/* Drawer Header */}
-              <div className="bg-[#053f36] p-6 text-white">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-400 font-bold text-[#053f36]">
+              <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-gradient-to-br from-lime-300 to-lime-400 font-bold text-[#053f36] shadow-md shrink-0 ring-4 ring-lime-400/20">
                       <Truck className="h-6 w-6" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-black">{partnerDetail.name}</h2>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-white/60">ID: {partnerDetail.id}</span>
+                    <div className="min-w-0">
+                      <h2 className="text-xl sm:text-2xl font-black text-white leading-tight truncate">{partnerDetail.name}</h2>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-white/90 bg-black/25 px-2.5 py-1 rounded-lg border border-white/10">ID: {partnerDetail.id}</span>
                         <Badge
                           variant="outline"
                           className={
                             partnerDetail.status === "active"
-                              ? "border-emerald-400/30 bg-emerald-500/20 text-emerald-200"
-                              : "border-rose-400/30 bg-rose-500/20 text-rose-200"
+                              ? "border-emerald-400/40 bg-emerald-500/25 text-emerald-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg"
+                              : "border-rose-400/40 bg-rose-500/25 text-rose-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg"
                           }
                         >
                           {partnerDetail.status}
@@ -870,31 +870,32 @@ export function AgriLogisticsPartnersManagement({
                   </div>
                   <button
                     onClick={() => setSelectedPartnerId(null)}
-                    className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                    aria-label="Close dossier"
+                    className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
                 {/* 4 Stat Boxes */}
-                <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Rating</p>
-                    <p className="text-base font-black text-lime-300">
+                <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Rating</p>
+                    <p className="text-base sm:text-lg font-black text-lime-300 mt-0.5">
                       {typeof partnerDetail.rating === "number" ? `${partnerDetail.rating.toFixed(1)} ★` : "—"}
                     </p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Carrier Hub</p>
-                    <p className="text-xs font-bold text-white truncate">{partnerDetail.location || "—"}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Carrier Hub</p>
+                    <p className="text-sm sm:text-base font-black text-white truncate mt-0.5">{partnerDetail.location || "—"}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Account Verified</p>
-                    <p className="text-xs font-bold text-white">{partnerDetail.isVerified ? "Yes" : "No"}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Account Verified</p>
+                    <p className="text-sm sm:text-base font-black text-white mt-0.5">{partnerDetail.isVerified ? "Yes" : "No"}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Member Since</p>
-                    <p className="text-[11px] font-medium text-white/80">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Member Since</p>
+                    <p className="text-sm sm:text-base font-bold text-white/90 truncate mt-0.5">
                       {partnerDetail.createdAt ? new Date(partnerDetail.createdAt).toLocaleDateString("en-GB") : "—"}
                     </p>
                   </div>
@@ -902,83 +903,82 @@ export function AgriLogisticsPartnersManagement({
               </div>
 
               {/* Drawer Tabs */}
-              <Tabs defaultValue="specs" className="flex-1 p-6">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-200">
-                  <TabsTrigger value="specs" className="text-xs font-bold">
+              <Tabs defaultValue="specs" className="flex-1 p-6 sm:p-7">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-200 h-12 p-1.5 rounded-xl">
+                  <TabsTrigger value="specs" className="text-sm sm:text-base font-black rounded-lg">
                     Fleet & Depot Specs
                   </TabsTrigger>
-                  <TabsTrigger value="activity" className="text-xs font-bold">
+                  <TabsTrigger value="activity" className="text-sm sm:text-base font-black rounded-lg">
                     Activity & Audit
                   </TabsTrigger>
                 </TabsList>
 
                 {/* Specs Tab */}
-                <TabsContent value="specs" className="mt-4 space-y-4">
-                  <Card className="border-slate-200">
-                    <CardContent className="p-4 space-y-3 text-xs">
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Official Dispatch Email</span>
-                        <span className="font-semibold text-slate-900">{partnerDetail.email}</span>
+                <TabsContent value="specs" className="mt-5 space-y-5">
+                  <Card className="border-slate-200 rounded-2xl shadow-xs">
+                    <CardContent className="p-5 sm:p-6 space-y-4 text-sm sm:text-base">
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Official Dispatch Email</span>
+                        <span className="font-mono font-bold text-slate-900 text-sm sm:text-base">{partnerDetail.email}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Contact Telephone</span>
-                        <span className="font-mono font-semibold text-slate-900">{partnerDetail.phone || "—"}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Contact Telephone</span>
+                        <span className="font-mono font-bold text-slate-900 text-sm sm:text-base">{partnerDetail.phone || "—"}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Depot Hub & Region</span>
-                        <span className="font-semibold text-slate-900 max-w-[220px] text-right">{partnerDetail.location || "—"}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Depot Hub & Region</span>
+                        <span className="font-bold text-slate-900 max-w-[240px] text-right text-sm sm:text-base">{partnerDetail.location || "—"}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Account Verification</span>
-                        <span className="font-bold text-slate-900">{partnerDetail.isVerified ? "Verified" : "Not verified"}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Account Verification</span>
+                        <span className="font-black text-emerald-800 text-sm sm:text-base">{partnerDetail.isVerified ? "Verified Partner" : "Not verified"}</span>
                       </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-slate-500">Operating Status</span>
-                        <span className="font-bold capitalize text-slate-900">{partnerDetail.status}</span>
+                      <div className="flex justify-between items-center py-1.5">
+                        <span className="text-slate-600 font-bold text-sm">Operating Status</span>
+                        <span className="font-black capitalize text-slate-900 text-sm sm:text-base">{partnerDetail.status}</span>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <Button
                       variant="outline"
-                      className="flex-1 h-9 text-xs"
+                      className="flex-1 h-12 sm:h-13 text-sm sm:text-base font-black rounded-xl cursor-pointer active:scale-[0.98] transition-all"
                       onClick={() => {
                         const target = partners.find((p) => p.id === partnerDetail.id);
                         if (target) setEditPartner(target);
                       }}
                     >
-                      <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit Record
+                      <Pencil className="mr-2 !h-5 !w-5" /> Edit Record
                     </Button>
                     <Button
-                      variant="outline"
-                      className="flex-1 h-9 text-xs"
+                      className="flex-1 h-12 sm:h-13 text-sm sm:text-base font-black bg-[#078c52] text-white hover:bg-[#067343] rounded-xl shadow-xs cursor-pointer active:scale-[0.98] transition-all"
                       onClick={() => {
                         const target = partners.find((p) => p.id === partnerDetail.id);
                         if (target) setMessageTarget(target);
                       }}
                     >
-                      <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Dispatch Notice
+                      <MessageSquare className="mr-2 !h-5 !w-5" /> Dispatch Notice
                     </Button>
                   </div>
                 </TabsContent>
 
                 {/* Activity Tab */}
-                <TabsContent value="activity" className="mt-4 space-y-2">
+                <TabsContent value="activity" className="mt-5 space-y-3">
                   {partnerDetail.activity?.length === 0 ? (
                     <div className="p-8 text-center text-slate-400">
-                      <Clock className="mx-auto mb-2 h-7 w-7 text-slate-300" />
-                      <p className="font-semibold">No recorded dispatch activity</p>
+                      <Clock className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                      <p className="font-bold text-slate-700 text-base">No recorded dispatch activity</p>
                     </div>
                   ) : (
                     partnerDetail.activity.map((item, idx) => (
-                      <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 text-xs">
+                      <div key={idx} className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800">{item.action}</span>
-                          <span className="text-[10px] text-slate-400">{timeAgo(item.occurredAt)}</span>
+                          <span className="font-black text-slate-900 text-sm sm:text-base">{item.action}</span>
+                          <span className="text-xs font-bold text-slate-400">{timeAgo(item.occurredAt)}</span>
                         </div>
-                        <p className="mt-1 text-[11px] text-slate-600">
-                          Target: {item.targetType} · Outcome: {item.outcome}
+                        <p className="text-xs sm:text-sm text-slate-700 font-medium">
+                          Target: <strong className="font-bold text-slate-900">{item.targetType}</strong> · Outcome: {item.outcome}
                         </p>
                       </div>
                     ))
@@ -992,63 +992,62 @@ export function AgriLogisticsPartnersManagement({
 
       {/* Onboard Partner Modal */}
       <Dialog open={onboardOpen} onOpenChange={setOnboardOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Onboard Logistics Fleet Partner</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl font-black text-slate-900">Onboard Logistics Fleet Partner</DialogTitle>
+            <DialogDescription className="text-sm font-semibold text-slate-600 mt-1">
               Register a freight carrier or rural cold-chain transport fleet.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3.5 py-2 text-xs">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Company / Carrier Name *</Label>
+          <div className="space-y-4 py-3 text-sm">
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Company / Carrier Name *</Label>
               <Input
                 placeholder="Enter the carrier name"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm sm:text-base rounded-xl"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Dispatch Email Address *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Dispatch Email Address *</Label>
               <Input
                 type="email"
                 placeholder="dispatch@carrier.co.uk"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm sm:text-base rounded-xl"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Telephone / 24/7 Ops Desk</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Telephone / 24/7 Ops Desk</Label>
               <Input
                 placeholder="Enter an operations phone number"
                 value={newPhone}
                 onChange={(e) => setNewPhone(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm sm:text-base rounded-xl"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Depot Hub & Primary Operating Region</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Depot Hub & Primary Operating Region</Label>
               <Input
                 placeholder="Enter the depot or operating region"
                 value={newLocation}
                 onChange={(e) => setNewLocation(e.target.value)}
-                className="h-9 text-xs"
+                className="h-11 sm:h-12 text-sm sm:text-base rounded-xl"
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setOnboardOpen(false)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2.5 pt-2">
+            <Button variant="outline" onClick={() => setOnboardOpen(false)} className="h-12 px-5 text-sm sm:text-base font-black rounded-xl cursor-pointer">
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={!newName.trim() || !newEmail.trim() || onboardMutation.isPending}
               onClick={() =>
                 onboardMutation.mutate({
@@ -1058,7 +1057,7 @@ export function AgriLogisticsPartnersManagement({
                   location: newLocation || undefined,
                 })
               }
-              className="bg-[#078c52] text-white hover:bg-[#067343]"
+              className="h-12 px-6 text-sm sm:text-base font-black bg-[#078c52] text-white hover:bg-[#067343] rounded-xl active:scale-95 transition-all shadow-xs cursor-pointer"
             >
               {onboardMutation.isPending ? "Enrolling..." : "Register Carrier"}
             </Button>
@@ -1068,53 +1067,53 @@ export function AgriLogisticsPartnersManagement({
 
       {/* Edit Partner Modal */}
       <Dialog open={Boolean(editPartner)} onOpenChange={(open) => !open && setEditPartner(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Edit Logistics Partner</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl font-black text-slate-900">Edit Logistics Partner</DialogTitle>
+            <DialogDescription className="text-sm font-semibold text-slate-600 mt-1">
               Update carrier profile and depot hub for {editPartner?.name}.
             </DialogDescription>
           </DialogHeader>
 
           {editPartner && (
-            <div className="space-y-3.5 py-2 text-xs">
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Carrier / Company Name</Label>
+            <div className="space-y-4 py-3 text-sm">
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Carrier / Company Name</Label>
                 <Input
                   value={editPartner.name}
                   onChange={(e) => setEditPartner({ ...editPartner, name: e.target.value })}
-                  className="h-9 text-xs"
+                  className="h-11 sm:h-12 text-sm sm:text-base rounded-xl"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Dispatch Phone</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Dispatch Phone</Label>
                 <Input
                   value={editPartner.phone || ""}
                   onChange={(e) => setEditPartner({ ...editPartner, phone: e.target.value })}
-                  className="h-9 text-xs"
+                  className="h-11 sm:h-12 text-sm sm:text-base rounded-xl"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Depot Hub / Region</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Depot Hub / Region</Label>
                 <Input
                   value={editPartner.location || ""}
                   onChange={(e) => setEditPartner({ ...editPartner, location: e.target.value })}
-                  className="h-9 text-xs"
+                  className="h-11 sm:h-12 text-sm sm:text-base rounded-xl"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Account Operating Status</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Account Operating Status</Label>
                 <Select
                   value={editPartner.status}
                   onValueChange={(val) => setEditPartner({ ...editPartner, status: val })}
                 >
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-11 sm:h-12 text-sm sm:text-base rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="active">Active (Available)</SelectItem>
                     <SelectItem value="suspended">Suspended (Off-road)</SelectItem>
                   </SelectContent>
@@ -1123,12 +1122,11 @@ export function AgriLogisticsPartnersManagement({
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setEditPartner(null)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2.5 pt-2">
+            <Button variant="outline" onClick={() => setEditPartner(null)} className="h-12 px-5 text-sm sm:text-base font-black rounded-xl cursor-pointer">
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={editMutation.isPending || !editPartner}
               onClick={() => {
                 if (editPartner) {
@@ -1143,7 +1141,7 @@ export function AgriLogisticsPartnersManagement({
                   });
                 }
               }}
-              className="bg-[#078c52] text-white hover:bg-[#067343]"
+              className="h-12 px-6 text-sm sm:text-base font-black bg-[#078c52] text-white hover:bg-[#067343] rounded-xl active:scale-95 transition-all shadow-xs cursor-pointer"
             >
               {editMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>

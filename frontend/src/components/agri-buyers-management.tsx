@@ -875,33 +875,33 @@ export function AgriBuyersManagement({
 
       {/* Right-Side Buyer Detail Drawer */}
       <Sheet open={Boolean(selectedBuyerId)} onOpenChange={(open) => !open && setSelectedBuyerId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
+        <SheetContent side="right" hideCloseButton className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50 border-l border-slate-200 shadow-2xl">
           {isLoadingDetail ? (
             <div className="flex h-full items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+              <RefreshCw className="h-8 w-8 animate-spin text-emerald-600" />
             </div>
           ) : buyerDetail ? (
             <div className="flex flex-col min-h-full">
               {/* Drawer Header */}
-              <div className="bg-[#053f36] p-6 text-white">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border-2 border-white/20">
+              <div className="bg-[#053f36] p-6 sm:p-7 text-white shadow-md">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <Avatar className="h-14 w-14 sm:h-16 sm:w-16 border-2 border-white/20 shadow-md shrink-0">
                       {buyerDetail.avatar && <AvatarImage src={buyerDetail.avatar} alt={buyerDetail.name} />}
-                      <AvatarFallback className="bg-lime-400 font-bold text-[#053f36]">
+                      <AvatarFallback className="bg-lime-400 font-black text-[#053f36] text-lg">
                         {buyerDetail.name.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <h2 className="text-lg font-black">{buyerDetail.name}</h2>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-white/60">ID: {buyerDetail.id}</span>
+                    <div className="min-w-0">
+                      <h2 className="text-xl sm:text-2xl font-black text-white leading-tight truncate">{buyerDetail.name}</h2>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-white/90 bg-black/25 px-2.5 py-1 rounded-lg border border-white/10">ID: {buyerDetail.id}</span>
                         <Badge
                           variant="outline"
                           className={
                             buyerDetail.status === "active"
-                              ? "border-emerald-400/30 bg-emerald-500/20 text-emerald-200"
-                              : "border-rose-400/30 bg-rose-500/20 text-rose-200"
+                              ? "border-emerald-400/40 bg-emerald-500/25 text-emerald-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg"
+                              : "border-rose-400/40 bg-rose-500/25 text-rose-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg"
                           }
                         >
                           {buyerDetail.status}
@@ -911,113 +911,113 @@ export function AgriBuyersManagement({
                   </div>
                   <button
                     onClick={() => setSelectedBuyerId(null)}
-                    className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                    aria-label="Close dossier"
+                    className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 active:scale-95"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
                 {/* 4 Stat Boxes */}
-                <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Orders</p>
-                    <p className="text-base font-black text-white">{buyerDetail.orders}</p>
+                <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Orders</p>
+                    <p className="text-base sm:text-lg font-black text-white mt-0.5">{buyerDetail.orders}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Total Spend</p>
-                    <p className="text-base font-black text-lime-300">{formatGbp(buyerDetail.totalSpend)}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Total Spend</p>
+                    <p className="text-base sm:text-lg font-black text-lime-300 mt-0.5">{formatGbp(buyerDetail.totalSpend)}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Location</p>
-                    <p className="text-xs font-bold text-white truncate">{buyerDetail.location}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Location</p>
+                    <p className="text-sm sm:text-base font-black text-white truncate mt-0.5">{buyerDetail.location}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Joined</p>
-                    <p className="text-[11px] font-medium text-white/80">{timeAgo(buyerDetail.registeredOn)}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 shadow-xs">
+                    <p className="text-xs uppercase font-black tracking-wider text-emerald-200">Joined</p>
+                    <p className="text-sm sm:text-base font-bold text-white/90 truncate mt-0.5">{timeAgo(buyerDetail.registeredOn)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Drawer Tabs */}
-              <Tabs defaultValue="overview" className="flex-1 p-6">
-                <TabsList className="grid w-full grid-cols-3 bg-slate-200">
-                  <TabsTrigger value="overview" className="text-xs font-bold">
+              <Tabs defaultValue="overview" className="flex-1 p-6 sm:p-7">
+                <TabsList className="grid w-full grid-cols-3 bg-slate-200 h-12 p-1.5 rounded-xl">
+                  <TabsTrigger value="overview" className="text-xs sm:text-sm font-black rounded-lg">
                     Overview
                   </TabsTrigger>
-                  <TabsTrigger value="orders" className="text-xs font-bold">
+                  <TabsTrigger value="orders" className="text-xs sm:text-sm font-black rounded-lg">
                     Orders ({buyerDetail.orderList?.length ?? 0})
                   </TabsTrigger>
-                  <TabsTrigger value="activity" className="text-xs font-bold">
+                  <TabsTrigger value="activity" className="text-xs sm:text-sm font-black rounded-lg">
                     Activity
                   </TabsTrigger>
                 </TabsList>
 
                 {/* Overview Tab */}
-                <TabsContent value="overview" className="mt-4 space-y-4">
-                  <Card className="border-slate-200">
-                    <CardContent className="p-4 space-y-3 text-xs">
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Email Address</span>
-                        <span className="font-semibold text-slate-900">{buyerDetail.email || "—"}</span>
+                <TabsContent value="overview" className="mt-5 space-y-5">
+                  <Card className="border-slate-200 rounded-2xl shadow-xs">
+                    <CardContent className="p-5 sm:p-6 space-y-4 text-sm sm:text-base">
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Email Address</span>
+                        <span className="font-mono font-bold text-slate-900 text-sm sm:text-base">{buyerDetail.email || "—"}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Phone Number</span>
-                        <span className="font-semibold text-slate-900">{buyerDetail.phone || "—"}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Phone Number</span>
+                        <span className="font-mono font-bold text-slate-900 text-sm sm:text-base">{buyerDetail.phone || "—"}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Delivery Location</span>
-                        <span className="font-semibold text-slate-900">{buyerDetail.location || "London"}</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                        <span className="text-slate-600 font-bold text-sm">Delivery Location</span>
+                        <span className="font-bold text-slate-900 text-sm sm:text-base">{buyerDetail.location || "London"}</span>
                       </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-slate-500">Account Status</span>
-                        <span className="font-bold capitalize text-slate-900">{buyerDetail.status}</span>
+                      <div className="flex justify-between items-center py-1.5">
+                        <span className="text-slate-600 font-bold text-sm">Account Status</span>
+                        <span className="font-black capitalize text-emerald-800 text-sm sm:text-base">{buyerDetail.status}</span>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <Button
                       variant="outline"
-                      className="flex-1 h-9 text-xs"
+                      className="flex-1 h-12 sm:h-13 text-sm sm:text-base font-black rounded-xl cursor-pointer active:scale-[0.98] transition-all"
                       onClick={() => {
                         const target = buyers.find((b) => b.id === buyerDetail.id);
                         if (target) setEditBuyer(target);
                       }}
                     >
-                      <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit Profile
+                      <Pencil className="mr-2 !h-5 !w-5" /> Edit Profile
                     </Button>
                     <Button
-                      variant="outline"
-                      className="flex-1 h-9 text-xs"
+                      className="flex-1 h-12 sm:h-13 text-sm sm:text-base font-black bg-[#078c52] text-white hover:bg-[#067343] rounded-xl shadow-xs cursor-pointer active:scale-[0.98] transition-all"
                       onClick={() => {
                         const target = buyers.find((b) => b.id === buyerDetail.id);
                         if (target) setMessageTarget(target);
                       }}
                     >
-                      <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message
+                      <MessageSquare className="mr-2 !h-5 !w-5" /> Message Buyer
                     </Button>
                   </div>
                 </TabsContent>
 
                 {/* Orders Tab */}
-                <TabsContent value="orders" className="mt-4 space-y-2">
+                <TabsContent value="orders" className="mt-5 space-y-3">
                   {buyerDetail.orderList?.length === 0 ? (
                     <div className="p-8 text-center text-slate-400">
-                      <ShoppingBag className="mx-auto mb-2 h-7 w-7 text-slate-300" />
-                      <p className="font-semibold">No orders yet</p>
-                      <p className="text-xs">This buyer has not placed any marketplace orders.</p>
+                      <ShoppingBag className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                      <p className="font-bold text-slate-700 text-base">No orders yet</p>
+                      <p className="text-xs sm:text-sm text-slate-400 mt-1">This buyer has not placed any marketplace orders.</p>
                     </div>
                   ) : (
                     buyerDetail.orderList.map((order) => (
-                      <Card key={order.id} className="border-slate-200">
-                        <CardContent className="p-3 flex items-center justify-between text-xs">
+                      <Card key={order.id} className="border-slate-200 rounded-xl shadow-2xs">
+                        <CardContent className="p-4 flex items-center justify-between">
                           <div>
-                            <p className="font-bold text-slate-900">{order.orderNumber}</p>
-                            <p className="text-[10px] text-slate-400">{timeAgo(order.createdAt)}</p>
+                            <p className="font-black text-slate-900 text-sm sm:text-base">{order.orderNumber}</p>
+                            <p className="text-xs font-semibold text-slate-400 mt-0.5">{timeAgo(order.createdAt)}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-mono font-bold text-slate-900">{formatGbp(order.total)}</p>
-                            <Badge variant="outline" className="text-[9px] capitalize">
+                            <p className="font-mono font-black text-slate-900 text-base sm:text-lg">{formatGbp(order.total)}</p>
+                            <Badge variant="outline" className="text-xs font-bold capitalize mt-0.5">
                               {order.status}
                             </Badge>
                           </div>
@@ -1028,21 +1028,21 @@ export function AgriBuyersManagement({
                 </TabsContent>
 
                 {/* Activity Tab */}
-                <TabsContent value="activity" className="mt-4 space-y-2">
+                <TabsContent value="activity" className="mt-5 space-y-3">
                   {buyerDetail.activity?.length === 0 ? (
                     <div className="p-8 text-center text-slate-400">
-                      <Clock className="mx-auto mb-2 h-7 w-7 text-slate-300" />
-                      <p className="font-semibold">No recorded activity</p>
+                      <Clock className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                      <p className="font-bold text-slate-700 text-base">No recorded activity</p>
                     </div>
                   ) : (
                     buyerDetail.activity.map((item, idx) => (
-                      <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 text-xs">
+                      <div key={idx} className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800">{item.action}</span>
-                          <span className="text-[10px] text-slate-400">{timeAgo(item.occurredAt)}</span>
+                          <span className="font-black text-slate-900 text-sm sm:text-base">{item.action}</span>
+                          <span className="text-xs font-bold text-slate-400">{timeAgo(item.occurredAt)}</span>
                         </div>
-                        <p className="mt-1 text-[11px] text-slate-600">
-                          Target: {item.targetType} · Outcome: {item.outcome}
+                        <p className="text-xs sm:text-sm text-slate-700 font-medium">
+                          Target: <strong className="font-bold text-slate-900">{item.targetType}</strong> · Outcome: {item.outcome}
                         </p>
                       </div>
                     ))

@@ -34,6 +34,8 @@ import {
   listOrganisationApplications,
   mutateControlCentreResource,
   requestAdminBackup,
+  verifySnapshotIntegrity,
+  unverifySnapshotIntegrity,
   reviewOrganisationApplication,
   setOrganisationOperationalSetting,
   updateControlCentreFarmer,
@@ -51,6 +53,10 @@ import {
   getControlCentreOrderDetail,
   updateControlCentreOrderStatus,
   globalSearchControlCentre,
+  getControlCentreOpportunityDetail,
+  createControlCentreOpportunityTarget,
+  scanControlCentreOpportunities,
+  releaseEscrowAllocations,
 } from "../../organisations/control-centre-repository";
 import {
   acceptMarketplaceOpportunity,
@@ -71,9 +77,10 @@ const farmerQuerySchema = z.object({
   registeredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 const overviewQuerySchema = z.object({
-  days: z.coerce.number().int().refine((value) => [7, 30, 90].includes(value), "Reporting window must be 7, 30, or 90 days").default(30),
+  days: z.coerce.number().int().refine((value) => [7, 30, 90, 180, 365].includes(value), "Reporting window must be 7, 30, 90, 180, or 365 days").default(30),
 });
 const categoryExplorerQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(100000).default(1),
   category: idSchema.optional(),
   subCategory: idSchema.optional(),
   variety: z.string().trim().min(1).max(160).optional(),
@@ -605,6 +612,53 @@ export function registerOrganisationControlCentreRoutes(app: Express) {
     } catch (error) { return sendError(error, res); }
   });
 
+  app.get("/api/admin/resources/opportunities/:id/detail", isAuthenticated, requireAdminPermission("opportunities.view"), requirePlatformSuperAdmin, async (req, res) => {
+    try {
+      const id = idSchema.parse(req.params.id);
+      const detail = await getControlCentreOpportunityDetail(id);
+      if (!detail) return res.status(404).json({ error: "Opportunity not found", code: "OPPORTUNITY_NOT_FOUND" });
+      return res.json(detail);
+    } catch (error) { return sendError(error, res); }
+  });
+
+  app.post("/api/admin/resources/opportunities/scan", isAuthenticated, requireAdminPermission("opportunities.manage"), requirePlatformSuperAdmin, async (req, res) => {
+    try {
+      const result = await scanControlCentreOpportunities();
+      await recordAdminAuditEvent({
+        organisationId: req.adminAccess?.organisation?.id,
+        actorUserId: req.session.userId,
+        membershipId: req.adminAccess?.membership?.id,
+        action: "admin.regional_opportunities_scanned",
+        permissionCode: "opportunities.manage",
+        targetType: "regional_product_opportunities",
+        targetId: "scan",
+        metadata: result,
+      });
+      return res.json({ success: true, result });
+    } catch (error) { return sendError(error, res); }
+  });
+
+  app.post("/api/admin/resources/opportunities/target", isAuthenticated, requireAdminPermission("opportunities.manage"), requirePlatformSuperAdmin, async (req, res) => {
+    try {
+      const targetInputSchema = z.object({
+        regionId: z.string().min(1).max(120),
+        productName: z.string().min(2).max(200),
+        categoryId: z.string().min(2).max(120),
+        subcategoryId: z.string().min(2).max(120).optional().default("general"),
+        minimumActiveListings: z.coerce.number().int().min(1).max(50).default(2),
+      });
+      const input = targetInputSchema.parse(req.body);
+      const target = await createControlCentreOpportunityTarget({
+        ...input,
+        actorUserId: req.session.userId!,
+        actorOrganisationId: req.adminAccess!.organisation!.id,
+        membershipId: req.adminAccess?.membership?.id ?? null,
+        requestId: req.get("x-request-id") ?? null,
+      });
+      return res.json({ target });
+    } catch (error) { return sendError(error, res); }
+  });
+
   app.put("/api/admin/global-operations/settings", isAuthenticated, requireAdminPermission("settings.manage"), requirePlatformSuperAdmin, async (req, res) => {
     try {
       const input = organisationOperationalSettingSchema.parse(req.body);
@@ -630,6 +684,13 @@ export function registerOrganisationControlCentreRoutes(app: Express) {
     } catch (error) { return sendError(error, res); }
   });
 
+  app.post("/api/admin/revenue/escrow/release", isAuthenticated, requireAdminPermission("orders.manage"), requirePlatformSuperAdmin, async (req, res) => {
+    try {
+      const result = await releaseEscrowAllocations(req.body || {});
+      return res.json(result);
+    } catch (error) { return sendError(error, res); }
+  });
+
   app.get("/api/admin/data-requests", isAuthenticated, requireAdminPermission("data.export"), requirePlatformSuperAdmin, async (_req, res) => {
     try { return res.json(await listDataRequests()); }
     catch (error) { return sendError(error, res); }
@@ -641,8 +702,43 @@ export function registerOrganisationControlCentreRoutes(app: Express) {
       return res.status(202).json({ request: await requestAdminBackup({
         organisationId: req.adminAccess!.organisation!.id, actorUserId: req.session.userId!,
         membershipId: req.adminAccess?.membership?.id ?? null, reason: input.reason,
+        scope: input.scope,
         requestId: req.get("x-request-id") ?? null,
-      }), execution: "external_backup_provider_required" });
+      }), execution: "completed" });
+    } catch (error) { return sendError(error, res); }
+  });
+
+  app.post("/api/admin/data/verify-snapshot", isAuthenticated, requireAdminPermission("data.export"), requirePlatformSuperAdmin, async (req, res) => {
+    try {
+      const verifySchema = z.object({
+        snapshotId: z.string().trim().min(1),
+      });
+      const input = verifySchema.parse(req.body);
+      const result = await verifySnapshotIntegrity({
+        snapshotId: input.snapshotId,
+        organisationId: req.adminAccess!.organisation!.id,
+        actorUserId: req.session.userId!,
+        membershipId: req.adminAccess?.membership?.id ?? null,
+        requestId: req.get("x-request-id") ?? null,
+      });
+      return res.json(result);
+    } catch (error) { return sendError(error, res); }
+  });
+
+  app.post("/api/admin/data/unverify-snapshot", isAuthenticated, requireAdminPermission("data.export"), requirePlatformSuperAdmin, async (req, res) => {
+    try {
+      const verifySchema = z.object({
+        snapshotId: z.string().trim().min(1),
+      });
+      const input = verifySchema.parse(req.body);
+      const result = await unverifySnapshotIntegrity({
+        snapshotId: input.snapshotId,
+        organisationId: req.adminAccess!.organisation!.id,
+        actorUserId: req.session.userId!,
+        membershipId: req.adminAccess?.membership?.id ?? null,
+        requestId: req.get("x-request-id") ?? null,
+      });
+      return res.json(result);
     } catch (error) { return sendError(error, res); }
   });
 

@@ -12,6 +12,7 @@ export type CategoryExplorerFilter = {
   maxPrice?: number;
   quantity?: "any" | "bulk" | "retail";
   quality?: "all" | "organic" | "premium";
+  page?: number;
 };
 
 type Row = Record<string, any>;
@@ -57,6 +58,7 @@ const visibleSellerSql = `
   )`;
 
 async function resolveRegion(region: string | undefined) {
+  if (region === "all") return null;
   if (!region) {
     const result = await pool.query(
       `SELECT r.id,r.name,r.type,r.country_code,r.latitude,r.longitude
@@ -143,6 +145,7 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
          LEFT JOIN commerce_products p
            ON p.moderation_status='approved'
           AND (p.category_id=c.canonical_id OR p.subcategory_id=c.canonical_id)
+          AND EXISTS (SELECT 1 FROM users u WHERE u.id=p.farmer_id AND ${visibleSellerSql})
         WHERE c.published_data IS NOT NULL AND c.archived_at IS NULL
         GROUP BY c.id
         ORDER BY c.parent_id NULLS FIRST,display_order,c.name`,
@@ -326,7 +329,6 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
   for (const product of allProducts) varietyCounts.set(product.variety, (varietyCounts.get(product.variety) ?? 0) + 1);
   const varieties = Array.from(varietyCounts.entries())
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, 12)
     .map(([name, count]) => ({ name, count }));
 
   if (filters.variety?.trim()) allProducts = allProducts.filter((product) => product.variety === filters.variety);
@@ -344,6 +346,9 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
     || b.rating - a.rating);
 
   const filteredProductCount = allProducts.length;
+  const pageSize = 60;
+  const pageCount = Math.max(1, Math.ceil(filteredProductCount / pageSize));
+  const page = Math.min(pageCount, Math.max(1, Math.floor(filters.page || 1)));
   const approvedSellerIds = new Set(allProducts.map((product) => product.sellerId));
   const coveredLocations = new Set(allProducts.map((product) => product.location).filter(Boolean));
 
@@ -542,7 +547,10 @@ export async function getCategoryExplorerData(filters: CategoryExplorerFilter, u
     categoriesNav,
     varieties,
     productTotal: filteredProductCount,
-    products: allProducts.slice(0, 60),
+    page,
+    pageSize,
+    pageCount,
+    products: allProducts.slice((page - 1) * pageSize, page * pageSize),
     verifiedOrganisations: organisationsResult.rows.map((row: Row) => ({
       id: String(row.id), name: String(row.name), location: text(row.location), role: String(row.type),
       verified: true, productCount: numeric(row.product_count),

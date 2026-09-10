@@ -168,7 +168,7 @@ export async function moderateProduct(
   actor: ProductModerationActor,
   input: {
     toStatus: ProductModerationStatus;
-    expectedUpdatedAt: string;
+    expectedUpdatedAt?: string;
     reason?: string;
     permission: AdminPermissionCode;
     action: string;
@@ -179,7 +179,7 @@ export async function moderateProduct(
   try {
     await client.query("BEGIN");
     const product = await lockProduct(client, productId);
-    if (!sameInstant(product.updated_at, input.expectedUpdatedAt)) throw new ProductModerationError(409, "PRODUCT_STALE_UPDATE", "The listing changed. Refresh before reviewing it.");
+    if (input.expectedUpdatedAt && !sameInstant(product.updated_at, input.expectedUpdatedAt)) throw new ProductModerationError(409, "PRODUCT_STALE_UPDATE", "The listing changed. Refresh before reviewing it.");
     if (!isProductModerationTransitionAllowed(product.moderation_status, input.toStatus)) {
       throw new ProductModerationError(422, "PRODUCT_TRANSITION_INVALID", `The transition from ${product.moderation_status} to ${input.toStatus} is not allowed.`);
     }
@@ -229,13 +229,13 @@ export async function moderateProduct(
 export async function setProductPromotion(
   productId: string,
   actor: ProductModerationActor,
-  input: { field: "is_featured" | "is_fresh_pick"; enabled: boolean; expectedUpdatedAt: string },
+  input: { field: "is_featured" | "is_fresh_pick"; enabled: boolean; expectedUpdatedAt?: string },
 ): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const product = await lockProduct(client, productId);
-    if (!sameInstant(product.updated_at, input.expectedUpdatedAt)) throw new ProductModerationError(409, "PRODUCT_STALE_UPDATE", "The listing changed. Refresh before updating promotion placement.");
+    if (input.expectedUpdatedAt && !sameInstant(product.updated_at, input.expectedUpdatedAt)) throw new ProductModerationError(409, "PRODUCT_STALE_UPDATE", "The listing changed. Refresh before updating promotion placement.");
     if (product.moderation_status !== "approved") throw new ProductModerationError(422, "PRODUCT_NOT_APPROVED", "Only approved products can be featured or marked as Fresh Picks.");
     const now = new Date();
     const jsonField = input.field === "is_featured" ? "isFeatured" : "isFreshPick";

@@ -395,32 +395,29 @@ export function AgriContentManagement({
         <div className="flex flex-wrap items-center gap-2.5">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="h-9 gap-1.5 border-slate-300 bg-white font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            className="h-11 px-5 rounded-xl border-slate-300 bg-white text-base font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4.5 w-4.5 mr-2 ${isFetching ? "animate-spin text-emerald-600" : ""}`} />
             <span>Refresh</span>
           </Button>
 
           <Button
             variant="outline"
-            size="sm"
             onClick={handleExportCsv}
-            className="h-9 gap-1.5 border-slate-300 bg-white font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            className="h-11 px-5 rounded-xl border-slate-300 bg-white text-base font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
           >
-            <Download className="h-3.5 w-3.5" />
+            <Download className="h-4.5 w-4.5 mr-2" />
             <span>Export CSV</span>
           </Button>
 
           {canManage && (
             <Button
-              size="sm"
               onClick={() => setCreateModalOpen(true)}
-              className="h-9 gap-1.5 bg-[#078c52] font-semibold text-white shadow-sm hover:bg-[#067343]"
+              className="h-11 px-5 rounded-xl bg-[#078c52] text-base font-black text-white shadow-md hover:bg-[#067343] active:scale-95 transition-all cursor-pointer"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4.5 w-4.5 mr-2" />
               <span>+ Create Resource</span>
             </Button>
           )}
@@ -479,13 +476,13 @@ export function AgriContentManagement({
         />
       </div>
 
-      {/* Filter Matrix Card */}
-      <Card className="border border-emerald-950/10 bg-white shadow-sm">
+      {/* Filter Matrix */}
+      <Card className="border border-emerald-950/10 bg-white shadow-sm rounded-2xl">
         <CardContent className="p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             {/* Search */}
             <div className="relative min-w-[240px] flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Search title, summary keywords, category, or URL..."
                 value={search}
@@ -493,12 +490,12 @@ export function AgriContentManagement({
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                className="h-10 pl-9 pr-8 text-sm"
+                className="h-11 pl-11 pr-8 text-base font-medium rounded-xl border-slate-200"
               />
               {search && (
                 <button
                   onClick={() => setSearch("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -514,7 +511,7 @@ export function AgriContentManagement({
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="h-10 w-[150px] text-xs font-medium">
+                <SelectTrigger className="h-11 w-[160px] text-sm font-bold rounded-xl border-slate-200">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -531,7 +528,7 @@ export function AgriContentManagement({
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="h-10 w-[190px] text-xs font-medium truncate">
+                <SelectTrigger className="h-11 w-[200px] text-sm font-bold rounded-xl border-slate-200 truncate">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -551,7 +548,7 @@ export function AgriContentManagement({
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="h-10 w-[170px] text-xs font-medium truncate">
+                <SelectTrigger className="h-11 w-[180px] text-sm font-bold rounded-xl border-slate-200 truncate">
                   <SelectValue placeholder="Target Level" />
                 </SelectTrigger>
                 <SelectContent>
@@ -566,8 +563,7 @@ export function AgriContentManagement({
 
               {(search || statusFilter !== "all" || categoryFilter !== "all" || levelFilter !== "all") && (
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant="outline"
                   onClick={() => {
                     setSearch("");
                     setStatusFilter("all");
@@ -575,7 +571,7 @@ export function AgriContentManagement({
                     setLevelFilter("all");
                     setPage(1);
                   }}
-                  className="h-10 text-xs text-slate-500 hover:text-slate-900"
+                  className="h-11 px-4 text-sm font-black rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
                 >
                   Reset
                 </Button>
@@ -586,34 +582,34 @@ export function AgriContentManagement({
       </Card>
 
       {/* Main Table */}
-      <Card className="overflow-hidden border border-emerald-950/10 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="border-b border-slate-200 bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+      <Card className="overflow-hidden border border-emerald-950/10 bg-slate-50/50 shadow-sm rounded-2xl">
+        <div className="overflow-x-auto p-3">
+          <table className="w-full text-left text-sm border-separate border-spacing-y-2.5">
+            <thead className="text-xs font-black uppercase tracking-wider text-slate-600">
               <tr>
-                <th className="px-4 py-3">Resource Title & Summary</th>
-                <th className="px-4 py-3">Knowledge Category</th>
-                <th className="px-4 py-3">Target Audience</th>
-                <th className="px-4 py-3 text-center">Sort Order</th>
-                <th className="px-4 py-3 text-center">Publication Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <th className="px-5 pb-2 pt-1">Resource Title & Summary</th>
+                <th className="px-5 pb-2 pt-1">Knowledge Category</th>
+                <th className="px-5 pb-2 pt-1">Target Audience</th>
+                <th className="px-5 pb-2 pt-1 text-center">Sort Order</th>
+                <th className="px-5 pb-2 pt-1 text-center">Publication Status</th>
+                <th className="px-5 pb-2 pt-1 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+            <tbody className="font-medium text-slate-700">
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={6} className="px-4 py-4">
+                    <td colSpan={6} className="px-5 py-5 bg-white rounded-2xl border border-slate-200">
                       <div className="h-4 w-full rounded bg-slate-200" />
                     </td>
                   </tr>
                 ))
               ) : paginatedResources.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
                     <BookOpen className="mx-auto mb-2 h-8 w-8 text-slate-300" />
-                    <p className="text-sm font-semibold">No content resources match your query</p>
-                    <p className="text-xs">Create a new guide or adjust the filter criteria.</p>
+                    <p className="text-base font-bold text-slate-700">No content resources match your query</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Create a new guide or adjust the filter criteria.</p>
                   </td>
                 </tr>
               ) : (
@@ -623,64 +619,74 @@ export function AgriContentManagement({
                   return (
                     <tr
                       key={item.id}
-                      className="group transition-colors hover:bg-emerald-50/40"
+                      className="group transition-all duration-150 bg-white hover:bg-emerald-50/50 shadow-2xs hover:shadow-xs"
                     >
-                      <td className="px-4 py-3.5 max-w-sm">
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-[#053f36] border border-emerald-100 font-bold">
-                            <BookMarked className="h-4 w-4" />
+                      <td className="px-5 py-4 max-w-md border-y border-slate-200/90 first:border-l first:rounded-l-2xl group-hover:border-emerald-300/80 transition-colors">
+                        <div className="flex items-start gap-3.5">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-[#053f36] border border-emerald-200 font-bold shadow-xs">
+                            <BookMarked className="h-5 w-5" />
                           </div>
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <button
                               onClick={() => setSelectedResourceId(item.id)}
-                              className="font-bold text-slate-900 hover:text-[#078c52] hover:underline text-left block truncate max-w-xs"
+                              className="font-black text-slate-900 hover:text-[#078c52] hover:underline text-left block text-sm sm:text-base leading-snug cursor-pointer"
                             >
                               {item.name}
                             </button>
-                            <p className="line-clamp-1 text-[11px] text-slate-500">{item.summary}</p>
-                            <span className="font-mono text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
-                              <LinkIcon className="h-2.5 w-2.5" />
-                              <span className="truncate max-w-[200px]">{item.url}</span>
-                            </span>
+                            <p className="text-xs sm:text-sm font-medium text-slate-600 mt-1 line-clamp-2 leading-relaxed">
+                              {item.summary}
+                            </p>
+                            {item.url && (
+                              <a
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="font-mono text-xs font-bold text-emerald-700 hover:text-emerald-900 hover:underline inline-flex items-center gap-1.5 mt-1.5"
+                              >
+                                <LinkIcon className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                <span className="truncate max-w-[280px]">{item.url}</span>
+                              </a>
+                            )}
                           </div>
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5">
-                        <Badge variant="outline" className="bg-slate-50 text-slate-700 font-medium text-[10px]">
+                      <td className="px-5 py-4 border-y border-slate-200/90 group-hover:border-emerald-300/80 transition-colors">
+                        <Badge variant="outline" className="bg-slate-100 text-slate-800 font-bold text-xs border-slate-200 px-3 py-1 rounded-lg">
                           {item.category}
                         </Badge>
                       </td>
 
-                      <td className="px-4 py-3.5">
-                        <div className="flex flex-wrap gap-1">
+                      <td className="px-5 py-4 border-y border-slate-200/90 group-hover:border-emerald-300/80 transition-colors">
+                        <div className="flex flex-wrap gap-1.5">
                           {item.studyLevels?.slice(0, 2).map((lvl) => (
-                            <Badge key={lvl} variant="secondary" className="bg-emerald-50 text-emerald-800 text-[9px] font-semibold">
+                            <Badge key={lvl} variant="secondary" className="bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200/60 px-2.5 py-1 rounded-lg">
                               {lvl}
                             </Badge>
                           ))}
                           {item.studyLevels?.length > 2 && (
-                            <Badge variant="secondary" className="bg-slate-100 text-slate-600 text-[9px]">
+                            <Badge variant="secondary" className="bg-slate-100 text-slate-700 text-xs font-bold px-2 py-1 rounded-lg">
                               +{item.studyLevels.length - 2}
                             </Badge>
                           )}
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5 text-center font-mono text-xs font-bold text-slate-600">
+                      <td className="px-5 py-4 text-center font-mono text-sm font-black text-slate-700 border-y border-slate-200/90 group-hover:border-emerald-300/80 transition-colors">
                         #{item.sortOrder || 0}
                       </td>
 
-                      <td className="px-4 py-3.5 text-center">
+                      <td className="px-5 py-4 text-center border-y border-slate-200/90 group-hover:border-emerald-300/80 transition-colors">
                         <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${
                             isPublished
                               ? "bg-emerald-100 text-emerald-800"
                               : "bg-amber-100 text-amber-800"
                           }`}
                         >
                           <span
-                            className={`h-1.5 w-1.5 rounded-full ${
+                            className={`h-2 w-2 rounded-full ${
                               isPublished ? "bg-emerald-500" : "bg-amber-500"
                             }`}
                           />
@@ -688,22 +694,23 @@ export function AgriContentManagement({
                         </span>
                       </td>
 
-                      <td className="px-4 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1">
+                      <td className="px-5 py-4 text-right border-y border-slate-200/90 last:border-r last:rounded-r-2xl group-hover:border-emerald-300/80 transition-colors">
+                        <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
-                            size="icon"
+                            variant="outline"
+                            size="sm"
                             onClick={() => setSelectedResourceId(item.id)}
-                            className="h-7 w-7 text-slate-500 hover:text-slate-900"
+                            className="h-9 px-3 rounded-xl border border-slate-200 bg-white hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-800 text-xs font-black shadow-2xs active:scale-95 transition-all cursor-pointer"
                             title="Inspect Resource"
                           >
-                            <Eye className="h-3.5 w-3.5" />
+                            <Eye className="h-4 w-4 mr-1" />
+                            <span>Inspect</span>
                           </Button>
 
                           {canManage && (
                             <Button
-                              variant="ghost"
-                              size="icon"
+                              variant="outline"
+                              size="sm"
                               onClick={() => {
                                 setEditTarget(item);
                                 setEditTitle(item.name);
@@ -714,32 +721,34 @@ export function AgriContentManagement({
                                 setEditPublished(item.published || item.status === "published");
                                 setEditSortOrder((item.sortOrder || 0).toString());
                               }}
-                              className="h-7 w-7 text-slate-500 hover:text-slate-900"
+                              className="h-9 px-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-black shadow-2xs active:scale-95 transition-all cursor-pointer"
                               title="Edit Resource"
                             >
-                              <Pencil className="h-3.5 w-3.5" />
+                              <Pencil className="h-4 w-4 mr-1" />
+                              <span>Edit</span>
                             </Button>
                           )}
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-slate-900">
-                                <MoreHorizontal className="h-3.5 w-3.5" />
+                              <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl border-slate-200 bg-white text-slate-600 hover:text-slate-900 cursor-pointer shadow-2xs">
+                                <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 text-xs font-medium">
-                              <DropdownMenuLabel>Resource Actions</DropdownMenuLabel>
+                            <DropdownMenuContent align="end" className="w-52 text-xs font-bold rounded-xl shadow-lg">
+                              <DropdownMenuLabel className="font-black text-slate-900">Resource Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => setSelectedResourceId(item.id)}>
-                                <Eye className="mr-2 h-3.5 w-3.5 text-emerald-600" />
+                              <DropdownMenuItem onClick={() => setSelectedResourceId(item.id)} className="cursor-pointer font-bold">
+                                <Eye className="mr-2 h-4 w-4 text-emerald-600" />
                                 <span>Inspect Handbook</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
                                   if (item.url) window.open(item.url, "_blank");
                                 }}
+                                className="cursor-pointer font-bold"
                               >
-                                <ExternalLink className="mr-2 h-3.5 w-3.5 text-blue-600" />
+                                <ExternalLink className="mr-2 h-4 w-4 text-blue-600" />
                                 <span>Open Document URL</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem
@@ -753,8 +762,9 @@ export function AgriContentManagement({
                                   setEditPublished(item.published || item.status === "published");
                                   setEditSortOrder((item.sortOrder || 0).toString());
                                 }}
+                                className="cursor-pointer font-bold"
                               >
-                                <Pencil className="mr-2 h-3.5 w-3.5 text-slate-700" />
+                                <Pencil className="mr-2 h-4 w-4 text-slate-700" />
                                 <span>Edit Metadata</span>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
@@ -765,16 +775,16 @@ export function AgriContentManagement({
                                     published: !isPublished,
                                   })
                                 }
-                                className={isPublished ? "text-amber-700" : "text-emerald-700"}
+                                className={`cursor-pointer font-bold ${isPublished ? "text-amber-700" : "text-emerald-700"}`}
                               >
-                                <Power className="mr-2 h-3.5 w-3.5" />
+                                <Power className="mr-2 h-4 w-4" />
                                 <span>{isPublished ? "Unpublish to Draft" : "Publish to Live"}</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => setDeleteTarget(item)}
-                                className="text-rose-600"
+                                className="cursor-pointer font-bold text-rose-600 hover:text-rose-700"
                               >
-                                <Trash2 className="mr-2 h-3.5 w-3.5" />
+                                <Trash2 className="mr-2 h-4 w-4" />
                                 <span>Delete Resource</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -790,24 +800,24 @@ export function AgriContentManagement({
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/50 px-4 py-3 text-xs text-slate-500">
+        <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/50 px-5 py-3.5 text-sm text-slate-600">
           <div>
-            Showing <span className="font-semibold text-slate-900">{filteredResources.length === 0 ? 0 : (page - 1) * pageSize + 1}</span> to{" "}
-            <span className="font-semibold text-slate-900">{Math.min(page * pageSize, filteredResources.length)}</span> of{" "}
-            <span className="font-semibold text-slate-900">{filteredResources.length}</span> resources
+            Showing <span className="font-black text-slate-900">{filteredResources.length === 0 ? 0 : (page - 1) * pageSize + 1}</span> to{" "}
+            <span className="font-black text-slate-900">{Math.min(page * pageSize, filteredResources.length)}</span> of{" "}
+            <span className="font-black text-slate-900">{filteredResources.length}</span> resources
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="h-8 w-8 p-0"
+              className="h-9 w-9 p-0 rounded-xl cursor-pointer"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4.5 w-4.5" />
             </Button>
-            <span className="px-2 font-bold text-slate-700">
+            <span className="px-2.5 font-bold text-slate-800 text-sm">
               {page} / {totalPages}
             </span>
             <Button
@@ -815,9 +825,9 @@ export function AgriContentManagement({
               size="sm"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="h-8 w-8 p-0"
+              className="h-9 w-9 p-0 rounded-xl cursor-pointer"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4.5 w-4.5" />
             </Button>
           </div>
         </div>
@@ -825,116 +835,116 @@ export function AgriContentManagement({
 
       {/* Resource Detail Drawer */}
       <Sheet open={Boolean(selectedResourceId)} onOpenChange={(open) => !open && setSelectedResourceId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
+        <SheetContent hideCloseButton side="right" className="w-full sm:max-w-xl p-0 overflow-y-auto bg-slate-50">
           {selectedResource && (
             <div className="flex flex-col min-h-full">
               {/* Header */}
-              <div className="bg-[#053f36] p-6 text-white">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-400 font-bold text-[#053f36]">
-                      <BookOpen className="h-6 w-6" />
+              <div className="bg-[#053f36] p-6 text-white shadow-md">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lime-400 font-black text-[#053f36] shadow-sm shrink-0">
+                      <BookOpen className="h-7 w-7" />
                     </div>
                     <div>
-                      <h2 className="text-base font-black leading-snug">{selectedResource.name}</h2>
-                      <div className="mt-1 flex items-center gap-2">
+                      <h2 className="text-lg sm:text-xl font-black leading-snug tracking-tight text-white">{selectedResource.name}</h2>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
                         <Badge
                           variant="outline"
                           className={
                             selectedResource.published
-                              ? "border-emerald-400/30 bg-emerald-500/20 text-emerald-200"
-                              : "border-amber-400/30 bg-amber-500/20 text-amber-200"
+                              ? "border-emerald-400/40 bg-emerald-500/25 text-emerald-200 font-black text-xs px-2.5 py-0.5"
+                              : "border-amber-400/40 bg-amber-500/25 text-amber-200 font-black text-xs px-2.5 py-0.5"
                           }
                         >
                           {selectedResource.published ? "Published" : "Draft"}
                         </Badge>
-                        <span className="text-[10px] text-white/60">Category: {selectedResource.category}</span>
+                        <span className="text-xs font-bold text-emerald-100/80">Category: {selectedResource.category}</span>
                       </div>
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedResourceId(null)}
-                    className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                    aria-label="Close dossier"
+                    className="rounded-xl p-2 text-white/70 hover:bg-white/15 hover:text-white transition cursor-pointer shrink-0"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
                 {/* 4 Stat Boxes */}
-                <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Order</p>
-                    <p className="text-sm font-black text-lime-300">#{selectedResource.sortOrder || 0}</p>
+                <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 backdrop-blur-xs">
+                    <p className="text-xs uppercase tracking-wider font-bold text-white/70">Order</p>
+                    <p className="text-base sm:text-lg font-black text-lime-300 mt-0.5">#{selectedResource.sortOrder || 0}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Audience</p>
-                    <p className="text-xs font-bold text-white">{selectedResource.studyLevels?.length || 0} Levels</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 backdrop-blur-xs">
+                    <p className="text-xs uppercase tracking-wider font-bold text-white/70">Audience</p>
+                    <p className="text-sm sm:text-base font-black text-white mt-0.5">{selectedResource.studyLevels?.length || 0} Levels</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Status</p>
-                    <p className="text-xs font-bold text-emerald-300 capitalize">{selectedResource.status || "Live"}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 backdrop-blur-xs">
+                    <p className="text-xs uppercase tracking-wider font-bold text-white/70">Status</p>
+                    <p className="text-sm sm:text-base font-black text-emerald-300 capitalize mt-0.5">{selectedResource.status || "Live"}</p>
                   </div>
-                  <div className="rounded-lg bg-white/10 p-2.5 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-white/60">Updated</p>
-                    <p className="text-[11px] font-medium text-white/80">{timeAgo(selectedResource.updatedAt)}</p>
+                  <div className="rounded-xl bg-white/10 p-3 text-center border border-white/10 backdrop-blur-xs">
+                    <p className="text-xs uppercase tracking-wider font-bold text-white/70">Updated</p>
+                    <p className="text-xs sm:text-sm font-bold text-white/90 mt-0.5">{timeAgo(selectedResource.updatedAt)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Content Details */}
-              <div className="flex-1 p-6 space-y-4">
-                <Card className="border-slate-200">
-                  <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <div className="flex-1 p-6 space-y-5">
+                <Card className="border-slate-200/90 shadow-xs rounded-2xl overflow-hidden bg-white">
+                  <CardHeader className="p-4 pb-2.5 bg-slate-50/70 border-b border-slate-100">
+                    <CardTitle className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
                       Handbook Summary & Overview
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-4 pt-0 text-xs text-slate-700 leading-relaxed">
+                  <CardContent className="p-4 pt-3.5 text-sm sm:text-base font-medium text-slate-900 leading-relaxed">
                     {selectedResource.summary}
                   </CardContent>
                 </Card>
 
-                <Card className="border-slate-200">
-                  <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <Card className="border-slate-200/90 shadow-xs rounded-2xl overflow-hidden bg-white">
+                  <CardHeader className="p-4 pb-2.5 bg-slate-50/70 border-b border-slate-100">
+                    <CardTitle className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
                       Target Audience & Study Levels
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-4 pt-0 flex flex-wrap gap-1.5">
+                  <CardContent className="p-4 pt-3.5 flex flex-wrap gap-2.5">
                     {selectedResource.studyLevels?.map((lvl) => (
-                      <Badge key={lvl} className="bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold text-xs">
+                      <Badge key={lvl} className="bg-emerald-50 text-emerald-950 border-2 border-emerald-300 font-black text-xs sm:text-sm px-4 py-1.5 rounded-xl shadow-2xs">
                         {lvl}
                       </Badge>
                     ))}
                   </CardContent>
                 </Card>
 
-                <Card className="border-slate-200">
-                  <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <Card className="border-slate-200/90 shadow-xs rounded-2xl overflow-hidden bg-white">
+                  <CardHeader className="p-4 pb-2.5 bg-slate-50/70 border-b border-slate-100">
+                    <CardTitle className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">
                       External URL / PDF Asset Link
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <div className="flex items-center justify-between rounded-lg bg-slate-100 p-2.5 text-xs">
-                      <span className="font-mono text-slate-700 truncate max-w-[320px]">{selectedResource.url}</span>
+                  <CardContent className="p-4 pt-3.5">
+                    <div className="flex items-center justify-between rounded-xl bg-slate-100/90 p-3.5 text-sm sm:text-base border border-slate-200/90 gap-3">
+                      <span className="font-mono text-slate-900 truncate flex-1 font-bold">{selectedResource.url}</span>
                       <Button
                         size="sm"
-                        variant="outline"
                         onClick={() => window.open(selectedResource.url, "_blank")}
-                        className="h-7 text-[11px] gap-1"
+                        className="h-9 px-4 text-xs sm:text-sm font-black gap-2 rounded-xl shrink-0 cursor-pointer bg-emerald-700 text-white hover:bg-emerald-800 shadow-xs"
                       >
-                        <ExternalLink className="h-3 w-3" />
-                        <span>Open</span>
+                        <ExternalLink className="h-4 w-4" />
+                        <span>Open Document</span>
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Actions */}
-                <div className="space-y-2 pt-2">
+                <div className="space-y-3 pt-3">
                   <Button
-                    className="w-full bg-[#078c52] text-white hover:bg-[#067343] text-xs h-9"
+                    className="w-full bg-[#078c52] text-white hover:bg-[#067343] text-base sm:text-lg font-black h-13 rounded-2xl shadow-md cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-2.5"
                     onClick={() => {
                       setEditTarget(selectedResource);
                       setEditTitle(selectedResource.name);
@@ -946,12 +956,12 @@ export function AgriContentManagement({
                       setEditSortOrder((selectedResource.sortOrder || 0).toString());
                     }}
                   >
-                    <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit Resource Metadata
+                    <Pencil className="h-5 w-5" /> Edit Resource Metadata
                   </Button>
 
                   <Button
                     variant="outline"
-                    className="w-full text-xs h-9"
+                    className="w-full text-base font-black h-12 rounded-2xl border-2 border-slate-300 hover:bg-slate-100 text-slate-900 cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-2.5"
                     onClick={() =>
                       togglePublishMutation.mutate({
                         id: selectedResource.id,
@@ -959,16 +969,16 @@ export function AgriContentManagement({
                       })
                     }
                   >
-                    <Power className="mr-1.5 h-3.5 w-3.5" />
+                    <Power className="h-5 w-5 text-emerald-700" />
                     {selectedResource.published ? "Unpublish to Draft" : "Publish to Live Platform"}
                   </Button>
 
                   <Button
                     variant="ghost"
-                    className="w-full text-xs h-9 text-rose-600 hover:bg-rose-50"
+                    className="w-full text-sm sm:text-base font-black h-11 rounded-2xl border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 cursor-pointer transition-all flex items-center justify-center gap-2"
                     onClick={() => setDeleteTarget(selectedResource)}
                   >
-                    <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete Resource
+                    <Trash2 className="h-4.5 w-4.5" /> Delete Resource
                   </Button>
                 </div>
               </div>
@@ -979,35 +989,35 @@ export function AgriContentManagement({
 
       {/* Create Modal */}
       <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl rounded-2xl p-6 bg-white shadow-2xl border-slate-200">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Publish Educational Resource</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900">Publish Educational Resource</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 font-medium mt-1">
               Publish technical agronomy guides, DEFRA manuals, or academic publications to AgriConnect.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3.5 py-2 text-xs">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Resource Title *</Label>
+          <div className="space-y-4 py-3 text-sm">
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Resource Title *</Label>
               <Input
                 placeholder="e.g. DEFRA Sustainable Farming Incentive (SFI) 2026 Handbook"
                 value={createTitle}
                 onChange={(e) => setCreateTitle(e.target.value)}
-                className="h-9 text-xs"
+                className="h-12 text-sm sm:text-base font-medium px-4 rounded-xl border-slate-300"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Knowledge Category *</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Knowledge Category *</Label>
                 <Select value={createCategory} onValueChange={setCreateCategory}>
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-12 text-sm sm:text-base font-medium rounded-xl border-slate-300">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {CATEGORY_OPTIONS.map((c) => (
-                      <SelectItem key={c} value={c}>
+                      <SelectItem key={c} value={c} className="text-sm font-bold">
                         {c}
                       </SelectItem>
                     ))}
@@ -1015,42 +1025,42 @@ export function AgriContentManagement({
                 </Select>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Sort Priority (Order)</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Sort Priority (Order)</Label>
                 <Input
                   type="number"
                   placeholder="1"
                   value={createSortOrder}
                   onChange={(e) => setCreateSortOrder(e.target.value)}
-                  className="h-9 text-xs font-mono"
+                  className="h-12 text-sm sm:text-base font-mono px-4 rounded-xl border-slate-300"
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Summary & Learning Objectives *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Summary & Learning Objectives *</Label>
               <textarea
-                rows={3}
+                rows={4}
                 placeholder="Comprehensive overview of compliance standards, soil metrics, or farm workflows..."
                 value={createSummary}
                 onChange={(e) => setCreateSummary(e.target.value)}
-                className="w-full rounded-md border border-slate-300 p-2 text-xs focus:border-[#078c52] focus:outline-none"
+                className="w-full rounded-xl border border-slate-300 p-3.5 text-sm sm:text-base font-medium focus:border-[#078c52] focus:outline-none leading-relaxed"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Resource / PDF URL Link *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Resource / PDF URL Link *</Label>
               <Input
                 placeholder="https://www.gov.uk/defra-guidance or /resources/handbook.pdf"
                 value={createUrl}
                 onChange={(e) => setCreateUrl(e.target.value)}
-                className="h-9 text-xs font-mono"
+                className="h-12 text-sm sm:text-base font-mono px-4 rounded-xl border-slate-300"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Target Audiences</Label>
-              <div className="flex flex-wrap gap-2 pt-1">
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Target Audiences</Label>
+              <div className="flex flex-wrap gap-2.5 pt-0.5">
                 {STUDY_LEVEL_OPTIONS.map((lvl) => {
                   const isChecked = createLevels.includes(lvl);
                   return (
@@ -1064,10 +1074,10 @@ export function AgriContentManagement({
                           setCreateLevels([...createLevels, lvl]);
                         }
                       }}
-                      className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                      className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-black transition-all cursor-pointer active:scale-95 ${
                         isChecked
-                          ? "bg-[#078c52] text-white"
-                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          ? "bg-[#078c52] text-white shadow-xs"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/80"
                       }`}
                     >
                       {lvl}
@@ -1077,21 +1087,24 @@ export function AgriContentManagement({
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 p-2.5">
+            <div className="flex items-center justify-between rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
               <div>
-                <Label className="text-xs font-bold text-slate-800">Publish Immediately</Label>
-                <p className="text-[10px] text-slate-500">Make this guide visible in user portal resource feeds</p>
+                <Label className="text-sm sm:text-base font-black text-slate-900">Publish Immediately</Label>
+                <p className="text-xs text-slate-500 font-medium">Make this guide visible in user portal resource feeds</p>
               </div>
               <Switch checked={createPublished} onCheckedChange={setCreatePublished} />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setCreateModalOpen(false)}>
+          <DialogFooter className="gap-2 pt-2 border-t border-slate-100">
+            <Button
+              variant="outline"
+              onClick={() => setCreateModalOpen(false)}
+              className="h-12 px-6 text-sm sm:text-base font-black rounded-xl border-slate-300 text-slate-700 hover:bg-slate-100 cursor-pointer"
+            >
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={!createTitle.trim() || !createSummary.trim() || !createUrl.trim() || createContentMutation.isPending}
               onClick={() =>
                 createContentMutation.mutate({
@@ -1104,7 +1117,7 @@ export function AgriContentManagement({
                   sortOrder: parseInt(createSortOrder) || 0,
                 })
               }
-              className="bg-[#078c52] text-white hover:bg-[#067343]"
+              className="h-12 px-8 text-sm sm:text-base font-black rounded-xl bg-[#078c52] hover:bg-[#067343] text-white shadow-md cursor-pointer active:scale-95"
             >
               {createContentMutation.isPending ? "Publishing..." : "Publish Resource"}
             </Button>
@@ -1114,34 +1127,34 @@ export function AgriContentManagement({
 
       {/* Edit Modal */}
       <Dialog open={Boolean(editTarget)} onOpenChange={(open) => !open && setEditTarget(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl rounded-2xl p-6 bg-white shadow-2xl border-slate-200">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900">Edit Resource Metadata</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900">Edit Resource Metadata</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 font-medium mt-1">
               Modify publication information and target eligibility.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3.5 py-2 text-xs">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Resource Title *</Label>
+          <div className="space-y-4 py-3 text-sm">
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Resource Title *</Label>
               <Input
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="h-9 text-xs"
+                className="h-12 text-sm sm:text-base font-medium px-4 rounded-xl border-slate-300"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Knowledge Category</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Knowledge Category</Label>
                 <Select value={editCategory} onValueChange={setEditCategory}>
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-12 text-sm sm:text-base font-medium rounded-xl border-slate-300">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {CATEGORY_OPTIONS.map((c) => (
-                      <SelectItem key={c} value={c}>
+                      <SelectItem key={c} value={c} className="text-sm font-bold">
                         {c}
                       </SelectItem>
                     ))}
@@ -1149,39 +1162,39 @@ export function AgriContentManagement({
                 </Select>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-slate-700">Sort Priority (Order)</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Sort Priority (Order)</Label>
                 <Input
                   type="number"
                   value={editSortOrder}
                   onChange={(e) => setEditSortOrder(e.target.value)}
-                  className="h-9 text-xs font-mono"
+                  className="h-12 text-sm sm:text-base font-mono px-4 rounded-xl border-slate-300"
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Summary *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Summary *</Label>
               <textarea
-                rows={3}
+                rows={4}
                 value={editSummary}
                 onChange={(e) => setEditSummary(e.target.value)}
-                className="w-full rounded-md border border-slate-300 p-2 text-xs focus:border-[#078c52] focus:outline-none"
+                className="w-full rounded-xl border border-slate-300 p-3.5 text-sm sm:text-base font-medium focus:border-[#078c52] focus:outline-none leading-relaxed"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Resource / PDF URL Link *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Resource / PDF URL Link *</Label>
               <Input
                 value={editUrl}
                 onChange={(e) => setEditUrl(e.target.value)}
-                className="h-9 text-xs font-mono"
+                className="h-12 text-sm sm:text-base font-mono px-4 rounded-xl border-slate-300"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Target Audiences</Label>
-              <div className="flex flex-wrap gap-2 pt-1">
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700">Target Audiences</Label>
+              <div className="flex flex-wrap gap-2.5 pt-0.5">
                 {STUDY_LEVEL_OPTIONS.map((lvl) => {
                   const isChecked = editLevels.includes(lvl);
                   return (
@@ -1195,10 +1208,10 @@ export function AgriContentManagement({
                           setEditLevels([...editLevels, lvl]);
                         }
                       }}
-                      className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                      className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-black transition-all cursor-pointer active:scale-95 ${
                         isChecked
-                          ? "bg-[#078c52] text-white"
-                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          ? "bg-[#078c52] text-white shadow-xs"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/80"
                       }`}
                     >
                       {lvl}
@@ -1208,21 +1221,24 @@ export function AgriContentManagement({
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 p-2.5">
+            <div className="flex items-center justify-between rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
               <div>
-                <Label className="text-xs font-bold text-slate-800">Publish Status</Label>
-                <p className="text-[10px] text-slate-500">Live platform accessibility</p>
+                <Label className="text-sm sm:text-base font-black text-slate-900">Publish Status</Label>
+                <p className="text-xs text-slate-500 font-medium">Live platform accessibility</p>
               </div>
               <Switch checked={editPublished} onCheckedChange={setEditPublished} />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setEditTarget(null)}>
+          <DialogFooter className="gap-2 pt-2 border-t border-slate-100">
+            <Button
+              variant="outline"
+              onClick={() => setEditTarget(null)}
+              className="h-12 px-6 text-sm sm:text-base font-black rounded-xl border-slate-300 text-slate-700 hover:bg-slate-100 cursor-pointer"
+            >
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={!editTitle.trim() || !editSummary.trim() || !editUrl.trim() || updateContentMutation.isPending}
               onClick={() => {
                 if (editTarget) {
@@ -1240,7 +1256,7 @@ export function AgriContentManagement({
                   });
                 }
               }}
-              className="bg-[#078c52] text-white hover:bg-[#067343]"
+              className="h-12 px-8 text-sm sm:text-base font-black rounded-xl bg-[#078c52] text-white hover:bg-[#067343] shadow-md cursor-pointer active:scale-95"
             >
               {updateContentMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
@@ -1250,27 +1266,30 @@ export function AgriContentManagement({
 
       {/* Delete Modal */}
       <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md rounded-2xl p-6 bg-white shadow-2xl border-slate-200">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-rose-600">Delete Content Resource</DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
-              Are you sure you want to permanently delete <strong>{deleteTarget?.name}</strong>? This cannot be undone.
+            <DialogTitle className="text-xl sm:text-2xl font-black text-rose-600">Delete Content Resource</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base text-slate-600 font-medium mt-1 leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-slate-900 font-black">{deleteTarget?.name}</strong>? This cannot be undone.
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)}>
+          <DialogFooter className="gap-2 pt-3 border-t border-slate-100">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              className="h-12 px-6 text-sm sm:text-base font-black rounded-xl border-slate-300 text-slate-700 hover:bg-slate-100 cursor-pointer"
+            >
               Cancel
             </Button>
             <Button
-              size="sm"
               disabled={deleteContentMutation.isPending}
               onClick={() => {
                 if (deleteTarget) {
                   deleteContentMutation.mutate(deleteTarget.id);
                 }
               }}
-              className="bg-rose-600 text-white hover:bg-rose-700"
+              className="h-12 px-7 text-sm sm:text-base font-black rounded-xl bg-rose-600 text-white hover:bg-rose-700 shadow-md cursor-pointer active:scale-95"
             >
               {deleteContentMutation.isPending ? "Deleting..." : "Permanently Delete"}
             </Button>
